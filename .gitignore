@@ -24,3 +24,6 @@ apache2
 ## sync directories
 abet.asucapstonetools.com
 server_clone
+
+.DS_Store
+**/.DS_Store
