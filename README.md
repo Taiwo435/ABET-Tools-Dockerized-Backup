@@ -86,4 +86,5 @@ docker compose up --build
 
 ## More information
 
+More docs are located in the [docs directory](./docs/).
 More information is found [in this master document.](https://docs.google.com/document/d/1mHOwIYyIZtg7FO8jtxTz9lPIuB3W9JVeVAR240YsTQA/edit?tab=t.88j2hx3zuwbr)
