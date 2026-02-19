@@ -42,4 +42,4 @@ This directory contains useful scripts that I have been using for development th
 
 ## Docs directory (/docs)
 
-It's this directory! I will include important project documentation here, and any automatically generated files will also be here. 
+It's this directory! I will include important project documentation here, and any automatically generated files will also be here.

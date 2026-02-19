@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile
     container_name: php_apache
     environment:
-      - ABET_PRIVATE_DIR=/home/abet_private
+      - ABET_PRIVATE_DIR=${ABET_PRIVATE_DIR}
       - DB_HOST=mysql
       - DB_NAME=${MYSQL_DATABASE}
       - DB_USER=${MYSQL_USER}
