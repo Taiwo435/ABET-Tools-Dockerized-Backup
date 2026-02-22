@@ -22,4 +22,4 @@ pytest .                            # initiate tests
 
 ## Organization
 
-the only important files are `requirements.txt` and `test_*.py`. Pytest will treat all files starting with "test" as a testing suite, running all methods that start with "test". A template for using selenium for a testing suite is in `main.py` with a template method. 
+the only important files are `requirements.txt` and `test_*.py`. Pytest will treat all files starting with "test" as a testing suite, running all methods that start with "test". A template for using selenium for a testing suite is in `main.py` with a template method.
