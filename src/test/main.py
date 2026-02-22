@@ -28,7 +28,8 @@ def init_webdriver():
         print_exc()
         exit(1)
 
-def template(): 
+# Template function for testing. The new name should start with "test_" to be recognized by pytest.
+def test_template(): 
     driver = init_webdriver()
     try:
         driver.get(f"http://{os.getenv('APP_CONTAINERNAME')}:80")
