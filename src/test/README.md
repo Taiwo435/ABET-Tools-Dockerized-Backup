@@ -23,3 +23,9 @@ pytest .                            # initiate tests
 ## Organization
 
 the only important files are `requirements.txt` and `test_*.py`. Pytest will treat all files starting with "test" as a testing suite, running all methods that start with "test". A template for using selenium for a testing suite is in `main.py` with a template method.
+
+## More Information
+
+Once the testing environment is up, you can access your sessions at [http://localhost:4444](http://localhost:4444). It lets you manage sessions in the case that you accidentally forget to delete a session (shouldn't happen if you follow the template, but you never know...). 
+
+If you need to, here's informatoin from the selenium container i use: [docker-selenium docs](https://github.com/SeleniumHQ/docker-selenium?tab=readme-ov-file)
