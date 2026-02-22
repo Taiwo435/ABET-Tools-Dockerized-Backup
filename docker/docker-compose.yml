@@ -108,6 +108,19 @@ services:
   #   depends_on:
   #     - mysql
 
+  ###################################################
+  # the selenium container for running end-to-end tests with a headless browser.
+  selenium:
+    build: 
+      context: ./test/
+      dockerfile: Dockerfile
+    container_name: selenium
+    profiles:
+      - testing
+    ports:
+      - "4444:4444"
+    networks:
+      - app_network
 
   ###################################################
   # the default network that allows the containers to communicate with each other.
