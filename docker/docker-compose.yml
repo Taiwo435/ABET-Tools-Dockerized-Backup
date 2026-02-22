@@ -70,7 +70,25 @@ services:
     depends_on:
       - mysql
 
-  
+###################################################
+  # Assignment Extraction FastAPI Backend
+  # Handles Canvas extraction and serves data for report gen
+  ###################################################
+  extraction_api:
+    build: 
+      context: ../
+      dockerfile: docker/extraction_api/Dockerfile
+    container_name: extraction_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../src/extraction_api:/usr/src/app
+    networks:
+      - app_network
+    # depends_on:
+    #   - mysql
+
+
   ###################################################
   # the report generation container that hosts the fastapi backend
   # accessed by the php_apache container to generate reports.

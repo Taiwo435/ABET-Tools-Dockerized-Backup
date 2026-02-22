@@ -14,6 +14,7 @@ __pycache__
 mysql_data
 generated_pdfs
 logs
+*.log
 
 
 ## stuff that I created randomly and don't want to track
