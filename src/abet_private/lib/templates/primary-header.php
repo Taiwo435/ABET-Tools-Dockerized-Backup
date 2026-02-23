@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once '/home/osburn/abet_private/lib/auth.php';
+require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/auth.php';
 require_login();
 
 // user info for the dropdown
