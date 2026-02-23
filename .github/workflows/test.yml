@@ -16,15 +16,15 @@ on:
   #     - 'docs/**'
   #     - '.github/workflows/**'
   workflow_dispatch:
-  inputs:
-    browser:
-      type: choice
-      description: Which browser to test
-      required: true
-      options:
-        - chrome
-        - firefox
-        - edge
+    inputs:
+      browser:
+        type: choice
+        description: Which browser to test
+        required: true
+        options:
+          - chrome
+          - firefox
+          - edge
 
 # jobs to be executed on runner machines
 jobs:
