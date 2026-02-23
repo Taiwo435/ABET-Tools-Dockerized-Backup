@@ -12,7 +12,8 @@ config.php
 # local data that should not be tracked
 *.pyc
 mysql_data
-logs
+*log
+*logs
 report_jobs
 Test-PDFs
 

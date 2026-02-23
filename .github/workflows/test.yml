@@ -33,6 +33,13 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
 
+    # services:
+    #   selenium:
+    #     image: selenium/standalone-${{ inputs.browser }}
+    #     ports:
+    #       - 4444:4444
+    #     options: --shm-size=2gb
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -41,6 +48,7 @@ jobs:
         run: |
           echo "ABET_PRIVATE_DIR=/home/abet_private" > .env
           echo "APP_CONTAINERNAME=php_apache" >> .env
+          echo "SELENIUM_PORT=4445" >> .env
           echo "MYSQL_DATABASE=testdb" >> .env
           echo "MYSQL_ROOT_PASSWORD=testingRootPassword" >> .env
           echo "MYSQL_USER=testingUser" >> .env
@@ -55,21 +63,25 @@ jobs:
 
       - name: Install testing dependencies
         run: |
-          pip install -r src/test/requirements.txt > /dev/null
+          pip install --root-user-action=ignore -r src/test/requirements.txt > /dev/null
+
+      - name: kill any running docker containers (cleanup)
+        working-directory: ./docker
+        run: |
+          docker compose --profile testingdown || true
 
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
-          docker compose --profile testing up -d 
+          docker compose up -d 
+
+      - name: connect service to our containers
+        run: |
+          docker network connect app_network selenium || true
 
       - name: Run Selenium tests
         run: |
           # Wait for the Selenium container to be ready
-          sleep 10
+          sleep 20
           # Run your Selenium tests here, for example:
           pytest src/test/
-      
-      - name: Tear down Docker containers
-        working-directory: ./docker
-        run: |
-          docker compose --profile testing down

@@ -19,6 +19,8 @@ import pytest
 
 EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")
 PASSWORD = os.getenv("TEST_PASSWORD", "superSecretPassword1!")
+# WEBSITE_URL = f"http://localhost:{os.getenv('APP_PORT', '8080')}"
+WEBSITE_URL = f"http://{os.getenv('APP_CONTAINERNAME', 'php_apache')}"
 
 load_dotenv("../../docker/.env")
 os.environ["PATH"] += os.pathsep + os.pathsep.join([
@@ -28,7 +30,7 @@ os.environ["PATH"] += os.pathsep + os.pathsep.join([
 def init_webdriver():
     try:
         driver = webdriver.Remote(
-            command_executor="http://localhost:4444/wd/hub",
+            command_executor=f"http://localhost:{os.getenv('SELENIUM_PORT', '4444')}/wd/hub",
             options=webdriver.FirefoxOptions(),
         )
         return driver
@@ -40,9 +42,9 @@ def init_webdriver():
 def test_login_invalid_credentials():
     driver = init_webdriver()
     try:
-        driver.get(f"http://{os.getenv('APP_CONTAINERNAME')}")
+        driver.get(f"{WEBSITE_URL}/login")
         driver.implicitly_wait(2)  # Wait for the page to load
-        assert driver.current_url == f"http://{os.getenv('APP_CONTAINERNAME')}/login", "User not redirected to login page on initial load"
+        assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page on initial load"
         print("Got the website")
 
         email_input = driver.find_element(By.ID, "email")
@@ -55,7 +57,7 @@ def test_login_invalid_credentials():
         
         driver.implicitly_wait(2)  # Wait for the next page to load
 
-        assert driver.current_url == f"http://{os.getenv('APP_CONTAINERNAME')}/login", "User not redirected to login page after invalid credentials"
+        assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page after invalid credentials"
     except Exception as e:
         print(f"An error occurred: {e}")
         print_exc()
@@ -67,7 +69,7 @@ def test_login_invalid_credentials():
 def test_register_and_login_valid_credentials():
     driver = init_webdriver()
     try:
-        driver.get(f"http://{os.getenv('APP_CONTAINERNAME')}/register")
+        driver.get(f"{WEBSITE_URL}/register")
         driver.implicitly_wait(2)  # Wait for the page to load
         print("Got the website")
 
@@ -93,7 +95,7 @@ def test_register_and_login_valid_credentials():
             print(error_message_element.text)
             assert error_message_element.text == "An account with that email already exists.", "Error message element not found after attempting to register with existing email"
 
-        driver.get(f"http://{os.getenv('APP_CONTAINERNAME')}/login")
+        driver.get(f"{WEBSITE_URL}/login")
 
         email_input = driver.find_element(By.ID, "email")
         password_input = driver.find_element(By.ID, "password")
@@ -104,7 +106,7 @@ def test_register_and_login_valid_credentials():
         login_button.click()
         driver.implicitly_wait(2)  # Wait for the next page to load
 
-        assert driver.current_url == f"http://{os.getenv('APP_CONTAINERNAME')}/home", "User not redirected to home after valid login"
+        assert driver.current_url == f"{WEBSITE_URL}/home", "User not redirected to home after valid login"
     except Exception as e:
         print(f"An error occurred: {e}")
         print_exc()
@@ -117,7 +119,7 @@ def test_register_and_login_valid_credentials():
 def template(): 
     driver = init_webdriver()
     try:
-        driver.get(f"http://{os.getenv('APP_CONTAINERNAME')}:80")
+        driver.get(f"{WEBSITE_URL}")
         driver.implicitly_wait(2)  # Wait for the page to load
         print("Got the website")
 

@@ -20,7 +20,7 @@ services:
       - SESSION_ABSOLUTE_TIMEOUT=28800
       - SESSION_COOKIE_SAMESITE=Lax
     ports:
-      - "8080:80"
+      - "${APP_PORT-8080}:80"
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR}
@@ -118,7 +118,7 @@ services:
     profiles:
       - testing
     ports:
-      - "4444:4444"
+      - "${SELENIUM_PORT-4444}:4444"
     networks:
       - app_network
 
