@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     office_location VARCHAR(255),
     bio VARCHAR(512),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     metadata JSON,
     ip_address VARCHAR(45),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (actor_user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS login_events (
@@ -53,12 +53,12 @@ CREATE TABLE IF NOT EXISTS login_events (
     ip_address VARCHAR(45),
     user_agent TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--------------------------------------------------
+-- -----------------------------------------------
 -- REPORT GENERATION TABLES
--------------------------------------------------
+-- -----------------------------------------------
 
 -- ALL OUTCOMES FOR A COURSE
 -- data from assignment_extraction.py, we don't need a form 
@@ -72,13 +72,13 @@ CREATE TABLE IF NOT EXISTS courses (
     course_data JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    FOREIGN KEY (professor_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 
--------------------------------------------------
+-- -----------------------------------------------
 -- data that we retrieve from forms 
--------------------------------------------------
+-- -----------------------------------------------
 
 -- Example query to get faculty info for a user by email:
 -- SELECT * FROM faculty_info WHERE user_id = (SELECT user_id FROM users WHERE email = 'test@asu.edu');
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS faculty_info (
     activity_prof_dev ENUM('H', 'M', 'L'),
     activity_consulting ENUM('H', 'M', 'L'),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 
@@ -115,5 +115,5 @@ CREATE TABLE IF NOT EXISTS cv_information (
     user_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

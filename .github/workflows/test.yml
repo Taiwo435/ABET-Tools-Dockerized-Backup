@@ -81,7 +81,7 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          # Wait for the Selenium container to be ready
+          # Wait for the containers to be ready
           sleep 20
           # Run your Selenium tests here, for example:
           pytest src/test/
