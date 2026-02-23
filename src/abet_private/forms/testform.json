@@ -1,0 +1,51 @@
+{
+
+    "title": "Test Form",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "expandable-grid",
+            "name": "test_grid",
+            "label": "Test Grid",
+            "columns": [
+                "Column 1",
+                "Column 2",
+                "Column 3"
+            ],
+            "maxRows": 5,
+            "required": false
+            
+        },
+        {
+            "type": "text",
+            "name": "first_name",
+            "label": "First Name",
+            "required": true,
+            "minLength": 2
+        },
+        {
+            "type": "email",
+            "name": "email",
+            "label": "NAME",
+            "required": true
+        },
+        {
+            "type": "password",
+            "name": "password",
+            "label": "Password",
+            "required": true,
+            "minLength": 8
+        },
+        {
+            "type": "select",
+            "name": "role",
+            "label": "Role",
+            "required": true,
+            "options": {
+                "option1": "Option1",
+                "option2": "Option2"
+            }
+        }
+    ]
+}

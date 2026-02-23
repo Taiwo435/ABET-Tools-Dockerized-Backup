@@ -10,12 +10,11 @@ config.php
 *cache*
 
 # local data that should not be tracked
-__pycache__
 *.pyc
 mysql_data
-generated_pdfs
 logs
-*.log
+report_jobs
+Test-PDFs
 
 
 ## stuff that I created randomly and don't want to track
@@ -23,6 +22,14 @@ composer.phar
 vendor
 INSTALL.sh
 apache2 
+
+# Python-generated files
+__pycache__
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
 
 ## sync directories
 abet.asucapstonetools.com
