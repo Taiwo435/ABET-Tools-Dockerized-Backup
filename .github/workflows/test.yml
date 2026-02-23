@@ -25,6 +25,7 @@ on:
           - chrome
           - firefox
           - edge
+        default: firefox
 
 # jobs to be executed on runner machines
 jobs:
@@ -32,13 +33,6 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
 
-    services: 
-      selenium:
-        image: selenium/standalone-${{ github.event.inputs.browser }}
-        options: --shm-size=2g
-        ports:
-          - 4444:4444
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -46,6 +40,7 @@ jobs:
       - name: Set up .env file
         run: |
           echo "ABET_PRIVATE_DIR=/home/abet_private" > .env
+          echo "APP_CONTAINERNAME=php_apache" >> .env
           echo "MYSQL_DATABASE=testdb" >> .env
           echo "MYSQL_ROOT_PASSWORD=testingRootPassword" >> .env
           echo "MYSQL_USER=testingUser" >> .env
@@ -60,12 +55,12 @@ jobs:
 
       - name: Install testing dependencies
         run: |
-          pip install -r src/test/requirements.txt
+          pip install -r src/test/requirements.txt > /dev/null
 
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
-          docker compose up -d 
+          docker compose --profile testing up -d 
 
       - name: Run Selenium tests
         run: |
@@ -74,3 +69,7 @@ jobs:
           # Run your Selenium tests here, for example:
           pytest src/test/
       
+      - name: Tear down Docker containers
+        working-directory: ./docker
+        run: |
+          docker compose --profile testing down
