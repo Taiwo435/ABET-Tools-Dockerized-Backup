@@ -1,0 +1,104 @@
+.center-div {
+    place-items: center;
+    width: 100%
+}
+
+.form-holder {
+    place-items: left;
+    min-width: 75%;
+    max-width: 90%;
+}
+
+.form-title {
+    margin: 0.5rem;
+    font-size 4rem;
+}
+
+form {
+    background: white;
+    padding: 30px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+.form-input, .form-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.form-button {
+    background: #2563eb;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-button:hover {
+    background: #1d4ed8;
+}
+
+.expandable-grid {
+    font-weight: 600;
+}
+
+.expandable-grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);  /*default value; will likely be overridden when the form is generated from the template*/
+    grid-template-rows: 2rem;               /* Size of the first (label) row */
+    grid-auto-rows: minmax(50px, 5rem);     /* Size of the remaining (input) rows */
+}
+.expandable-grid-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+}
+
+.expandable-grid-input {
+    resize: none;
+    width: 100%;
+    border-radius: 0px;
+    padding: 7px;
+    border: 1px solid black;
+}
+
+.expandable-grid-add-button {
+    font-weight: 600;
+    background: #abc2f7;
+    color: black;
+    padding: 7px 12px;
+    margin: 4px 0px;
+    border: 1px solid black;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.expandable-grid-remove-button {
+    font-weight: 600;
+    background: #e8b5b7;
+    color: black;
+    border: 1px solid black;
+    border-radius: 0px;
+    cursor: pointer;
+}
+
+
+.error {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
