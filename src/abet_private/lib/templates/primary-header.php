@@ -1,0 +1,75 @@
+<?php
+declare(strict_types=1);
+
+require_once '/home/osburn/abet_private/lib/auth.php';
+require_login();
+
+// user info for the dropdown
+$user_email = $_SESSION['email'] ?? $_SESSION['user_email'] ?? 'user@asu.edu';
+$parts = explode('@', (string)$user_email);
+$asu_id = $parts[0] ?? 'user';
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASU ABET Tools | Arizona State University</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+
+    <script>
+        function toggleProfile(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById("profileDropdown");
+            if (menu) menu.classList.toggle("show");
+        }
+
+        window.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                const menu = document.getElementById("profileDropdown");
+                if (menu && menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                }
+            }
+        });
+
+    </script>
+</head>
+<body>
+
+<header>
+    <div class="logo-wrapper">
+        <img src="https://cms.asuonline.asu.edu/sites/g/files/litvpz1971/files/asu-vertical-logo.png" alt="Arizona State University logo" class="asu-logo">
+        <span class="logo-area">Arizona State University</span>
+        <span class="logo-sub">Enterprise Technology</span>
+    </div>
+
+    <div class="auth-nav">
+        <?php if (is_logged_in()): ?>
+            <div class="dropdown">
+                <button type="button" onclick="toggleProfile(event)" class="auth-btn dropbtn" aria-expanded="false" aria-controls="profileDropdown">
+                    My Profile
+                    <span style="font-size: 0.8em;">&#9662;</span>
+                </button>
+
+                <div id="profileDropdown" class="dropdown-content">
+                    <div class="dropdown-info">
+                        <a href="/account/me/" class="dropdown-user-link" title="View my profile">
+                            <strong><?php echo htmlspecialchars((string)$asu_id, ENT_QUOTES, 'UTF-8'); ?></strong>
+                            <span><?php echo htmlspecialchars((string)$user_email, ENT_QUOTES, 'UTF-8'); ?></span>
+                        </a>
+                    </div>
+
+                    <a href="/account/profile/">Edit my profile</a>
+                    <a href="/account/settings/">Account settings</a>
+                    <a href="/account/privacy/">Privacy</a>
+                    <a href="/account/help/">Help</a>
+                    <a href="/logout" class="logout-item">Log Out</a>
+                </div>
+            </div>
+        <?php else: ?>
+            <a href="/login" class="auth-link">Log In</a>
+        <?php endif; ?>
+    </div>
+</header>
