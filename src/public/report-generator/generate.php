@@ -10,7 +10,7 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
-$privateLogDir = $_ENV['ABET_PRIVATE_DIR'] . '/logs';
+$privateLogDir = getenv('ABET_PRIVATE_DIR') . '/logs';
 if (!is_dir($privateLogDir)) {
     @mkdir($privateLogDir, 0700, true);
 }
@@ -23,7 +23,7 @@ register_shutdown_function(function () {
     }
 });
 
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/auth.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -168,7 +168,7 @@ try {
     }
 
     // Paths
-    $jobsRoot      = $_ENV['ABET_PRIVATE_DIR'] . '/report_jobs';
+    $jobsRoot      = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
     $generatorPath = '../cgi-bin/abetReportGenerator.py';
     $pythonBin     = '/bin/python3';
 

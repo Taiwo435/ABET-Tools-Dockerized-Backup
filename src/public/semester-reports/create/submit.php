@@ -1,7 +1,7 @@
 <?php
 /*header('Location: /semester-reports');
 
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/form_functions.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 
 $form = loadForm('testform');
 
@@ -13,7 +13,7 @@ $errors = validateForm($form, $_POST);
 
 if (!empty($errors)) {
     $old = $_POST;
-    #include($_ENV['ABET_PRIVATE_DIR'] . '/lib/templates/form-template.php');
+    #include(getenv('ABET_PRIVATE_DIR') . '/lib/templates/form-template.php');
     header('Location: /semester-reports/create');
     exit;
 }*/

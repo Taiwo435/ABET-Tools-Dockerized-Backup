@@ -1,7 +1,6 @@
 <?php
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/config/config.php';
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/db.php';
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/auth.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 
 $errors = [];
 $success = false;
@@ -74,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->fetch()) {
       $errors[] = 'An account with that email already exists.';
     } else {
-      $hash = password_hash($password, PASSWORD_DEFAULT);
+      $hash = password_hash($password, getenv("PASSWORD_DEFAULT"));
 
       // Default role is faculty, active by default
       $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, 'faculty', 1)");

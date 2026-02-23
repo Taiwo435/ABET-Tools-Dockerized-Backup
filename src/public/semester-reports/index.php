@@ -1,5 +1,5 @@
 <?php
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/templates/primary-header.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 ?>
 
 <section class="hero hero-small">
@@ -92,5 +92,5 @@ require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/templates/primary-header.php';
 </script>
 
 <?php
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/templates/primary-footer.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-footer.php';
 ?>

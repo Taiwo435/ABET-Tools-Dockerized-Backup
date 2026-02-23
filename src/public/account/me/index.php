@@ -19,7 +19,7 @@ $profile = [
 ];
 
 // Pull saved profile if service exists
-$servicePath = $_ENV['ABET_PRIVATE_DIR'] . '/lib/account_profile_service.php';
+$servicePath = getenv('ABET_PRIVATE_DIR') . '/lib/account_profile_service.php';
 if (is_file($servicePath)) {
     require_once $servicePath;
     if (function_exists('profile_get_for_user') && $userId > 0) {

@@ -2,8 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../_guard.php';
 
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/csrf.php';
-require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/account_profile_service.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/account_profile_service.php';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 $profileRaw = profile_get_for_user($userId);

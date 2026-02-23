@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../_guard.php';
 
-if (!function_exists('db') && !empty($_ENV['ABET_PRIVATE_DIR'])) {
-  require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/db.php';
+if (!function_exists('db') && !empty(getenv('ABET_PRIVATE_DIR'))) {
+  require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 }
 
 function e(string $s): string {
