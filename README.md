@@ -44,7 +44,7 @@ Note: you can automate step 4 and 5 if you create your own private key and put t
 
 ## Docker Installs
 
-You should follow official Docker installation. You got this.
+You should follow official Docker installation. You got this. Installing Docker Desktop is the easiest way, regardless of OS.
 
 ### Linux
 
