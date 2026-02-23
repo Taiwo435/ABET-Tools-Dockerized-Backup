@@ -70,7 +70,7 @@ services:
     depends_on:
       - mysql
 
-###################################################
+  ###################################################
   # Assignment Extraction FastAPI Backend
   # Handles Canvas extraction and serves data for report gen
   ###################################################

@@ -13,31 +13,16 @@ I do not currently have a deployment command, but I aim to create a script to be
 
 This requires:
 
-- **Docker engine** AND **docker compose** to be installed. [Docker Install](#docker-installs) 
+- **Docker engine** AND **docker compose** to be installed. [Docker Install](#docker-installs)
 - **CPanel** This also requires you to have the cPanel server private keys added. [ABET Private Key](#abet-private-key-setup)
 - A bash command line. (a given)
 
 Once that's done, you can run these commands to view the application
 
-1) cd into `scripts/` and run `bash sync_private_files.bash`
-2) cd into `docker/` and create a `.env` file. `env.demo` is a format file that you can use ONLY FOR DEVELOPMENT
-3) within `docker/`, run `docker compose up`
-4) you can visit [localhost port 8080](https://localhost:8080) to see the interface
-5) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin
-
-### Docker Installs
-
-You should follow official Docker installation. You got this.
-
-### Linux
-
-[Docker engine](https://docs.docker.com/engine/install)
-
-[Docker compose](https://docs.docker.com/compose/install)
-
-### Windows
-
-[Docker desktop](https://docs.docker.com/desktop/setup/install/windows-install/) (Installs both!)
+1) cd into `docker/` and create a `.env` file in that folder. `env.demo` is a format file that you can use. Please use this for development. [More info about .env files](#env-files)
+2) within `docker/`, run `docker compose up`
+3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
+4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin
 
 ## ABET private key setup
 
@@ -52,6 +37,20 @@ Using the CPanel
 
 Note: you can automate step 4 and 5 if you create your own private key and put these commands in your `~/.bashrc`
 
+## Docker Installs
+
+You should follow official Docker installation. You got this.
+
+### Linux
+
+[Docker engine](https://docs.docker.com/engine/install)
+
+[Docker compose](https://docs.docker.com/compose/install)
+
+### Windows
+
+[Docker desktop](https://docs.docker.com/desktop/setup/install/windows-install/) (Installs both!)
+
 ## Important Files
 
 everything in `docker/` refers to the current containers that we have in the application. If we want more, we should add a folder with the container name, and a `docker-compose.yaml`.
@@ -61,6 +60,14 @@ everything in `docker/` refers to the current containers that we have in the app
 **mysql container**: the container containing the mysql instance and whose database is in `./docker/mysql/mysql_data`
 
 if we want to integrate the python file, we can easily create a fastapi container in the docker-compose.
+
+The rest of the project organization info is [HERE in the docs](docs/project-organization.md)
+
+### `.env` files
+
+this is the MOST important concept of configuration in the project. On first setup, you probably run `cp env.demo .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
+
+`.env` stores ALL of our secret keys, but also our configuratoin information. Changing .env will change how the containers are built. I made `env.demo` with the purpose of easy setup, but these values should NEVER be exposed or used in the real server.
 
 ## Updating mysql tables
 

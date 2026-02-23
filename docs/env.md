@@ -8,4 +8,3 @@ These files are typically named `.env` and will NOT be tracked by version contro
 
 This .env file is used by docker-compose to supply important information, such as database credentials or API keys.
 It ensures that all containers have the same credentials.
-

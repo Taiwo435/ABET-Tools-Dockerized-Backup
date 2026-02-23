@@ -4,11 +4,13 @@ These are scripts that you may run to test the application. I added a selenium d
 
 ## Getting Started
 
+Starting the tests assume that you have done the setup from the base [README](../../README.md).
+
 Spin up the selenium grid testing ground:
 
 ```bash
 cd docker                               # make sure you are in docker/
-docker compose down
+docker compose down                     # 
 docker compose --profile debug up       # spins up the server containers + testing containers
 ```
 
@@ -26,6 +28,6 @@ the only important files are `requirements.txt` and `test_*.py`. Pytest will tre
 
 ## More Information
 
-Once the testing environment is up, you can access your sessions at [http://localhost:4444](http://localhost:4444). It lets you manage sessions in the case that you accidentally forget to delete a session (shouldn't happen if you follow the template, but you never know...). 
+Once the testing environment is up, you can access your sessions at [http://localhost:4444](http://localhost:4444). It lets you manage sessions in the case that you accidentally forget to delete a session (shouldn't happen if you follow the template, but you never know...).
 
 If you need to, here's informatoin from the selenium container i use: [docker-selenium docs](https://github.com/SeleniumHQ/docker-selenium?tab=readme-ov-file)
