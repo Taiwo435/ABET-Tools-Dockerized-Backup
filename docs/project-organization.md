@@ -9,6 +9,7 @@ This holds the source code for all of the different components of the system. Ea
 - **public/**: holds information for the *app* docker container and has the PHP code that is responsible for hosting the webserver.
 - **abet_private/**: holds sensitive PHP and configuration files that we don't want to be directly via the browser.
 - **reportgen/**: will hold the source code for the [Report Generation](./reportgen/README.md) part of the project.
+- **test/**: holds the pytest files that we may run to test the application.
 
 ## The Docker Directory (/docker)
 
@@ -20,13 +21,15 @@ root
     └── 📁app
     └── 📁mysql
     └── 📁reportgen
+    └── 📁test
     ├── docker_compose.yml
     └── env.demo
 ```
 
 - **app/**: the PHP/Apache server that hosts the website on port 8080
 - **mysql/**: the database that the server relies on. Database data is stored in `mysql_data`, and may need to be cleared if database schema is changed.
-- **reportgen/**: will host the python fastapi interfaces that the app will use to execute backend functions. 
+- **reportgen/**: will host the python fastapi interfaces that the app will use to execute backend functions.
+- **test/**: holds the dockerfile for the selinium image in case we want to change it (very unlikely, but you never know...)
 
 ### docker-compose.yml
 
