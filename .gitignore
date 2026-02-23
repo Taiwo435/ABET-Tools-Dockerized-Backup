@@ -13,7 +13,6 @@ config.php
 __pycache__
 *.pyc
 mysql_data
-generated_pdfs
 logs
 report_jobs
 

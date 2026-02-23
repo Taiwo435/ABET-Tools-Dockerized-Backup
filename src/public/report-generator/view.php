@@ -1,5 +1,5 @@
 <?php
-require_once '/home/osburn/abet_private/lib/auth.php';
+require_once $_ENV['ABET_PRIVATE_DIR'] . '/lib/auth.php';
 require_login();
 
 $job = $_GET['job'] ?? '';
@@ -16,7 +16,7 @@ if (!in_array($file, $allowed, true)) {
     exit('Invalid file');
 }
 
-$base = '/home/osburn/abet_private/report_jobs/' . $job . '/generated_pdfs/';
+$base = $_ENV['ABET_PRIVATE_DIR'] . '/report_jobs/' . $job . '/generated_pdfs/';
 $path = realpath($base . $file);
 $baseReal = realpath($base);
 
