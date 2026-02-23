@@ -25,7 +25,7 @@ This requires:
 Once that's done, you can run these commands to view the application
 
 1) cd into `docker/` and create a `.env` file in that folder. `env.demo` is a format file that you can use. Please use this for development. [More info about .env files](#env-files)
-2) within `docker/`, run `docker compose up`
+2) within `docker/`, run `docker compose up --build`
 3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
 4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin
 
