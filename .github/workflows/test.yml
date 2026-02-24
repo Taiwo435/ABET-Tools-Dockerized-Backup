@@ -47,7 +47,7 @@ jobs:
       - name: Set up .env file
         working-directory: ./docker
         run: |
-          mv env.demo .env
+          cp ./env.demo ./.env
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -59,23 +59,26 @@ jobs:
         run: |
           pip install --root-user-action=ignore -r src/test/requirements.txt > /dev/null
 
-      - name: kill any running docker containers (cleanup)
-        working-directory: ./docker
-        run: |
-          docker compose --profile testingdown || true
+      # - name: kill any running docker containers (cleanup)
+      #   working-directory: ./docker
+      #   run: |
+      #     docker compose --profile testing down || true
 
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
-          docker compose --profile testing up -d 
+          docker compose --profile testing up --build -d
 
       # - name: connect service to our containers
       #   run: |
       #     docker network connect app_network selenium || true
 
-      - name: Run Selenium tests
+      - name: Wait for services to be ready 
         run: |
           # Wait for the containers to be ready
           sleep 20
+        
+      - name: Run Selenium tests
+        run: |
           # Run your Selenium tests here, for example:
           pytest src/test/

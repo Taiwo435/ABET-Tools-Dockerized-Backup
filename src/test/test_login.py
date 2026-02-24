@@ -13,6 +13,9 @@ from traceback import print_exc
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from time import sleep
 
 from dotenv import load_dotenv
 import pytest
@@ -85,9 +88,20 @@ def test_register_and_login_valid_credentials():
         register_button.click()
         driver.implicitly_wait(2)  # Wait for the next page to load
 
+        sleep(2)
+
         # check if there's a success message
-        if driver.find_elements(By.CLASS_NAME, "success"):
-            innerHTML = driver.find_element(By.CLASS_NAME, "success").get_attribute('innerHTML')
+        success_elements = driver.find_elements(By.CLASS_NAME, "success")
+
+        webdriver_wait = WebDriverWait(driver, 5)
+        webdriver_wait.until(EC.any_of(
+            EC.presence_of_element_located((By.CLASS_NAME, "success")),
+            EC.presence_of_element_located((By.CLASS_NAME, "error"))
+        ))
+
+        print(success_elements)
+        if len(success_elements) > 0:
+            innerHTML = success_elements[0].get_attribute('innerHTML')
             assert innerHTML.strip() == "<strong>Success!</strong> Account created. You can now sign in.", "Success message not found after registration"
         else:
             # if not, check for error message about existing account

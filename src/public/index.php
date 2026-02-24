@@ -5,7 +5,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 <link rel="stylesheet" href="assets/css/toolcards.css">
 
 <section class="hero">
-    <h1>ABET Tools</h1>
+    <h1>ABET Tools </h1>
     <p>Access the core tools designed to empower the Sun Devil faculty. Select a tool below to learn more about its capabilities.</p>
 </section>
 

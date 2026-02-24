@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS faculty_info (
     user_id INT NOT NULL,
     first_name VARCHAR(255),
     last_name VARCHAR(255),
-    rank ENUM('P', 'ASC', 'AST', 'I', 'A', 'O'),
+    instructor_rank ENUM('P', 'ASC', 'AST', 'I', 'A', 'O'), -- RANK is a reserved word in MySQL, so we use instructor_rank instead
     academic_appointment ENUM('T', 'TT', 'NTT'),
     time_commitment ENUM('FT', 'PT'),
     years_experience_gov_industry INT,
