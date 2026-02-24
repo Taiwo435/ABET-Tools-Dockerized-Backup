@@ -67,11 +67,11 @@ jobs:
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
-          docker compose up -d 
+          docker compose --profile testing up -d 
 
-      - name: connect service to our containers
-        run: |
-          docker network connect app_network selenium || true
+      # - name: connect service to our containers
+      #   run: |
+      #     docker network connect app_network selenium || true
 
       - name: Run Selenium tests
         run: |
