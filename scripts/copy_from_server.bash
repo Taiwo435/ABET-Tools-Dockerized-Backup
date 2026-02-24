@@ -12,6 +12,7 @@ case "$response" in
         HOSTNAME=35.148.167.72.host.secureserver.net
 
         # COPY DEPLOYED FILES FROM SERVER TO LOCAL MACHINE
+        # TODO: use rsync instead of scp to only copy changed files and preserve permissions
         scp -r osburn@${HOSTNAME}:/home/osburn/public_html/abet.asucapstonetools.com/* ../src/public/server_clone
 
         scp -r osburn@${HOSTNAME}:/home/osburn/abet_private/* ../src/abet_private/server_clone

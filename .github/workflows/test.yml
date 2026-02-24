@@ -3,18 +3,12 @@ run-name: ${{ github.workflow }} - ${{ github.ref }} - by ${{ github.actor }}
 
 # events that trigger this workflow
 on:
-  # push:
-  #   branches: [ dev, prod ]
-  #   paths-ignore:
-  #     - '*.md'
-  #     - 'docs/**'
-  #     - '.github/workflows/**'
-  # pull_request:
-  #   branches: [ dev, prod ]
-  #   paths-ignore:
-  #     - '*.md'
-  #     - 'docs/**'
-  #     - '.github/workflows/**'
+  pull_request:
+    branches: [ "main", "prod" ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.github/workflows/**'
   workflow_dispatch:
     inputs:
       browser:
@@ -33,13 +27,6 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
 
-    # services:
-    #   selenium:
-    #     image: selenium/standalone-${{ inputs.browser }}
-    #     ports:
-    #       - 4444:4444
-    #     options: --shm-size=2gb
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -48,6 +35,7 @@ jobs:
         working-directory: ./docker
         run: |
           cp ./env.demo ./.env
+          echo "SELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -59,19 +47,10 @@ jobs:
         run: |
           pip install --root-user-action=ignore -r src/test/requirements.txt > /dev/null
 
-      # - name: kill any running docker containers (cleanup)
-      #   working-directory: ./docker
-      #   run: |
-      #     docker compose --profile testing down || true
-
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
           docker compose --profile testing up --build -d
-
-      # - name: connect service to our containers
-      #   run: |
-      #     docker network connect app_network selenium || true
 
       - name: Wait for services to be ready 
         run: |
@@ -82,3 +61,5 @@ jobs:
         run: |
           # Run your Selenium tests here, for example:
           pytest src/test/
+
+  

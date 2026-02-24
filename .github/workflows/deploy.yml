@@ -1,0 +1,19 @@
+name: Remote Deployment
+on:
+    push:
+        branches: [ "prod" ]
+    workflow_dispatch:
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+        - uses: actions/checkout@v4
+        
+        # - uses: masterjanic/docker-compose-ssh-deployment@master
+        # name: Docker-Stack Remote Deployment
+        # with:
+        #     ssh_host: your-remote-server.com
+        #     ssh_private_key: s  ${{ secrets.SSH_PRIVATE_KEY }}
+        #     ssh_user: ${{ secrets.SSH_USER }}
+        #     use_stack: 'true'

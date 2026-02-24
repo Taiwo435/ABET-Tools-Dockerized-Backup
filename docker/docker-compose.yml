@@ -110,9 +110,7 @@ services:
   ###################################################
   # the selenium container for running end-to-end tests with a headless browser.
   selenium:
-    build: 
-      context: ./test/
-      dockerfile: Dockerfile
+    image: selenium/standalone-${SELENIUM_BROWSER:-firefox}:latest
     container_name: selenium
     profiles:
       - testing
