@@ -321,7 +321,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <div class="login-container">
     
-    <!-- Left Side: Branding -->
     <div class="brand-section">
       <div class="brand-content">
         <h2>Arizona State University</h2>
@@ -330,9 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
 
-    <!-- Right Side: Login Form -->
     <div class="form-section">
-      <!-- Helper Link Placeholder -->
       <a href="https://www.asu.edu/about/contact" class="help-link">Need Help?</a>
 
       <div class="form-header">
@@ -362,8 +359,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" class="btn-submit">Sign In</button>
 
         <div class="footer-links">
-          <span>Don't have an account?</span>
-          <a href="/auth/register.php">Create Account</a>
+          <div>
+            <span>Don't have an account?</span>
+            <a href="/auth/register.php">Create Account</a>
+          </div>
+          <div style="margin-top: 15px;">
+            <a href="/auth/forgot_password.php" style="margin-left: 0;">Forgot Password?</a>
+          </div>
         </div>
       </form>
     </div>

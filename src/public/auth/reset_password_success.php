@@ -1,0 +1,35 @@
+<?php
+declare(strict_types=1);
+
+// require_once '/home/abet_private/config/config.php'; // local config path not available right now
+require_once '/home/abet_private/lib/auth.php';
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Password Reset Successful</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f6fa; margin:0; }
+    .wrap { max-width: 560px; margin: 60px auto; background:#fff; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.08); }
+    h1 { margin-top:0; }
+    .notice { background:#eef7ee; color:#1f5f2b; padding:12px; border-radius:8px; }
+    a.button { display:inline-block; margin-top:16px; padding:10px 14px; border-radius:8px; background:#8C1D40; color:#fff; text-decoration:none; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Password Reset Successful</h1>
+    <div class="notice">
+      Your password has been updated successfully. You can now sign in with your new password.
+    </div>
+
+    <a class="button" href="login.php">Go to Login</a>
+  </div>
+</body>
+</html>
