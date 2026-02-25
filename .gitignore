@@ -22,7 +22,7 @@ Test-PDFs
 composer.phar
 vendor
 INSTALL.sh
-apache2 
+apache2
 
 # Python-generated files
 __pycache__
