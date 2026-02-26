@@ -132,6 +132,9 @@ CREATE TABLE IF NOT EXISTS admission_major_map (
 -- level of activity for (professional orgs, professional development, consulting/summer work in industry) - H/M/L
 -- professional orgs name - e.g. "ACM, IEEE, IFIP"
 -- highest degree (field and year) - e.g. "Ph.D., Computer Science, ASU, 2000"
+-- unmarked table 1 (pg 79): COUNT from faculty_info grouped by program_id and faculty_rank
+-- *unmarked table 2 (pg 80): JOIN faculty_info on itself basically — first_name, last_name, faculty_rank, areas_of_interest is all already there, no join even needed
+
 
 CREATE TABLE IF NOT EXISTS faculty_info (
     faculty_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -524,7 +527,7 @@ CREATE TABLE IF NOT EXISTS cv_information (
     activity_prof_orgs ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
     activity_prof_dev  ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
     activity_consulting ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
-    professional_orgs_names TEXT NOT NULL,
+    professional_orgs_names TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
@@ -608,7 +611,134 @@ CREATE TABLE IF NOT EXISTS outcome_assessment (
     FOREIGN KEY (program_id)   REFERENCES programs(program_id) ON DELETE CASCADE
 );
 
+-- Unmarked table pg 40
+-- Number of assessments and criteria for meeting outcome
 
+CREATE TABLE IF NOT EXISTS outcome_attainment_criteria (
+    criteria_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    num_assessments INT NOT NULL,
+    criteria_for_meeting_outcome TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- Table 4-2: Required level of attainment per outcome per course
+
+CREATE TABLE IF NOT EXISTS outcome_attainment_level (
+    attainment_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    outcome_number INT NOT NULL,
+    course_name VARCHAR(100) NOT NULL,
+    attainment_level VARCHAR(20),           -- e.g. '70/70', empty cell = no row stored
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+
+-- Table 4-3: Summary of assessment results
+
+CREATE TABLE IF NOT EXISTS assessment_summary (
+    summary_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    outcome_number INT NOT NULL,
+    semester VARCHAR(10) NOT NULL,    -- e.g. 'F21', 'S22'
+    result ENUM('Met', 'Not Met') NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- Table 4-6: Percentages of met outcomes and consecutive not met semesters
+
+CREATE TABLE IF NOT EXISTS outcome_met_percentages (
+    met_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    outcome_number INT NOT NULL,
+    semesters_assessed TEXT,
+    percentage_met TEXT,
+    times_consecutive_not_met TEXT,
+    percentage_met_secondary TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- Continuous improvement tables (pg 46-52)
+-- One generic table for all improvement types
+
+CREATE TABLE IF NOT EXISTS continuous_improvement (
+    improvement_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    type ENUM('hardware', 'semester_improvement', 'peo_update', 'new_course', 'concentration_update', 'concentration_flowchart', 'adhoc') NOT NULL,
+    semester_year VARCHAR(50),              -- only relevant for semester_improvement type
+    source TEXT,
+    problem_analysis TEXT,
+    actions_plans TEXT,
+    status_actions TEXT,
+    result TEXT,                            -- only relevant for peo_update type
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- Unmarked concentration table pg 55
+-- Courses required for each concentration
+CREATE TABLE IF NOT EXISTS concentration_courses (
+    conc_course_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    department VARCHAR(50) NOT NULL,       -- e.g. 'CSE'
+    course_number VARCHAR(20) NOT NULL,    -- e.g. '365'
+    course_title TEXT,
+    required_for VARCHAR(100),             -- e.g. 'CbS'
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- Table 5-1 / 5-1a Curriculum
+CREATE TABLE IF NOT EXISTS curriculum (
+    curriculum_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    concentration VARCHAR(100),            
+    semester_year VARCHAR(50),             -- e.g. 'Semester 1', 'Year 1'
+    course VARCHAR(255) NOT NULL,
+    course_type ENUM('R', 'E', 'SE') NOT NULL,  -- Required, Elective, Selected Elective
+    credit_hours_math_science DECIMAL(4,1),
+    credit_hours_engineering DECIMAL(4,1),
+    credit_hours_other DECIMAL(4,1),
+    last_two_terms VARCHAR(100),
+    max_section_enrollment INT,            
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- Table 5-2: Course alignment with program educational objectives
+CREATE TABLE IF NOT EXISTS curriculum_peo_alignment (
+    alignment_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    objective_number INT NOT NULL,         -- 1-4, could be auto increment too
+    year_level VARCHAR(255) NOT NULL,
+    courses TEXT,                          -- e.g. 'CSE220, CSE230'
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- Table 5-3: Course alignment with ABET student outcomes
+CREATE TABLE IF NOT EXISTS curriculum_outcome_alignment (
+    alignment_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    student_outcome TEXT NOT NULL,           -- 1-7 with theor outcome description
+    year_level VARCHAR(255) NOT NULL,
+    courses TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- unmarked table pg 75
+CREATE TABLE IF NOT EXISTS course_pre_co_requisite (
+    pre_co_requisite_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    pre_co_requisite TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
 
 CREATE TABLE IF NOT EXISTS cv_information (
     cv_id INT AUTO_INCREMENT PRIMARY KEY,
