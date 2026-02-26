@@ -130,12 +130,9 @@ CREATE TABLE IF NOT EXISTS admission_major_map (
 -- level of activity for (professional orgs, professional development, consulting/summer work in industry) - H/M/L
 -- professional orgs name - e.g. "ACM, IEEE, IFIP"
 -- highest degree (field and year) - e.g. "Ph.D., Computer Science, ASU, 2000"
-<<<<<<< HEAD
 -- unmarked table 1 (pg 79): COUNT from faculty_info grouped by program_id and faculty_rank
 -- *unmarked table 2 (pg 80): JOIN faculty_info on itself basically — first_name, last_name, faculty_rank, areas_of_interest is all already there, no join even needed
 
-=======
->>>>>>> a1cf9ae (Update init.sql)
 
 CREATE TABLE IF NOT EXISTS faculty_info (
     faculty_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -156,7 +153,7 @@ CREATE TABLE IF NOT EXISTS faculty_info (
     activity_prof_orgs ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
     activity_prof_dev  ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
     activity_consulting ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
-    professional_orgs_names TEXT NOT NULL,
+    professional_orgs_names TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
