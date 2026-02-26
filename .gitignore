@@ -23,6 +23,8 @@ composer.phar
 vendor
 INSTALL.sh
 apache2
+server_apache
+server_nginx
 
 # Python-generated files
 __pycache__

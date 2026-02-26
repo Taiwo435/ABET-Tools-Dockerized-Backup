@@ -1,0 +1,26 @@
+services:
+  ###################################################
+  # Assignment Extraction FastAPI Backend
+  # Handles Canvas extraction and serves data for report gen
+  ###################################################
+  extraction_api:
+    build: 
+      context: ../
+      dockerfile: docker/extraction_api/Dockerfile
+    container_name: extraction_api
+    ports:
+      - "8000:8000" # should Only be in deveopment
+    volumes:
+      - ../src/extraction_api:/usr/src/app
+    networks:
+      - app_network
+
+
+  ###################################################
+  # the default network that allows the containers to communicate with each other.
+  # just in case we want to change network settings in the future, we define it explicitly here.
+  ###################################################
+networks:
+  app_network:
+    name: app_network
+    driver: host
