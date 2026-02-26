@@ -75,6 +75,45 @@ CREATE TABLE IF NOT EXISTS courses (
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- General Criteria: Students Adissions
+-- Idea: store admission “rules text” once, then link it to one or many majors.
+
+-- Table 1: programss
+-- global anchor table
+-- program_id keeps data separated per ABET program (so multiple programs don’t mix).
+
+CREATE TABLE IF NOT EXISTS programs (
+    program_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_name VARCHAR(255) NOT NULL,   -- e.g. "Computer Science"
+    program_code VARCHAR(50) NOT NULL -- e.g. BS, BSE
+);
+
+-- Table 2: student_admission_requirements
+-- One row = one “admissions criteria row” from the screenshot (the 4 text cells).
+-- We keep the 4 criteria fields nullable because some programs/majors may not use a category (N/A).
+
+CREATE TABLE IF NOT EXISTS student_admission_requirements (
+    admission_id INT AUTO_INCREMENT PRIMARY KEY,
+    freshman TEXT,
+    transfer_12_23 TEXT,
+    transfer_24_primary TEXT,
+    transfer_24_secondary TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+);
+
+-- Table 3: admission_major_map
+-- Junction table to support “multiple majors in one cell”:
+-- many majors can point to the same admission_id (shared criteria), and a major can be linked to a criteria row.
+
+CREATE TABLE IF NOT EXISTS admission_major_map (
+    admission_id INT NOT NULL,
+    program_id INT NOT NULL,
+    PRIMARY KEY(admission_id, program_id),
+    FOREIGN KEY (admission_id) REFERENCES student_admission_requirements(admission_id) ON DELETE CASCADE,
+    FOREIGN KEY (program_id)   REFERENCES programs(program_id) ON DELETE CASCADE
+      
+);
 
 -- -----------------------------------------------
 -- data that we retrieve from forms 
@@ -86,28 +125,115 @@ CREATE TABLE IF NOT EXISTS courses (
 -- ranks: P = Professor ASC = Associate Professor AST = Assistant Professor I = Instructor A = Adjunct O = Other
 -- academic appointments: T = Tenured TT = Tenure Track NTT = Non-Tenure Track
 -- FT or PT
--- years of experience (gov/industry, teaching, this institution)
+-- years of experience (gov/industry, teaching, this institution) - govt/industry could be decimal, has 0.5 value
 -- professional registration (nullable, stuff like CISSP)
 -- level of activity for (professional orgs, professional development, consulting/summer work in industry) - H/M/L
+-- professional orgs name - e.g. "ACM, IEEE, IFIP"
+-- highest degree (field and year) - e.g. "Ph.D., Computer Science, ASU, 2000"
 
 CREATE TABLE IF NOT EXISTS faculty_info (
     faculty_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    instructor_rank ENUM('P', 'ASC', 'AST', 'I', 'A', 'O'), -- RANK is a reserved word in MySQL, so we use instructor_rank instead
-    academic_appointment ENUM('T', 'TT', 'NTT'),
-    time_commitment ENUM('FT', 'PT'),
-    years_experience_gov_industry INT,
-    years_experience_teaching INT,
-    years_experience_institution INT,
+    program_id INT NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    highest_degree VARCHAR(255) NOT NULL,
+    asurite VARCHAR(255) NOT NULL,
+    areas_of_interest TEXT,
+    faculty_rank ENUM('P', 'ASC', 'AST', 'I', 'A', 'O') NOT NULL,
+    academic_appointment ENUM('T', 'TT', 'NTT') NOT NULL,
+    time_commitment ENUM('FT', 'PT') NOT NULL,
+    years_experience_gov_industry DECIMAL(4,1) DEFAULT 0.0,
+    years_experience_teaching DECIMAL(4,1) DEFAULT 0.0,
+    years_experience_institution DECIMAL(4,1) DEFAULT 0.0,
     professional_registration VARCHAR(255),
-    activity_prof_orgs ENUM('H', 'M', 'L'),
-    activity_prof_dev ENUM('H', 'M', 'L'),
-    activity_consulting ENUM('H', 'M', 'L'),
+    activity_prof_orgs ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
+    activity_prof_dev  ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
+    activity_consulting ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
+    professional_orgs_names TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- table 6-2
+CREATE TABLE IF NOT EXISTS faculty_workload (
+    workload_id INT AUTO_INCREMENT PRIMARY KEY,
+    faculty_id INT NOT NULL,
+    academic_year VARCHAR(20) NOT NULL,
+    pt_or_ft ENUM('FT', 'PT') NOT NULL,
+    classes_taught TEXT,
+    teaching_pct INT NOT NULL,
+    research_or_scholarship_pct INT NOT NULL,
+    other_pct INT NOT NULL,
+    pct_time_devoted_to_program INT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (faculty_id) REFERENCES faculty_info(faculty_id) ON DELETE CASCADE,
+    CONSTRAINT chk_workload_pct_range
+        CHECK (
+            teaching_pct <= 100 AND
+            research_or_scholarship_pct <= 100 AND
+            other_pct <= 100 AND
+            pct_time_devoted_to_program <= 100
+        ),   
+    CONSTRAINT chk_workload_sum
+      CHECK (teaching_pct + research_or_scholarship_pct + other_pct = 100)
+
+);
+
+-- One row per faculty member.
+-- Foreign keys to users so vitae is tied to a specific faculty account.
+-- All fields are TEXT since they are long form input fields in the form.
+-- Use join (faculty_info) if we want names
+
+CREATE TABLE IF NOT EXISTS faculty_vitae (
+    vitae_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    department TEXT,
+    education TEXT,
+    academic_experience TEXT,
+    non_academic_experience TEXT,
+    certification TEXT,
+    professional_memberships TEXT,
+    honors_and_awards TEXT,
+    service_activities TEXT,
+    publications_presentations TEXT,
+    professional_development TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+
+
+-- Criterion 2: Program Education Objectives. table 1-1
+-- the title changes based on which program is being worked on so program_id as foreign key
+
+CREATE TABLE IF NOT EXISTS peo_review (
+    peo_review_id INT AUTO_INCREMENT PRIMARY KEY,
+    input_method TEXT,
+    schedule TEXT,
+    constituencies TEXT,
+    program_id INT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,    
+    FOREIGN KEY (program_id)   REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
+-- CRITERION 4. CONTINUOUS IMPROVEMENT: Student Outcomes. table 4-1
+-- Rows = outcome numbers 1-7; outcome_number
+-- Columns = course codes (CSE 301, CSE 320, etc.);course_name
+-- Cells = assessment method text (Essay, Assignment, Report, etc.); assessment_method
+-- Empty cells = just no row stored for that outcome/course combination
+
+CREATE TABLE IF NOT EXISTS outcome_assessment (
+    assessment_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    outcome_number INT NOT NULL,
+    course_name VARCHAR(100) NOT NULL,
+    assessment_method TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id)   REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
 
 
 CREATE TABLE IF NOT EXISTS cv_information (
