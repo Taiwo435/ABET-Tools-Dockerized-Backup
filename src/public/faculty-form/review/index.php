@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -249,3 +250,6 @@ $pageNames = getAllPageNames($formName);
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-footer.php';
 ?>
+=======
+Form review page
+>>>>>>> 83c5e62 (Added the edit form pages for the faculty form with basic saving and loading functionality.)

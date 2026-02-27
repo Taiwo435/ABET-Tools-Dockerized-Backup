@@ -104,15 +104,30 @@
         {
             "type": "text-field",
             "name": "course_description",
-            "label": "Catalog Description of the Course",
+            "label": "Brief Description of the Course",
+            "description": "Catalog Description",
             "required": true
         },
         {
-            "type": "text-field",
-            "name": "pre_co_requisites_and_requirements",
-            "label": "Prerequisites, Corequisites, and Other Requirements",
-            "description": "e.g. 'CSE120 or EEE120 with C or better; CSE100, 110, or 200 with C or better; OR Computer Science or Computer Systems Engineering Graduate student; Credit is allowed for only CSE230 or EEE 230'",
-            "required": true
+            "type": "expandable-grid",
+            "name": "pre_co_requisites",
+            "label": "Prerequisites and Corequisites",
+            "description": "Input the token from each of your canvas courses. Add a new row for each new token.",
+            "columns": [
+                {
+                    "name": "pre_or_co",
+                    "label": "Prerequisite or Corequisite",
+                    "type": "select",
+                    "options": ["Prerequisite", "Corequisite"]
+                },
+                {
+                    "name": "course_number",
+                    "label": "Course Number",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10
+            
         },
         {
             "type": "select",
@@ -128,6 +143,9 @@
         },
 
 
+        {
+            "type": "section-break"
+        },
         {
             "type": "text-field",
             "name": "course_goals",
