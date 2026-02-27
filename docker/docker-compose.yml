@@ -64,7 +64,7 @@ services:
       PMA_PASSWORD: ${MYSQL_PASS}
     restart: always
     ports:
-      - "8081:80"
+      - "${PHP_MYADMIN_PORT:?error}:80"
     networks:
       - app_network
     depends_on:
