@@ -16,7 +16,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 // Optional mailer include (safe if not created yet)
-$__rpMailerPath = '/home/abet_private/lib/mailer.php';
+$__rpMailerPath = getenv('ABET_PRIVATE_DIR') . '/lib/mailer.php';
 if (file_exists($__rpMailerPath)) {
     require_once $__rpMailerPath;
 }
