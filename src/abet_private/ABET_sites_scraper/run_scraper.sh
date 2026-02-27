@@ -1,6 +1,6 @@
 #!/bin/bash
 #Path to the project
-cd "$ABET_PRIVATE_DIR/ABET_sites_scraper/" || exit
+cd /home/osburn/abet_private/ABET_sites_scraper/ || exit
 
 #Time stamp for each log entry
 echo "========== $(date '+%Y-%m-%d %H:%M:%S') ==========" >> cron_run.log
