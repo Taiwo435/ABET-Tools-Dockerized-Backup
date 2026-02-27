@@ -21,7 +21,7 @@ services:
       - "${WEBSERVER_PORT:-8080}:80"
     volumes:
       - ../src/public:/var/www/html
-      - ../src/abet_private:${ABET_PRIVATE_DIR}
+      - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
       - ./app/apache2:/etc/apache2 # Only for development
     networks:
       - app_network
@@ -79,11 +79,11 @@ services:
       context: ../
       dockerfile: docker/extraction_api/Dockerfile
     container_name: extraction_api
-    hostname: ${EXTRACTION_API_HOSTNAME:?error}
+    hostname: ${EXTRACTION_HOSTNAME:?error}
     env_file:
       - .env
     ports:
-      - "{EXTRACTION_PORT:?error}:8000" # should Only be in deveopment
+      - "${EXTRACTION_PORT:?error}:8000" # should Only be in deveopment
     volumes:
       - ../src/extraction_api:/usr/src/app
     networks:
