@@ -1,0 +1,21 @@
+{
+    "title": "Instructor Information",
+    "pages": [
+        {
+            "fileName": "canvasTokens"
+        },
+        {
+            "fileName": "canvasSyllabus"
+        },
+        {
+            "fileName": "qualifications"
+        },
+        {
+            "fileName": "workload"
+        },
+        {
+            "fileName": "vitae"
+        }
+
+    ]
+}

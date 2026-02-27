@@ -39,6 +39,26 @@ header {
     z-index: 100;
 }
 
+.header-right-alligned {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.home-link {
+    margin-right: 15px;
+    margin-bottom: -3px;
+    color: black;
+}
+
+.home-icon {
+    width: auto;
+    height: 35px;
+    color: red;
+}
+
 /*-----Logo-----*/
 
 .logo-wrapper {
