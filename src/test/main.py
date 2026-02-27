@@ -32,7 +32,7 @@ def init_webdriver():
 def test_template(): 
     driver = init_webdriver()
     try:
-        driver.get(f"http://{os.getenv('APP_CONTAINERNAME')}:80")
+        driver.get(f"http://{os.getenv('WEBSERVER_HOSTNAME')}:80")
         driver.implicitly_wait(2)  # Wait for the page to load
         print("Got the website")
 

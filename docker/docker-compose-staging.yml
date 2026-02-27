@@ -1,4 +1,5 @@
 services:
+
   ###################################################
   # Assignment Extraction FastAPI Backend
   # Handles Canvas extraction and serves data for report gen
@@ -8,6 +9,9 @@ services:
       context: ../
       dockerfile: docker/extraction_api/Dockerfile
     container_name: extraction_api
+    hostname: ${EXTRACTION_API_HOSTNAME:?error}
+    env_file:
+      - .env
     ports:
       - "8000:8000" # should Only be in deveopment
     volumes:
@@ -15,6 +19,20 @@ services:
     networks:
       - app_network
 
+
+  ###################################################
+  # the selenium container for running end-to-end tests with a headless browser.
+  ###################################################
+  selenium:
+    image: selenium/standalone-${SELENIUM_BROWSER:-firefox}:latest
+    container_name: selenium
+    hostname: ${SELENIUM_HOSTNAME:?error}
+    profiles:
+      - testing
+    ports:
+      - "${SELENIUM_PORT-4444}:4444"
+    networks:
+      - app_network
 
   ###################################################
   # the default network that allows the containers to communicate with each other.

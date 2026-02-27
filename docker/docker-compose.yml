@@ -10,17 +10,15 @@ services:
       context: ./app/
       dockerfile: Dockerfile
     container_name: php_apache
+    hostname: ${WEBSERVER_HOSTNAME:?error}
+    env_file:
+      - .env
     environment:
-      - ABET_PRIVATE_DIR=${ABET_PRIVATE_DIR}
-      - DB_HOST=mysql
-      - DB_NAME=${MYSQL_DATABASE}
-      - DB_USER=${MYSQL_USER}
-      - DB_PASS=${MYSQL_PASS}
       - SESSION_IDLE_TIMEOUT=1800
       - SESSION_ABSOLUTE_TIMEOUT=28800
       - SESSION_COOKIE_SAMESITE=Lax
     ports:
-      - "${APP_PORT-8080}:80"
+      - "${WEBSERVER_PORT:-8080}:80"
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR}
@@ -40,6 +38,7 @@ services:
       context: ./mysql/
       dockerfile: Dockerfile
     container_name: mysql
+    hostname: ${MYSQL_HOSTNAME:?error}
     environment:
     # CHANGE THESE VALUES BEFORE DEPLOYING TO PRODUCTION
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -80,14 +79,15 @@ services:
       context: ../
       dockerfile: docker/extraction_api/Dockerfile
     container_name: extraction_api
+    hostname: ${EXTRACTION_API_HOSTNAME:?error}
+    env_file:
+      - .env
     ports:
-      - "8000:8000" # should Only be in deveopment
+      - "{EXTRACTION_PORT:?error}:8000" # should Only be in deveopment
     volumes:
       - ../src/extraction_api:/usr/src/app
     networks:
       - app_network
-    # depends_on:
-    #   - mysql
 
 
   ###################################################
@@ -100,24 +100,27 @@ services:
   #     context: ./reportgen/
   #     dockerfile: Dockerfile
   #   container_name: reportgen
-  #   environment:
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #   hostname: ${REPORTGEN_HOSTNAME:?error}
+  #   ports:
+  #     - "${REPORTGEN_PORT:?error}:8000" 
+  #   env_file:
+  #     - .env
   #   volumes:
   #     - ../src/reportgen:/usr/src/app
   #   networks:
   #     - app_network
-  #   depends_on:
-  #     - mysql
 
   ###################################################
   # the selenium container for running end-to-end tests with a headless browser.
+  ###################################################
   selenium:
     image: selenium/standalone-${SELENIUM_BROWSER:-firefox}:latest
     container_name: selenium
+    hostname: ${SELENIUM_HOSTNAME:?error}
     profiles:
       - testing
     ports:
-      - "${SELENIUM_PORT-4444}:4444"
+      - "${SELENIUM_PORT:?error}:4444"   
     networks:
       - app_network
 
