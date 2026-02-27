@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 // require_once '/home/abet_private/config/config.php'; // local config path not available right now
-require_once '/home/abet_private/lib/db.php';
-require_once '/home/abet_private/lib/auth.php';
-require_once '/home/abet_private/lib/reset_password_lib.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/reset_password_lib.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
