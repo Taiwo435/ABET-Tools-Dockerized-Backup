@@ -1,0 +1,40 @@
+{
+
+    "title": "Workload",
+    "name": "workload",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "select",
+            "name": "part_full_time",
+            "label": "Part-Time or Full-Time?",
+            "required": true,
+            "options": {
+                "part_time": "Part-Time",
+                "full_time": "Full-Time"
+            }
+        },
+        {
+            "type": "text",
+            "name": "teaching_percentage",
+            "label": "Teaching Percentage",
+            "description": "What percentage of your work is related to teaching?",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "research_scholarship_percentage",
+            "label": "Teaching Percentage",
+            "description": "What percentage of your work is related to research and/or scholarships?",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "other_percentage",
+            "label": "Teaching Percentage",
+            "description": "What percentage of your work is related to other aspects?",
+            "required": true
+        }
+    ]
+}

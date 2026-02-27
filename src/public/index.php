@@ -20,20 +20,20 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Manage course performance data efficiently with a clear, structured view of assignments and outcomes-related grading. Ensure records are complete and ready for review when needed.</p>
-                    <a href="https://abet.asucapstonetools.com/AssignmentsGrades/viewClasses.php" class="action-link">Launch Tool 1 &rarr;</a>
+                    <a href="/AssignmentsGrades/viewClasses.php" class="action-link">Launch Tool 1 &rarr;</a>
                 </div>
             </div>
         </div>
 
         <div class="tool-card">
             <div class="card-header" onclick="triggerToggle(this)">
-                <div class="card-title">Generate Semester Report</div>
+                <div class="card-title">Faculty Form</div>
                 <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
             </div>
             <div class="card-body">
                 <div class="card-body-inner">
-                    <p>Create a polished semester summary that consolidates key course activity and performance indicators. Produce a consistent report suitable for faculty review and departmental records.</p>
-                    <a href="https://abet.asucapstonetools.com/semester-reports" class="action-link">Launch Tool 2 &rarr;</a>
+                    <p>Description text.</p>
+                    <a href="/faculty-form/edit" class="action-link">Open Faculty Form &rarr;</a>
                 </div>
             </div>
         </div>
@@ -46,7 +46,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Generate a comprehensive ABET report that summarizes assessment results and supporting materials. Present information clearly to streamline internal review and accreditation preparation.</p>
-                    <a href="https://abet.asucapstonetools.com/report-generator/index.php" class="action-link">Launch Tool 3 &rarr;</a>
+                    <a href="/report-generator/index.php" class="action-link">Launch Tool 3 &rarr;</a>
                 </div>
             </div>
         </div>

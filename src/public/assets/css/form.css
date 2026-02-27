@@ -7,11 +7,20 @@
     place-items: left;
     min-width: 75%;
     max-width: 90%;
+    margin-bottom: 1rem;
+}
+
+.top-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
 }
 
 .form-title {
     margin: 0.5rem;
-    font-size 4rem;
+    font-size: 2.5rem;
 }
 
 form {
@@ -32,6 +41,20 @@ form {
     font-weight: bold;
 }
 
+.form-field-description {
+    margin-top: -6px;
+}
+
+.form-section-label {
+    font-size: 2rem;
+}
+
+.form-section-break {
+    height: 1px;
+    background: black;
+    margin: 1.5rem 0;
+}
+
 .form-input, .form-select {
     width: 100%;
     padding: 10px;
@@ -39,17 +62,52 @@ form {
     border: 1px solid #ccc;
 }
 
-.form-button {
-    background: #2563eb;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.form-text-field {
+    resize: none;
+    width: 100%;
+    min-height: 6rem;
+    border-radius: 0px;
+    padding: 7px;
+    border: 1px solid black;
 }
 
-.form-button:hover {
-    background: #1d4ed8;
+.bottom-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.form-button {
+    color: black;
+    padding: 10px 15px;
+    border: 1px solid black;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 550;
+}
+
+.form-button-return {
+    background: #c3c3c3;
+    max-height: 2.5rem;
+    margin: 1rem;
+}
+.form-button-return:hover {
+    background: #a9a9a9;
+}
+
+.form-button-save {
+    background: #c3c3c3;
+}
+.form-button-save:hover {
+    background: #a9a9a9;
+}
+
+.form-button-save-continue {
+    background: #537fde;
+}
+
+.form-button-save-continue:hover {
+    background: #345fd6;
 }
 
 .expandable-grid {
@@ -60,7 +118,7 @@ form {
     display: grid;
     grid-template-columns: repeat(3, 1fr);  /*default value; will likely be overridden when the form is generated from the template*/
     grid-template-rows: 2rem;               /* Size of the first (label) row */
-    grid-auto-rows: minmax(50px, 5rem);     /* Size of the remaining (input) rows */
+    grid-auto-rows: minmax(50px, auto);     /* Size of the remaining (input) rows */
 }
 .expandable-grid-row {
     display: grid;
@@ -68,9 +126,28 @@ form {
     grid-column: 1 / -1;
 }
 
-.expandable-grid-input {
+.expandable-grid-small-input {
+    width: 100%;
+    min-height: 2rem;
+    max-height: 10rem;
+    border-radius: 0px;
+    padding: 7px;
+    border: 1px solid black;
+}
+
+.expandable-grid-large-input {
     resize: none;
     width: 100%;
+    min-height: 6rem;
+    max-height: 10rem;
+    border-radius: 0px;
+    padding: 7px;
+    border: 1px solid black;
+}
+.expandable-grid-select {
+    width: 100%;
+    min-height: 2rem;
+    max-height: 10rem;
     border-radius: 0px;
     padding: 7px;
     border: 1px solid black;
@@ -96,6 +173,11 @@ form {
     cursor: pointer;
 }
 
+.form-error {
+    color: red;
+    font-size: 1.5rem;
+    margin-top: 5px;
+}
 
 .error {
     color: red;

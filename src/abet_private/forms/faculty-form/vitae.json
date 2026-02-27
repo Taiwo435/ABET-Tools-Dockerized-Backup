@@ -1,0 +1,147 @@
+{
+
+    "title": "Vitae",
+    "name": "vitae",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "text",
+            "name": "vitae_full_name",
+            "label": "Full Name",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "asurite_id",
+            "label": "ASURITE ID",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "current_working_department",
+            "label": "Current Working Department",
+            "description": "Computer Science, Computer Systems Engineering, etc...",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "area_of_interest",
+            "label": "Area of Interest",
+            "required": true
+        },
+        {
+            "type": "text-field",
+            "name": "education",
+            "label": "Education",
+            "required": true
+        },
+        {
+            "type": "text-field",
+            "name": "academic_experience",
+            "label": "Academic Experience",
+            "required": false
+        },
+        {
+            "type": "text-field",
+            "name": "non_academic_experience",
+            "label": "Non-Academic Experience",
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "certifications_or_professional_reigstrations",
+            "label": "Certifications or Professional Registrations",
+            "columns": [
+                {
+                    "name": "certification_registration_name",
+                    "label": "Certification or Registration Name",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "professional_organization_memberships",
+            "label": "Current Memberships in Professional Organizations",
+            "columns": [
+                {
+                    "name": "organization_name",
+                    "label": "Organization Name",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "honors_awards",
+            "label": "Honors and Awards",
+            "columns": [
+                {
+                    "name": "award_name",
+                    "label": "Award Name",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "service_activities",
+            "label": "Service Activities",
+            "columns": [
+                {
+                    "name": "activity",
+                    "label": "Activity",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "most_important_publications_presentations",
+            "label": "Most Important Publications and Presentations",
+            "description": "Only list those from the past 5 years.",
+            "columns": [
+                {
+                    "name": "publication_presentation_name",
+                    "label": "Publication or Presentation Name",
+                    "type": "text"
+                },
+                {
+                    "name": "year",
+                    "label": "Year",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "professional_development_activities",
+            "label": "Most Recent Professional Development Activities",
+            "columns": [
+                {
+                    "name": "professional_development_activity",
+                    "label": "Activity",
+                    "type": "text"
+                },
+                {
+                    "name": "year",
+                    "label": "Year",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        }
+    ]
+}

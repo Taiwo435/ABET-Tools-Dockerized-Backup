@@ -1,0 +1,151 @@
+{
+
+    "title": "Canvas Syllabus",
+    "name": "canvasSyllabus",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "text",
+            "name": "course_number",
+            "label": "Course Number",
+            "description": "The 3 letter prefix and 3 digit number of this course.",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "course_name",
+            "label": "Course Name",
+            "required": true
+        },
+
+        {
+            "type": "text",
+            "name": "instructor_coordinator_name",
+            "label": "Instructor or Course Coordinator Name",
+            "required": true
+        },
+
+
+        {
+            "type": "section-break"
+        },
+        {
+            "type": "section-label",
+            "label": "Credits"
+        },
+        {
+            "type": "select",
+            "name": "credit_field",
+            "label": "Subject Area",
+            "description": "What subject area the course provide credits for.",
+            "required": true,
+            "options": {
+                "math_science": "Math & Basic Sciences",
+                "engineering_no_sd": "Engineering without Significant Design",
+                "engineering_with_sd": "Engineering with Significant Design",
+                "other": "Other"
+            }
+        },
+        {
+            "type": "text",
+            "name": "credit_hours",
+            "label": "Number of Credit Hours",
+            "required": true
+        },
+
+
+
+        {
+            "type": "section-break"
+        },
+        {
+            "type": "section-label",
+            "label": "Course Textbook"
+        },
+        {
+            "type": "text",
+            "name": "textbook_title",
+            "label": "Textbook Title",
+            "required": false
+        },
+        {
+            "type": "text",
+            "name": "textbook_author",
+            "label": "Author",
+            "required": false
+        },
+        {
+            "type": "text",
+            "name": "textbook_year",
+            "label": "Year Released",
+            "required": false
+        },
+
+
+        {
+            "type": "section-break"
+        },
+        {
+            "type": "section-label",
+            "label": "Specific Course Information"
+        },
+        {
+            "type": "text-field",
+            "name": "course_description",
+            "label": "Brief Description of the Course",
+            "description": "Catalog Description",
+            "required": true
+        },
+        {
+            "type": "expandable-grid",
+            "name": "pre_co_requisites",
+            "label": "Prerequisites and Corequisites",
+            "description": "Input the token from each of your canvas courses. Add a new row for each new token.",
+            "columns": [
+                {
+                    "name": "pre_or_co",
+                    "label": "Prerequisite or Corequisite",
+                    "type": "select",
+                    "options": ["Prerequisite", "Corequisite"]
+                },
+                {
+                    "name": "course_number",
+                    "label": "Course Number",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10
+            
+        },
+        {
+            "type": "select",
+            "name": "required_or_elective",
+            "label": "Required or Elective?",
+            "description": "Is this course a required course, an elective, or a selected elective within the program",
+            "required": true,
+            "options": {
+                "required": "Required",
+                "elective": "Elective",
+                "selected_elective": "Selected Elective"
+            }
+        },
+
+
+        {
+            "type": "section-break"
+        },
+        {
+            "type": "text-field",
+            "name": "course_goals",
+            "label": "Specific Goals for this Course",
+            "required": true
+        },
+        {
+            "type": "text-field",
+            "name": "covered_topics",
+            "label": "Brief list of topics to be covered",
+            "required": true
+        }
+    ]
+}
