@@ -11,19 +11,22 @@ services:
   ###################################################
   # Simulation of production web server.
   # No direct access to environment variables. Need to set it ourselves.
+  #
+  # IMPORTANT: I REMOVE the volume to allow us to modify .htaccess without it being overwritten by the host machine. 
   ###################################################
   php_apache:
     build: 
       context: ./app/
-      dockerfile: Dockerfile
+      dockerfile: DockerfileStaging
     container_name: php_apache
     hostname: ${WEBSERVER_HOSTNAME:?error}
     environment:
       - SESSION_IDLE_TIMEOUT=1800
       - SESSION_ABSOLUTE_TIMEOUT=28800
       - SESSION_COOKIE_SAMESITE=Lax
+      - BUILD_ENV=staging
     volumes:
-      - ../src/public:/var/www/html
+      # - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
     network_mode: "host"
     depends_on:

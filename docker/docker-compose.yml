@@ -62,6 +62,7 @@ services:
       PMA_HOST: mysql
       PMA_USER: ${MYSQL_USER}
       PMA_PASSWORD: ${MYSQL_PASS}
+      PMA_PORT: ${MYSQL_PORT:-3306}
     restart: always
     ports:
       - "${PHP_MYADMIN_PORT:?error}:80"
