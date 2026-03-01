@@ -106,6 +106,22 @@ services:
     networks:
       - app_network
 
+  ###################################################
+  # Canvas Formatting FastAPI Backend
+  # Generates course/ABET HTML pages and uploads to Canvas modules
+  ###################################################
+  canvas_formatting_api:
+    build:
+      context: ../
+      dockerfile: docker/canvas_formatting_api/Dockerfile
+    container_name: canvas_formatting_api
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../src/canvas_formatting_api:/usr/src/app
+    networks:
+      - app_network
+
 
   ###################################################
   # the report generation container that hosts the fastapi backend
