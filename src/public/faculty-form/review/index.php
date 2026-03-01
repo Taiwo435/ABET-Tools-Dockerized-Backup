@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ff5ef5a (Added faculty form review page, faculty form select page)
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -234,6 +237,7 @@ $pageNames = getAllPageNames($formName);
 
       </div>
     <?php endforeach; ?>
+<<<<<<< HEAD
     <div style="text-align: right;">
         <button class="form-button form-button-return"
             type="button"
@@ -241,6 +245,8 @@ $pageNames = getAllPageNames($formName);
           Return to Page Select
         </button>
     </div>
+=======
+>>>>>>> ff5ef5a (Added faculty form review page, faculty form select page)
 
   </div>
 </div>
@@ -249,7 +255,11 @@ $pageNames = getAllPageNames($formName);
 
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-footer.php';
+<<<<<<< HEAD
 ?>
 =======
 Form review page
 >>>>>>> 83c5e62 (Added the edit form pages for the faculty form with basic saving and loading functionality.)
+=======
+?>
+>>>>>>> ff5ef5a (Added faculty form review page, faculty form select page)
