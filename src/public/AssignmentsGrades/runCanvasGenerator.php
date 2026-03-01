@@ -74,65 +74,49 @@ if ($errors) {
     ], 422);
 }
 
-$wrapper = getenv('ABET_PRIVATE_DIR') . '/bin/run_canvas_generator.sh';
-if (!is_file($wrapper) || !is_executable($wrapper)) {
+// Call the Canvas Formatting API (Docker container on the same server)
+$apiUrl = "http://localhost:8001/format-and-upload/" . urlencode($sourceCourse);
+$apiUrl .= "?" . http_build_query([
+    'destination_course_id' => $destCourse,
+    'semester' => strtolower($semester),
+    'year' => $year,
+]);
+
+$ch = curl_init($apiUrl);
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => [
+        'canvas_access_token: ' . $canvasToken,
+        'Content-Type: application/json',
+    ],
+    CURLOPT_TIMEOUT => 120,
+]);
+
+$responseBody = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError = curl_error($ch);
+curl_close($ch);
+
+if ($curlError) {
     json_response([
         'success' => false,
-        'message' => 'Backend wrapper script is missing or not executable.'
-    ], 500);
+        'message' => 'Failed to reach Canvas Formatting API: ' . $curlError,
+    ], 502);
 }
 
-// Build environment vars for Python script.
-// IMPORTANT: pass token via env, NOT command line args.
-$env = $_ENV;
-$env['canvas_access_token'] = $canvasToken;
-$env['CANVAS_SOURCE_COURSE_ID'] = $sourceCourse;
-$env['CANVAS_DEST_COURSE_ID'] = $destCourse;
-$env['CANVAS_SEMESTER'] = $semester;
-$env['CANVAS_YEAR'] = $year;
-$env['CANVAS_DO_COURSE_PAGE'] = $genCoursePage ? '1' : '0';
-$env['CANVAS_DO_ABET_PAGE'] = $genAbetPage ? '1' : '0';
-$env['CANVAS_DOMAIN'] = 'canvas.asu.edu';
+$data = json_decode($responseBody, true) ?: [];
+$success = ($httpCode >= 200 && $httpCode < 300);
 
-// Run process
-$descriptorspec = [
-    0 => ['pipe', 'r'], // stdin
-    1 => ['pipe', 'w'], // stdout
-    2 => ['pipe', 'w'], // stderr
-];
-
-$process = @proc_open($wrapper, $descriptorspec, $pipes, null, $env);
-
-if (!is_resource($process)) {
-    json_response([
-        'success' => false,
-        'message' => 'Failed to start backend process (proc_open unavailable or blocked).'
-    ], 500);
-}
-
-// No stdin needed
-fclose($pipes[0]);
-
-$stdout = stream_get_contents($pipes[1]);
-$stderr = stream_get_contents($pipes[2]);
-
-fclose($pipes[1]);
-fclose($pipes[2]);
-
-$exitCode = proc_close($process);
-
-// Redact token if somehow echoed by downstream code
-if ($canvasToken !== '') {
-    $stdout = str_replace($canvasToken, '[REDACTED_TOKEN]', (string)$stdout);
-    $stderr = str_replace($canvasToken, '[REDACTED_TOKEN]', (string)$stderr);
-}
-
-$success = ($exitCode === 0);
+// Redact token if somehow echoed
+$safeBody = str_replace($canvasToken, '[REDACTED_TOKEN]', (string)$responseBody);
 
 json_response([
     'success' => $success,
-    'message' => $success ? 'Canvas generator completed successfully.' : 'Canvas generator failed.',
-    'exitCode' => $exitCode,
-    'stdout' => (string)$stdout,
-    'stderr' => (string)$stderr,
+    'message' => $success
+        ? ($data['message'] ?? 'Canvas formatting completed successfully.')
+        : ($data['detail'] ?? 'Canvas formatting API returned an error.'),
+    'exitCode' => $httpCode,
+    'stdout' => $safeBody,
+    'stderr' => '',
 ], $success ? 200 : 500);
