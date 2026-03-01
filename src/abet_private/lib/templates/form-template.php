@@ -21,7 +21,8 @@
     <?php foreach ($form['fields'] as $field): 
         $name = $field['name'];
         $type = $field['type'];
-        $value = htmlspecialchars($old[$name] ?? '');
+        $raw = $old[$name] ?? '';
+        $value = is_string($raw) ? htmlspecialchars($raw, ENT_QUOTES, 'UTF-8') : '';
         $error = $errors[$name] ?? '';
     ?>
 
@@ -62,19 +63,26 @@
 
 
             <?php elseif ($type === 'expandable-grid'): ?>
-            
+                <?php
+                $gridOldJson = "";
+                if (is_array($raw)){
+                    $gridOldJson = json_encode($raw);
+                } elseif (is_string($raw)){
+                    $gridOldJson = $raw;
+                }
+                ?>
                 <?php $columnCount = count($field['columns']); ?>
                 
                 <div class="expandable-grid" data-max-rows="<?= $field['maxRows']?>">
                     <div class="expandable-grid-container"
                         name="<?= $name ?>"
-                        data-old-values=<?= json_encode($value) ?>
+                        data-old-values='<?= htmlspecialchars(json_encode($raw ?? ""), ENT_QUOTES, "UTF-8") ?>'
                         style="grid-template-columns: repeat(<?= $columnCount ?> , 1fr) 0.25fr;">
                         <div class="expandable-grid-row expandable-grid-label-row">
                             <?php foreach ($field['columns'] as $column): ?>
                                 <label class="expandable-grid-label" 
-                                    data-type= <?= htmlspecialchars($column['type']) ?>
-                                    data-name= <?= htmlspecialchars($column['name']) ?> 
+                                    data-type="<?= htmlspecialchars($column['type'], ENT_QUOTES, 'UTF-8') ?>"
+                                    data-name="<?= htmlspecialchars($column['name'], ENT_QUOTES, 'UTF-8') ?>"
                                     <?php if (!empty($column['options'])){
                                         echo "data-option-count=" . count($column['options']) . " ";
                                         for ($i = 0; $i < count($column['options']); $i++) {
