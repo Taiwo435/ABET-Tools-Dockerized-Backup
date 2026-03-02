@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Password reset helper library
- * Path: /home/osburn/abet_private/lib/reset_password_lib.php
+ * Path: getenv('ABET_PRIVATE_DIR') . '/lib/reset_password_lib.php'
  *
  * Assumptions (adjust if your schema differs):
  * - users table has: id, email, password_hash

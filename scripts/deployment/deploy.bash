@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eEuo pipefail
+trap 'echo "[ERROR] in ${BASH_SOURCE[0]} at line $LINENO: $BASH_COMMAND"' ERR
 
 echo "WARNING: This script will deploy the current state of the repository to the server, overwriting any existing files. Make sure this is stable and ready to be deployed before proceeding. This will also stop docker services on the server, so ensure that this is the right time to deploy."
 read -r -p "Are you sure you want to continue? [y/N]: " response
@@ -56,7 +57,7 @@ case "$response" in
         
         ;;
     *)
-        echo "[ERROR] Aborted. Not copying from server."
+        echo "[INFO] Aborted. Not copying from server."
         exit 1
         ;;
 esac

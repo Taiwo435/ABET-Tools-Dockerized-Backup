@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eEuo pipefail
+trap 'echo "[ERROR] in ${BASH_SOURCE[0]} at line $LINENO: $BASH_COMMAND"' ERR
 
 echo "WARNING: This script will fetch sensitive production files from the server and copy them to your local repository. Make sure you understand the implications of this before proceeding, as these files may contain secrets or other sensitive information."
 read -r -p "Are you sure you want to continue? [y/N]: " response
