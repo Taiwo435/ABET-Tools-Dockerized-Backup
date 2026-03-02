@@ -13,9 +13,10 @@
         },
         {
             "type": "text",
-            "name": "highest_degree_field",
+            "name": "highest_degree_year",
             "label": "Highest Degree Earned: Year",
-            "required": true
+            "required": true,
+            "numerical": true
         },
         {
             "type": "text",
