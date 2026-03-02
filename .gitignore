@@ -1,7 +1,7 @@
 # environment data, keys, and secrets
 .ssh
-*.env
-*prod*
+*.env*
+*prod
 venv
 .venv
 config.php
@@ -28,6 +28,7 @@ INSTALL.sh
 apache2
 server_apache
 server_nginx
+src/public/debug.php
 
 # Python-generated files
 __pycache__

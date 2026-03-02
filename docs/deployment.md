@@ -14,6 +14,7 @@
 preconditon:
 
 - The app works, tests pass
+- .htaccess does not currently have SetEnv setup.
 - sensitive files are built, copied, and up to date
   - may be achievable with gh secrets
 
