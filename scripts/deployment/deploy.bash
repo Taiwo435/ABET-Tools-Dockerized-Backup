@@ -17,9 +17,20 @@ case "$response" in
         
         echo "Deploying to $REMOTE..."
 
-        # COPY DATABASE CONFIG FILES
+        # build the sentitive files
+        bash "$REPO_ROOT/scripts/deployment/build_files.bash"
+
+        # COPY EVERYTHING tracked by git
         git ls-files -z . | rsync -avz --delete --files-from=- --from0 \
         ./ "$REMOTE"
+
+        # Transfer sensitive files that are not tracked by git
+        rsync -avz --delete ./docker/.env.prod "$REMOTE"/.env
+        rsync -avz --delete ./docker/app/build/.htaccess "$REMOTE"/public/.htaccess
+
+
+        ssh -t osburn@"$HOSTNAME" "mkdir IT_WORKS"
+
         
         echo "Deployment complete."
         
