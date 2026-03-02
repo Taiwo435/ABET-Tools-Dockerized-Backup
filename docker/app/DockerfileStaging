@@ -12,16 +12,21 @@ RUN a2enmod headers
 RUN a2enmod proxy
 RUN a2enmod proxy_http
 
-COPY config/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+COPY docker/app/config/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
 #RUN if [ "$BUILD_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
 
 # change php.ini based on environment variable
-RUN if [ "$BUILD_ENV" = "development" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+#RUN if [ "$BUILD_ENV" = "development" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-COPY ../../src/public /var/www/html
+#COPY src/public /var/www/html
+
 # i'm assuming this overwrites the .htaccess file in the public directory, which is what we want for staging
-COPY build/.htaccess /var/www/.htaccess
+COPY docker/app/build/.htaccess /var/www/html/.htaccess
+
+# RUN sed -ri -e 's!80!${WEBSERVER_PORT}!g' /etc/apache2/sites-available/*.conf
+# RUN sed -ri -e 's!80!${WEBSERVER_PORT}!g' /etc/apache2/ports.conf
 
 #RUN mkdir -p /var/www/
 WORKDIR /var/www

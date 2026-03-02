@@ -16,8 +16,8 @@ services:
   ###################################################
   php_apache:
     build: 
-      context: ./app/
-      dockerfile: DockerfileStaging
+      context: ../
+      dockerfile: docker/app/DockerfileStaging
     container_name: php_apache
     hostname: ${WEBSERVER_HOSTNAME:?error}
     environment:
@@ -26,9 +26,11 @@ services:
       - SESSION_COOKIE_SAMESITE=Lax
       - BUILD_ENV=staging
     volumes:
-      # - ../src/public:/var/www/html
+      - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
     network_mode: "host"
+    ports:
+      - "${WEBSERVER_PORT:-8080}:80"
     depends_on:
       - mysql
       - extraction_api
@@ -36,7 +38,8 @@ services:
   ###################################################
   # the MySQL container provides the database service for the application.
   # Simulates the deployment database
-  ###################################################
+  ##################################################
+
   mysql:
     build: 
       context: ./mysql/
@@ -57,15 +60,19 @@ services:
   # ###################################################
   # # phpMyAdmin for a web-based interface for managing the MySQL database.
   # ###################################################
-  # phpmyadmin:
-  #   image: phpmyadmin
-  #   container_name: phpmyadmin
-  #   environment:
-  #     PMA_ARBITRARY: 1
-  #     PMA_HOST: mysql
-  #     PMA_USER: ${MYSQL_USER}
-  #     PMA_PASSWORD: ${MYSQL_PASS}
-  #   restart: always
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: 127.0.0.1
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASS}
+      APACHE_PORT: ${PHP_MYADMIN_PORT:-8081}
+    ports:
+      - "${PHP_MYADMIN_PORT:-8081}:80"
+    network_mode: "host"
+    restart: always
 
 
   ###################################################
