@@ -22,7 +22,7 @@ services:
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
-      - ./app/apache2:/etc/apache2 # Only for development
+      #- ./app/apache2:/etc/apache2 # Only for development
     networks:
       - app_network
     depends_on:
