@@ -1,0 +1,28 @@
+######################################################
+# Docker Compose configuration for staging environment
+# This deploys the application similar to how it will be deployed in production.
+# It uses host networking to allow the containers to communicate with services running on the host machine (like a managed database service).
+# 
+# php_apache simulates the prod. web server, mysql is removed to simulate using a managed database, and extraction_api is what we deploy.
+######################################################
+
+
+services:
+
+  ###################################################
+  # Our service
+  # We can directly control the environment variables here
+  ###################################################
+  extraction_api:
+    build: 
+      context: ../
+      dockerfile: docker/extraction_api/Dockerfile
+    container_name: extraction_api
+    hostname: ${EXTRACTION_HOSTNAME:?error}
+    env_file:
+      - .env
+    volumes:
+      - ../src/extraction_api:/usr/src/app
+    network_mode: "host"
+
+
