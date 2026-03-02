@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Auth/session helpers
- * Path: /home/osburn/abet_private/lib/auth.php
+ * Path: getenv('ABET_PRIVATE_DIR') . '/lib/auth.php'
  */
 
 function safe_redirect(string $redirectTo = '/login'): void {
