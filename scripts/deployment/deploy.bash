@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
+<<<<<<< HEAD
 set -eEuo pipefail
 trap 'echo "[ERROR] in ${BASH_SOURCE[0]} at line $LINENO: $BASH_COMMAND"' ERR
+=======
+set -euo pipefail
+>>>>>>> f01c7ee (Merge PR from CUrbati without exposing private key)
 
 echo "WARNING: This script will deploy the current state of the repository to the server, overwriting any existing files. Make sure this is stable and ready to be deployed before proceeding. This will also stop docker services on the server, so ensure that this is the right time to deploy."
 read -r -p "Are you sure you want to continue? [y/N]: " response
@@ -57,7 +61,11 @@ case "$response" in
         
         ;;
     *)
+<<<<<<< HEAD
         echo "[INFO] Aborted. Not copying from server."
+=======
+        echo "[ERROR] Aborted. Not copying from server."
+>>>>>>> f01c7ee (Merge PR from CUrbati without exposing private key)
         exit 1
         ;;
 esac

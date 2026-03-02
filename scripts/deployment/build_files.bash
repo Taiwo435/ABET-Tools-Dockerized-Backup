@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+<<<<<<< HEAD
 set -eEuo pipefail
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -7,6 +8,13 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 ##################################################
 # build the .htaccess file
 ##################################################
+=======
+set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# build the .htaccess file
+>>>>>>> f01c7ee (Merge PR from CUrbati without exposing private key)
 cd "$REPO_ROOT"
 rm -rf docker/app/build || true
 mkdir -p docker/app/build
@@ -15,4 +23,8 @@ python3 scripts/deployment/generate_env.py docker/prod.env >> docker/app/build/.
 
 echo "[INFO] .htaccess file generated"
 
+<<<<<<< HEAD
 # TODO: if we have other files that need to be built in the future, we can add them here
+=======
+# docker compose up with staging file
+>>>>>>> f01c7ee (Merge PR from CUrbati without exposing private key)
