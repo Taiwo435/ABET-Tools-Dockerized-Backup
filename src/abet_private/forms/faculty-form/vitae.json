@@ -1,6 +1,6 @@
 {
 
-    "title": "Vitae",
+    "title": "About You",
     "name": "vitae",
     "action": "submit.php",
     "method": "POST",
@@ -15,14 +15,26 @@
             "type": "text",
             "name": "asurite_id",
             "label": "ASURITE ID",
+            "description": "Your 5–8 character username (e.g., jsmith2). NOT your 10 digit ASU ID number.",
+            "required": true
+        },
+        {
+            "type": "select",
+            "name": "current_working_department",
+            "label": "Current Working Department",
+            "description": "Computer Science, Computer Systems Engineering, etc...",
+            "options": {
+                "computer_science": "Computer Science",
+                "computer_systems_engineering": "Computer Systems Engineering",
+                "other": "Other"
+            },
             "required": true
         },
         {
             "type": "text",
-            "name": "current_working_department",
-            "label": "Current Working Department",
-            "description": "Computer Science, Computer Systems Engineering, etc...",
-            "required": true
+            "name": "current_working_department_other",
+            "description": "If other, please specifiy.",
+            "required": false
         },
         {
             "type": "text",
@@ -63,13 +75,24 @@
             "required": false
         },
         {
+            "type": "select",
+            "name": "professional_organization_activity_level",
+            "label": "Level of Activity in Professional Organizations",
+            "options": {
+                "H": "High",
+                "M": "Medium",
+                "L": "Low"
+            },
+            "required": true
+        },
+        {
             "type": "expandable-grid",
             "name": "professional_organization_memberships",
             "label": "Current Memberships in Professional Organizations",
             "columns": [
                 {
                     "name": "organization_name",
-                    "label": "Organization Name",
+                    "label": "Organization Name- use abbreviations if possible",
                     "type": "text"
                 }
             ],
@@ -118,7 +141,8 @@
                 {
                     "name": "year",
                     "label": "Year",
-                    "type": "text"
+                    "type": "text",
+                    "numerical": true
                 }
             ],
             "maxRows": 10,
@@ -137,7 +161,8 @@
                 {
                     "name": "year",
                     "label": "Year",
-                    "type": "text"
+                    "type": "text",
+                    "numerical": true
                 }
             ],
             "maxRows": 10,

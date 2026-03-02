@@ -1,0 +1,70 @@
+.checklist {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: #e0e0e0; /* darker for higher contrast */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.checklist-title {
+    margin-bottom: 0.75rem;
+    color: #333;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.checklist-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    width: 100%;
+}
+
+.checklist-item:hover {
+    background: #f0f0f0;
+}
+
+.checklist-item * {
+    cursor: pointer;
+}
+
+.checklist-check,
+.checklist-x {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background: #fff;
+    font-size: 1.25rem;
+    height: 2rem;
+    width: 2rem;
+    border: 1px solid #ccc;
+}
+
+.checklist-check {
+    color: #28a745;
+}
+
+.checklist-x {
+    color: #dc3545;
+}
+
+.checklist-label {
+    color: #333;
+    font-size: 1.5rem; /* larger text makes arrow bigger too */
+    flex: 1;
+}

@@ -42,7 +42,7 @@
             "required": true,
             "options": {
                 "math_science": "Math & Basic Sciences",
-                "engineering_no_sd": "Engineering without Significant Design",
+                "engineering_no_sig": "Engineering without Significant Design",
                 "engineering_with_sd": "Engineering with Significant Design",
                 "other": "Other"
             }
@@ -51,7 +51,8 @@
             "type": "text",
             "name": "credit_hours",
             "label": "Number of Credit Hours",
-            "required": true
+            "required": true,
+            "numerical": true
         },
 
 
@@ -62,6 +63,15 @@
         {
             "type": "section-label",
             "label": "Course Textbook"
+        },
+        {
+            "type": "select",
+            "label": "Does this course use a textbook?",
+            "options": {
+                "yes": "Yes",
+                "no": "No"
+            },
+            "required": true
         },
         {
             "type": "text",
@@ -79,7 +89,8 @@
             "type": "text",
             "name": "textbook_year",
             "label": "Year Released",
-            "required": false
+            "required": false,
+            "numerical": true
         },
 
 
@@ -93,30 +104,15 @@
         {
             "type": "text-field",
             "name": "course_description",
-            "label": "Brief Description of the Course",
-            "description": "Catalog Description",
+            "label": "Catalog Description of the Course",
             "required": true
         },
         {
-            "type": "expandable-grid",
-            "name": "pre_co_requisites",
-            "label": "Prerequisites and Corequisites",
-            "description": "Input the token from each of your canvas courses. Add a new row for each new token.",
-            "columns": [
-                {
-                    "name": "pre_or_co",
-                    "label": "Prerequisite or Corequisite",
-                    "type": "select",
-                    "options": ["Prerequisite", "Corequisite"]
-                },
-                {
-                    "name": "course_number",
-                    "label": "Course Number",
-                    "type": "text"
-                }
-            ],
-            "maxRows": 10
-            
+            "type": "text-field",
+            "name": "pre_co_requisites_and_requirements",
+            "label": "Prerequisites, Corequisites, and Other Requirements",
+            "description": "e.g. 'CSE120 or EEE120 with C or better; CSE100, 110, or 200 with C or better; OR Computer Science or Computer Systems Engineering Graduate student; Credit is allowed for only CSE230 or EEE 230'",
+            "required": true
         },
         {
             "type": "select",
@@ -132,9 +128,6 @@
         },
 
 
-        {
-            "type": "section-break"
-        },
         {
             "type": "text-field",
             "name": "course_goals",

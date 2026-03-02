@@ -219,7 +219,7 @@ body {
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
     color: var(--asu-white);
-    padding: 5rem 5% 6rem 5%;
+    padding: 1.5rem 5% 2rem 5%;
     text-align: center;
 }
 
@@ -248,6 +248,14 @@ body {
 }
 
 /*-----Main Body-----*/
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto 3rem auto;
+    padding: 0 20px;
+    z-index: 10;
+}
 
 .body-main {
     width: 100%;

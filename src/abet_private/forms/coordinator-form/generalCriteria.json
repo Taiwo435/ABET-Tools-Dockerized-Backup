@@ -1,0 +1,76 @@
+{
+    "title": "General Criteria",
+    "name": "background",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "expandable-grid",
+            "name": "freshman_criteria",
+            "label": "Freshman students who have completed 0-11 transferable college credits post high school",
+            "columns": [
+                {
+                    "name": "majors",
+                    "label": "Majors (multiple allowed in a single box)",
+                    "type": "text-field"
+                },
+                {
+                    "name": "admission_criteria",
+                    "label": "Admission Criteria",
+                    "type": "text-field"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+            
+        },
+
+        {
+            "type": "expandable-grid",
+            "name": "transfer_criteria_12_to_23",
+            "label": "Transfer students who have completed 12-23 transferable college credits post high school",
+            "columns": [
+                {
+                    "name": "majors",
+                    "label": "Majors (multiple allowed in a single box)",
+                    "type": "text-field"
+                },
+                {
+                    "name": "admission_criteria",
+                    "label": "Admission Criteria",
+                    "type": "text-field"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+            
+        },
+
+        {
+            "type": "expandable-grid",
+            "name": "transfer_criteria_24",
+            "label": "Transfer students with 24 or more transferable college credit hours post high school",
+            "description": "Must meet EITHER the primary criteria OR the secondary criteria (both not required)",
+            "columns": [
+                {
+                    "name": "majors",
+                    "label": "Majors (multiple allowed in a single box)",
+                    "type": "text-field"
+                },
+                {
+                    "name": "primary_criteria",
+                    "label": "Primary Criteria",
+                    "type": "text-field"
+                },
+                {
+                    "name": "secondary_criteria",
+                    "label": "Secondary Criteria",
+                    "type": "text-field"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+            
+        }
+    ]
+}

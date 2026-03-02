@@ -1,9 +1,6 @@
 {
-    "title": "Instructor Information",
+    "title": "Faculty Information",
     "pages": [
-        {
-            "fileName": "canvasTokens"
-        },
         {
             "fileName": "canvasSyllabus"
         },

@@ -233,6 +233,13 @@ $pageNames = getAllPageNames($formName);
 
       </div>
     <?php endforeach; ?>
+    <div style="text-align: right;">
+        <button class="form-button form-button-return"
+            type="button"
+            onclick="window.location.assign('/faculty-form')">
+          Return to Page Select
+        </button>
+    </div>
 
   </div>
 </div>
