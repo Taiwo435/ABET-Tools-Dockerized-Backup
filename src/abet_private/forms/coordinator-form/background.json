@@ -1,0 +1,12 @@
+{
+    "title": "Background Information",
+    "name": "background",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "section-label",
+            "label": "Contact Information"
+        }
+    ]
+}

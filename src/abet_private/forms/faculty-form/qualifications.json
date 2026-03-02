@@ -13,9 +13,10 @@
         },
         {
             "type": "text",
-            "name": "highest_degree_field",
+            "name": "highest_degree_year",
             "label": "Highest Degree Earned: Year",
-            "required": true
+            "required": true,
+            "numerical": true
         },
         {
             "type": "text",
@@ -38,25 +39,28 @@
             "type": "text",
             "name": "govt_ind_years_experience",
             "label": "Years of Experience in Government or Individual Practice",
-            "required": true
+            "required": true,
+            "numerical": true
         },
         {
             "type": "text",
             "name": "teaching_years_experience",
             "label": "Years of Experience in Teaching",
-            "required": true
+            "required": true,
+            "numerical": true
         },
         {
             "type": "text",
             "name": "asu_years_experience",
             "label": "Years of Experience at ASU",
-            "required": true
+            "required": true,
+            "numerical": true
         },
         {
             "type": "expandable-grid",
             "name": "professional_reistrations_certifications",
             "label": "Professional Registrations and Certifications",
-            "description": "Abbreviations preferred",
+            "description": "Use abbreviations if possible",
             "columns": [
                 {
                     "name": "registration_certification",
@@ -72,7 +76,7 @@
             "type": "expandable-grid",
             "name": "professional_organizations",
             "label": "Professional Organizations",
-            "description": "Abbreviations preferred",
+            "description": "Use abbreviations if possible",
             "columns": [
                 {
                     "name": "organization",
@@ -90,9 +94,9 @@
             "label": "Level of Professional Development",
             "required": true,
             "options": {
-                "high": "High",
-                "medium": "Medium",
-                "low": "Low"
+                "H": "High",
+                "M": "Medium",
+                "L": "Low"
             }
         },
         {
@@ -101,9 +105,9 @@
             "label": "Amount of Consulting/Summer Work In the Industry",
             "required": true,
             "options": {
-                "high": "High",
-                "medium": "Medium",
-                "low": "Low"
+                "H": "High",
+                "M": "Medium",
+                "L": "Low"
             }
         }
     ]

@@ -36,9 +36,17 @@ form {
 }
 
 .form-label {
-    display: block;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
     margin-bottom: 6px;
     font-weight: bold;
+}
+
+.form-required-star {
+    color: red;
 }
 
 .form-field-description {
@@ -183,4 +191,5 @@ form {
     color: red;
     font-size: 0.9em;
     margin-top: 5px;
+    font-weight: bold;
 }

@@ -16,6 +16,23 @@ function getPageNameFromNumber($formName, $pageNumber){
     return ($form['pages'])[$pageNumber - 1]['fileName'];
 }
 
+function allPagesDone($formName) {
+    $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
+    if (!file_exists($path)) {
+        throw new Exception("Form not found.");
+    }
+    
+    $form = json_decode(file_get_contents($path), true);
+
+    foreach ($form['pages'] as $page) {
+        $path = getenv('ABET_PRIVATE_DIR') . "/" . "testData" . "/" . $page['fileName'] . "_data.json";
+        if (!file_exists($path)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function getAllPageNames($formName) {
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
     if (!file_exists($path)) {

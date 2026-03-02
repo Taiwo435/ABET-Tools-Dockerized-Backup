@@ -20,21 +20,24 @@
             "name": "teaching_percentage",
             "label": "Teaching Percentage",
             "description": "What percentage of your work is related to teaching?",
-            "required": true
+            "required": true,
+            "numerical": true
         },
         {
             "type": "text",
             "name": "research_scholarship_percentage",
-            "label": "Teaching Percentage",
+            "label": "Research or Scholarship Percentage",
             "description": "What percentage of your work is related to research and/or scholarships?",
-            "required": true
+            "required": true,
+            "numerical": true
         },
         {
             "type": "text",
             "name": "other_percentage",
-            "label": "Teaching Percentage",
+            "label": "Other Work Percentage",
             "description": "What percentage of your work is related to other aspects?",
-            "required": true
+            "required": true,
+            "numerical": true
         }
     ]
 }

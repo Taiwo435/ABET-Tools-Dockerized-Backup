@@ -34,10 +34,13 @@
 
 
         <div class="form-group" id="<?= $name ?>">
-            <label class="form-label <?php if ($type==="section-label") {echo "form-section-label";}?>">
-                <?= htmlspecialchars($field['label']) ?>
-                <?php if ($field['required']) { echo "*"; } ?>
-            </label>
+            <?php if (!empty($field['label'])): ?>
+                <label class="form-label <?php if ($type==="section-label") {echo "form-section-label";}?>">
+                    <div><?= htmlspecialchars($field['label']) ?></div>
+                    &nbsp;
+                    <div class="form-required-star"><?php if ($field['required']) { echo ("      *"); } ?></div>
+                </label>
+            <?php endif ?>
 
             
 
@@ -77,6 +80,7 @@
                     <div class="expandable-grid-container"
                         name="<?= $name ?>"
                         data-old-values='<?= htmlspecialchars(json_encode($raw ?? ""), ENT_QUOTES, "UTF-8") ?>'
+                        data-old-values2=<?= json_encode($value) ?>
                         style="grid-template-columns: repeat(<?= $columnCount ?> , 1fr) 0.25fr;">
                         <div class="expandable-grid-row expandable-grid-label-row">
                             <?php foreach ($field['columns'] as $column): ?>
@@ -190,12 +194,13 @@ function loadDataToGridElements() {
     expandableGrids = document.querySelectorAll('.expandable-grid');
     expandableGrids.forEach((grid) => { 
         const gridContainer = grid.querySelector('.expandable-grid-container');
-        oldValues = gridContainer.getAttribute('data-old-values');
+        oldValues = gridContainer.getAttribute('data-old-values2')
         if (oldValues == "") {
             addExpandableGridRow(grid);
             return;
         }
-        oldData = JSON.parse(gridContainer.getAttribute('data-old-values'));
+        
+        oldData = JSON.parse(oldValues);
         if (oldData['rows'].length == 0) {
             addExpandableGridRow(grid);
             return;
@@ -354,7 +359,7 @@ function validateForm() {
 
         // Make sure expandable-grid is checked first because its logic differs
         if (field.type === "expandable-grid") {
-            const expandableGridRows = input.querySelectorAll('.expandable-grid-input-row');  
+            const expandableGridRows = input.querySelectorAll('.expandable-grid-input-row');
 
             let hasAFullRow = false;
             expandableGridRows.forEach((row, rowIndex) => {
@@ -363,6 +368,12 @@ function validateForm() {
                 let isEmptyRow = true;
                 let isFullRow = true;
                 rowElementsArray.forEach((element, elementIndex) => {
+                    /*if (element.getAttribute('data-numerical') == 'true' && !isPositiveWholeNumber(value)) {
+                        errors.push(`${label.value} must be entered as a positive, whole number.`);
+                        showError(input, `${label.value} must be entered as a positive, whole number.`);
+                        return;
+                    }*/
+
                     if (element.classList.contains('expandable-grid-remove-button')) {
                         return;
                     }
@@ -401,6 +412,15 @@ function validateForm() {
             errors.push(`${field.label} is required.`);
             showError(input, `${field.label} is required.`);
             return;
+        }
+        
+        // Numerical field validation
+        if (field.numerical && value != "") {
+            if (!isPositiveWholeNumber(value)) {
+                errors.push(`${field.label} must be entered as a positive, whole number.`)
+                showError(input, `${field.label} must be entered as a positive, whole number.`)
+                return;
+            }
         }
 
         // Min length validation
@@ -447,6 +467,14 @@ function clearError(input) {
     const existing = input.parentNode.querySelector(".error");
     if (existing) existing.remove();
     input.classList.remove("input-error");
+}
+
+function isPositiveWholeNumber(value) {
+    const num = Number(value);
+    if (!Number.isInteger(num) || num < 0) {
+        return false
+    }
+    return true
 }
 
 loadDataToGridElements();
