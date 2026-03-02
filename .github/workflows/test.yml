@@ -35,7 +35,7 @@ jobs:
         working-directory: ./docker
         run: |
           cp ./env.demo ./.env
-          echo "SELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
+          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
 
       - name: Set up Python
         uses: actions/setup-python@v6
