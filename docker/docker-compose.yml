@@ -116,6 +116,8 @@ services:
     build: 
       context: ../
       dockerfile: docker/reportgen/Dockerfile
+      args:
+        REPORTGEN_PORT: 8002
     container_name: reportgen
     hostname: ${REPORTGEN_HOSTNAME:?error}
     environment:
@@ -125,7 +127,7 @@ services:
     volumes:
       - ../src/report_generation_api:/usr/src/app
     ports:
-      - "${REPORTGEN_PORT:?error}:8001"  
+      - "${REPORTGEN_PORT:?error}:${REPORTGEN_PORT:?error}"  
     networks:
       - app_network
     depends_on:

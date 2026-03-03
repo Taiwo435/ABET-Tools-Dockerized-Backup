@@ -26,3 +26,25 @@ services:
     network_mode: "host"
 
 
+  ###################################################
+  # the report generation container that hosts the fastapi backend
+  # accessed by the php_apache container to generate reports.
+  # we may optinally give it environment variables for database connections if needed in the future.
+  ###################################################
+  reportgen:
+    build: 
+      context: ../
+      dockerfile: docker/reportgen/Dockerfile
+    container_name: reportgen
+    hostname: ${REPORTGEN_HOSTNAME:?error}
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ../src/report_generation_api:/usr/src/app
+    ports:
+      - "${REPORTGEN_PORT:?error}:8001"  
+    network_mode: "host"
+    depends_on:
+      - mysql
