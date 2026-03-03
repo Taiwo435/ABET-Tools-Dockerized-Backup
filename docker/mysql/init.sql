@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS abet_tools;
-USE abet_tools; 
+--CREATE DATABASE IF NOT EXISTS abet_tools;
+--USE abet_tools; 
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,

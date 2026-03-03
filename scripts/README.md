@@ -13,13 +13,18 @@ Scripts directly in this directory are ones that I think are very useful and are
 
 ## copy_from_server.bash
 
-Copies server folders `abet_private` and `abet.asucapstonetools.com` to the local machine.
+Copies server folders `abet_private` and `abet.asucapstonetools.com` to the local machine. Editable to copy any file/folder you want from the server. (`copy_from_server_config.bash`) is an example of me copying this file. 
 
 They are put into untracked `server_clone` directores in the appropriate location (ex. `src/abet_private/server_clone`).
 
 ## ssh.bash
 
 A shortcut to ssh directly into the server. Gives command line access.
+
+## upload_scripts.bash
+
+A very useful script for the deployment process. Want to edit bash scripts on your local machine and then send it to the server? 
+This does exactly that. 
 
 ## Others
 
