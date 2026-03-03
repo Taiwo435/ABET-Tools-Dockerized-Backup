@@ -48,8 +48,10 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">*Other task* &#x279E;</label>
+            <label class="checklist-label">Upload and manage your roster and assignments &#x279E;</label>
         </div>
+
+        
     </div>
 
     <div class="tools-grid">

@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> ff5ef5a (Added faculty form review page, faculty form select page)
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -244,6 +240,7 @@ $pageNames = getAllPageNames($formName);
           Return to Page Select
         </button>
     </div>
+
   </div>
 </div>
 </body>

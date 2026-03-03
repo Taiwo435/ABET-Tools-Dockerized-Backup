@@ -1,6 +1,5 @@
 # Steps for Deployment
 
-<<<<<<< HEAD
 ## How to deploy
 
 1) Add any ssh key that has access to the server. The `abet` key mentioned earlier works.
@@ -20,16 +19,17 @@
 6) Spins up the docker containers
 
 All errors should be caught by the trap statement and should be reported for helpful debugging.
-=======
 1) Prepare sensitive environment files to deploy
    1) /docker/.env.prod
    2) /src/public/.htaccess
-2) Ensure tests pass
-3) Copy sensitive environment files from the server (I need to make a script for this)
-4) push the code to the server
-5) docker compose down
-6) docker compose up -f <prod_compose>
->>>>>>> f01c7ee (Merge PR from CUrbati without exposing private key)
+2) Shuts down server docker containers
+3) Copies git-tracked files to the server
+4) Copy sensitive environment files from the server
+5) Moves files into their correct location
+   1) Replaces public_html/abet.asucapstonetools.com
+6) Spins up the docker containers
+
+All errors should be caught by the trap statement and should be reported for helpful debugging.
 
 ## CD Steps
 
