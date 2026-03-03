@@ -82,13 +82,27 @@ def get_paginated_list(
 
 
 def find_file_folder(
-    course_id: str, semester: str, year: str, headers: dict, api_base_url: str
+    course_id: str,
+    semester: str,
+    year: str,
+    headers: dict,
+    api_base_url: str,
+    course_code: str = "",
+    instructor_name: str = "",
 ) -> List[dict]:
-    """Find folders matching (year semester) in course."""
-    logger.info("Finding all (%s %s) folders in course %s...", year, semester.capitalize(), course_id)
+    """Find folders matching (year semester) and optionally course_code in course."""
+    logger.info(
+        "Finding all (%s %s) folders for %s in course %s...",
+        year, semester.capitalize(), course_code or "(all)", course_id,
+    )
     endpoint = f"courses/{course_id}/folders"
     file_folders = get_paginated_list(endpoint, headers, api_base_url, params={"include[]": "folders"})
-    return [f for f in file_folders if f"({year} {semester.capitalize()})" in f.get("full_name", "")]
+    results = [
+        f for f in file_folders
+        if f"({year} {semester.capitalize()})" in f.get("full_name", "")
+        and (not course_code or course_code in f.get("full_name", ""))
+    ]
+    return results
 
 
 def get_files(
@@ -197,7 +211,15 @@ def upload_module_to_canvas(
 def add_single_module_item(
     course_id: str, module_id: int, page: dict, headers: dict, api_base_url: str
 ) -> None:
-    """Add a page as an item to a module."""
+    """Add a page as an item to a module (skips if already exists)."""
+    endpoint = f"courses/{course_id}/modules/{module_id}/items"
+    module_items = get_paginated_list(endpoint, headers, api_base_url)
+
+    for item in module_items:
+        if item.get("title") == page.get("title"):
+            logger.info("Module item '%s' already exists with id %s", item.get("title"), item.get("id"))
+            return
+
     module_item_data = {
         "module_item": {
             "title": page.get("title"),
@@ -222,6 +244,8 @@ def run_formatting_pipeline(
     semester: str = "fall",
     year: str = "2023",
     canvas_domain: str = "canvas.asu.edu",
+    course_code: str = "",
+    instructor_name: str = "",
 ) -> dict:
     """
     Run the full formatting pipeline: fetch data, build HTML, upload pages, create module.
@@ -236,8 +260,11 @@ def run_formatting_pipeline(
     canvas_base_url = _get_canvas_base_url(canvas_domain)
     headers = {"Authorization": f"Bearer {canvas_access_token}"}
 
-    # 1) Find folder structure for the term
-    file_folders = find_file_folder(source_course_id, semester, year, headers, api_base_url)
+    # 1) Find folder structure for the term (filtered by course_code when provided)
+    file_folders = find_file_folder(
+        source_course_id, semester, year, headers, api_base_url,
+        course_code=course_code, instructor_name=instructor_name,
+    )
     if not file_folders:
         raise RuntimeError(
             f"No folders found for ({year} {semester.capitalize()}). "
@@ -272,19 +299,29 @@ def run_formatting_pipeline(
     html_writer.set_up_course_page(file_folders, files, semester, year)
     course_html = html_writer.get_course_html()
 
-    # 6) Create module
+    # 6) Build and upload ABET page
+    html_writer.set_up_abet_page()
+    abet_html = html_writer.get_abet_html()
+    abet_page = add_page_to_canvas(
+        abet_html,
+        "CSE-ABET Assessment Instruments and Samples",
+        dest_id, headers, api_base_url,
+    )
+
+    # 7) Create module
     module_name = f"Courses - Course Folders and Student Work Samples ({semester.capitalize()} {year})"
     module = upload_module_to_canvas(dest_id, module_name, headers, api_base_url)
 
-    # 7) Upload page and add to module
+    # 8) Upload course page and add to module
     page = add_page_to_canvas(course_html, course_name, dest_id, headers, api_base_url)
     add_single_module_item(dest_id, module["id"], page, headers, api_base_url)
 
-    # 8) Publish the module
+    # 9) Publish the module
     publish_module(dest_id, module["id"], headers, api_base_url)
 
     return {
         "course_page": page,
+        "abet_page": abet_page,
         "module": module,
         "course_name": course_name,
     }
@@ -297,6 +334,8 @@ def generate_course_html(
     semester: str = "fall",
     year: str = "2023",
     canvas_domain: str = "canvas.asu.edu",
+    course_code: str = "",
+    instructor_name: str = "",
 ) -> dict:
     """
     Generate course page HTML and ABET HTML without uploading to Canvas.
@@ -309,7 +348,10 @@ def generate_course_html(
     canvas_base_url = _get_canvas_base_url(canvas_domain)
     headers = {"Authorization": f"Bearer {canvas_access_token}"}
 
-    file_folders = find_file_folder(source_course_id, semester, year, headers, api_base_url)
+    file_folders = find_file_folder(
+        source_course_id, semester, year, headers, api_base_url,
+        course_code=course_code, instructor_name=instructor_name,
+    )
     if not file_folders:
         raise RuntimeError(
             f"No folders found for ({year} {semester.capitalize()}). "
