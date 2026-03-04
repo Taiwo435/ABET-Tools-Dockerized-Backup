@@ -1,5 +1,7 @@
---CREATE DATABASE IF NOT EXISTS abet_tools;
---USE abet_tools; 
+-- Resets the database every time - DEVELOPMENT ONLY, will remove for production and use migrations instead
+--DROP DATABASE IF EXISTS osburn_abet_tools_dev;
+--CREATE DATABASE IF NOT EXISTS osburn_abet_tools_dev;
+USE osburn_abet_tools_dev; 
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,

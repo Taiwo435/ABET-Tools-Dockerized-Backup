@@ -44,6 +44,8 @@ def generate_html(
     semester: str = Query("fall", description="Semester (e.g., fall, spring)"),
     year: str = Query("2023", description="Year (e.g., 2023)"),
     canvas_domain: str = Query("canvas.asu.edu", description="Canvas instance domain"),
+    course_code: str = Query("", description="Course code filter (e.g., CSE 423)"),
+    instructor_name: str = Query("", description="Instructor name filter"),
 ):
     """
     Generate course page HTML and ABET HTML without uploading to Canvas.
@@ -56,6 +58,8 @@ def generate_html(
             semester=semester,
             year=year,
             canvas_domain=canvas_domain,
+            course_code=course_code,
+            instructor_name=instructor_name,
         )
         return result
     except ValueError as e:
@@ -75,10 +79,12 @@ def format_and_upload(
     semester: str = Query("fall", description="Semester (e.g., fall, spring)"),
     year: str = Query("2023", description="Year (e.g., 2023)"),
     canvas_domain: str = Query("canvas.asu.edu", description="Canvas instance domain"),
+    course_code: str = Query("", description="Course code filter (e.g., CSE 423)"),
+    instructor_name: str = Query("", description="Instructor name filter"),
 ):
     """
     Run the full pipeline: fetch course data, build HTML, create module,
-    upload course page to Canvas, and publish the module.
+    upload course page and ABET page to Canvas, and publish the module.
     """
     try:
         result = run_formatting_pipeline(
@@ -88,10 +94,13 @@ def format_and_upload(
             semester=semester,
             year=year,
             canvas_domain=canvas_domain,
+            course_code=course_code,
+            instructor_name=instructor_name,
         )
         return {
             "message": "Formatting and upload complete.",
             "course_page": result["course_page"],
+            "abet_page": result["abet_page"],
             "module": result["module"],
             "course_name": result["course_name"],
         }
