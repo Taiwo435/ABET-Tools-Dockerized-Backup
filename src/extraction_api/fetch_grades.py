@@ -4,6 +4,8 @@ Canvas Grades Fetcher
 Fetches grades and submission data from Canvas LMS for ABET assessment purposes.
 """
 
+from pathlib import Path
+
 import requests
 import json
 import os
@@ -13,13 +15,17 @@ from typing import Dict, List, Optional, Any
 import logging
 import time
 import shutil
+from dotenv import load_dotenv
+from pathlib import Path
 
+# load environment variables from docker/.env
+load_dotenv(Path(__file__).parent.parent.parent / "docker" / ".env")
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("grades_fetch.log"), logging.StreamHandler()],
+    handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
@@ -108,9 +114,15 @@ class CanvasGradesFetcher:
                     # Discover next page from Link header (if present)
                     url = None
                     if "Link" in response.headers:
-                        links = requests.utils.parse_header_links(response.headers["Link"])
+                        links = requests.utils.parse_header_links(
+                            response.headers["Link"]
+                        )
                         url = next(
-                            (link["url"] for link in links if link.get("rel") == "next"),
+                            (
+                                link["url"]
+                                for link in links
+                                if link.get("rel") == "next"
+                            ),
                             None,
                         )
 
@@ -120,7 +132,9 @@ class CanvasGradesFetcher:
                     break  # exit retry loop on success
                 else:
                     # Exhausted retries for rate limiting — log and stop.
-                    logger.error("Exceeded retry attempts due to rate limiting for %s", url)
+                    logger.error(
+                        "Exceeded retry attempts due to rate limiting for %s", url
+                    )
                     break
 
             except requests.exceptions.RequestException as e:
@@ -361,7 +375,10 @@ class CanvasGradesFetcher:
         if workflow_state:
             params["workflow_state"] = workflow_state
 
-        logger.info(f"Fetching bulk submissions for course {course_id} (assignments=%s)", assignment_ids)
+        logger.info(
+            f"Fetching bulk submissions for course {course_id} (assignments=%s)",
+            assignment_ids,
+        )
         return self._get_paginated_list(url, params=params)
 
     def fetch_course_students(self, course_id: int) -> List[Dict[str, Any]]:
@@ -533,6 +550,7 @@ class CanvasGradesFetcher:
         endpoint = f"courses/{course_id}/assignment_groups"
         assignment_groups = self.get_paginated_list(endpoint=endpoint)
         return assignment_groups
+
 
 if __name__ == "__main__":
     try:
