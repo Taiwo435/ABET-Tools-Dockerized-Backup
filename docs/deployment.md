@@ -19,6 +19,7 @@
 6) Spins up the docker containers
 
 All errors should be caught by the trap statement and should be reported for helpful debugging.
+
 1) Prepare sensitive environment files to deploy
    1) /docker/.env.prod
    2) /src/public/.htaccess

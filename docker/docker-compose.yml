@@ -86,7 +86,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${EXTRACTION_PORT:?error}:${EXTRACTION_PORT:?error}" # should Only be in deveopment
+      - "${EXTRACTION_PORT:?error}:${EXTRACTION_PORT:?error}" 
     volumes:
       - ../src/extraction_api:/usr/src/app
     networks:

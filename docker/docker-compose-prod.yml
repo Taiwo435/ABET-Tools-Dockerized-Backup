@@ -17,13 +17,30 @@ services:
     build: 
       context: ../
       dockerfile: docker/extraction_api/Dockerfile
+      args:
+        EXTRACTION_PORT: ${EXTRACTION_PORT:?error}
     container_name: extraction_api
-    hostname: ${EXTRACTION_HOSTNAME:?error}
     env_file:
       - .env
     volumes:
       - ../src/extraction_api:/usr/src/app
     network_mode: "host"
+
+  ###################################################
+  # Canvas Formatting FastAPI Backend
+  # Generates course/ABET HTML pages and uploads to Canvas modules
+  ###################################################
+  canvas_formatting_api:
+    build:
+      context: ../
+      dockerfile: docker/canvas_formatting_api/Dockerfile
+      args:
+        CANVAS_FORMATTING_PORT: ${CANVAS_FORMATTING_PORT:?error}
+    container_name: canvas_formatting_api
+    ports:
+      - "${CANVAS_FORMATTING_PORT:?error}:8001"
+    volumes:
+      - ../src/canvas_formatting_api:/usr/src/app
 
 
   ###################################################
@@ -35,16 +52,13 @@ services:
     build: 
       context: ../
       dockerfile: docker/reportgen/Dockerfile
+      args:
+        REPORTGEN_PORT: ${REPORTGEN_PORT:?error}
     container_name: reportgen
-    hostname: ${REPORTGEN_HOSTNAME:?error}
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     env_file:
       - .env
     volumes:
       - ../src/report_generation_api:/usr/src/app
-    ports:
-      - "${REPORTGEN_PORT:?error}:8001"  
     network_mode: "host"
-    depends_on:
-      - mysql
