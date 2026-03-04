@@ -39,7 +39,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Enter your token and class ID to add classes &#x279E;</label>
+            <label class="checklist-label">Link all of your canvas courses (<?= 0 ?> added so far) &#x279E;</label>
         </div>
         <div class="checklist-item"
             onclick="window.location.href='#';">
@@ -64,7 +64,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Manage course performance data efficiently with a clear, structured view of assignments and outcomes-related grading. Ensure records are complete and ready for review when needed.</p>
-                    <a href="/AssignmentsGrades/tool1.php" class="action-link">Launch Tool 1 &rarr;</a>
+                    <a href="/AssignmentsGrades/viewClasses.php" class="action-link">Launch Tool 1 &rarr;</a>
                 </div>
             </div>
         </div>
