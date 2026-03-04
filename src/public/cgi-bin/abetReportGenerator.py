@@ -31,7 +31,9 @@ import urllib.error
 
 
 # CONFIG
-load_dotenv(os.getenv("ABET_PRIVATE_DIR") + "/config/.env")
+_env_path = os.path.join(os.getenv("ABET_PRIVATE_DIR", ""), "config", ".env")
+if os.path.isfile(_env_path):
+    load_dotenv(_env_path)
 
 json_input_glob = "input_jsons/*.json"
 out_dir = "generated_pdfs"
