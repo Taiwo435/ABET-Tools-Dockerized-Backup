@@ -57,6 +57,10 @@ def classify_major(plan: str) -> str | None:
         'Computer Science' for CS plans,
         or None if neither matches.
     """
+
+    if not isinstance(plan, str):
+        return None
+    
     if not plan:
         return None
     # Check CSE first — more specific match avoids false positives
