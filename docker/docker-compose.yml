@@ -79,12 +79,14 @@ services:
     build: 
       context: ../
       dockerfile: docker/extraction_api/Dockerfile
+      args:
+        EXTRACTION_PORT: ${EXTRACTION_PORT:?error}
     container_name: extraction_api
     hostname: ${EXTRACTION_HOSTNAME:?error}
     env_file:
       - .env
     ports:
-      - "${EXTRACTION_PORT:?error}:8000" # should Only be in deveopment
+      - "${EXTRACTION_PORT:?error}:${EXTRACTION_PORT:?error}" # should Only be in deveopment
     volumes:
       - ../src/extraction_api:/usr/src/app
     networks:
@@ -98,6 +100,8 @@ services:
     build:
       context: ../
       dockerfile: docker/canvas_formatting_api/Dockerfile
+      args:
+        CANVAS_FORMATTING_PORT: ${CANVAS_FORMATTING_PORT:?error}
     container_name: canvas_formatting_api
     hostname: ${CANVAS_FORMATTING_HOSTNAME:?error}
     ports:
@@ -117,7 +121,7 @@ services:
       context: ../
       dockerfile: docker/reportgen/Dockerfile
       args:
-        REPORTGEN_PORT: 8002
+        REPORTGEN_PORT: ${REPORTGEN_PORT:?error}
     container_name: reportgen
     hostname: ${REPORTGEN_HOSTNAME:?error}
     environment:
