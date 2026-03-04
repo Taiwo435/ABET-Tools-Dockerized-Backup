@@ -47,14 +47,14 @@ def render_quiz_statistics_pdf(
 
     sub_stats = stats.get("submission_statistics", {})
     questions = stats.get("question_statistics", [])
-    points = stats.get("points_possible", 0)
+    points = float(stats.get("points_possible") or 0)
 
-    avg = sub_stats.get("score_average", 0)
-    high = sub_stats.get("score_high", 0)
-    low = sub_stats.get("score_low", 0)
-    stdev = sub_stats.get("score_stdev", 0)
-    duration = sub_stats.get("duration_average", 0)
-    unique = sub_stats.get("unique_count", 0)
+    avg = float(sub_stats.get("score_average") or 0)
+    high = float(sub_stats.get("score_high") or 0)
+    low = float(sub_stats.get("score_low") or 0)
+    stdev = float(sub_stats.get("score_stdev") or 0)
+    duration = float(sub_stats.get("duration_average") or 0)
+    unique = int(sub_stats.get("unique_count") or 0)
 
     html = _build_summary_html(
         quiz_title, points, avg, high, low, stdev, duration, unique

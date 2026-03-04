@@ -1,4 +1,5 @@
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 import csv
 import enum
 import io
@@ -55,8 +56,60 @@ class TaskType(str, enum.Enum):
 CANVAS_DOMAIN = "canvas.asu.edu"
 ABET_TAG = "abet"
 
+# Max assignments to process concurrently in Phase 1.
+# Uploads happen separately in Phase 2, so no nested thread pools.
+MAX_PARALLEL_ASSIGNMENTS = 3
+
 # SETUP
 TEMP_DIR_PREFIX = "abet_extraction_"
+
+
+def _process_single_assignment(
+    assignment: dict,
+    grades_fetcher: CanvasGradesFetcher,
+    temp_dir: str,
+    submissions_by_assignment: dict,
+    assignment_groups: dict,
+    course_folder_name: str,
+    term_display: str,
+) -> tuple[int, dict, tuple | None]:
+    """Extract artifacts and generate a grade report for one assignment.
+
+    Returns:
+        (assignment_id, extracted_texts, upload_task | None)
+        where upload_task is (canvas_folder, file_paths) or None if no files.
+    """
+    prefetched = submissions_by_assignment.get(assignment["id"])
+
+    local_files, extracted_texts = extract_and_save_artifacts(
+        assignment,
+        grades_fetcher,
+        temp_dir,
+        prefetched_submissions=prefetched,
+    )
+
+    sanitized_name = sanitize_filename(assignment["name"])
+    folder_path = os.path.join(temp_dir, f"{assignment['id']}_{sanitized_name}")
+
+    report_path = generate_assignment_grade_report(
+        grades_fetcher,
+        assignment,
+        folder_path,
+        prefetched_submissions=prefetched,
+    )
+    if report_path:
+        local_files.append(report_path)
+
+    upload_task = None
+    if local_files:
+        assignment_type = assignment_groups[assignment.get("assignment_group_id", 0)]
+        canvas_folder = (
+            f"{course_folder_name}/({term_display})"
+            f"/Test_Assignments/{assignment_type}/{sanitized_name}"
+        )
+        upload_task = (canvas_folder, local_files)
+
+    return assignment["id"], extracted_texts, upload_task
 
 
 # Helpers
@@ -572,6 +625,7 @@ def build_outcome_report_data(
     course_id: str,
     student_major_map: RosterMap,
     assignment_texts_map: dict,
+    prefetched_submissions: dict | None = None,
 ) -> list[dict]:
     """
     Pure data builder: gathers submissions, computes competency stats, and
@@ -584,58 +638,62 @@ def build_outcome_report_data(
     )
     outcome_reports = []
 
-    # Prefetch submissions in bulk for all assignments referenced by outcomes.
-    # This replaces the previous per-assignment N+1 fetching and is batched
-    # to respect Canvas' limit on assignment_ids[] (≈50 per request).
+    # Build submission cache: use prefetched data if available, otherwise fetch.
     all_assignment_ids = set()
     for assignments in outcome_map.values():
         for assign in assignments:
             all_assignment_ids.add(assign["id"])
 
-    all_assignment_ids_list = list(all_assignment_ids)
-    all_submissions_flat: list[dict] = []
-    BATCH_SIZE = 50
-    for i in range(0, len(all_assignment_ids_list), BATCH_SIZE):
-        batch = all_assignment_ids_list[i : i + BATCH_SIZE]
-        try:
-            all_submissions_flat.extend(
-                grades_fetcher.fetch_all_course_submissions(
-                    int(course_id), assignment_ids=batch
-                )
-            )
-        except Exception as e:
-            logger.warning("Bulk submissions fetch failed for batch %s: %s", batch, e)
-
-    # If bulk fetch returned useful data, index by assignment_id. Otherwise,
-    # fall back to the original per-assignment fetch behavior to guarantee
-    # that `full_rubric_assessment` is present (critical for ABET extraction).
     submission_cache = defaultdict(list)
-    if all_submissions_flat:
-        # Detect whether bulk responses include full_rubric_assessment
-        has_rubric_data = any(
-            sub.get("full_rubric_assessment") is not None
-            for sub in all_submissions_flat
-        )
 
-        if has_rubric_data:
-            for sub in all_submissions_flat:
-                # submissions returned by the bulk endpoint include assignment_id
-                submission_cache[sub["assignment_id"]].append(sub)
-        else:
-            # Roll back to per-assignment fetching if rubric details are missing
-            logger.warning(
-                "Bulk submissions missing `full_rubric_assessment`. Falling back to per-assignment fetch."
+    if prefetched_submissions is not None:
+        # Reuse submissions already fetched during the data gathering phase.
+        for aid in all_assignment_ids:
+            submission_cache[aid] = prefetched_submissions.get(aid, [])
+    else:
+        # No prefetched data — fetch from Canvas (used by standalone endpoints).
+        all_assignment_ids_list = list(all_assignment_ids)
+        all_submissions_flat: list[dict] = []
+        BATCH_SIZE = 50
+        for i in range(0, len(all_assignment_ids_list), BATCH_SIZE):
+            batch = all_assignment_ids_list[i : i + BATCH_SIZE]
+            try:
+                all_submissions_flat.extend(
+                    grades_fetcher.fetch_all_course_submissions(
+                        int(course_id), assignment_ids=batch
+                    )
+                )
+            except Exception as e:
+                logger.warning(
+                    "Bulk submissions fetch failed for batch %s: %s", batch, e
+                )
+
+        if all_submissions_flat:
+            # Detect whether bulk responses include full_rubric_assessment
+            has_rubric_data = any(
+                sub.get("full_rubric_assessment") is not None
+                for sub in all_submissions_flat
             )
+
+            if has_rubric_data:
+                for sub in all_submissions_flat:
+                    # submissions returned by the bulk endpoint include assignment_id
+                    submission_cache[sub["assignment_id"]].append(sub)
+            else:
+                # Roll back to per-assignment fetching if rubric details are missing
+                logger.warning(
+                    "Bulk submissions missing `full_rubric_assessment`. Falling back to per-assignment fetch."
+                )
+                for aid in all_assignment_ids_list:
+                    submission_cache[aid] = grades_fetcher.fetch_assignment_submissions(
+                        course_id, aid
+                    )
+        else:
+            # No bulk data returned. Use per-assignment fetch.
             for aid in all_assignment_ids_list:
                 submission_cache[aid] = grades_fetcher.fetch_assignment_submissions(
                     course_id, aid
                 )
-    else:
-        # No bulk data returned. Use per-assignment fetch.
-        for aid in all_assignment_ids_list:
-            submission_cache[aid] = grades_fetcher.fetch_assignment_submissions(
-                course_id, aid
-            )
 
     for outcome_id, assignments in outcome_map.items():
         outcome_info = outcome_details.get(outcome_id, {})
@@ -1262,51 +1320,32 @@ def move_data_between_courses(
             student_major_map = parse_roster_upload(roster_file)
             roster_file.file.seek(0)
 
+            # Phase 1: Process all assignments locally (concurrent)
             assignment_texts_map = {}
-            for assignment in all_assignments:
-                local_files, extracted_texts = extract_and_save_artifacts(
-                    assignment,
-                    grades_fetcher,
-                    temp_dir,
-                    prefetched_submissions=submissions_by_assignment.get(
-                        assignment["id"]
-                    ),
-                )
-                # Collect texts for ABET report generation
-                assignment_texts_map[assignment["id"]] = extracted_texts
-
-                sanitized_name = sanitize_filename(assignment["name"])
-                assignment_folder_path = os.path.join(
-                    temp_dir, f"{assignment['id']}_{sanitized_name}"
-                )
-
-                report_path = generate_assignment_grade_report(
-                    grades_fetcher,
-                    assignment,
-                    assignment_folder_path,
-                    prefetched_submissions=submissions_by_assignment.get(
-                        assignment["id"]
-                    ),
-                )
-                if report_path:
-                    local_files.append(report_path)
-
-                if local_files:
-                    logger.info("Uploading artifacts for '%s'...", assignment["name"])
-
-                    assignment_type = assignment_groups[
-                        assignment.get("assignment_group_id", 0)
-                    ]
-                    logger.info(
-                        "Fetched the Assignment Category - '%s'...", assignment_type
+            upload_tasks = []
+            with ThreadPoolExecutor(max_workers=MAX_PARALLEL_ASSIGNMENTS) as pool:
+                futures = [
+                    pool.submit(
+                        _process_single_assignment,
+                        assignment,
+                        grades_fetcher,
+                        temp_dir,
+                        submissions_by_assignment,
+                        assignment_groups,
+                        course_folder_name,
+                        term_display,
                     )
+                    for assignment in all_assignments
+                ]
+                for future in futures:
+                    assign_id, texts, upload_task = future.result()
+                    assignment_texts_map[assign_id] = texts
+                    if upload_task:
+                        upload_tasks.append(upload_task)
 
-                    canvas_folder = f"{course_folder_name}/({term_display})/Test_Assignments/{assignment_type}/{sanitized_name}"
-                    grades_fetcher.upload_files(
-                        course_id_to_push, canvas_folder, local_files
-                    )
-                else:
-                    logger.info("No artifacts found to upload for this assignment.")
+            # Phase 2: Upload all collected files to Canvas
+            for canvas_folder, files in upload_tasks:
+                grades_fetcher.upload_files(course_id_to_push, canvas_folder, files)
 
             logger.info("Data Gathering Complete")
 
@@ -1322,6 +1361,7 @@ def move_data_between_courses(
                         course_id_to_pull,
                         student_major_map,
                         assignment_texts_map,
+                        prefetched_submissions=submissions_by_assignment,
                     )
                     report_json = {
                         "metadata": {

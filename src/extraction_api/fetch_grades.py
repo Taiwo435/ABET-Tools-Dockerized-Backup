@@ -5,6 +5,7 @@ Fetches grades and submission data from Canvas LMS for ABET assessment purposes.
 """
 
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 import json
@@ -28,6 +29,9 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
+
+# Max concurrent file uploads to Canvas. Increase for speed, decrease if hitting rate limits.
+MAX_PARALLEL_UPLOADS = 4
 
 
 class CanvasGradesFetcher:
@@ -238,17 +242,27 @@ class CanvasGradesFetcher:
         max_retries: int = 3,
     ):
         """
-        Uploads files to a Canvas course folder, with retries.
+        Uploads files to a Canvas course folder in parallel, with retries.
+
+        Concurrency is controlled by MAX_PARALLEL_UPLOADS (module-level constant).
+        Each file goes through Canvas's 3-step upload: init → POST binary → confirm.
         """
+        if not file_paths:
+            return
+
         logger.info(
             "Uploading %d files to Canvas folder '%s'...",
             len(file_paths),
             folder_path,
         )
-        for file_path in file_paths:
+
+        failed: list[str] = []
+
+        def _upload_single(file_path: str) -> None:
+            """Upload one file with retries. Appends to `failed` on total failure."""
+            filename = os.path.basename(file_path)
             for attempt in range(max_retries):
                 try:
-                    filename = os.path.basename(file_path)
                     init_data = {
                         "name": filename,
                         "parent_folder_path": folder_path,
@@ -276,7 +290,7 @@ class CanvasGradesFetcher:
                         if confirmation.get("location"):
                             self.api_request(confirmation["location"])  # confirm
                     logger.info("Successfully uploaded %s", filename)
-                    break
+                    return
                 except Exception as e:
                     logger.error(
                         "ERROR on attempt %d/%d for %s: %s",
@@ -287,12 +301,31 @@ class CanvasGradesFetcher:
                     )
                     if attempt < max_retries - 1:
                         time.sleep(2)
-                    else:
-                        logger.error(
-                            "All %d attempts failed for %s.",
-                            max_retries,
-                            filename,
-                        )
+
+            logger.error("All %d attempts failed for %s.", max_retries, filename)
+            failed.append(filename)
+
+        start = time.time()
+        with ThreadPoolExecutor(max_workers=MAX_PARALLEL_UPLOADS) as pool:
+            pool.map(_upload_single, file_paths)
+        elapsed = time.time() - start
+
+        ok_count = len(file_paths) - len(failed)
+        logger.info(
+            "Upload complete: %d/%d succeeded in %.1fs (workers=%d)",
+            ok_count,
+            len(file_paths),
+            elapsed,
+            MAX_PARALLEL_UPLOADS,
+        )
+
+        if failed:
+            logger.warning(
+                "%d/%d uploads failed: %s",
+                len(failed),
+                len(file_paths),
+                ", ".join(failed),
+            )
 
     def fetch_course_assignments(self, course_id: int) -> List[Dict[str, Any]]:
         """Fetch all assignments for a given course.
