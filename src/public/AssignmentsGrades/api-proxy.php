@@ -144,6 +144,8 @@ if ($action === 'verify-course') {
 
 
 if ($action === 'run-pipeline') {
+    set_time_limit(0); 
+
     $token    = $_SESSION['canvas_token']     ?? '';
     $sourceId = $_SESSION['source_course_id'] ?? '';
     $destId   = $_SESSION['dest_course_id']   ?? '';
