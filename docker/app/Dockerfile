@@ -2,7 +2,16 @@ FROM php:8.2-apache
 
 RUN apt-get update && apt-get install -y \
     zip \
-    unzip 
+    unzip \
+    python3 \
+    python3-pip \
+    libreoffice-writer \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir --break-system-packages \
+    python-docx \
+    python-dotenv \
+    openai
 
 RUN docker-php-ext-install pdo pdo_mysql
 
