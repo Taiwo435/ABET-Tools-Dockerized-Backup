@@ -7,7 +7,9 @@ from urllib.parse import unquote
 class WriteAbetHtml:
     """Builds HTML content for course pages and ABET reports. Uses in-memory buffers."""
 
-    def __init__(self, canvas_base_url: str = "https://canvas.asu.edu/", course_id: str = ""):
+    def __init__(
+        self, canvas_base_url: str = "https://canvas.asu.edu/", course_id: str = ""
+    ):
         self.canvas_base_url = canvas_base_url.rstrip("/") + "/"
         self.course_id = str(course_id)
         self._course_buffer = io.StringIO()
@@ -78,7 +80,7 @@ class WriteAbetHtml:
             "an ability to recognize ethical and professional responsibilities in engineering situations and make informed judgments, which must consider the impact of engineering solutions in global, economic, environmental, and societal contexts.",
             "an ability to function effectively on a team whose members together provide leadership, create a collaborative and inclusive environment, establish goals, plan tasks, and meet objectives.",
             "an ability to develop and conduct appropriate experimentation, analyze and interpret data, and use engineering judgment to draw conclusions.",
-            "an ability to acquire and apply new knowledge as needed, using appropriate learning strategies."
+            "an ability to acquire and apply new knowledge as needed, using appropriate learning strategies.",
         ]
         for i in range(7):
             self.add_abet_table_row(i, abet_outcomes[i])
@@ -91,31 +93,34 @@ class WriteAbetHtml:
         for folder in file_folders:
             f_name = folder.get("full_name")
             if f"Test_Assignments/" in f_name:
-                split_name = f_name.split('Test_Assignments/', 1)[1]
+                split_name = f_name.split("Test_Assignments/", 1)[1]
                 # add groups
-                group_name = split_name.split('/', 1)[0]
-               # print("GROUP", split_name)
+                group_name = split_name.split("/", 1)[0]
+                # print("GROUP", split_name)
                 if group_name not in assignment_groups:
                     assignment_groups.append(group_name)
                 # add assignments
                 try:
-                    assign_name = split_name.split('/', 1)[1]
+                    assign_name = split_name.split("/", 1)[1]
                     assignment_names[folder.get("id")] = assign_name
-                   # print("ASSIGNMENTS", assign_name)
-                except(IndexError):
+                # print("ASSIGNMENTS", assign_name)
+                except IndexError:
                     continue
 
         return assignment_groups, assignment_names
 
     def get_assignments(self, group_name, file_folders, files):
-        # Flatten ALL files from the dict into one list
-        all_files = []
-        try:
+        # Flatten ALL files from the dict into one list uniquely
+        all_files = files.get("ALL_FILES", [])
+        if not all_files:
+            # Fallback for tests/older data structures
+            seen_ids = set()
             for v in files.values():
                 if isinstance(v, list):
-                    all_files.extend(v)
-        except Exception:
-            pass
+                    for f in v:
+                        if f.get("id") not in seen_ids:
+                            seen_ids.add(f.get("id"))
+                            all_files.append(f)
 
         assignments = []
 
@@ -136,13 +141,12 @@ class WriteAbetHtml:
         print(f"GROUP '{group_name}' → found {len(assignments)} files")
         return assignments
 
-
     def _is_hml_file(self, filename_lower: str) -> bool:
         return (
-                "high" in filename_lower
-                or "mid" in filename_lower
-                or "avg" in filename_lower
-                or "low" in filename_lower
+            "high" in filename_lower
+            or "mid" in filename_lower
+            or "avg" in filename_lower
+            or "low" in filename_lower
         )
 
     def _hml_label(self, filename_lower: str) -> str:
@@ -163,7 +167,10 @@ class WriteAbetHtml:
         try:
             syllabus_id = None
             for f in files.get("Syllabus", []):
-                if (f.get("filename") or "").lower() in ["syllabus_body.pdf", "syllabus.pdf"]:
+                if (f.get("filename") or "").lower() in [
+                    "syllabus_body.pdf",
+                    "syllabus.pdf",
+                ]:
                     syllabus_id = f.get("id")
                     break
 
@@ -181,7 +188,7 @@ class WriteAbetHtml:
 """
         else:
             content += "<ul><li>Syllabus is missing.</li></ul>\n"
-        
+
         # ----------------------------
         # 2) Main Section Header
         # ----------------------------
@@ -191,7 +198,9 @@ class WriteAbetHtml:
         # ----------------------------
         # 3) Build groups and assignment names dict from folders
         # ----------------------------
-        assignment_groups, assignment_names = self.get_assignment_groups(file_folders, files)
+        assignment_groups, assignment_names = self.get_assignment_groups(
+            file_folders, files
+        )
 
         # ----------------------------
         # 4) Bulleted section format
@@ -207,10 +216,12 @@ class WriteAbetHtml:
 
                 # Add each assignment description (currently located in description.html files) and update name to match parent folder
                 if "description" in fl and fl.endswith(".html"):
-                    folder_id = f.get('folder_id')
+                    folder_id = f.get("folder_id")
                     assignment_name = assignment_names[folder_id]
                     link = f"{self.canvas_base_url}courses/{self.course_id}/files/{f.get('id')}"
-                    self.write_to_page(f'<li><a href="{link}">{assignment_name}</a></li>')
+                    self.write_to_page(
+                        f'<li><a href="{link}">{assignment_name}</a></li>'
+                    )
 
             self.write_to_page("</ul></li></ul>")
 
@@ -230,7 +241,10 @@ class WriteAbetHtml:
                 self.write_to_page(f"<ul><li><b>{group}</b> (no files found)</li></ul>")
                 continue
 
-            has_hml = any(self._is_hml_file((f.get("filename") or "").lower()) for f in group_files)
+            has_hml = any(
+                self._is_hml_file((f.get("filename") or "").lower())
+                for f in group_files
+            )
 
             # TABLE format
             if has_hml:
@@ -250,13 +264,14 @@ class WriteAbetHtml:
 
                     folder_name = assignment_names[folder_id]
                     if folder_name not in rows:
-                         rows[folder_name] = {"High": "", "Mid": "", "Low": ""}
+                        rows[folder_name] = {"High": "", "Mid": "", "Low": ""}
 
                     link = f"{self.canvas_base_url}courses/{self.course_id}/files/{f.get('id')}"
                     rows[folder_name][label] = f'<a href="{link}">{unquote(fname)}</a>'
 
                 self.write_to_page(f"<h4>{group}</h4>")
-                self.write_to_page("""
+                self.write_to_page(
+                    """
 <table style="width: 100%;" border="1">
   <thead>
     <tr>
@@ -267,7 +282,8 @@ class WriteAbetHtml:
     </tr>
   </thead>
   <tbody>
-""")
+"""
+                )
 
                 for base_key in sorted(rows.keys()):
                     pretty_name = base_key
@@ -275,13 +291,15 @@ class WriteAbetHtml:
                     mid = rows[base_key]["Mid"]
                     low = rows[base_key]["Low"]
 
-                    self.write_to_page(f"""
+                    self.write_to_page(
+                        f"""
 <tr>
   <td>{pretty_name}</td>
   <td>{high}</td>
   <td>{mid}</td>
   <td>{low}</td>
 </tr>
-""")
+"""
+                    )
 
                 self.write_to_page("</tbody></table>")
