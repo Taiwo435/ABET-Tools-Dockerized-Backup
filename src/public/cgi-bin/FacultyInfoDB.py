@@ -8,12 +8,21 @@ print("hi")
 
 load_dotenv()
 print("HOST:", os.getenv("HOST"))
+
+"""
+you can test out this open source database in case the cpanel database isn't working
+HOST=mysql-rfam-public.ebi.ac.uk
+ENVUSER=rfamro
+PASSWORD=
+PORT=4497
+NAME=Rfam
+"""
 conn = mysql.connector.connect(
-    host=os.getenv("HOST"),
-    user=os.getenv("ENVUSER"),
-    password=os.getenv("PASSWORD"),
-    port=os.getenv("PORT"),
-    database=os.getenv("NAME")
+    host=os.getenv("MYSQL_HOSTNAME"),
+    user=os.getenv("MYSQL_USER"),
+    password=os.getenv("MYSQL_PASS"),
+    port=os.getenv("MYSQL_PORT"),
+    database=os.getenv("MYSQL_DATABASE")
 )
 
 doc = Document()
