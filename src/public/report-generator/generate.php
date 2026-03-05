@@ -170,6 +170,7 @@ try {
     // Paths
     $jobsRoot      = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
     $generatorPath = realpath(__DIR__ . '/../cgi-bin/abetReportGenerator.py');
+    $LongReportPath = realpath(__DIR__ . '/../cgi-bin/FacultyInfoDB.py');
     $pythonBin     = '';
     foreach (['/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
         if (is_file($candidate) && is_executable($candidate)) {
@@ -184,6 +185,9 @@ try {
 
     if (!$generatorPath || !file_exists($generatorPath)) {
         json_response(500, ['ok' => false, 'error' => 'Generator script not found']);
+    }
+    if (!$LongReportPath || !file_exists($LongReportPath)) {
+        json_response(500, ['ok' => false, 'error' => 'Long report script not found']);
     }
 
     if ($pythonBin === '') {
@@ -254,11 +258,7 @@ try {
         ]);
     }
 
-    // Find generated DOCX
-    $docxFiles = glob($outDir . '/*_ABET_Report.docx') ?: [];
-    if (count($docxFiles) === 0) {
-        json_response(500, ['ok' => false, 'error' => 'No DOCX generated', 'job_id' => $jobId]);
-    }
+    
 
     usort($docxFiles, static function ($a, $b) {
         return filemtime($b) <=> filemtime($a);
