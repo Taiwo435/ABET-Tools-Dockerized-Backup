@@ -1,0 +1,103 @@
+{
+  "title": "Student Outcomes",
+  "name": "student_outcomes",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Courses and Method of Assessment for Each Outcome"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "courses_and_methods_of_assessment",
+      "label": "Courses and method of assessment for each outcome",
+      "columns": [
+        {
+          "name": "abet_outcome",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "class_name",
+          "label": "Class Name",
+          "type": "text"
+        },
+        {
+          "name": "assessment_method",
+          "label": "Method of Assessment",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 50,
+      "required": false
+    },
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Summary of Assessment Results"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "assessment_results_summary",
+      "label": "Summary of assessment results",
+      "columns": [
+        {
+          "name": "outcome",
+          "label": "Outcome",
+          "type": "text"
+        },
+        {
+          "name": "summary",
+          "label": "Summary of Assessment Results",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    },
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Percentages of Met and Times of 2 Consecutive Semester with Not Met"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "percentages_met_table",
+      "label": "Table 4-6: Percentages of Met and times of 2 consecutive semester with Not Met",
+      "columns": [
+        {
+          "name": "outcome",
+          "label": "Outcome",
+          "type": "text"
+        },
+        {
+          "name": "semesters_assessed",
+          "label": "Semesters Assessed",
+          "type": "text"
+        },
+        {
+          "name": "percentage_met",
+          "label": "Percentage Met",
+          "type": "text"
+        },
+        {
+          "name": "times_two_consecutive_semesters_not_met",
+          "label": "Times of 2 Consecutive Sem. Not Met",
+          "type": "text"
+        },
+        {
+          "name": "percentage_met_past_year",
+          "label": "Percentage Met in Past Year",
+          "type": "text"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    }
+  ]
+}
