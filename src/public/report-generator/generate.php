@@ -258,7 +258,16 @@ try {
         ]);
     }
 
-    
+    //testing this out to see if the doc is being generated 
+    $docxFiles = glob($outDir . '/*.docx');
+
+    if (!$docxFiles) {
+        json_response(500, [
+            'ok' => false,
+            'error' => 'Gen failed :(',
+            'job_id' => $jobId
+        ]);
+    }
 
     usort($docxFiles, static function ($a, $b) {
         return filemtime($b) <=> filemtime($a);
