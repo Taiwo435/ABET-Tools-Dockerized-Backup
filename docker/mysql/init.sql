@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS admission_major_map (
 
 CREATE TABLE IF NOT EXISTS faculty_info (
     faculty_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT NOT NULL UNIQUE, 
     program_id INT NOT NULL,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
@@ -147,15 +147,12 @@ CREATE TABLE IF NOT EXISTS faculty_info (
     areas_of_interest TEXT,
     faculty_rank ENUM('P', 'ASC', 'AST', 'I', 'A', 'O') NOT NULL,
     academic_appointment ENUM('T', 'TT', 'NTT') NOT NULL,
-    time_commitment ENUM('FT', 'PT') NOT NULL,
-    years_experience_gov_industry DECIMAL(4,1) DEFAULT 0.0,
-    years_experience_teaching DECIMAL(4,1) DEFAULT 0.0,
-    years_experience_institution DECIMAL(4,1) DEFAULT 0.0,
-    professional_registration VARCHAR(255),
+    years_experience_gov_industry INT NOT NULL,
+    years_experience_teaching INT NOT NULL,
+    years_experience_institution INT NOT NULL,
     activity_prof_orgs ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
     activity_prof_dev  ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
     activity_consulting ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
-    professional_orgs_names TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
@@ -164,16 +161,16 @@ CREATE TABLE IF NOT EXISTS faculty_info (
 -- table 6-2
 CREATE TABLE IF NOT EXISTS faculty_workload (
     workload_id INT AUTO_INCREMENT PRIMARY KEY,
-    faculty_id INT NOT NULL,
+    user_id INT NOT NULL UNIQUE,
     academic_year VARCHAR(20) NOT NULL,
     pt_or_ft ENUM('FT', 'PT') NOT NULL,
-    classes_taught TEXT,
+    classes_taught JSON,
     teaching_pct INT NOT NULL,
     research_or_scholarship_pct INT NOT NULL,
     other_pct INT NOT NULL,
     pct_time_devoted_to_program INT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (faculty_id) REFERENCES faculty_info(faculty_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT chk_workload_pct_range
         CHECK (
             teaching_pct <= 100 AND
@@ -193,17 +190,16 @@ CREATE TABLE IF NOT EXISTS faculty_workload (
 
 CREATE TABLE IF NOT EXISTS faculty_vitae (
     vitae_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    department TEXT,
+    user_id INT NOT NULL UNIQUE,
     education TEXT,
     academic_experience TEXT,
     non_academic_experience TEXT,
-    certification TEXT,
-    professional_memberships TEXT,
-    honors_and_awards TEXT,
-    service_activities TEXT,
-    publications_presentations TEXT,
-    professional_development TEXT,
+    certifications JSON,
+    professional_memberships JSON,
+    honors_and_awards JSON,
+    service_activities JSON,
+    publications_presentations JSON,
+    professional_development JSON,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

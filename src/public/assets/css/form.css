@@ -56,6 +56,9 @@ form {
 .form-section-label {
     font-size: 2rem;
 }
+.form-section-label-small {
+    font-size: 1.3rem;
+}
 
 .form-section-break {
     height: 1px;
@@ -125,13 +128,19 @@ form {
 .expandable-grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);  /*default value; will likely be overridden when the form is generated from the template*/
-    grid-template-rows: 2rem;               /* Size of the first (label) row */
+    grid-template-rows: minmax(2rem, auto);               /* Size of the first (label) row */
     grid-auto-rows: minmax(50px, auto);     /* Size of the remaining (input) rows */
 }
 .expandable-grid-row {
     display: grid;
     grid-template-columns: subgrid;
     grid-column: 1 / -1;
+}
+
+.expandable-grid-label {
+    font-weight: 600;
+    font-size: 1rem;
+    color: rgb(30, 30, 30);
 }
 
 .expandable-grid-small-input {
