@@ -1,73 +1,65 @@
 {
 
-    "title": "About You",
+    "title": "Vitae",
     "name": "vitae",
     "action": "submit.php",
     "method": "POST",
     "fields": [
         {
-            "type": "text",
-            "name": "vitae_full_name",
-            "label": "Full Name",
-            "required": true
-        },
-        {
-            "type": "text",
-            "name": "asurite_id",
-            "label": "ASURITE ID",
-            "description": "Your 5–8 character username (e.g., jsmith2). NOT your 10 digit ASU ID number.",
-            "required": true
-        },
-        {
-            "type": "select",
-            "name": "current_working_department",
-            "label": "Current Working Department",
-            "description": "Computer Science, Computer Systems Engineering, etc...",
-            "options": {
-                "computer_science": "Computer Science",
-                "computer_systems_engineering": "Computer Systems Engineering",
-                "other": "Other"
-            },
-            "required": true
-        },
-        {
-            "type": "text",
-            "name": "current_working_department_other",
-            "description": "If other, please specifiy.",
-            "required": false
-        },
-        {
-            "type": "text",
-            "name": "area_of_interest",
-            "label": "Area of Interest",
-            "required": true
-        },
-        {
-            "type": "text-field",
+            "type": "expandable-grid",
             "name": "education",
             "label": "Education",
+            "columns": [
+                {
+                    "name": "degree",
+                    "label": "Degree Type, Field, School, and Year Completed",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
             "required": true
         },
         {
-            "type": "text-field",
+            "type": "expandable-grid",
             "name": "academic_experience",
             "label": "Academic Experience",
-            "required": false
-        },
-        {
-            "type": "text-field",
-            "name": "non_academic_experience",
-            "label": "Non-Academic Experience",
+            "columns": [
+                {
+                    "name": "experience",
+                    "label": "Institution/Company, Position, Years, and Part-Time or Full-Time",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
             "required": false
         },
         {
             "type": "expandable-grid",
-            "name": "certifications_or_professional_reigstrations",
+            "name": "non_academic_experience",
+            "label": "Non-Academic Experience",
+            "columns": [
+                {
+                    "name": "experience",
+                    "label": "Institution/Company, Position, Years, and Part-Time or Full-Time",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "certifications",
             "label": "Certifications or Professional Registrations",
             "columns": [
                 {
                     "name": "certification_registration_name",
-                    "label": "Certification or Registration Name",
+                    "label": "Certification or Registration Name, Abbreviate if possible.",
+                    "type": "text"
+                },
+                {
+                    "name": "certification_registration_other_info",
+                    "label": "Other Information- unabbreviated name, year received, certifying organization, etc.",
                     "type": "text"
                 }
             ],
@@ -75,24 +67,18 @@
             "required": false
         },
         {
-            "type": "select",
-            "name": "professional_organization_activity_level",
-            "label": "Level of Activity in Professional Organizations",
-            "options": {
-                "H": "High",
-                "M": "Medium",
-                "L": "Low"
-            },
-            "required": true
-        },
-        {
             "type": "expandable-grid",
-            "name": "professional_organization_memberships",
+            "name": "professional_memberships",
             "label": "Current Memberships in Professional Organizations",
             "columns": [
                 {
                     "name": "organization_name",
-                    "label": "Organization Name- use abbreviations if possible",
+                    "label": "Organization Name. Abbreviate if possible.",
+                    "type": "text"
+                },
+                {
+                    "name": "organization_other_info",
+                    "label": "Other Information- role, years of membership, etc.",
                     "type": "text"
                 }
             ],
@@ -101,12 +87,12 @@
         },
         {
             "type": "expandable-grid",
-            "name": "honors_awards",
+            "name": "honors_and_awards",
             "label": "Honors and Awards",
             "columns": [
                 {
-                    "name": "award_name",
-                    "label": "Award Name",
+                    "name": "award",
+                    "label": "Award Name and Year Received",
                     "type": "text"
                 }
             ],
@@ -116,11 +102,11 @@
         {
             "type": "expandable-grid",
             "name": "service_activities",
-            "label": "Service Activities",
+            "label": "Service Activities (within and outside of ASU)",
             "columns": [
                 {
                     "name": "activity",
-                    "label": "Activity",
+                    "label": "Activity and Year(s)",
                     "type": "text"
                 }
             ],
@@ -129,20 +115,14 @@
         },
         {
             "type": "expandable-grid",
-            "name": "most_important_publications_presentations",
+            "name": "publications_presentations",
             "label": "Most Important Publications and Presentations",
             "description": "Only list those from the past 5 years.",
             "columns": [
                 {
-                    "name": "publication_presentation_name",
-                    "label": "Publication or Presentation Name",
-                    "type": "text"
-                },
-                {
-                    "name": "year",
-                    "label": "Year",
-                    "type": "text",
-                    "numerical": true
+                    "name": "publication_or_presentation",
+                    "label": "Publication or Presentation Citation",
+                    "type": "text-field"
                 }
             ],
             "maxRows": 10,
@@ -150,19 +130,13 @@
         },
         {
             "type": "expandable-grid",
-            "name": "professional_development_activities",
+            "name": "professional_development",
             "label": "Most Recent Professional Development Activities",
             "columns": [
                 {
                     "name": "professional_development_activity",
-                    "label": "Activity",
+                    "label": "Activity Name and Year(s)",
                     "type": "text"
-                },
-                {
-                    "name": "year",
-                    "label": "Year",
-                    "type": "text",
-                    "numerical": true
                 }
             ],
             "maxRows": 10,

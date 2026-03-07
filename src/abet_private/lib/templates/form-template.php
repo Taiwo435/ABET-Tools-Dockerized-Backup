@@ -35,7 +35,12 @@
 
         <div class="form-group" id="<?= $name ?>">
             <?php if (!empty($field['label'])): ?>
-                <label class="form-label <?php if ($type==="section-label") {echo "form-section-label";}?>">
+                <label 
+                    class="form-label 
+                        <?php if ($type==="section-label") {echo "form-section-label";}?>
+                        <?php if ($type==="section-label-small") {echo "form-section-label-small";}?>"
+                >
+
                     <div><?= htmlspecialchars($field['label']) ?></div>
                     &nbsp;
                     <div class="form-required-star"><?php if ($field['required']) { echo ("      *"); } ?></div>
@@ -52,9 +57,9 @@
 
 
 
-            <?php if ($type === 'select'): ?>
+            <?php if ($type === 'select' || $type === 'select-multiple'): ?>
 
-                <select class="form-select" name="<?= $name ?>">
+                <select class="form-select" name="<?= $name ?>" <?php if ($type === 'select-multiple') { echo 'multiple'; } ?>>
                     <option value="">Select...</option>
                     <?php foreach ($field['options'] as $key => $option): ?>
                         <option value="<?= $key ?>" <?= $value === $key ? 'selected' : '' ?>>
@@ -107,7 +112,6 @@
 
 
             <?php elseif ($type === 'text'): ?>
-
                 <input
                     class="form-input"
                     type="<?= htmlspecialchars($type) ?>"
@@ -200,12 +204,12 @@ function loadDataToGridElements() {
             return;
         }
         
-        oldData = JSON.parse(oldValues);
-        if (oldData['rows'].length == 0) {
+        oldRowData = JSON.parse(oldValues);
+        if (oldRowData.length == 0) {
             addExpandableGridRow(grid);
             return;
         }
-        oldData['rows'].forEach((rowData, rowIndex) => {
+        oldRowData.forEach((rowData, rowIndex) => {
             addExpandableGridRow(grid, rowData);
         });
     });
@@ -213,9 +217,7 @@ function loadDataToGridElements() {
 function prepareDataFromGridElements() {
     expandableGrids = document.querySelectorAll('.expandable-grid-container');
     expandableGrids.forEach((grid, gridIndex) => {
-        rowJSONs = {
-            "rows": []
-        };
+        rows = [];
 
         inputRows = grid.querySelectorAll('.expandable-grid-input-row');       
         inputRows.forEach((row, rowIndex) => {
@@ -239,14 +241,14 @@ function prepareDataFromGridElements() {
                 
             });
             if (!isEmptyRow) {
-                rowJSONs['rows'].push(rowJSON);
+                rows.push(rowJSON);
             }
         });
 
         const expandableGridInput = document.createElement('input');
         expandableGridInput.type = "hidden";
         expandableGridInput.name = grid.getAttribute("name");
-        expandableGridInput.value = JSON.stringify(rowJSONs);
+        expandableGridInput.value = JSON.stringify(rows);
 
         const form = document.querySelector('form');
         form.appendChild(expandableGridInput);
@@ -283,7 +285,7 @@ function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
         const columnName = label.getAttribute('data-name');
         let inputField;
         
-        if (columnType === 'select') {
+        if (columnType === 'select' || columnType === 'select-multiple') {
             inputField = document.createElement('select');
             const optionCount = labelRow.children[i].getAttribute('data-option-count');
 
@@ -296,6 +298,9 @@ function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
                 newOption.value = label.getAttribute('data-option-' + j);
                 newOption.textContent = label.getAttribute('data-option-' + j);
                 inputField.appendChild(newOption);
+            }
+            if (columnType === 'select-multiple') {
+                inputField.multiple = true;
             }
             inputField.className = 'expandable-grid-select';
             if (oldRowDataJSON != null) {
@@ -390,8 +395,8 @@ function validateForm() {
                     return;
                 }
                 if (!isFullRow) {
-                    errors.push("All parts of a row must be filled out.");
-                    showError(input, "All parts of a row must be filled out.");
+                    errors.push("Rows cannot be partially filled out. Either fill out all parts of the row or remove the row.");
+                    showError(input, "Rows cannot be partially filled out. Either fill out all parts of the row or remove the row.");
                     return;
                 } else {
                     hasAFullRow = true;
@@ -416,7 +421,8 @@ function validateForm() {
         
         // Numerical field validation
         if (field.numerical && value != "") {
-            if (!isPositiveWholeNumber(value)) {
+            newValue = value.replace(/%/g, '');
+            if (!isPositiveWholeNumber(newValue)) {
                 errors.push(`${field.label} must be entered as a positive, whole number.`)
                 showError(input, `${field.label} must be entered as a positive, whole number.`)
                 return;

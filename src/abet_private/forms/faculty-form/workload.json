@@ -7,17 +7,63 @@
     "fields": [
         {
             "type": "select",
-            "name": "part_full_time",
+            "name": "pt_or_ft",
             "label": "Part-Time or Full-Time?",
             "required": true,
             "options": {
-                "part_time": "Part-Time",
-                "full_time": "Full-Time"
+                "PT": "Part-Time",
+                "FT": "Full-Time"
             }
         },
         {
+            "type": "expandable-grid",
+            "name": "classes_taught",
+            "label": "Classes Taught in the Last Year",
+            "description": "If you taught the same course during multiple semesters, use different rows to specify each semester.",
+            "columns": [
+                {
+                    "name": "course_number",
+                    "label": "Course Number",
+                    "type": "text"
+                },
+                {
+                    "name": "credit_hours",
+                    "label": "# of Credit Hours",
+                    "type": "text"
+                },
+                {
+                    "name": "semester",
+                    "label": "Semester taught",
+                    "type": "select",
+                    "options": [
+                        "Fall 2025",
+                        "Spring 2026",
+                        "Summer 2026"
+                    ]
+                },
+                {
+                    "name": "sections_taught",
+                    "label": "# of Sections that Semester",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 20,
+            "required": false
+        },
+
+        {
+            "type": "section-break"
+        },
+
+        {
+            "type": "section-label-small",
+            "label": "Teaching, Research/Service, and Other Work Percentages should sum to 100%."
+        },
+
+
+        {
             "type": "text",
-            "name": "teaching_percentage",
+            "name": "teaching_pct",
             "label": "Teaching Percentage",
             "description": "What percentage of your work is related to teaching?",
             "required": true,
@@ -25,17 +71,30 @@
         },
         {
             "type": "text",
-            "name": "research_scholarship_percentage",
-            "label": "Research or Scholarship Percentage",
-            "description": "What percentage of your work is related to research and/or scholarships?",
+            "name": "research_or_scholarship_pct",
+            "label": "Research and/or Service Percentage",
+            "description": "What percentage of your work is related to research and/or service?",
             "required": true,
             "numerical": true
         },
         {
             "type": "text",
-            "name": "other_percentage",
+            "name": "other_pct",
             "label": "Other Work Percentage",
             "description": "What percentage of your work is related to other aspects?",
+            "required": true,
+            "numerical": true
+        },
+
+        {
+            "type": "section-break"
+        },
+
+        {
+            "type": "text",
+            "name": "pct_time_devoted_to_program",
+            "label": "What percentage of your time at ASU is devoted to the program?",
+            "description": "*Description to explain this. Is it as opposed to other programs at ASU?*",
             "required": true,
             "numerical": true
         }
