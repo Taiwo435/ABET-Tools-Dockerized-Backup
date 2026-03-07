@@ -1,5 +1,7 @@
 <?php
 
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+
 function getPageNameFromNumber($formName, $pageNumber){
 
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
@@ -23,10 +25,19 @@ function allPagesDone($formName) {
     }
     
     $form = json_decode(file_get_contents($path), true);
-
+    $pdo = db();
     foreach ($form['pages'] as $page) {
-        $path = getenv('ABET_PRIVATE_DIR') . "/" . "testData" . "/" . $page['fileName'] . "_data.json";
-        if (!file_exists($path)) {
+        try {
+            $query = "SELECT EXISTS(SELECT 1 FROM " . $page['tableName'] . " WHERE user_id = :user_id)";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+            $count = $stmt->fetchColumn();
+
+            if ($count == 0) {
+                return false;
+            }
+        } catch (PDOException $e) {
+            //print_r($e);
             return false;
         }
     }

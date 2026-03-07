@@ -2,16 +2,16 @@
     "title": "Faculty Information",
     "pages": [
         {
-            "fileName": "canvasSyllabus"
+            "fileName": "info",
+            "tableName": "faculty_info"
         },
         {
-            "fileName": "qualifications"
+            "fileName": "workload",
+            "tableName": "faculty_workload"
         },
         {
-            "fileName": "workload"
-        },
-        {
-            "fileName": "vitae"
+            "fileName": "vitae",
+            "tableName": "faculty_vitae"
         }
 
     ]
