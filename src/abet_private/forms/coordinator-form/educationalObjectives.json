@@ -1,0 +1,32 @@
+{
+  "title": "Educational Objectives",
+  "name": "educationalObjectives",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "expandable-grid",
+      "name": "educational_objectives",
+      "label": "Review of educational objectives for the Computer Systems Engineering program.",
+      "columns": [
+        {
+          "name": "input_method",
+          "label": "Input Method",
+          "type": "text"
+        },
+        {
+          "name": "schedule",
+          "label": "Schedule",
+          "type": "text"
+        },
+        {
+          "name": "constituencies",
+          "label": "Constituencies",
+          "type": "text"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    }
+  ]
+}

@@ -33,7 +33,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <label class="checklist-label">Complete the faculty information form &#x279E;</label>
         </div>
         <div class="checklist-item"
-            onclick="window.location.href='/AssignmentsGrades/viewClasses.php';">
+            onclick="window.location.href='/AssignmentsGrades/tool1.php';">
             <?php if (false): ?>
                 <label class="checklist-check">&#10004;</label>
             <?php else: ?>
@@ -64,7 +64,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Manage course performance data efficiently with a clear, structured view of assignments and outcomes-related grading. Ensure records are complete and ready for review when needed.</p>
-                    <a href="/AssignmentsGrades/viewClasses.php" class="action-link">Launch Tool 1 &rarr;</a>
+                    <a href="/AssignmentsGrades/tool1.php" class="action-link">Launch Tool 1 &rarr;</a>
                 </div>
             </div>
         </div>

@@ -193,3 +193,28 @@ form {
     margin-top: 5px;
     font-weight: bold;
 }
+
+/* Visual feedback on invalid input fields */
+.input-error {
+    border: 2px solid #d32f2f !important;
+    background-color: #fff5f5 !important;
+}
+
+/* Disabled button styling */
+.form-button:disabled,
+.expandable-grid-add-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Focus styles for form inputs (matches auth & tool1 patterns) */
+.form-input:focus,
+.form-select:focus,
+.form-text-field:focus,
+.expandable-grid-small-input:focus,
+.expandable-grid-large-input:focus,
+.expandable-grid-select:focus {
+    outline: none;
+    border-color: #8C1D40;
+    box-shadow: 0 0 0 3px rgba(140, 29, 64, 0.1);
+}

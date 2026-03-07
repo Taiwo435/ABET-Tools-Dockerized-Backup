@@ -169,18 +169,28 @@ try {
 
     // Paths
     $jobsRoot      = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
-    $generatorPath = '../cgi-bin/abetReportGenerator.py';
-    $pythonBin     = '/bin/python3';
+    $generatorPath = realpath(__DIR__ . '/../cgi-bin/abetReportGenerator.py');
+    $LongReportPath = realpath(__DIR__ . '/../cgi-bin/FacultyInfoDB.py');
+    $pythonBin     = '';
+    foreach (['/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
+        if (is_file($candidate) && is_executable($candidate)) {
+            $pythonBin = $candidate;
+            break;
+        }
+    }
 
     if (!is_dir($jobsRoot) && !mkdir($jobsRoot, 0700, true)) {
         json_response(500, ['ok' => false, 'error' => 'Cannot create jobs directory']);
     }
 
-    if (!file_exists($generatorPath)) {
+    if (!$generatorPath || !file_exists($generatorPath)) {
         json_response(500, ['ok' => false, 'error' => 'Generator script not found']);
     }
+    if (!$LongReportPath || !file_exists($LongReportPath)) {
+        json_response(500, ['ok' => false, 'error' => 'Long report script not found']);
+    }
 
-    if (!file_exists($pythonBin)) {
+    if ($pythonBin === '') {
         json_response(500, ['ok' => false, 'error' => 'Python binary not found']);
     }
 
@@ -215,9 +225,11 @@ try {
     // Run Python generator from isolated cwd = $jobDir
     $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($generatorPath);
     $env = [
-        'HOME' => '/home/osburn',
+        'HOME' => '/tmp',
         'PATH' => '/usr/local/bin:/usr/bin:/bin',
         'PYTHONUNBUFFERED' => '1',
+        'ABET_PRIVATE_DIR' => getenv('ABET_PRIVATE_DIR') ?: '',
+        'OPENAI_API_KEY' => getenv('OPENAI_API_KEY') ?: '',
     ];
 
     $runResult = null;
@@ -246,10 +258,15 @@ try {
         ]);
     }
 
-    // Find generated DOCX
-    $docxFiles = glob($outDir . '/*_ABET_Report.docx') ?: [];
-    if (count($docxFiles) === 0) {
-        json_response(500, ['ok' => false, 'error' => 'No DOCX generated', 'job_id' => $jobId]);
+    //testing this out to see if the doc is being generated 
+    $docxFiles = glob($outDir . '/*.docx');
+
+    if (!$docxFiles) {
+        json_response(500, [
+            'ok' => false,
+            'error' => 'Gen failed :(',
+            'job_id' => $jobId
+        ]);
     }
 
     usort($docxFiles, static function ($a, $b) {

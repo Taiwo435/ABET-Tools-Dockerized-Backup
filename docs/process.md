@@ -28,6 +28,7 @@ This section will allow you to follow the github commmands that I list.
 It is VERY useful for interfacing with github generally.
 
 [This video](https://www.youtube.com/watch?v=yVP3sYgd0bY) is very helpful.
+
 I also recommend adding the ssh-add command in your `.bashrc` so it runs every time you start the terminal.
 I cannot overstate how useful this will be to software dev.
 
@@ -44,6 +45,13 @@ Covered in the [main README](../README.md#getting-started) but here more thourog
 2) within `docker/`, run `docker compose up --build`. This is a command that will be super helpful for you. It forces the containers to rebuild, even if they are already created, which is crucial if you change certain files like `docker/mysql/init.sql` and you want the containers to reflect the changes.
 3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
 4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin
+
+
+> [!TIP]
+> As long as you use the important .env variables for connecting to different
+> containers, you should not worry about the implementaion on the server!
+> The server builds based on an entirely different set of variable values,
+> which correspond to how services on the server are laid out. 
 
 ### cPanel
 
@@ -120,8 +128,56 @@ A Pull request can be opened at any time and resolved at any other time.
 
 ## Application staging
 
-WIP, nobody else needs to do this at the moment.
+Staging is in a WIP state at the moment. It is meant
+to simulate how deployment on the server will look like, on 
+your local machine. 
+
+> [!IMPORTANT]  
+> This depends on the fact that you are using
+> the production environment variables. Please
+> copy the production .env file into your system
+> and save your current .env file. somewhere else.
+>
+> Useful scripts for this are in `scripts/` (woah!!) 
+
+```bash
+docker compose -f docker-compose-staging.yml
+```
 
 ## Deployment to the server
 
-WIP, nobody else needs to do this at the moment.
+> [!CAUTION]  
+> The steps here can permanently affect the state of the
+> server. Please exercise caution.
+> Make sure you know what each script does before doing it.
+> A backup directory on the server at `~/abet_backup` exists
+> if you're not confident in yourself.
+>
+> Good luck!
+
+
+The main script I use for deployment is `scripts/deployment/deploy.bash`. 
+
+It assumes you:
+
+- Have a server SSH key already added.
+- Have a copy of the server's .env file in `docker/prod.env`.
+- Have a stable, working version of code.
+
+> [!TIP]
+> `scripts/deployment/copy_from_server.bash` is a really useful template
+> file for copying files directly from the server (like if you wanted
+> to copy docker/.env on the server to docker/prod.env)
+
+The script will copy your local copy of the files directly onto the server.
+It will then restart and rebuild the docker containers. 
+
+### Specific steps it takes
+- It generates a `.htaccess` file with the production environment variables
+- It shuts down the containers on the server
+- It copies ONLY git-tracked files onto the server
+- It copies sensitive .env and .htaccess files to the server
+- It rebuilds and starts the containers based on `docker/docker-compose-prod.yml`
+
+If any of these commands fail, the script will HALT and send a useful error message
+to the user. 

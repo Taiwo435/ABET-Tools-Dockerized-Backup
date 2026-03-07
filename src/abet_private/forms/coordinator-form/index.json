@@ -6,6 +6,36 @@
         },
         {
             "fileName": "generalCriteria"
+        },
+        {
+            "fileName": "educationalObjectives"
+        },
+        {
+            "fileName": "studentOutcomes"
+        },
+        {
+            "fileName": "continuousImprovement"
+        },
+        {
+            "fileName": "Curriculum"
+        },
+        {
+            "fileName": "Faculty"
+        },
+        {
+            "fileName": "Facilities"
+        },
+        {
+            "fileName": "Staffing"
+        },
+        {
+            "fileName": "Equipment"
+        },
+        {
+            "fileName": "institutionalSummary"
+        },
+        {
+            "fileName": "assessmentPlan"
         }
     ]
 }

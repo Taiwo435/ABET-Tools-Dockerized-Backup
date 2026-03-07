@@ -29,10 +29,19 @@ This requires:
 
 Once that's done, you can run these commands to view the application
 
-1) cd into `docker/` and create a `.env` file in that folder. `env.demo` is a format file that you can use. Please use this for development. [More info about .env files](#env-files)
-2) within `docker/`, run `docker compose up --build`
-3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
-4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin
+1) cd into `docker/` and create a `.env`. `env.demo` is a template file that is suitable for development.
+
+> [!NOTE]  
+> Env files are how we configure the containers to run
+> differently on your local machine and on the server.
+> Using the env files correctly will ensure that your
+> code works as intended on the server.
+>
+> [More information about the ENV files are available in this section](#env-files).
+
+3) within `docker/`, run `docker compose up --build`
+4) you can visit [localhost port 8080](https://localhost:8080) to see the interface
+5) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin (useful to see database state)
 
 ## ABET private key setup
 
@@ -44,8 +53,6 @@ Using the CPanel
 4) `eval "$(ssh-agent -s)"`
 5) `ssh-add $PATH_TO_ABET_PRIVATE_KEY`
 6) Use the ABET ssh key password in the discord.
-
-Note: you can automate step 4 and 5 if you create your own private key and put these commands in your `~/.bashrc`
 
 ## Docker Installs
 
@@ -75,21 +82,42 @@ The rest of the project organization info is [HERE in the docs](docs/project-org
 
 ### `.env` files
 
-this is the MOST important concept of configuration in the project. On first setup, you probably run `cp env.demo .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
+This is the MOST important concept of configuration in the project. On first setup, you probably run `cp env.demo .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
 
 `.env` stores ALL of our secret keys, but also our configuratoin information. Changing .env will change how the containers are built. I made `env.demo` with the purpose of easy setup, but these values should NEVER be exposed or used in the real server.
 
-## Updating mysql tables
+> [!NOTE]  
+> The project usually has a second .env file called prod.env
+> that is meant to only run on the server and has credentials
+> that may never be exposed. You only interact with this file if
+> you are deploying the application or messing with the server.
+>
+> [More information about .env files](docs/env.md)
+> 
+> [More information about project deployment](docs/deployment.md)
 
-Updating mysql tables requires a reset of the `./docker/mysql/mysql_data` directory. To update the mysql tables, I usually run:
+
+## Database development
+
+If you're working on the database, the most important file
+in the project for you is `docker/mysql/init.sql`, as it 
+defines all of the database tables that you will interface with. 
+
+> [!IMPORTANT]  
+> Restarting the `docker compose` contaienrs will NOT
+> update the mySQL tables. This is because the mysql
+> container is simply restarted, not built again.
+>
+> You can fix this by running the following commands:
 
 within the `docker/` folder
 
 ```bash
 docker compose down     # or docker-compse if you have that
-rm -rf ./mysql/mysql_data        # reset mysql_data so that tables can be updated.
 docker compose up --build
 ```
+
+[Information on how to link to the database](docs/database_link.md)
 
 ## Pulling from the server
 
@@ -104,4 +132,5 @@ docker compose up --build
 ## More information
 
 More docs are located in the [docs directory](./docs/).
-More information is found [in this master document.](https://docs.google.com/document/d/1mHOwIYyIZtg7FO8jtxTz9lPIuB3W9JVeVAR240YsTQA/edit?tab=t.88j2hx3zuwbr)
+
+Even more information is found [in this master document.](https://docs.google.com/document/d/1mHOwIYyIZtg7FO8jtxTz9lPIuB3W9JVeVAR240YsTQA/edit?tab=t.88j2hx3zuwbr)
