@@ -431,7 +431,6 @@ function e(string $v): string {
       statusEl.className = 'status ' + type;
       statusEl.textContent = msg;
     }
-
     function setLRStatus(type, msg) {
       lrStatusEl.className = 'status test ' + type;
       lrStatusEl.textContent = msg;
