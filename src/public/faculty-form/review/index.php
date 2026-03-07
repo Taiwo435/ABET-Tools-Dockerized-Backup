@@ -13,10 +13,10 @@ $formName = "faculty-form";
 
 
 function decodeGridRows($v): array {
-    if (is_array($v) && isset($v["rows"]) && is_array($v["rows"])) return $v["rows"];
+    if (is_array($v)) return $v;
     if (is_string($v) && trim($v) !== "") {
         $decoded = json_decode($v, true);
-        if (is_array($decoded) && isset($decoded["rows"]) && is_array($decoded["rows"])) return $decoded["rows"];
+        if (is_array($decoded)) return $decoded;
     }
     return [];
 }

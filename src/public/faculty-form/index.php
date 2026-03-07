@@ -26,10 +26,10 @@ function isEmptyValue($v): bool {
  * returns an empty string if no rows exist or the formatting is invalid
  */
 function decodeGridRows($v): array {
-    if (is_array($v) && isset($v["rows"]) && is_array($v["rows"])) return $v["rows"];
+    if (is_array($v)) return $v;
     if (is_string($v) && trim($v) !== "") {
         $decoded = json_decode($v, true);
-        if (is_array($decoded) && isset($decoded["rows"]) && is_array($decoded["rows"])) return $decoded["rows"];
+        if (is_array($decoded)) return $decoded;
     }
     return [];
 }
@@ -155,6 +155,7 @@ $overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequir
     .small-muted { opacity:0.75; font-size:0.9rem; margin-top:4px; }
     .form-group.page-card { cursor:pointer; transition: transform 0.06s ease, background 0.1s ease; }
     .form-group.page-card:hover { transform: translateY(-1px); background: rgba(0,0,0,0.02); }
+    .right-allign-div { display:flex; justify-content:flex-end; margin-top:18px; width: 100%;}
   </style>
 </head>
 <body>
@@ -222,6 +223,14 @@ $overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequir
         </div>
       </a>
     <?php endforeach; ?>
+
+    <div class="right-allign-div">
+    <button class="form-button form-button-save"
+            type="button"
+            onclick="window.location.assign('/home')">
+      Return Home
+    </button>
+    </div>
 
   </div>
 </div>

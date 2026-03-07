@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $success = true;
     }
   }
-}
+} 
 ?>
 <!DOCTYPE html>
 <html lang="en">
