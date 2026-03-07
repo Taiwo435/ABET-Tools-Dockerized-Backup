@@ -373,6 +373,19 @@ function e(string $v): string {
     </section>
   </main>
 
+  <main class="container">
+    <section class="card">
+      <h1>Generate Long Report</h1>
+      <p class="sub">This is a placeholder for the long report generation tried to connect it with FacultyInfoDB.py(still figuring it out) for now just says hi</p>
+            <div class="actions">
+        <button id="LRbtn" class="btn prim" type="button">Generate Long Report</button>
+      </div>
+      <div id="status" class="status test">
+      </div>
+    </section>
+  </main>
+
+
   <script>
     // ===== Profile dropdown =====
     const profileBtn = document.getElementById('profileBtn');
@@ -401,7 +414,11 @@ function e(string $v): string {
     const downloadDocxBtn = document.getElementById('downloadDocxBtn');
     const pdfHint = document.getElementById('pdfHint');
 
+    const LRbtn = document.getElementById('LRbtn');
+
     let selectedFile = null;
+
+
 
     function setStatus(type, msg) {
       statusEl.className = 'status ' + type;
@@ -531,6 +548,13 @@ function e(string $v): string {
         generateBtn.disabled = false;
       }
     });
+
+    LRbtn.addEventListener('click', () => {
+      setStatus('info', 'Generating report...');
+      statusEl.textContent = 'Report generated'; 
+    });
+    
+
   </script>
 </body>
 </html>

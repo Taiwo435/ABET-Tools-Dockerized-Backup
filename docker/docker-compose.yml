@@ -19,6 +19,11 @@ services:
       - SESSION_COOKIE_SAMESITE=Lax
     ports:
       - "${WEBSERVER_PORT:-8080}:80"
+    command:
+      - sh
+      - -lc
+      - >- 
+        install -d -o www-data -g www-data -m 0770 "${ABET_PRIVATE_DIR}/report_jobs" && exec apache2-foreground
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
@@ -79,12 +84,14 @@ services:
     build: 
       context: ../
       dockerfile: docker/extraction_api/Dockerfile
+      args:
+        EXTRACTION_PORT: ${EXTRACTION_PORT:?error}
     container_name: extraction_api
     hostname: ${EXTRACTION_HOSTNAME:?error}
     env_file:
       - .env
     ports:
-      - "${EXTRACTION_PORT:?error}:8000" # should Only be in deveopment
+      - "${EXTRACTION_PORT:?error}:${EXTRACTION_PORT:?error}" 
     volumes:
       - ../src/extraction_api:/usr/src/app
     networks:
@@ -98,6 +105,8 @@ services:
     build:
       context: ../
       dockerfile: docker/canvas_formatting_api/Dockerfile
+      args:
+        CANVAS_FORMATTING_PORT: ${CANVAS_FORMATTING_PORT:?error}
     container_name: canvas_formatting_api
     hostname: ${CANVAS_FORMATTING_HOSTNAME:?error}
     ports:
@@ -106,7 +115,6 @@ services:
       - ../src/canvas_formatting_api:/usr/src/app
     networks:
       - app_network
-
 
   ###################################################
   # the report generation container that hosts the fastapi backend
@@ -117,6 +125,8 @@ services:
     build: 
       context: ../
       dockerfile: docker/reportgen/Dockerfile
+      args:
+        REPORTGEN_PORT: ${REPORTGEN_PORT:?error}
     container_name: reportgen
     hostname: ${REPORTGEN_HOSTNAME:?error}
     environment:
@@ -126,7 +136,7 @@ services:
     volumes:
       - ../src/report_generation_api:/usr/src/app
     ports:
-      - "${REPORTGEN_PORT:?error}:8001"  
+      - "${REPORTGEN_PORT:?error}:${REPORTGEN_PORT:?error}"  
     networks:
       - app_network
     depends_on:

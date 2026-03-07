@@ -30,7 +30,9 @@ def _get_canvas_base_url(canvas_domain: str) -> str:
     return domain + "/"
 
 
-def fetch_all_course_files(canvas_domain: str, course_id: str, headers: dict) -> List[dict]:
+def fetch_all_course_files(
+    canvas_domain: str, course_id: str, headers: dict
+) -> List[dict]:
     """
     Fetch ALL files in a course using /files (paginated).
     """
@@ -93,12 +95,18 @@ def find_file_folder(
     """Find folders matching (year semester) and optionally course_code in course."""
     logger.info(
         "Finding all (%s %s) folders for %s in course %s...",
-        year, semester.capitalize(), course_code or "(all)", course_id,
+        year,
+        semester.capitalize(),
+        course_code or "(all)",
+        course_id,
     )
     endpoint = f"courses/{course_id}/folders"
-    file_folders = get_paginated_list(endpoint, headers, api_base_url, params={"include[]": "folders"})
+    file_folders = get_paginated_list(
+        endpoint, headers, api_base_url, params={"include[]": "folders"}
+    )
     results = [
-        f for f in file_folders
+        f
+        for f in file_folders
         if f"({year} {semester.capitalize()})" in f.get("full_name", "")
         and (not course_code or course_code in f.get("full_name", ""))
     ]
@@ -115,7 +123,9 @@ def get_files(
 ) -> Tuple[dict, str]:
     """Get files grouped by Syllabus/Assignments from folders."""
     if not file_folders:
-        raise RuntimeError("No folders were returned from Canvas. Check permissions/course_id.")
+        raise RuntimeError(
+            "No folders were returned from Canvas. Check permissions/course_id."
+        )
 
     course_name = file_folders[0].get("full_name", "").split("/")[1] or "COURSE"
 
@@ -171,7 +181,9 @@ def add_page_to_canvas(
     return response.json()
 
 
-def publish_module(course_id: str, module_id: int, headers: dict, api_base_url: str) -> dict:
+def publish_module(
+    course_id: str, module_id: int, headers: dict, api_base_url: str
+) -> dict:
     """Publish a Canvas module."""
     module_data = {"module": {"published": "true"}}
     response = requests.put(
@@ -193,7 +205,9 @@ def upload_module_to_canvas(
 
     for module in all_mods:
         if module.get("name") == module_name:
-            logger.info("Module %s already exists with id %s", module_name, module.get("id"))
+            logger.info(
+                "Module %s already exists with id %s", module_name, module.get("id")
+            )
             return module
 
     logger.info("Uploading '%s' module to Canvas...", module_name)
@@ -217,7 +231,11 @@ def add_single_module_item(
 
     for item in module_items:
         if item.get("title") == page.get("title"):
-            logger.info("Module item '%s' already exists with id %s", item.get("title"), item.get("id"))
+            logger.info(
+                "Module item '%s' already exists with id %s",
+                item.get("title"),
+                item.get("id"),
+            )
             return
 
     module_item_data = {
@@ -246,6 +264,8 @@ def run_formatting_pipeline(
     canvas_domain: str = "canvas.asu.edu",
     course_code: str = "",
     instructor_name: str = "",
+    course_folder_name: str = "",
+    term_display: str = "",
 ) -> dict:
     """
     Run the full formatting pipeline: fetch data, build HTML, upload pages, create module.
@@ -260,15 +280,30 @@ def run_formatting_pipeline(
     canvas_base_url = _get_canvas_base_url(canvas_domain)
     headers = {"Authorization": f"Bearer {canvas_access_token}"}
 
-    # 1) Find folder structure for the term (filtered by course_code when provided)
-    file_folders = find_file_folder(
-        source_course_id, semester, year, headers, api_base_url,
-        course_code=course_code, instructor_name=instructor_name,
-    )
+    # 1) Find folder structure
+    # When course_folder_name is provided (from extraction), use it for direct matching
+    if course_folder_name:
+        endpoint = f"courses/{source_course_id}/folders"
+        all_folders = get_paginated_list(
+            endpoint, headers, api_base_url, params={"include[]": "folders"}
+        )
+        file_folders = [
+            f for f in all_folders if course_folder_name in f.get("full_name", "")
+        ]
+    else:
+        file_folders = find_file_folder(
+            source_course_id,
+            semester,
+            year,
+            headers,
+            api_base_url,
+            course_code=course_code,
+            instructor_name=instructor_name,
+        )
     if not file_folders:
         raise RuntimeError(
-            f"No folders found for ({year} {semester.capitalize()}). "
-            "Ensure course has folder structure with that term in the path."
+            f"No folders found matching '{course_folder_name or f'({year} {semester.capitalize()})'}'. "
+            "Ensure course has the expected folder structure."
         )
 
     # 2) Get grouped files
@@ -305,7 +340,9 @@ def run_formatting_pipeline(
     abet_page = add_page_to_canvas(
         abet_html,
         "CSE-ABET Assessment Instruments and Samples",
-        dest_id, headers, api_base_url,
+        dest_id,
+        headers,
+        api_base_url,
     )
 
     # 7) Create module
@@ -349,8 +386,13 @@ def generate_course_html(
     headers = {"Authorization": f"Bearer {canvas_access_token}"}
 
     file_folders = find_file_folder(
-        source_course_id, semester, year, headers, api_base_url,
-        course_code=course_code, instructor_name=instructor_name,
+        source_course_id,
+        semester,
+        year,
+        headers,
+        api_base_url,
+        course_code=course_code,
+        instructor_name=instructor_name,
     )
     if not file_folders:
         raise RuntimeError(
@@ -399,7 +441,9 @@ if __name__ == "__main__":
     canvas_domain = os.getenv("CANVAS_DOMAIN", "canvas.asu.edu")
 
     if not canvas_token:
-        raise RuntimeError("Missing Canvas API token. Set CANVAS_TOKEN in your environment or .env file.")
+        raise RuntimeError(
+            "Missing Canvas API token. Set CANVAS_TOKEN in your environment or .env file."
+        )
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 

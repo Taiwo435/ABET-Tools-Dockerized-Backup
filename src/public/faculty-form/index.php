@@ -1,18 +1,10 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/faculty_form_load.php';
 
 $formName = "faculty-form";
 
-/**
- * isEmptyValue is used later for form completion checking.
- * null = empty
- * empty string after trimming = empty
- * empty array = empty
- * anything else = filled
- */
 function isEmptyValue($v): bool {
     if ($v === null) return true;
     if (is_string($v)) return trim($v) === "";
@@ -20,11 +12,6 @@ function isEmptyValue($v): bool {
     return false;
 }
 
-/**
- * Accepts either already decoded array or a JSON string
- * extracts and returns the "rows" array
- * returns an empty string if no rows exist or the formatting is invalid
- */
 function decodeGridRows($v): array {
     if (is_array($v)) return $v;
     if (is_string($v) && trim($v) !== "") {
@@ -34,19 +21,11 @@ function decodeGridRows($v): array {
     return [];
 }
 
-/**
- * loads forms data for a given page
- * returns an array
- */
 function loadValues(string $pageName): array {
     $data = loadFormData($pageName);
     return is_array($data) ? $data : [];
 }
 
-/**
- * extracts the field array from the form JSON
- * returns a simplified array containing name, type, label, req. flag
- */
 function normalizeFields(array $formJson): array {
     $fields = $formJson["fields"] ?? [];
     $out = [];
@@ -134,6 +113,8 @@ foreach ($pageNames as $i => $pageName) {
 }
 
 $overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequired) * 100) : 0;
+
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -159,6 +140,9 @@ $overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequir
   </style>
 </head>
 <body>
+
+<link rel="stylesheet" href="/assets/css/form.css">
+<link rel="stylesheet" href="/assets/css/faculty-form.css">
 
 <div class="center-div">
   <div class="form-holder">
@@ -234,9 +218,6 @@ $overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequir
 
   </div>
 </div>
-
-</body>
-</html>
 
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-footer.php';

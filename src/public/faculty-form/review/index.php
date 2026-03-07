@@ -7,10 +7,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/faculty_form_load.php';
 
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
-
 $formName = "faculty-form";
-
 
 function decodeGridRows($v): array {
     if (is_array($v)) return $v;
@@ -35,89 +32,15 @@ function loadValues(string $pageName): array {
 }
 
 $pageNames = getAllPageNames($formName);
+
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 ?>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Faculty Form Review</title>
-  <link rel="stylesheet" href="/assets/css/form.css">
 
-  <style>
-    :root{
-    --asu-maroon:#8C1D40;
-    --asu-gold:#FFC627;
-    --asu-rich-black:#191919;
-    --border-light: rgba(0,0,0,0.12);
-    --card-bg: #FFFFFF;
-    --page-bg: #F4F5F7;
-    }
+<link rel="stylesheet" href="/assets/css/form.css">
+<link rel="stylesheet" href="/assets/css/faculty-form-review.css">
 
-    body { background: var(--page-bg); }
-
-    .form-holder {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    }
-    .review-section {
-    margin-top: 18px;
-    padding: 18px 18px 8px;
-    border: 1px solid rgba(0,0,0,0.10);
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-    position: relative;
-    }
-    .review-section:last-child {
-    padding-bottom: 8px;
-    }
-    .review-section::before{
-    content:"";
-    position:absolute;
-    left:0;
-    right:0;
-    top:0;
-    height:5px;
-    background: linear-gradient(90deg, #8C1D40 0%, #8C1D40 85%, #FFC627 85%, #FFC627 100%);
-    border-radius: 8px 8px 0 0;
-    }
-    .review-section:last-child { 
-    border-bottom: none; padding-bottom: 0; 
-    }
-    .review-section-title{
-    margin: 0;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    color: var(--asu-maroon);
-    }
-    .review-section-header{
-    display:flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-    }
-    .review-value-box{
-    border: 1px solid rgba(0,0,0,0.10);
-    background: #FAFAFA;
-    border-radius: 6px;
-    padding: 10px 12px;
-    }
-    .review-grid th{
-    background: rgba(140, 29, 64, 0.06);
-    color: var(--asu-rich-black);
-    }
-  </style>
-</head>
-
-<body>
 <div class="center-div">
-  <div class="form-holder">
+  <div class="form-holder review-form-holder">
     <div class="top-bar">
       <h2 class="form-title">Faculty Form Review</h2>
       <div class="page-select-actions">
@@ -143,7 +66,7 @@ $pageNames = getAllPageNames($formName);
       <div class="review-section">
         <div class="review-section-header">
           <div>
-            <h3 class="form-label"><?php echo htmlspecialchars($title); ?></label>
+            <h3 class="form-label"><?php echo htmlspecialchars($title); ?></h3>
           </div>
           <button class="form-button form-button-save"
                   type="button"
@@ -243,8 +166,6 @@ $pageNames = getAllPageNames($formName);
 
   </div>
 </div>
-</body>
-</html>
 
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-footer.php';

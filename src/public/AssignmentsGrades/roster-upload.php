@@ -1,3 +1,8 @@
+<?php
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_login();
+$csrfToken = csrf_token('tool1_proxy');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,6 +18,7 @@
       --bg-color: #F9F9F9;
       --border-color: #E0E0E0;
       --success: #0a7d30;
+      --error: #d32f2f;
     }
 
     body {
@@ -270,14 +276,49 @@
       margin-bottom: 15px;
       opacity: 0.3;
     }
+
+    .pipeline-section { margin-top: 20px; }
+
+    .pipeline-locked {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .pipeline-status {
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .pipeline-status.active { display: block; }
+    .status-running { background: #e3f2fd; border-left: 4px solid #1976d2; }
+    .status-success { background: #e6f4ea; border-left: 4px solid var(--success); }
+    .status-error { background: #fdecea; border-left: 4px solid var(--error); }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ccc;
+      border-top-color: var(--asu-maroon);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
   <header class="site-header">
-    <div class="site-title">ABET Tools - Roster Management</div>
-    <a href="/../index.php" class="nav-link">← Back to Dashboard</a>
-    <a href="tool1.php" class="nav-link">← Back </a>
+    <div class="site-title">ABET Tools - Roster & Extraction</div>
+    <div>
+      <a href="tool1.php" class="nav-link" style="margin-right: 15px;">← Back to Connection</a>
+      <a href="/../index.php" class="nav-link">← Dashboard</a>
+    </div>
 
   </header>
 
@@ -285,26 +326,26 @@
     
     <div class="page-header">
       <div class="page-title">
-        <h1>Student Roster Management</h1>
-        <p id="classInfo">CSE 445: Software Security • Fall 2024</p>
+        <h1>Upload Roster & Run Extraction</h1>
+        <p id="classInfo">Upload your class roster, then run the extraction pipeline</p>
       </div>
     </div>
 
     <!-- Upload Section -->
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">Upload or Download Roster</h2>
+        <h2 class="card-title">Upload Roster</h2>
       </div>
       <div class="card-body">
         
 
         <!-- Action Buttons -->
         <div class="btn-group">
-          <button class="btn btn-primary" onclick="downloadFromCanvas()">
+          <!-- <button class="btn btn-primary" onclick="downloadFromCanvas()">
             Download from Canvas
-          </button>
+          </button> -->
           <button class="btn btn-secondary" onclick="document.getElementById('rosterFile').click()">
-             Upload CSV File
+             Upload CSV/XLS File
           </button>
           <button class="btn btn-secondary" onclick="clearRoster()" style="margin-left: auto;">
             Clear Roster
@@ -314,9 +355,9 @@
         <!-- File Upload Area -->
         <div class="file-upload" id="dropZone" onclick="document.getElementById('rosterFile').click()">
           <div class="file-upload-text">Click to upload or drag and drop</div>
-          <div class="file-upload-hint">Accepts .csv files from Canvas export (Name, ID, Program will be extracted)</div>
+          <div class="file-upload-hint">Accepts .csv or .xls roster files (Name, ID, Program will be extracted)</div>
         </div>
-        <input type="file" id="rosterFile" accept=".csv" onchange="handleFileUpload(event)">
+        <input type="file" id="rosterFile" accept=".csv,.xls" onchange="handleFileUpload(event)">
 
       </div>
     </div>
@@ -357,7 +398,7 @@
             <tbody>
               <tr>
                 <td colspan="5" class="empty-state"> 
-                  <div>No roster data loaded. Upload a CSV file or download from Canvas to get started.</div>
+                  <div>No roster data loaded. Upload a CSV or XLS roster file to get started.</div>
                 </td>
               </tr>
             </tbody>
@@ -366,39 +407,60 @@
       </div>
     </div>
 
-      <a href="assignments.php" class="btn btn-primary">
+      <!-- <a href="assignments.php" class="btn btn-primary">
         Continue to Assignments
       </a>
-    </div>
+    </div> -->
 
-  </div>
+    <!-- Pipeline Trigger -->
+    <div class="pipeline-section">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Run Extraction & Formatting</h2>
+        </div>
+        <div class="card-body">
+          <p style="color: var(--text-light); margin-top: 0;">
+            This will extract assignment data from your source course, upload it to the
+            destination shell, and create formatted Canvas modules. This process takes
+            2–5 minutes.
+          </p>
+          <button class="btn btn-primary" id="runPipelineBtn"
+                  onclick="runPipeline()" disabled>
+            Run Extraction & Formatting
+          </button>
+        </div>
+      </div>
+      <div class="pipeline-status" id="pipelineStatus"></div>
+    </div>
 
   <script>
     // Global variables
     let rosterData = [];
+    // // Load saved roster on page load
+    // window.addEventListener('DOMContentLoaded', function() {
+    //   loadSelectedClass();
+    //   loadSavedRoster();
+    // });
 
-    // Load saved roster on page load
-    window.addEventListener('DOMContentLoaded', function() {
-      loadSelectedClass();
-      loadSavedRoster();
-    });
+    // // Load selected class information from localStorage
+    // function loadSelectedClass() {
+    //   const selectedClassStr = localStorage.getItem('selectedClass');
+    //   if (selectedClassStr) {
+    //     try {
+    //       const classInfo = JSON.parse(selectedClassStr);
+    //       // Update the page header with selected class info
+    //       const classInfoElement = document.getElementById('classInfo');
+    //       if (classInfoElement && classInfo.name && classInfo.semester) {
+    //         classInfoElement.textContent = classInfo.name + ' • ' + classInfo.semester;
+    //       }
+    //     } catch (error) {
+    //       console.error('Error loading selected class:', error);
+    //     }
+    //   }
+    // }
+    let uploadedFile = null;
 
-    // Load selected class information from localStorage
-    function loadSelectedClass() {
-      const selectedClassStr = localStorage.getItem('selectedClass');
-      if (selectedClassStr) {
-        try {
-          const classInfo = JSON.parse(selectedClassStr);
-          // Update the page header with selected class info
-          const classInfoElement = document.getElementById('classInfo');
-          if (classInfoElement && classInfo.name && classInfo.semester) {
-            classInfoElement.textContent = classInfo.name + ' • ' + classInfo.semester;
-          }
-        } catch (error) {
-          console.error('Error loading selected class:', error);
-        }
-      }
-    }
+
 
     // Drag and drop functionality
     const dropZone = document.getElementById('dropZone');
@@ -440,8 +502,19 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      if (!file.name.endsWith('.csv')) {
-        alert('Please upload a CSV file');
+      if (!file.name.match(/\.(csv|xls)$/i)) {
+        alert('Please upload a .csv or .xls file');
+        return;
+      }
+
+      uploadedFile = file;
+      showFileSelected(file.name);
+
+      if (file.name.match(/\.xls$/i)) {
+        document.getElementById('runPipelineBtn').disabled = false;
+        document.getElementById('dropZone').innerHTML +=
+          '<div class="file-upload-hint" style="color:var(--text-light); margin-top:6px;">' +
+          'XLS roster preview not available — file will be parsed server-side during extraction</div>';
         return;
       }
 
@@ -505,17 +578,17 @@
           return;
         }
 
-        // Save to localStorage
-        localStorage.setItem('rosterData', JSON.stringify(rosterData));
-        localStorage.setItem('rosterLastUpdated', new Date().toLocaleString());
+        // // Save to localStorage
+        // localStorage.setItem('rosterData', JSON.stringify(rosterData));
+        // localStorage.setItem('rosterLastUpdated', new Date().toLocaleString());
         
         // Update display
         updateRosterDisplay();
-        
-        alert('Roster uploaded successfully!\n\n' +
-              '• Students loaded: ' + rosterData.length + '\n' +
-              '• Data extracted: Name, ID, Program, Email\n\n' +
-              'Roster will be saved until you upload a new file.');
+        // alert('Roster uploaded successfully!\n\n' +
+        //       '• Students loaded: ' + rosterData.length + '\n' +
+        //       '• Data extracted: Name, ID, Program, Email\n\n' +
+        //       'Roster will be saved until you upload a new file.');
+        document.getElementById('runPipelineBtn').disabled = false;
 
       } catch (error) {
         console.error('Error parsing CSV:', error);
@@ -577,8 +650,8 @@
       document.getElementById('totalStudents').textContent = rosterData.length;
       document.getElementById('totalPrograms').textContent = uniquePrograms;
       
-      const lastUpdated = localStorage.getItem('rosterLastUpdated') || 'Just now';
-      document.getElementById('lastUpdated').textContent = lastUpdated.split(',')[0]; // Just show date
+      const lastUpdated = new Date().toLocaleDateString();
+      document.getElementById('lastUpdated').textContent = lastUpdated;
 
       // Update title
       document.getElementById('rosterTableTitle').textContent = `Current Roster (${rosterData.length} Students)`;
@@ -614,22 +687,91 @@
       });
     }
 
+    function showFileSelected(filename) {
+      const dz = document.getElementById('dropZone');
+      dz.innerHTML =
+        '<div class="file-upload-text">✅ ' + escapeHtml(filename) + '</div>' +
+        '<div class="file-upload-hint">File selected — click to change</div>';
+      dz.style.borderColor = 'var(--success)';
+      dz.style.background = '#e6f4ea';
+    }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
-
-    function loadSavedRoster() {
-      const saved = localStorage.getItem('rosterData');
-      if (saved) {
-        try {
-          rosterData = JSON.parse(saved);
-          updateRosterDisplay();
-        } catch (error) {
-          console.error('Error loading saved roster:', error);
-        }
+    
+    // function loadSavedRoster() {
+    //   const saved = localStorage.getItem('rosterData');
+    //   if (saved) {
+    //     try {
+    //       rosterData = JSON.parse(saved);
+    //       updateRosterDisplay();
+    //     } catch (error) {
+    //       console.error('Error loading saved roster:', error);
+    //     }
+    //   }
+    
+    // ── Pipeline execution ──
+    async function runPipeline() {
+      if (!uploadedFile) {
+        alert('Please upload a roster file first.');
+        return;
       }
+
+      const btn = document.getElementById('runPipelineBtn');
+      const uploadSection = document.querySelector('.card');
+
+      btn.disabled = true;
+      btn.textContent = 'Processing…';
+      uploadSection.classList.add('pipeline-locked');
+
+      setStatus('running',
+        '<span class="spinner"></span>' +
+        '<strong>Step 1/2:</strong> Extracting data from Canvas and uploading to destination course… ' +
+        '<br><span style="color:var(--text-light)">This may take 2–5 minutes. Please do not close this page.</span>'
+      );
+
+      try {
+        const body = new FormData();
+        body.append('action', 'run-pipeline');
+        body.append('roster_file', uploadedFile);
+        body.append('csrf_token', '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>');
+
+        const res = await fetch('api-proxy.php', { method: 'POST', body });
+        const data = await res.json();
+
+        if (!data.success) {
+          const step = data.step === 'formatting' ? 'Step 2 (Formatting)' : 'Step 1 (Extraction)';
+          setStatus('error', '<strong>' + step + ' failed:</strong> ' + escapeHtml(data.message));
+          btn.disabled = false;
+          btn.textContent = 'Retry Extraction & Formatting';
+          uploadSection.classList.remove('pipeline-locked');
+          return;
+        }
+
+        setStatus('success',
+          '<strong>✅ Pipeline complete!</strong><br>' +
+          'Data has been extracted, formatted, and uploaded to your Canvas destination course.'
+        );
+        btn.disabled = false;
+        btn.textContent = 'Run Extraction & Formatting';
+        uploadSection.classList.remove('pipeline-locked');
+
+      } catch (err) {
+        setStatus('error', '<strong>Network error:</strong> ' + escapeHtml(err.message));
+        btn.disabled = false;
+        btn.textContent = 'Retry Extraction & Formatting';
+        uploadSection.classList.remove('pipeline-locked');
+      }
+    }
+
+    function setStatus(type, html) {
+      const el = document.getElementById('pipelineStatus');
+      el.className = 'pipeline-status active status-' + type;
+      el.innerHTML = html;
+      el.scrollIntoView({ behavior: 'smooth' });
     }
 
     function editStudent(index) {
@@ -648,16 +790,16 @@
       rosterData[index].id = newId || student.id;
       rosterData[index].program = newProgram || student.program;
       
-      localStorage.setItem('rosterData', JSON.stringify(rosterData));
-      localStorage.setItem('rosterLastUpdated', new Date().toLocaleString());
+      // localStorage.setItem('rosterData', JSON.stringify(rosterData));
+      // localStorage.setItem('rosterLastUpdated', new Date().toLocaleString());
       updateRosterDisplay();
     }
 
     function removeStudent(index) {
       if (confirm('Remove ' + rosterData[index].name + ' from roster?')) {
         rosterData.splice(index, 1);
-        localStorage.setItem('rosterData', JSON.stringify(rosterData));
-        localStorage.setItem('rosterLastUpdated', new Date().toLocaleString());
+        // localStorage.setItem('rosterData', JSON.stringify(rosterData));
+        // localStorage.setItem('rosterLastUpdated', new Date().toLocaleString());
         updateRosterDisplay();
       }
     }
@@ -665,8 +807,8 @@
     function clearRoster() {
       if (confirm('Clear entire roster?\n\nThis will remove all ' + rosterData.length + ' students from the roster.')) {
         rosterData = [];
-        localStorage.removeItem('rosterData');
-        localStorage.removeItem('rosterLastUpdated');
+        // localStorage.removeItem('rosterData');
+        // localStorage.removeItem('rosterLastUpdated');
         updateRosterDisplay();
         alert('Roster cleared successfully!');
       }

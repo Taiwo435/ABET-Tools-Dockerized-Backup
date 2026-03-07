@@ -33,13 +33,13 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <label class="checklist-label">Complete the faculty information form &#x279E;</label>
         </div>
         <div class="checklist-item"
-            onclick="window.location.href='/AssignmentsGrades/viewClasses.php';">
+            onclick="window.location.href='/AssignmentsGrades/tool1.php';">
             <?php if (false): ?>
                 <label class="checklist-check">&#10004;</label>
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Enter your token and class ID to add classes &#x279E;</label>
+            <label class="checklist-label">Link all of your canvas courses (<?= 0 ?> added so far) &#x279E;</label>
         </div>
         <div class="checklist-item"
             onclick="window.location.href='#';">
