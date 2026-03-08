@@ -155,8 +155,7 @@ docker compose -f docker-compose-staging.yml
 >
 > Good luck!
 
-
-The main script I use for deployment is `scripts/deployment/deploy.bash`. 
+The main script I use for deployment is `scripts/deployment/deploy.bash`.
 
 It assumes you:
 
@@ -180,4 +179,7 @@ It will then restart and rebuild the docker containers.
 - It rebuilds and starts the containers based on `docker/docker-compose-prod.yml`
 
 If any of these commands fail, the script will HALT and send a useful error message
-to the user. 
+to the user.
+
+Note: If you changed any of the database tables, you will need to update them.
+More info in [the deployment file](./deployment.md)
