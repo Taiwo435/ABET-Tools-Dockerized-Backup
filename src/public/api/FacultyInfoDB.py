@@ -61,7 +61,7 @@ try:
     )
 
     curr = conn.cursor()
-    curr.execute("SELECT Concat(first_name, ' ', last_name) AS name, highest_degree, faculty_rank, academic_appointment, faculty_id, years_experience_gov_industry, years_experience_teaching, years_experience_institution, activity_prof_orgs, activity_prof_dev, activity_consulting  From faculty_info limit 10;")
+    curr.execute("SELECT Concat(first_name, ' ', last_name) AS name, highest_degree, faculty_rank, academic_appointment, faculty_id, years_experience_gov_industry, years_experience_teaching, years_experience_institution, activity_prof_orgs, activity_prof_dev, activity_consulting From faculty_info limit 10;")
 
     for i in curr.fetchall():
         #creates tables here
