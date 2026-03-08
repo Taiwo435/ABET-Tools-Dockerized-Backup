@@ -377,7 +377,7 @@ function e(string $v): string {
     <section class="card">
       <h1>Generate Long Report</h1>
       <p class="sub">
-        Generate the long faculty report from the InfoDB source and download it as a DOCX file.
+        Generate the long faculty report and download it as a DOCX file.
       </p>
       <div class="actions">
         <button id="LRbtn" class="btn prim" type="button">Generate Long Report</button>
