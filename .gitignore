@@ -8,6 +8,7 @@ config.php
 *.key
 *.crt
 *cache*
+*.secrets
 
 # local data that should not be tracked
 *.pyc
