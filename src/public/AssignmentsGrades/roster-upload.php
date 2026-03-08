@@ -9,315 +9,15 @@ $csrfToken = csrf_token('tool1_proxy');
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Manage Roster | ABET Tools</title>
-  <style>
-    :root {
-      --asu-maroon: #8C1D40;
-      --asu-gold: #FFC627;
-      --text-dark: #222;
-      --text-light: #555;
-      --bg-color: #F9F9F9;
-      --border-color: #E0E0E0;
-      --success: #0a7d30;
-      --error: #d32f2f;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg-color);
-      color: var(--text-dark);
-      margin: 0;
-      padding: 0;
-    }
-
-    .site-header {
-      background: var(--asu-maroon);
-      color: white;
-      padding: 1rem 2rem;
-      border-bottom: 4px solid var(--asu-gold);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .site-title {
-      font-weight: 700;
-      font-size: 1.25rem;
-    }
-
-    .nav-link {
-      color: rgba(255,255,255,0.9);
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-
-    .main-container {
-      max-width: 1400px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-
-    .page-title h1 {
-      margin: 0;
-      font-size: 1.75rem;
-      color: var(--asu-maroon);
-    }
-
-    .page-title p {
-      margin: 5px 0 0;
-      color: var(--text-light);
-    }
-
-    .card {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      border: 1px solid var(--border-color);
-      margin-bottom: 20px;
-    }
-
-    .card-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border-color);
-      background: #fafafa;
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .card-body {
-      padding: 30px;
-    }
-
-    .instructions {
-      background: #f9f9f9;
-      border-left: 4px solid var(--asu-maroon);
-      padding: 20px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-
-    .instructions h4 {
-      margin-top: 0;
-      color: var(--asu-maroon);
-    }
-
-    .instructions ol {
-      margin: 10px 0 0 0;
-      padding-left: 20px;
-    }
-
-    .instructions li {
-      margin-bottom: 8px;
-      line-height: 1.5;
-    }
-
-    .btn {
-      padding: 12px 24px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .btn-primary {
-      background: var(--asu-maroon);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #5c132a;
-    }
-
-    .btn-secondary {
-      background: white;
-      color: var(--asu-maroon);
-      border: 1px solid var(--asu-maroon);
-    }
-
-    .btn-icon {
-      margin-right: 8px;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
-    .file-upload {
-      border: 2px dashed var(--border-color);
-      border-radius: 8px;
-      padding: 40px;
-      text-align: center;
-      background: #fafafa;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .file-upload:hover {
-      border-color: var(--asu-maroon);
-      background: #f5f5f5;
-    }
-
-    .file-upload-icon {
-      font-size: 3rem;
-      color: var(--asu-maroon);
-      margin-bottom: 15px;
-    }
-
-    .file-upload-text {
-      font-size: 1.1rem;
-      color: var(--text-dark);
-      margin-bottom: 5px;
-    }
-
-    .file-upload-hint {
-      font-size: 0.9rem;
-      color: var(--text-light);
-    }
-
-    input[type="file"] {
-      display: none;
-    }
-
-    .stats-mini {
-      display: flex;
-      gap: 20px;
-      margin: 20px 0;
-      flex-wrap: wrap;
-    }
-
-    .stat-mini {
-      background: white;
-      padding: 15px 20px;
-      border-radius: 6px;
-      border-left: 3px solid var(--asu-maroon);
-      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-    }
-
-    .stat-mini-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      color: var(--text-light);
-      font-weight: 700;
-    }
-
-    .stat-mini-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--asu-maroon);
-      margin-top: 5px;
-    }
-
-    .table-responsive {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      background: #fcfcfc;
-      padding: 12px;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: var(--text-light);
-      font-weight: 700;
-      border-bottom: 2px solid var(--border-color);
-      text-align: left;
-    }
-
-    td {
-      padding: 12px;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.9rem;
-    }
-
-    tr:hover {
-      background: #fafafa;
-    }
-
-    .action-link {
-      color: var(--asu-maroon);
-      text-decoration: none;
-      font-weight: 600;
-      margin-right: 12px;
-    }
-
-    .action-link:hover {
-      text-decoration: underline;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-light);
-    }
-
-    .empty-state-icon {
-      font-size: 3rem;
-      margin-bottom: 15px;
-      opacity: 0.3;
-    }
-
-    .pipeline-section { margin-top: 20px; }
-
-    .pipeline-locked {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .pipeline-status {
-      padding: 20px;
-      border-radius: 8px;
-      margin-top: 20px;
-      display: none;
-    }
-
-    .pipeline-status.active { display: block; }
-    .status-running { background: #e3f2fd; border-left: 4px solid #1976d2; }
-    .status-success { background: #e6f4ea; border-left: 4px solid var(--success); }
-    .status-error { background: #fdecea; border-left: 4px solid var(--error); }
-
-    .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #ccc;
-      border-top-color: var(--asu-maroon);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+  <link rel="stylesheet" href="/assets/css/roster.css">
 </head>
 <body>
 
   <header class="site-header">
     <div class="site-title">ABET Tools - Roster & Extraction</div>
     <div>
-      <a href="tool1.php" class="nav-link" style="margin-right: 15px;">← Back to Connection</a>
-      <a href="/../index.php" class="nav-link">← Dashboard</a>
+      <a href="tool1.php" class="nav-link pipeline-nav-link" style="margin-right: 15px;">← Back to Connection</a>
+      <a href="/../index.php" class="nav-link pipeline-nav-link">← Dashboard</a>
     </div>
 
   </header>
@@ -431,10 +131,14 @@ $csrfToken = csrf_token('tool1_proxy');
         </div>
       </div>
       <div class="pipeline-status" id="pipelineStatus"></div>
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
     </div>
 
   <script>
     // Global variables
+    let currentCsrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>';
     let rosterData = [];
     // // Load saved roster on page load
     // window.addEventListener('DOMContentLoaded', function() {
@@ -712,8 +416,81 @@ $csrfToken = csrf_token('tool1_proxy');
     //       console.error('Error loading saved roster:', error);
     //     }
     //   }
-    
-    // ── Pipeline execution ──
+    // }
+
+    let pollingTimeout = null;
+    let pollingInFlight = false;
+    let pipelineActive = false;
+
+    // localStorage helpers 
+    const _CLIENT_JOB_TTL_MS = 3600 * 1000; // 1 hour
+
+    function getStoredJob() {
+      const raw = localStorage.getItem('activeExtractionJob');
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.jobId) return parsed;
+      } catch (_) {  }
+
+      localStorage.removeItem('activeExtractionJob');
+      return null;
+    }
+
+    function saveJob(jobId) {
+      const entry = JSON.stringify({ jobId, createdAt: Date.now() });
+      localStorage.setItem('activeExtractionJob', entry);
+    }
+
+    function clearStoredJob() {
+      localStorage.removeItem('activeExtractionJob');
+    }
+
+    // Navigation guard 
+    function setPipelineActive(active) {
+      pipelineActive = active;
+      // Update nav link click guards
+      document.querySelectorAll('.pipeline-nav-link').forEach(link => {
+        if (active) {
+          link.dataset.originalHref = link.href;
+          link.addEventListener('click', navGuardHandler);
+        } else {
+          link.removeEventListener('click', navGuardHandler);
+        }
+      });
+    }
+
+    function navGuardHandler(e) {
+      if (!pipelineActive) return;
+      const leave = confirm(
+        'An extraction is still running in the background.\n\n' +
+        'If you leave now, you will lose track of this job\'s progress ' +
+        'Leave anyway?'
+      );
+      if (!leave) {
+        e.preventDefault();
+      }
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+      if (pipelineActive) e.preventDefault();
+    });
+
+    // Check on page load if a job is already running
+    window.addEventListener('DOMContentLoaded', () => {
+      const stored = getStoredJob();
+      if (stored) {
+        const ageMs = Date.now() - stored.createdAt;
+        if (ageMs > _CLIENT_JOB_TTL_MS) {
+          clearStoredJob();
+          return;
+        }
+        resumePolling(stored.jobId);
+      } else {
+        // No active job — idle
+      }
+    });
+
     async function runPipeline() {
       if (!uploadedFile) {
         alert('Please upload a roster file first.');
@@ -724,40 +501,42 @@ $csrfToken = csrf_token('tool1_proxy');
       const uploadSection = document.querySelector('.card');
 
       btn.disabled = true;
-      btn.textContent = 'Processing…';
+      btn.textContent = 'Starting Extraction...';
       uploadSection.classList.add('pipeline-locked');
 
       setStatus('running',
         '<span class="spinner"></span>' +
-        '<strong>Step 1/2:</strong> Extracting data from Canvas and uploading to destination course… ' +
-        '<br><span style="color:var(--text-light)">This may take 2–5 minutes. Please do not close this page.</span>'
+        '<strong>Initializing:</strong> Starting data extraction on Canvas…'
       );
 
       try {
         const body = new FormData();
-        body.append('action', 'run-pipeline');
+        body.append('action', 'start-extraction');
         body.append('roster_file', uploadedFile);
-        body.append('csrf_token', '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>');
+        body.append('csrf_token', currentCsrfToken);
 
         const res = await fetch('api-proxy.php', { method: 'POST', body });
         const data = await res.json();
+        if (data.next_csrf) {
+          currentCsrfToken = data.next_csrf;
+        }
 
-        if (!data.success) {
-          const step = data.step === 'formatting' ? 'Step 2 (Formatting)' : 'Step 1 (Extraction)';
-          setStatus('error', '<strong>' + step + ' failed:</strong> ' + escapeHtml(data.message));
+        if (!data.success || !data.job_id) {
+          setStatus('error', '<strong>Failed to start extraction:</strong> ' + escapeHtml(data.message));
           btn.disabled = false;
           btn.textContent = 'Retry Extraction & Formatting';
           uploadSection.classList.remove('pipeline-locked');
           return;
         }
-
-        setStatus('success',
-          '<strong>✅ Pipeline complete!</strong><br>' +
-          'Data has been extracted, formatted, and uploaded to your Canvas destination course.'
-        );
-        btn.disabled = false;
-        btn.textContent = 'Run Extraction & Formatting';
-        uploadSection.classList.remove('pipeline-locked');
+        
+        // Clear any stale job before saving the new one to prevent a previously
+        // completed job from retriggering formatting on an unexpected page refresh.
+        clearStoredJob();
+        saveJob(data.job_id);
+        setPipelineActive(true);
+        
+        // Begin the polling cycle
+        resumePolling(data.job_id);
 
       } catch (err) {
         setStatus('error', '<strong>Network error:</strong> ' + escapeHtml(err.message));
@@ -765,6 +544,176 @@ $csrfToken = csrf_token('tool1_proxy');
         btn.textContent = 'Retry Extraction & Formatting';
         uploadSection.classList.remove('pipeline-locked');
       }
+    }
+
+    function resumePolling(jobId) {
+      setPipelineActive(true);
+      const btn = document.getElementById('runPipelineBtn');
+      const uploadSection = document.querySelector('.card');
+      
+      btn.disabled = true;
+      btn.textContent = 'Processing in Background...';
+      uploadSection.classList.add('pipeline-locked');
+      
+      setStatus('running',
+        '<span class="spinner"></span>' +
+        '<strong>Step 1/2:</strong> Extracting data from Canvas and uploading to destination course… ' +
+        '<br><span style="color:var(--text-light)">This may take 2–5 minutes.</span>'
+      );
+
+      if (pollingTimeout) {
+        clearTimeout(pollingTimeout);
+      }
+      pollingInFlight = false;
+      
+      // Use setTimeout chain so the next poll only fires
+      // after the previous one completes — prevents CSRF token race conditions.
+      scheduleNextPoll(jobId);
+    }
+
+    function scheduleNextPoll(jobId) {
+      pollingTimeout = setTimeout(() => {
+        pollExtractionStatus(jobId);
+      }, 5000);
+    }
+
+    async function pollExtractionStatus(jobId) {
+      if (pollingInFlight) return;
+      pollingInFlight = true;
+      try {
+        const body = new FormData();
+        body.append('action', 'check-extraction-status');
+        body.append('job_id', jobId);
+        body.append('csrf_token', currentCsrfToken);
+
+        const res = await fetch('api-proxy.php', { method: 'POST', body });
+        const data = await res.json();
+        if (data.next_csrf) {
+          currentCsrfToken = data.next_csrf;
+        }
+
+        if (!data.success) {
+          clearTimeout(pollingTimeout);
+          clearStoredJob();
+          setPipelineActive(false);
+          const isStaleJob = (data.message || '').toLowerCase().includes('not found');
+          if (isStaleJob) {
+            setStatus('error',
+              '<strong>Previous extraction was interrupted.</strong><br>' +
+              'The server may have restarted. Please start the extraction again.'
+            );
+          } else {
+            setStatus('error', '<strong>Status check failed:</strong> ' + escapeHtml(data.message));
+          }
+          unlockUI();
+          return;
+        }
+
+        const statusStr = data.job_status.status;
+        
+        if (statusStr === 'processing') {
+          const progContainer = document.getElementById('progressContainer');
+          if (progContainer) {
+            progContainer.style.display = 'block';
+          }
+          
+          if (data.job_status.progress) {
+            const progBar = document.getElementById('progressBar');
+            if (progBar) {
+              progBar.style.width = data.job_status.progress + '%';
+            }
+          }
+          if (data.job_status.message) {
+            setStatus('running', '<span class="spinner"></span> <strong>Working:</strong> ' + escapeHtml(data.job_status.message));
+          }
+          scheduleNextPoll(jobId);
+        }
+        else if (statusStr === 'failed') {
+          clearTimeout(pollingTimeout);
+          clearStoredJob();
+          setPipelineActive(false);
+          setStatus('error', '<strong>Extraction failed:</strong> ' + escapeHtml(data.job_status.error || 'Unknown error.'));
+          unlockUI();
+        } 
+        else if (statusStr === 'completed') {
+          clearTimeout(pollingTimeout);
+          // NOTE: Do NOT clear localStorage here. Keep it until runFormatting
+          // finishes so a page reload during formatting can re-trigger it.
+          
+          const progContainer = document.getElementById('progressContainer');
+          if (progContainer) {
+            progContainer.style.display = 'none';
+          }
+          
+          runFormatting(data.job_status.course_folder_name, data.job_status.term_display);
+        }
+        else {
+          scheduleNextPoll(jobId);
+        }
+
+      } catch (err) {
+        console.error('Extraction status check failed:', err);
+        scheduleNextPoll(jobId);
+      } finally {
+        pollingInFlight = false;
+      }
+    }
+
+    async function runFormatting(folderName, termDisplay) {
+      setStatus('running',
+        '<span class="spinner"></span>' +
+        '<strong>Step 2/2:</strong> Extraction complete! Generating Canvas modules… ' +
+        '<br><span style="color:var(--text-light)">This will finish shortly.</span>'
+      );
+
+      try {
+        const body = new FormData();
+        body.append('action', 'run-formatting');
+        body.append('course_folder_name', folderName || '');
+        body.append('term_display', termDisplay || '');
+        body.append('csrf_token', currentCsrfToken);
+
+        const res = await fetch('api-proxy.php', { method: 'POST', body });
+        const data = await res.json();
+        if (data.next_csrf) {
+          currentCsrfToken = data.next_csrf;
+        }
+
+        if (!data.success) {
+          clearStoredJob();
+          setPipelineActive(false);
+          setStatus('error', '<strong>Formatting failed:</strong> ' + escapeHtml(data.message));
+          unlockUI();
+          return;
+        }
+
+        // Pipeline fully done — safe to clear localStorage now
+        clearStoredJob();
+        setPipelineActive(false);
+
+        setStatus('success',
+          '<strong>✅ Pipeline complete!</strong><br>' +
+          'Data has been extracted, formatted, and uploaded to your Canvas destination course.'
+        );
+        
+        const btn = document.getElementById('runPipelineBtn');
+        btn.disabled = false;
+        btn.textContent = 'Run Extraction & Formatting Again';
+        document.querySelector('.card').classList.remove('pipeline-locked');
+
+      } catch (err) {
+        clearStoredJob();
+        setPipelineActive(false);
+        setStatus('error', '<strong>Formatting network error:</strong> ' + escapeHtml(err.message));
+        unlockUI();
+      }
+    }
+
+    function unlockUI() {
+      const btn = document.getElementById('runPipelineBtn');
+      btn.disabled = false;
+      btn.textContent = 'Retry Extraction & Formatting';
+      document.querySelector('.card').classList.remove('pipeline-locked');
     }
 
     function setStatus(type, html) {

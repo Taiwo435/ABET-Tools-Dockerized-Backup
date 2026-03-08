@@ -3,8 +3,6 @@
 Canvas Grades Fetcher
 Fetches grades and submission data from Canvas LMS for ABET assessment purposes.
 """
-
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -16,11 +14,7 @@ from typing import Dict, List, Optional, Any
 import logging
 import time
 import shutil
-from dotenv import load_dotenv
-from pathlib import Path
-
-# load environment variables from docker/.env
-load_dotenv(Path(__file__).parent.parent.parent / "docker" / ".env")
+import threading
 
 # Configure logging
 logging.basicConfig(
@@ -45,8 +39,20 @@ class CanvasGradesFetcher:
         self.canvas_domain = canvas_domain
         self.access_token = access_token or self._get_access_token()
         self.headers = {"Authorization": f"Bearer {self.access_token}"}
-        self.session = requests.Session()
-        self.session.headers.update(self.headers)
+
+        # Use thread-local storage for requests session to ensure thread safety
+        # when methods are executed concurrently via ThreadPoolExecutor
+        self._local = threading.local()
+
+    @property
+    def session(self) -> requests.Session:
+        # One session per thread, each carrying the token set at construction.
+        # This instance is expected to live for a single request; do not reuse
+        # across requests with different tokens.
+        if not hasattr(self._local, "session"):
+            self._local.session = requests.Session()
+            self._local.session.headers.update(self.headers)
+        return self._local.session
 
     def _get_access_token(self) -> str:
         """Get Canvas access token from environment variable."""
@@ -431,10 +437,10 @@ class CanvasGradesFetcher:
         return students
 
     def fetch_course_grades(self, course_id: int) -> Dict[str, Any]:
-        """Fetch complete grade data for a course including assignments, submissions, and students.
+        """Fetch complete grade data for a course including assignments and submissions.
 
-        N + 1 api calls right now (1 for assignments then 1 per assignment for submissions)
-        Unfortunately this is unavoidable since Canvas does not provide a bulk endpoint for grades data.
+        Uses the bulk submissions endpoint to avoid per-assignment API calls.
+
         Args:
             course_id: Canvas course ID
 
@@ -445,8 +451,14 @@ class CanvasGradesFetcher:
         grades_summary = {}
         assignments = self.fetch_course_assignments(course_id)
 
+        # Bulk-fetch all submissions instead of one call per assignment
+        all_submissions = self.fetch_all_course_submissions(course_id)
+        subs_by_assignment: Dict[int, List[Dict]] = {}
+        for sub in all_submissions:
+            subs_by_assignment.setdefault(sub["assignment_id"], []).append(sub)
+
         for assignment in assignments:
-            submissions = self.fetch_assignment_submissions(course_id, assignment["id"])
+            submissions = subs_by_assignment.get(assignment["id"], [])
             graded_submissions = [s for s in submissions if s.get("grade") is not None]
             if graded_submissions:
                 scores = [

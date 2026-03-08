@@ -2,10 +2,6 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -43,13 +39,20 @@ function api_base(string $service): string {
 
 function curl_api(string $url, string $method, string $token, array $curlExtra = []): array {
     $ch = curl_init($url);
+
+    $headers = [];
+    if ($token !== '') {
+        $headers[] = 'canvas-access-token: ' . $token;
+    }
+    // Only set Content-Type for methods that send a body
+    if (in_array(strtoupper($method), ['POST', 'PUT', 'PATCH'], true)) {
+        $headers[] = 'Content-Type: application/json';
+    }
+
     curl_setopt_array($ch, [
         CURLOPT_CUSTOMREQUEST  => $method,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => [
-            'canvas-access-token: ' . $token,
-            'Content-Type: application/json',
-        ],
+        CURLOPT_HTTPHEADER     => $headers,
         CURLOPT_TIMEOUT => 600,
     ] + $curlExtra);
 
@@ -78,7 +81,13 @@ if ($action === '') {
     json_response(['success' => false, 'message' => 'Missing action parameter.'], 400);
 }
 
-$allowed_actions = ['store-credentials', 'verify-course', 'run-pipeline'];
+$allowed_actions = [
+    'store-credentials', 
+    'verify-course', 
+    'start-extraction', 
+    'check-extraction-status', 
+    'run-formatting'
+];
 if (!in_array($action, $allowed_actions, true)) {
     json_response(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -143,8 +152,8 @@ if ($action === 'verify-course') {
 }
 
 
-if ($action === 'run-pipeline') {
-    set_time_limit(0); 
+if ($action === 'start-extraction') {
+    set_time_limit(60);
 
     $token    = $_SESSION['canvas_token']     ?? '';
     $sourceId = $_SESSION['source_course_id'] ?? '';
@@ -160,10 +169,6 @@ if ($action === 'run-pipeline') {
         json_response(['success' => false, 'message' => 'Session credentials expired. Please reconnect.'], 401);
     }
 
-    if (!empty($_SESSION['pipeline_running'])) {
-        json_response(['success' => false, 'message' => 'A pipeline is already running. Please wait.'], 409);
-    }
-
     if (!isset($_FILES['roster_file']) || $_FILES['roster_file']['error'] !== UPLOAD_ERR_OK) {
         json_response(['success' => false, 'message' => 'Roster file is required.'], 400);
     }
@@ -174,10 +179,7 @@ if ($action === 'run-pipeline') {
         json_response(['success' => false, 'message' => 'Only .csv and .xls roster files are accepted.'], 400);
     }
 
-    $_SESSION['pipeline_running'] = true;
-    session_write_close();
-
-    // Step 1: Extraction — move-data-between-courses
+    // Trigger Extraction
     $extractionUrl = api_base('extraction')
         . '/move-data-between-courses/' . urlencode($destId)
         . '?' . http_build_query(['course_ids_to_pull' => $sourceId]);
@@ -193,7 +195,7 @@ if ($action === 'run-pipeline') {
         CURLOPT_POST           => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER     => ['canvas-access-token: ' . $token],
-        CURLOPT_TIMEOUT        => 600,
+        CURLOPT_TIMEOUT        => 30, // Background tasks return immediately
         CURLOPT_POSTFIELDS     => ['roster_file' => $rosterCurl],
     ]);
 
@@ -203,38 +205,76 @@ if ($action === 'run-pipeline') {
     curl_close($ch);
 
     if ($extractError || $extractCode < 200 || $extractCode >= 300) {
-        session_start();
-        $_SESSION['pipeline_running'] = false;
-        session_write_close();
         $decoded = json_decode((string) $extractBody, true);
-        $msg = $extractError ?: ($decoded['detail'] ?? 'Extraction failed.');
-        json_response(['success' => false, 'step' => 'extraction', 'message' => $msg], $extractCode ?: 502);
+        $msg = $extractError ?: ($decoded['detail'] ?? 'Failed to start extraction.');
+        json_response(['success' => false, 'message' => $msg], $extractCode ?: 502);
     }
 
     // Parse extraction response metadata
     $extractData = json_decode((string) $extractBody, true) ?: [];
+    
+    // Return job_id immediately
+    json_response([
+        'success' => true,
+        'message' => 'Extraction started.',
+        'job_id'  => $extractData['job_id'] ?? null
+    ]);
+}
 
-    // Step 2: Formatting — format-and-upload
-    // Reads from DEST course (where extraction uploaded files)
+
+if ($action === 'check-extraction-status') {
+    $jobId = post_str('job_id');
+    if ($jobId === '') {
+        json_response(['success' => false, 'message' => 'Missing job_id parameter.'], 400);
+    }
+
+    // Extraction API status endpoint
+    $statusUrl = api_base('extraction') . '/job-status/' . urlencode($jobId);
+    
+    // Call extraction API status endpoint. No canvas token needed for
+    // internal status checks, so we pass an empty string to avoid leaking it.
+    $result = curl_api($statusUrl, 'GET', '');
+
+    if (!$result['ok']) {
+        $detail = $result['error'] ?? ($result['body']['detail'] ?? 'Status check failed.');
+        json_response(['success' => false, 'message' => $detail], $result['status']);
+    }
+
+    json_response(['success' => true, 'job_status' => $result['body']]);
+}
+
+
+if ($action === 'run-formatting') {
+    set_time_limit(600); 
+
+    $token    = $_SESSION['canvas_token']     ?? '';
+    $destId   = $_SESSION['dest_course_id']   ?? '';
+    
+    $courseFolderName = post_str('course_folder_name');
+    $termDisplay      = post_str('term_display');
+
+    if ($token === '' || $destId === '') {
+        json_response(['success' => false, 'message' => 'No credentials in session. Please connect first.'], 401);
+    }
+
+    if (time() - ($_SESSION['token_stored_at'] ?? 0) > 1800) {
+        unset($_SESSION['canvas_token'], $_SESSION['source_course_id'], $_SESSION['dest_course_id'], $_SESSION['token_stored_at']);
+        json_response(['success' => false, 'message' => 'Session credentials expired. Please reconnect.'], 401);
+    }
+
     $formatQuery = [];
-    if (!empty($extractData['course_folder_name'])) {
-        $formatQuery['course_folder_name'] = $extractData['course_folder_name'];
+    if (!empty($courseFolderName)) {
+        $formatQuery['course_folder_name'] = $courseFolderName;
     }
-    if (!empty($extractData['term_display'])) {
-        $formatQuery['term_display'] = $extractData['term_display'];
+    if (!empty($termDisplay)) {
+        $formatQuery['term_display'] = $termDisplay;
     }
-    // $formattingUrl = api_base('formatting')
-    //     . '/format-and-upload/' . urlencode($sourceId)
-    //     . '?' . http_build_query(['destination_course_id' => $destId]);
+
     $formattingUrl = api_base('formatting')
         . '/format-and-upload/' . urlencode($destId)
         . '?' . http_build_query($formatQuery);
 
     $formatResult = curl_api($formattingUrl, 'POST', $token);
-
-    session_start();
-    $_SESSION['pipeline_running'] = false;
-    session_write_close();
 
     if (!$formatResult['ok']) {
         $detail = $formatResult['error'] ?? ($formatResult['body']['detail'] ?? 'Formatting failed.');

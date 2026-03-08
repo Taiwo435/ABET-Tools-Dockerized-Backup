@@ -1,5 +1,5 @@
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
 import enum
 import io
@@ -12,10 +12,21 @@ import os
 import re
 import shutil
 from datetime import datetime, timezone
+import threading
+import uuid
 from fetch_grades import CanvasGradesFetcher
-from fastapi import FastAPI, HTTPException, Header, UploadFile, File, Query
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Header,
+    UploadFile,
+    File,
+    Query,
+    BackgroundTasks,
+)
 from fastapi.responses import JSONResponse
-from typing import Annotated, Optional, List
+from typing import Annotated, NamedTuple, Optional, List, Dict, Any
+from typing_extensions import TypedDict
 import PyPDF2
 import docx
 from csv_filter import RosterMap, parse_roster_for_major_map
@@ -57,11 +68,78 @@ CANVAS_DOMAIN = "canvas.asu.edu"
 ABET_TAG = "abet"
 
 # Max assignments to process concurrently in Phase 1.
-# Uploads happen separately in Phase 2, so no nested thread pools.
-MAX_PARALLEL_ASSIGNMENTS = 3
+# Note: this limit controls work done per request and may run inside FastAPI's
+# own thread pool for sync endpoints, so increasing it raises total thread usage.
+MAX_PARALLEL_ASSIGNMENTS = 2
 
 # SETUP
 TEMP_DIR_PREFIX = "abet_extraction_"
+
+
+class CourseData(NamedTuple):
+    """Pre-fetched data for a single course, can be used by multiple endpoints now."""
+
+    course_info: dict
+    course_code: str
+    semester_code: str
+    term_display: str
+    course_folder_name: str
+    all_assignments: list[dict]
+    assignment_groups: dict[int, str]
+    submissions_by_assignment: dict[int, list[dict]]
+
+
+def _prepare_course_data(
+    course_id: str,
+    grades_fetcher: CanvasGradesFetcher,
+) -> CourseData:
+    """Fetch and organize all shared course data needed by extraction endpoints.
+
+    Raises ``ValueError`` if the course is not found or has no assignments.
+    """
+    # Dictionary of assignment groups where key is ID, value is category
+    # Ex. {123456: "Assignments", 1234567: "Quizzes"}
+    assignment_groups = {
+        g.get("id", 0): g.get("name", "Uncategorized")
+        for g in grades_fetcher.fetch_assignment_groups(course_id=course_id)
+    }
+
+    # Fetch course info - Syllabus and Term
+    course_info = grades_fetcher.api_request(
+        f"courses/{course_id}",
+        params={"include[]": ["syllabus_body", "term", "teachers"]},
+    )
+    if not course_info:
+        raise ValueError("Course not found or invalid token.")
+
+    course_code = course_info.get("course_code", "course")
+    term_name = course_info.get("term", {}).get("name", "")
+
+    all_assignments = get_all_assignments(course_id, grades_fetcher)
+    if not all_assignments:
+        raise ValueError("No assignments found in the course.")
+
+    # Data Gathering Phase (Always Runs)
+    logger.info("Starting Data Gathering Phase")
+
+    # Prefetch all submissions once and index by assignment
+    all_submissions = grades_fetcher.fetch_all_course_submissions(int(course_id))
+    submissions_by_assignment: dict[int, list[dict]] = defaultdict(list)
+    for sub in all_submissions:
+        submissions_by_assignment[sub["assignment_id"]].append(sub)
+
+    return CourseData(
+        course_info=course_info,
+        course_code=course_code,
+        semester_code=get_semester_short_code(term_name),
+        term_display=get_term_display_name(term_name),  # e.g., Fall 2023
+        course_folder_name=re.sub(
+            r'[<>:"/\\|?*]', "", course_info.get("name") or course_code
+        ),
+        all_assignments=all_assignments,
+        assignment_groups=assignment_groups,
+        submissions_by_assignment=submissions_by_assignment,
+    )
 
 
 def _process_single_assignment(
@@ -82,16 +160,16 @@ def _process_single_assignment(
     prefetched = submissions_by_assignment.get(assignment["id"])
 
     local_files, extracted_texts = extract_and_save_artifacts(
-        assignment,
-        grades_fetcher,
-        temp_dir,
+        assignment=assignment,
+        client=grades_fetcher,
+        temp_dir=temp_dir,
         prefetched_submissions=prefetched,
     )
 
-    sanitized_name = sanitize_filename(assignment["name"])
-    folder_path = os.path.join(temp_dir, f"{assignment['id']}_{sanitized_name}")
+    sanitized_name: str = sanitize_filename(assignment["name"])
+    folder_path: str = os.path.join(temp_dir, f"{assignment['id']}_{sanitized_name}")
 
-    report_path = generate_assignment_grade_report(
+    report_path: str | None = generate_assignment_grade_report(
         grades_fetcher,
         assignment,
         folder_path,
@@ -102,12 +180,14 @@ def _process_single_assignment(
 
     upload_task = None
     if local_files:
-        assignment_type = assignment_groups[assignment.get("assignment_group_id", 0)]
-        canvas_folder = (
+        assignment_type = assignment_groups.get(
+            assignment.get("assignment_group_id", 0), "Uncategorized"
+        )
+        canvas_folder: str = (
             f"{course_folder_name}/({term_display})"
             f"/Test_Assignments/{assignment_type}/{sanitized_name}"
         )
-        upload_task = (canvas_folder, local_files)
+        upload_task: tuple[str, list[str]] = (canvas_folder, local_files)
 
     return assignment["id"], extracted_texts, upload_task
 
@@ -485,7 +565,7 @@ def extract_and_save_artifacts(
     """
     Saves all relevant artifacts for an assignment to a local temporary directory.
     This includes the description, rubric, any documents attached in the description,
-    and files from the highest and lowest graded student submissions.
+    and files from the highest, average, and lowest graded student submissions.
 
     Args:
         assignment (dict): The assignment object.
@@ -670,7 +750,7 @@ def build_outcome_report_data(
 
         if all_submissions_flat:
             # Detect whether bulk responses include full_rubric_assessment
-            has_rubric_data = any(
+            has_rubric_data: bool = any(
                 sub.get("full_rubric_assessment") is not None
                 for sub in all_submissions_flat
             )
@@ -912,13 +992,13 @@ def generate_outcome_reports(
     Delegates data building to build_outcome_report_data.
     """
     outcome_reports = build_outcome_report_data(
-        grades_fetcher,
-        outcome_map,
-        outcome_details,
-        course_info,
-        course_id,
-        student_major_map,
-        assignment_texts_map,
+        grades_fetcher=grades_fetcher,
+        outcome_map=outcome_map,
+        outcome_details=outcome_details,
+        course_info=course_info,
+        course_id=course_id,
+        student_major_map=student_major_map,
+        assignment_texts_map=assignment_texts_map,
     )
 
     if not outcome_reports:
@@ -1115,7 +1195,7 @@ def generate_report_json(
     course_id: str,
     canvas_access_token: Annotated[str, Header()],
     roster_file: UploadFile = File(...),
-):
+) -> JSONResponse:
     """Returns ABET outcome report data as a JSON response without uploading to Canvas."""
     # Early token validation
     if not canvas_access_token or not str(canvas_access_token).strip():
@@ -1125,53 +1205,32 @@ def generate_report_json(
             status_code=400, detail="The 'roster_file' is required for this endpoint."
         )
 
-    student_major_map = parse_roster_upload(roster_file)
+    student_major_map: RosterMap = parse_roster_upload(roster_file)
 
     temp_dir = create_temp_dir()
     try:
         grades_fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
-        course_info = grades_fetcher.api_request(
-            f"courses/{course_id}", params={"include[]": ["syllabus_body", "term"]}
-        )
-        if not course_info:
-            raise HTTPException(
-                status_code=404, detail="Course not found or invalid token."
-            )
 
-        course_code = course_info.get("course_code", "course")
-        semester_code = get_semester_short_code(
-            course_info.get("term", {}).get("name", "")
-        )
-        course_folder_name = re.sub(
-            r'[<>:"/\\|?*]', "", course_info.get("name") or course_code
-        )
+        try:
+            cd: CourseData = _prepare_course_data(course_id, grades_fetcher)
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
 
-        all_assignments = get_all_assignments(course_id, grades_fetcher)
-        if not all_assignments:
-            raise HTTPException(
-                status_code=404, detail="No assignments found in the course."
-            )
-
-        # Gather extracted texts for each assignment (needs temp files for PDF/DOCX extraction)
+        # Extract text content from assignment artifacts (PDFs, DOCX, etc.)
         assignment_texts_map = {}
-
-        # Prefetch all submissions once and index by assignment
-        all_submissions = grades_fetcher.fetch_all_course_submissions(int(course_id))
-        submissions_by_assignment = defaultdict(list)
-        for sub in all_submissions:
-            submissions_by_assignment[sub["assignment_id"]].append(sub)
-
-        for assignment in all_assignments:
+        for assignment in cd.all_assignments:
             _, extracted_texts = extract_and_save_artifacts(
-                assignment,
-                grades_fetcher,
-                temp_dir,
-                prefetched_submissions=submissions_by_assignment.get(assignment["id"]),
+                assignment=assignment,
+                client=grades_fetcher,
+                temp_dir=temp_dir,
+                prefetched_submissions=cd.submissions_by_assignment.get(
+                    assignment["id"]
+                ),
             )
             assignment_texts_map[assignment["id"]] = extracted_texts
 
         # Filter for ABET assignments and build outcome data
-        abet_assignments = find_abet_assignments(all_assignments)
+        abet_assignments = find_abet_assignments(cd.all_assignments)
         if not abet_assignments:
             raise HTTPException(
                 status_code=404, detail="No ABET-tagged assignments found."
@@ -1185,23 +1244,24 @@ def generate_report_json(
             )
 
         outcome_reports = build_outcome_report_data(
-            grades_fetcher,
-            outcome_map,
-            outcome_details,
-            course_info,
-            course_id,
-            student_major_map,
-            assignment_texts_map,
+            grades_fetcher=grades_fetcher,
+            outcome_map=outcome_map,
+            outcome_details=outcome_details,
+            course_info=cd.course_info,
+            course_id=course_id,
+            student_major_map=student_major_map,
+            assignment_texts_map=assignment_texts_map,
+            prefetched_submissions=cd.submissions_by_assignment,
         )
 
         # Wrap in the metadata
         response_payload = {
             "metadata": {
                 "course_id": str(course_id),
-                "course_code": course_code,
-                "semester": semester_code,
+                "course_code": cd.course_code,
+                "semester": cd.semester_code,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "course_folder_name": course_folder_name,
+                "course_folder_name": cd.course_folder_name,
             },
             # # Corresponds to requirement 1.c (Class number)
             # "course_identification": course_info,
@@ -1220,70 +1280,110 @@ def generate_report_json(
         cleanup_temp_dir(temp_dir)
 
 
-@app.post("/move-data-between-courses/{course_id_to_push}")
-def move_data_between_courses(
+class _JobStatusRequired(TypedDict):
+    status: str
+
+
+class JobStatusData(_JobStatusRequired, total=False):
+    """Typed dict for background job progress tracking.
+
+    ``status`` is always present (``processing``, ``completed``, or ``failed``).
+    Other keys are populated as the pipeline progresses.
+    """
+
+    message: str
+    error: str
+    course_folder_name: str
+    term_display: str
+    course_code: str
+    progress: int
+    completed_at: float  # time.time() — used for TTL eviction
+
+
+# In-memory job store.  Safe for a single-worker uvicorn process.
+JOB_STATUS: dict[str, JobStatusData] = {}
+_job_status_lock = threading.Lock()
+
+# Completed/failed jobs are evicted after this many seconds.
+_JOB_TTL_SECONDS = 3600  # 1 hour
+
+
+def _evict_stale_jobs() -> None:
+    """Remove finished jobs older than ``_JOB_TTL_SECONDS``."""
+    now = time.time()
+    with _job_status_lock:
+        stale = [
+            jid
+            for jid, data in JOB_STATUS.items()
+            if "completed_at" in data
+            and now - data.get("completed_at", 0) > _JOB_TTL_SECONDS
+        ]
+        for jid in stale:
+            JOB_STATUS.pop(jid, None)
+    if stale:
+        logger.info("Evicted %d stale job(s) from JOB_STATUS.", len(stale))
+
+
+def _set_job_status(job_id: str, data: JobStatusData) -> None:
+    """Thread-safe update of a job's status entry."""
+    with _job_status_lock:
+        JOB_STATUS[job_id] = data
+
+
+@app.get("/job-status/{job_id}")
+def get_job_status(job_id: str) -> JobStatusData:
+    # Do eviction on reads so we don't need a background timer.
+    _evict_stale_jobs()
+    with _job_status_lock:
+        if job_id not in JOB_STATUS:
+            raise HTTPException(status_code=404, detail="Job not found")
+        return JOB_STATUS[job_id]
+
+
+def _run_extraction_pipeline_sync(
+    job_id: str,
     course_id_to_push: str,
-    canvas_access_token: Annotated[str, Header()],
-    course_ids_to_pull: Annotated[
-        List[str], Query(min_length=1, description="Enter all Course IDs to pull from")
-    ],
-    roster_file: UploadFile = File(...),
+    canvas_access_token: str,
+    course_ids_to_pull: list[str],
+    student_major_map: RosterMap,
 ):
-    # Validate Course IDs
-    if not course_ids_to_pull or not course_id_to_push:
-        raise HTTPException(status_code=400, detail="Course IDs must both be filled")
-
-    # Early token validation
-    if not canvas_access_token or not str(canvas_access_token).strip():
-        raise HTTPException(status_code=401, detail="Canvas access token is required.")
-
-    if not roster_file:
-        raise HTTPException(
-            status_code=400, detail="The 'roster_file' is required for this endpoint."
-        )
-
-    # Create Temp Directory
+    """
+    Abstacted away logic for running the full extraction and report generation pipeline out of the endpoint.
+    """
     temp_dir = create_temp_dir()
     try:
         grades_fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
 
-        for course_id_to_pull in course_ids_to_pull:
+        # Only the last course's metadata is stored in the job status.
+        # Multi-course support requires pairing each source course with its own
+        # roster (students differ across courses), so this design is intentionally
+        # limited to single-course runs for now.
+        last_course_folder_name = ""
+        last_term_display = ""
+        last_course_code = ""
+        total_courses = len(course_ids_to_pull)
 
-            assignment_groups_data = grades_fetcher.fetch_assignment_groups(
-                course_id=course_id_to_pull
+        for course_idx, course_id_to_pull in enumerate(course_ids_to_pull):
+            course_slice = 90 / total_courses
+            course_base = int(course_idx * course_slice)
+
+            _set_job_status(
+                job_id=job_id,
+                data={
+                    "status": "processing",
+                    "progress": course_base + int(course_slice * 0.05),
+                    "message": f"Course {course_idx + 1}/{total_courses}: Fetching course data...",
+                },
             )
 
-            # Dictionary of assignment groups where key is ID, value is category
-            # Ex. {123456: "Assignments", 1234567: "Quizzes"}
-            assignment_groups = {}
-            for group in assignment_groups_data:
-                assignment_id = group.get("id", 0)  # Example: id = 123456
-                category = group.get("name", "X")  # Example: name = "Quizzes"
-                assignment_groups[assignment_id] = category
-
-            # Fetch course info - Syllabus and Term
-            course_info = grades_fetcher.api_request(
-                endpoint_or_url=f"courses/{course_id_to_pull}",
-                params={"include[]": ["syllabus_body", "term", "teachers"]},
-            )
-
-            if not course_info:
-                raise HTTPException(
-                    status_code=404, detail="Course not found or invalid token."
-                )
-
-            course_code = course_info.get("course_code", "course")
-            term_name = course_info.get("term", {}).get("name", "")
-            semester_code = get_semester_short_code(term_name)  # e.g., f25
-            term_display = get_term_display_name(term_name)  # e.g., Fall 2023
-
-            course_folder_name = re.sub(
-                r'[<>:"/\\|?*]', "", course_info.get("name") or course_code
-            )
+            cd: CourseData = _prepare_course_data(course_id_to_pull, grades_fetcher)
+            last_course_folder_name = cd.course_folder_name
+            last_term_display = cd.term_display
+            last_course_code = cd.course_code
 
             # Extract and upload syllabus
             syllabus_path = extract_and_save_syllabus(
-                course_id_to_pull, course_info, grades_fetcher, temp_dir
+                course_id_to_pull, cd.course_info, grades_fetcher, temp_dir
             )
             syllabus_files = (
                 [os.path.join(syllabus_path, f) for f in os.listdir(syllabus_path)]
@@ -1294,82 +1394,104 @@ def move_data_between_courses(
             if syllabus_files:
                 grades_fetcher.upload_files(
                     course_id_to_push,
-                    f"{course_folder_name}/({term_display})/Syllabus",
+                    f"{cd.course_folder_name}/({cd.term_display})/Syllabus",
                     syllabus_files,
                 )
 
-            # Fetch all assignments including the rubric.
-            all_assignments = get_all_assignments(course_id_to_pull, grades_fetcher)
-            if not all_assignments:
-                raise HTTPException(
-                    status_code=404, detail="No assignments found in the course."
-                )
-
-            # Data Gathering Phase (Always Runs)
-            logger.info("Starting Data Gathering Phase")
-
-            # Prefetch all submissions once and index by assignment
-            all_submissions = grades_fetcher.fetch_all_course_submissions(
-                int(course_id_to_pull)
+            _set_job_status(
+                job_id=job_id,
+                data={
+                    "status": "processing",
+                    "progress": course_base + int(course_slice * 0.33),
+                    "message": f"Course {course_idx + 1}/{total_courses}: Gathering Canvas assignments...",
+                },
             )
-            submissions_by_assignment = defaultdict(list)
-            for sub in all_submissions:
-                submissions_by_assignment[sub["assignment_id"]].append(sub)
-
-            # Parse roster early so we don't need to do it after the loop
-            student_major_map = parse_roster_upload(roster_file)
-            roster_file.file.seek(0)
 
             # Phase 1: Process all assignments locally (concurrent)
             assignment_texts_map = {}
             upload_tasks = []
             with ThreadPoolExecutor(max_workers=MAX_PARALLEL_ASSIGNMENTS) as pool:
-                futures = [
+                futures = {
                     pool.submit(
                         _process_single_assignment,
                         assignment,
                         grades_fetcher,
                         temp_dir,
-                        submissions_by_assignment,
-                        assignment_groups,
-                        course_folder_name,
-                        term_display,
-                    )
-                    for assignment in all_assignments
-                ]
-                for future in futures:
+                        cd.submissions_by_assignment,
+                        cd.assignment_groups,
+                        cd.course_folder_name,
+                        cd.term_display,
+                    ): i
+                    for i, assignment in enumerate(cd.all_assignments)
+                }
+                total_assignments = len(futures)
+                done_count = 0
+
+                # For better progress reporting
+                for future in as_completed(futures):
                     assign_id, texts, upload_task = future.result()
                     assignment_texts_map[assign_id] = texts
                     if upload_task:
                         upload_tasks.append(upload_task)
+                    done_count += 1
+                    pct = course_base + int(
+                        course_slice * (0.33 + 0.22 * done_count / total_assignments)
+                    )
+                    _set_job_status(
+                        job_id=job_id,
+                        data={
+                            "status": "processing",
+                            "progress": pct,
+                            "message": f"Course {course_idx + 1}/{total_courses}: Processing assignment {done_count}/{total_assignments}...",
+                        },
+                    )
 
+            _set_job_status(
+                job_id=job_id,
+                data={
+                    "status": "processing",
+                    "progress": course_base + int(course_slice * 0.55),
+                    "message": f"Course {course_idx + 1}/{total_courses}: Uploading files to Canvas...",
+                },
+            )
             # Phase 2: Upload all collected files to Canvas
             for canvas_folder, files in upload_tasks:
                 grades_fetcher.upload_files(course_id_to_push, canvas_folder, files)
 
             logger.info("Data Gathering Complete")
 
-            abet_assignments = find_abet_assignments(all_assignments)
+            _set_job_status(
+                job_id=job_id,
+                data={
+                    "status": "processing",
+                    "progress": course_base + int(course_slice * 0.75),
+                    "message": f"Course {course_idx + 1}/{total_courses}: Generating ABET outcome reports...",
+                },
+            )
+
+            abet_assignments = find_abet_assignments(cd.all_assignments)
+
+            # If there are ABET assignments, build the outcome reports and upload them.
             if abet_assignments:
                 outcome_map, outcome_details = find_abet_outcomes(abet_assignments)
                 if outcome_map:
                     outcome_reports = build_outcome_report_data(
-                        grades_fetcher,
-                        outcome_map,
-                        outcome_details,
-                        course_info,
-                        course_id_to_pull,
-                        student_major_map,
-                        assignment_texts_map,
-                        prefetched_submissions=submissions_by_assignment,
+                        grades_fetcher=grades_fetcher,
+                        outcome_map=outcome_map,
+                        outcome_details=outcome_details,
+                        course_info=cd.course_info,
+                        course_id=course_id_to_pull,
+                        student_major_map=student_major_map,
+                        assignment_texts_map=assignment_texts_map,
+                        prefetched_submissions=cd.submissions_by_assignment,
                     )
                     report_json = {
                         "metadata": {
                             "course_id": str(course_id_to_pull),
-                            "course_code": course_code,
-                            "semester": semester_code,
-                            "term_display": term_display,
-                            "course_folder_name": course_folder_name,
+                            "course_code": cd.course_code,
+                            "semester": cd.semester_code,
+                            "term_display": cd.term_display,
+                            "course_folder_name": cd.course_folder_name,
                         },
                         "outcomes": [
                             {
@@ -1385,20 +1507,103 @@ def move_data_between_courses(
                         "Uploaded ABET reports for course '%s'", course_id_to_pull
                     )
 
-        return {
-            "message": "Data transfer complete.",
-            "course_folder_name": course_folder_name,
-            "term_display": term_display,
-            "course_code": course_code,
-        }
+        _set_job_status(
+            job_id=job_id,
+            data={
+                "status": "completed",
+                "message": "Data transfer complete.",
+                "course_folder_name": last_course_folder_name,
+                "term_display": last_term_display,
+                "course_code": last_course_code,
+                "progress": 100,
+                "completed_at": time.time(),
+            },
+        )
 
+    except requests.exceptions.RequestException as e:
+        logger.exception("Canvas API error in background task: %s", e)
+        _set_job_status(
+            job_id=job_id,
+            data={
+                "status": "failed",
+                "error": "A Canvas API error occurred. Please check your token and try again.",
+                "completed_at": time.time(),
+            },
+        )
+    except ValueError as e:
+        logger.error("Pipeline configuration error: %s", e)
+        _set_job_status(
+            job_id=job_id,
+            data={
+                "status": "failed",
+                "error": str(e),
+                "completed_at": time.time(),
+            },
+        )
+    except Exception as e:
+        logger.exception("Unexpected error in background task: %s", e)
+        _set_job_status(
+            job_id=job_id,
+            data={
+                "status": "failed",
+                "error": "An unexpected error occurred. Please try again or contact support.",
+                "completed_at": time.time(),
+            },
+        )
+    finally:
+        cleanup_temp_dir(temp_dir)
+
+
+@app.post("/move-data-between-courses/{course_id_to_push}")
+def move_data_between_courses(
+    course_id_to_push: str,
+    canvas_access_token: Annotated[str, Header()],
+    course_ids_to_pull: Annotated[
+        List[str], Query(min_length=1, description="Enter all Course IDs to pull from")
+    ],
+    background_tasks: BackgroundTasks,
+    roster_file: UploadFile = File(...),
+):
+    # Validate Course IDs
+    if not course_ids_to_pull or not course_id_to_push:
+        raise HTTPException(status_code=400, detail="Course IDs must both be filled")
+
+    # Early token validation
+    if not canvas_access_token or not str(canvas_access_token).strip():
+        raise HTTPException(status_code=401, detail="Canvas access token is required.")
+
+    if not roster_file:
+        raise HTTPException(
+            status_code=400, detail="The 'roster_file' is required for this endpoint."
+        )
+
+    # Parse roster early so we don't need to do it in the background
+    # roster is needed for generation of project evaluations folder which contains
+    # the abet reports for each outcome for the course
+    try:
+        student_major_map = parse_roster_upload(roster_file)
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Unexpected error in move_data_between_courses: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cleanup_temp_dir(temp_dir)
+        raise HTTPException(status_code=400, detail=f"Failed to parse roster file: {e}")
+
+    job_id = str(uuid.uuid4())
+    _set_job_status(job_id=job_id, data={"status": "processing"})
+
+    background_tasks.add_task(
+        _run_extraction_pipeline_sync,
+        job_id=job_id,
+        course_id_to_push=course_id_to_push,
+        canvas_access_token=canvas_access_token,
+        course_ids_to_pull=course_ids_to_pull,
+        student_major_map=student_major_map,
+    )
+
+    return {
+        "message": "Extraction started in background.",
+        "job_id": job_id,
+        "status": "processing",
+    }
 
 
 if __name__ == "__main__":
