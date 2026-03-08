@@ -34,6 +34,17 @@ All errors should be caught by the trap statement and should be reported for hel
 
 ## CD Steps
 
+I use ACT to simulate deployment.
+The only trigger I have at the moment is workflow-dispatch because
+I don't want this running on EVERY pull (yet).
+
+> [!WARNING]
+> This command pull an image that is 18GB of size!!! 😱
+
+```bash
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --secret-file .secrets
+```
+
 preconditon:
 
 - The app works, tests pass

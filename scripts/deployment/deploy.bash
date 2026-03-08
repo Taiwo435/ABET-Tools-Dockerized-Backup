@@ -34,6 +34,10 @@ if [[ "$run_action" == true ]]; then
         
         echo "Deploying to $REMOTE..."
 
+        # Use the sensitive .env file from the server 
+        rsync -avz --delete "$REMOTE/docker/.env" "$REPO_ROOT/docker/prod.env" 
+        echo "[INFO] Sensitive .env file copied from server."
+
         # build .htaccess with .env secrets
         bash "$REPO_ROOT/scripts/deployment/build_files.bash"
         echo "[INFO] .htaccess file built with environment variables."
@@ -47,10 +51,6 @@ if [[ "$run_action" == true ]]; then
         # COPY EVERYTHING tracked by git
         git ls-files -z . | rsync -avz --delete --files-from=- --from0 "$REPO_ROOT/" "$REMOTE"
         echo "[INFO] Git-tracked files copied to server."
-
-        # Use the sensitive .env file form the server 
-        rsync -avz --delete "$REMOTE/docker/.env" "$REPO_ROOT/docker/prod.env" 
-        echo "[INFO] Sensitive .env file copied from server."
 
         # build new .htaccess file with the sensitive environment variables, and copy it to the server
         rsync -avz --delete "$REPO_ROOT/docker/app/build/.htaccess" "$REMOTE/src/public/.htaccess"
