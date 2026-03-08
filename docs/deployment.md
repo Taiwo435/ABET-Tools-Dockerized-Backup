@@ -42,6 +42,8 @@ I don't want this running on EVERY pull (yet).
 > This command pull an image that is 18GB of size!!! 😱
 
 ```bash
+# assumes you have an ssh key at REPO_ROOT/.ssh/id_ed_25516
+./scripts/deployment/generate_secrets.py
 act -P ubuntu-latest=catthehacker/ubuntu:full-latest --secret-file .secrets
 ```
 
