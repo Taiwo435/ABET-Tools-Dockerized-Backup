@@ -49,25 +49,26 @@ nummy = 0
         # password=os.getenv("MYSQL_PASS"),
         # port=os.getenv("MYSQL_PORT"),
         # database=os.getenv("MYSQL_DATABASE")
-        # also change table name
+        # also change table name full_region
 
 try:
     conn = mysql.connector.connect(
-        host="mysql-rfam-public.ebi.ac.uk",
-        user="rfamro",
-        password="",
-        port=4497,
-        database="Rfam"
+        host=os.getenv("MYSQL_HOSTNAME"),
+        user=os.getenv("MYSQL_USER"),
+        password=os.getenv("MYSQL_PASS"),
+        port=os.getenv("MYSQL_PORT"),
+        database=os.getenv("MYSQL_DATABASE")
     )
 
     curr = conn.cursor()
-    curr.execute("SELECT * From full_region limit 10;")
+    curr.execute("SELECT Concat(first_name, ' ', last_name) AS name, highest_degree, faculty_rank, academic_appointment, faculty_id, years_experience_gov_industry, years_experience_teaching, years_experience_institution, activity_prof_orgs, activity_prof_dev, activity_consulting  From faculty_info limit 10;")
 
     for i in curr.fetchall():
         #creates tables here
         row = table.add_row().cells
 
         for j in range(len(i)):
+
             row[j].text = str(i[j])
             #print(row[j].text)
         print(i)
