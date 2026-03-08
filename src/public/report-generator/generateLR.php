@@ -134,8 +134,17 @@ try {
 
     // Paths
     $jobsRoot      = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
-    $LongReportPath = realpath(__DIR__ . '/../cgi-bin/FacultyInfoDB.py');
+    $LongReportPath = realpath(__DIR__ . '/../api/FacultyInfoDB.py');
+    // IMPORTANT USE THIS FOR DOCKER AND $pythonBin = '/home/osburn/venv/bin/python'; FOR CPANEL
+    // $pythonBin     = '';
+    // foreach (['/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
+    //     if (is_file($candidate) && is_executable($candidate)) {
+    //         $pythonBin = $candidate;
+    //         break;
+    //     }
+    // }
     $pythonBin     = '';
+    
     foreach (['/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
         if (is_file($candidate) && is_executable($candidate)) {
             $pythonBin = $candidate;
