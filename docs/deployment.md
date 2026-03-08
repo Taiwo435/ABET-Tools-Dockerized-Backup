@@ -3,8 +3,16 @@
 ## How to deploy
 
 1) Add any ssh key that has access to the server. The `abet` key mentioned earlier works.
-2) Copy sensitive files from the server. `scripts/deployment/get_prod_files.bash` does this for you.
-3) Run `deploy.bash`
+2) Run `deploy.bash` and wait for the messate `[INFO] Deployment complete`
+
+The following are optional steps that should be run if you edited init.sql
+
+3) go to cPanel -> phpMyAdmin
+4) Select the tables that you edited and DROP them (yes)
+5) Get terminal access to the server and run [scripts/server/execute_mysql_init.sh](../scripts/server/execute_mysql_init.sh)
+
+> [!NOTE]  
+> Please contact Danny (me) if you encounter errors at any step at this process!
 
 ## What the deployment script does
 
@@ -38,6 +46,8 @@ I use ACT to simulate deployment.
 The only trigger I have at the moment is workflow-dispatch because
 I don't want this running on EVERY pull (yet).
 
+Run this in the repository root!
+
 > [!WARNING]
 > This command pull an image that is 18GB of size!!! 😱
 
@@ -45,6 +55,14 @@ I don't want this running on EVERY pull (yet).
 # assumes you have an ssh key at REPO_ROOT/.ssh/id_ed_25516
 ./scripts/deployment/generate_secrets.py
 act -P ubuntu-latest=catthehacker/ubuntu:full-latest --secret-file .secrets
+```
+
+script that doesn't bankrupt your system of storage:
+
+```bash
+# assumes you have an ssh key at REPO_ROOT/.ssh/id_ed_25516
+./scripts/deployment/generate_secrets.py
+act -P ubuntu-latest=-self-hosted --secret-file .secrets
 ```
 
 preconditon:
