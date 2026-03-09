@@ -1,0 +1,11 @@
+{
+  "name": "ABET ReportGen Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "runArgs": ["--network=app_network"]
+}
