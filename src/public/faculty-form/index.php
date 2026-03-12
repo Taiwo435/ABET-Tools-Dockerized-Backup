@@ -116,6 +116,7 @@ $overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequir
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 ?>
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -123,6 +124,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Faculty Form</title>
   <link rel="stylesheet" href="/assets/css/form.css">
+  <link rel="stylesheet" href="/assets/css/faculty-form.css">
   <style>
     .status-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
     .status-pill { font-size:0.85rem; padding:6px 10px; border-radius:999px; border:1px solid rgba(0,0,0,0.12); background:rgba(0,0,0,0.04); white-space:nowrap; }
