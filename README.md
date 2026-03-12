@@ -1,21 +1,39 @@
-# The Frontend-Backend interface for ABET-Tools
+# The Main Application for ABET-Tools
 
-![Static Badge](https://img.shields.io/badge/ASU%20Capstone%20Project-8C1D40?logo=github&labelColor=red) 
+![Static Badge](https://img.shields.io/badge/ASU%20Capstone%20Project-8C1D40?logo=github&labelColor=red)
 
 <!--
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/hoang-danny05/ABET-Tools-Dockerized) ![GitHub contributors](https://img.shields.io/github/contributors-anon/hoang-danny05/ABET-Tools-Dockerized) ![GitHub issue custom search](https://img.shields.io/github/issues-search?query=repo%3Ahoang-danny05%2FABET-Tools-Dockerized%20is%3Aopen%20&label=open%20issues) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/test.yml?logo=docsdotrs&logoColor=white)
 -->
 
-
 <!-- fancy icons from shields.io -->
 <!--![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/WORKFLOW)-->
 
-This is our application, which I've containerized for easier development. Included are containers for:
+- [The Main Application for ABET-Tools](#the-main-application-for-abet-tools)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+  - [ABET private key setup](#abet-private-key-setup)
+  - [Docker Installs](#docker-installs)
+    - [Linux](#linux)
+    - [Windows](#windows)
+  - [Important Files](#important-files)
+    - [`.env` files](#env-files)
+    - [`.htaccess` files](#htaccess-files)
+  - [Database development](#database-development)
+  - [Pulling from the server](#pulling-from-the-server)
+  - [More information](#more-information)
+
+## Overview
+
+This is our application, containerized for easier development. Included are containers for:
 
 - The PHP/Apache server
-- The MySQL database
-- PHPMyAdmin for the database
-- and the report generation API (as soon as the API is created)
+- Canvas Formatting APIs
+- The report generation API
+- The Canvas Extraction API
+- The MySQL database (to simulate the real one)
+- PHPMyAdmin for easy database administration
+- A selenium container for E2E testing
 
 ## Getting Started
 
@@ -28,6 +46,9 @@ This requires:
 Once that's done, you can run these commands to view the application
 
 1) cd into `docker/` and create a `.env`. `env.demo` is a template file that is suitable for development.
+2) within `docker/`, run `docker compose up --build`
+3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
+4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin (useful to see database state)
 
 > [!NOTE]  
 > Env files are how we configure the containers to run
@@ -36,10 +57,6 @@ Once that's done, you can run these commands to view the application
 > code works as intended on the server.
 >
 > [More information about the ENV files are available in this section](#env-files).
-
-3) within `docker/`, run `docker compose up --build`
-4) you can visit [localhost port 8080](https://localhost:8080) to see the interface
-5) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin (useful to see database state)
 
 ## ABET private key setup
 
@@ -91,15 +108,22 @@ This is the MOST important concept of configuration in the project. On first set
 > you are deploying the application or messing with the server.
 >
 > [More information about .env files](docs/env.md)
-> 
+>
 > [More information about project deployment](docs/deployment.md)
 
+### `.htaccess` files
+
+These are apache configuration files that exist only within the `src/public` directory. They are local and apply to the current directory and all subdirectories. They work hieracically: htaccess files in subdirectories overwrite ones in parent directories.
+
+We use .htaccess files to rewrite important paths and to set apache settings specific to our project only. **DO NOT** try to update the server's actual apache's config, it will affect EVERY project hosted by this server.
+
+[Click here for official docs on the file type](https://httpd.apache.org/docs/current/howto/htaccess.html)
 
 ## Database development
 
 If you're working on the database, the most important file
-in the project for you is `docker/mysql/init.sql`, as it 
-defines all of the database tables that you will interface with. 
+in the project for you is `docker/mysql/init.sql`, as it
+defines all of the database tables that you will interface with.
 
 > [!IMPORTANT]  
 > Restarting the `docker compose` contaienrs will NOT
