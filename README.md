@@ -17,8 +17,6 @@ This is our application, which I've containerized for easier development. Includ
 - PHPMyAdmin for the database
 - and the report generation API (as soon as the API is created)
 
-I do not currently have a deployment command, but I aim to create a script to be able to deploy the server by next week.
-
 ## Getting Started
 
 This requires:
