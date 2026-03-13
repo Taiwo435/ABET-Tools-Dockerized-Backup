@@ -35,7 +35,6 @@ case "info":
         $formData['last_name'] = $faculty_info['last_name'];
         $formData['highest_degree'] = $faculty_info['highest_degree'];
         $formData['asurite'] = $faculty_info['asurite'];
-        $formData['department'] = "other"; // Fix
         $formData['department_other'] = "*PLACEHOLDER- department functionality to be added*"; // Fix
         $formData['areas_of_interest'] = $faculty_info['areas_of_interest'];
         $formData['faculty_rank'] = $faculty_info['faculty_rank'];
@@ -47,6 +46,15 @@ case "info":
         $formData['activity_prof_dev'] = $faculty_info['activity_prof_dev'];
         $formData['activity_consulting'] = $faculty_info['activity_consulting'];
 
+        $program_id = $faculty_info['program_id'];
+        $stmt = $pdo->prepare("SELECT program_name, program_code FROM programs WHERE program_id = :program_id");
+        $stmt->execute([':program_id' => $program_id]);
+        $program = $stmt->fetch();
+        if ($program) {
+            $formData['department'] = $program['program_name'] . "-" . $program['program_code'];
+        } else {
+            $formData['department'] = null;
+        }
 
         //print_r($formData);
     } catch (PDOException $e) {

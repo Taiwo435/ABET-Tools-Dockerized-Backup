@@ -28,36 +28,49 @@ case 'canvasTokens':
     $pageName = 'canvasTokens';
     break;
 case 'info':
-    // Temp fix, adds a program to the table because it's required for faculty_info
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM programs");
-    $stmt->execute();
-    $result = $stmt->fetch();
-    try{
-        if ($result['COUNT(*)'] == '0') {
-            $stmt = $pdo->prepare("INSERT INTO programs (program_name, program_code)
-            VALUES ('test_name', 'test_code')");
-            $stmt->execute();
+    // If the program doesn't exist in the table, add it and get the id. If it does exist, just get the id.
+    $program_id = null;
+    try {
+        //[0] => program_name
+        //[1] => program_code
+        $department = explode('-', $_POST['department']);
+        if (count($department) != 2) {
+            handleSaveError("Department field must be in the format '[ProgramName]-[ProgramCode]'. Currently, it is '" . $_POST['department'] . "'.");
+            die();
         }
-    } catch (PDOException $e) {
-        echo $e->getMessage();
-    }
 
-    /*  Changed
-        changed workload to have user_id instead of faculty_id
-        made user_id keys unique for info, workload, and vitae
-        removed time_commitment from info
-        removed department from vitae
-        removed organizations and certifications from info.
-        Many atributes are now stored as JSONs
-    */
+        // Checks if there are any existing programs with the same name and code, if not returns null
+        $stmt = $pdo->prepare("SELECT program_id FROM programs 
+            WHERE program_name = :program_name AND program_code = :program_code");
+        $stmt->execute([
+            'program_name' => $department[0],
+            'program_code' => $department[1]
+        ]);
+        $result = $stmt->fetch();
+
+        if (!$result) {
+            $stmt = $pdo->prepare("INSERT INTO programs (program_name, program_code)
+            VALUES (:program_name, :program_code)");
+            $stmt->execute([
+                'program_name' => $department[0],
+                'program_code' => $department[1]
+            ]);
+            $program_id = $pdo->lastInsertId();
+        } else {
+            $program_id = $result['program_id'];
+        }
+    } catch(PDOException $e) {
+        handleSaveError($e->getMessage());
+        die();
+    }
 
     $fields = [
         'user_id' => $_SESSION['user_id'],
-        'program_id' => 1, // Fix
+        'program_id' => $program_id,
         'first_name' => $_POST['first_name'],
         'last_name' => $_POST['last_name'],
         'highest_degree' => $_POST['highest_degree'],
-        'asurite' => $_POST['asurite'],
+        'asurite' => strtolower($_POST['asurite']),
         'areas_of_interest' => $_POST['areas_of_interest'],
         'faculty_rank' => ($_POST['faculty_rank'] !== '') ? $_POST['faculty_rank'] : 'O',
         'academic_appointment' => ($_POST['academic_appointment'] !== '') ? $_POST['academic_appointment'] : 'NTT',
@@ -74,7 +87,7 @@ case 'info':
 
     $updateFields = array_filter(
         array_keys($fields),
-        fn($field) => $field !== 'user_id' && $field !== 'program_id'
+        fn($field) => $field !== 'user_id'
     );
 
     $updateClause = implode(", ", array_map(
@@ -141,12 +154,12 @@ case 'workload':
 
     $percentSum = $teaching_pct + $research_or_scholarship_pct + $other_pct;
     if ($percentSum != 100) {
-        handleSaveError("The sum of the percentage fields must equal 100. Currently, they sum to " . $percentSum);
+        handleSaveError("Teaching, Research/Service, and Other Work Percentages should sum to 100%. Currently, they sum to " . $percentSum . "%.");
         die();
     }
 
     if ($pct_time_devoted_to_program > 100) {
-        handleSaveError("Percentage of time devoted to program cannot exceed 100. Currently, it is " . $pct_time_devoted_to_program);
+        handleSaveError("Percentage of time devoted to program cannot exceed 100. Currently, it is " . $pct_time_devoted_to_program . "%.");
         die();
     }
 

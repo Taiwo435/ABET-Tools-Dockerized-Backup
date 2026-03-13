@@ -50,6 +50,9 @@ $sections = [];
 $totalRequired = 0;
 $totalFilled = 0;
 
+$totalForms = 0;
+$totalCompleted = 0;
+
 $pageNames = getAllPageNames($formName);
 
 foreach ($pageNames as $i => $pageName) {
@@ -101,6 +104,11 @@ foreach ($pageNames as $i => $pageName) {
     $totalRequired += $reqCount;
     $totalFilled += $reqFilled;
 
+    $totalForms++;
+    if ($anyFilled) {
+      $totalCompleted++;
+    }
+
     $sections[] = [
         "pageNumber" => $i + 1,
         "name" => $pageName,
@@ -112,7 +120,8 @@ foreach ($pageNames as $i => $pageName) {
     ];
 }
 
-$overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequired) * 100) : 0;
+$overallPercent = ($totalForms > 0) ? (int)floor(($totalCompleted / $totalForms) * 100) : 0;
+//$overallPercent = ($totalRequired > 0) ? (int)floor(($totalFilled / $totalRequired) * 100) : 0;
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 ?>
@@ -133,6 +142,20 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
     .status-pill.notstarted{ background: rgba(231, 76, 60, 0.16); }
     .progress-bar { height:10px; background:rgba(0,0,0,0.10); border-radius:999px; overflow:hidden; margin-top:8px; }
     .progress-bar > div { height:100%; background:rgba(27, 102, 255, 0.85); }
+    .form-status-message {
+      margin-top: 24px;
+      margin-bottom: 18px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1a237e;
+      background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
+      border-left: 6px solid #1976d2;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+      letter-spacing: 0.02em;
+    }
+    .section-divider { border:0; border-top:1px solid #ccc; margin:24px 0; }
     .page-select-actions { display:flex; gap:10px; flex-wrap:wrap; }
     .page-card-link { text-decoration:none; color:inherit; display:block; }
     .small-muted { opacity:0.75; font-size:0.9rem; margin-top:4px; }
@@ -180,6 +203,12 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
       </div>
     </div>
 
+    <?php if ($overallPercent >= 100): ?>
+      <p class="form-status-message">The form is complete. If necessary, you can edit your responses. Otherwise, you are done with this form and can safely navigate away from this page.</p>
+    <?php else: ?>
+      <p class="form-status-message">Your form is not yet complete. Click "Start / Continue" or select a page to fill out the remaining sections.</p>
+    <?php endif; ?>
+
     <div class="form-group">
       <div class="status-row">
         <div>
@@ -193,6 +222,8 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
         <div style="width: <?php echo htmlspecialchars((string)$overallPercent); ?>%"></div>
       </div>
     </div>
+
+    <hr class="section-divider">
 
     <?php foreach ($sections as $s): ?>
       <?php
@@ -208,6 +239,8 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <div>
               <label class="form-label"><?php echo htmlspecialchars($s["title"]); ?></label>
               <div class="small-muted">
+                Go to page &rarr;
+                <!--
                 <?php if ($s["requiredCount"] > 0): ?>
                   Required filled: <?php echo htmlspecialchars((string)$s["requiredFilled"]); ?> /
                   <?php echo htmlspecialchars((string)$s["requiredCount"]); ?>
@@ -215,6 +248,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
                 <?php else: ?>
                   No required fields
                 <?php endif; ?>
+                -->
               </div>
             </div>
             <div class="status-pill <?php echo htmlspecialchars($statusClass); ?>">
