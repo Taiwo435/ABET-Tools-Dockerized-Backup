@@ -31,6 +31,7 @@ src/abet_private/testData/*
 ## stuff that I created randomly and don't want to track
 composer.phar
 vendor
+!/src/public/vendor/.htaccess
 INSTALL.sh
 apache2
 server_apache
