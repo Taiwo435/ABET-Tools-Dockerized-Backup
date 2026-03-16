@@ -19,6 +19,8 @@
   - [Important Files](#important-files)
     - [`.env` files](#env-files)
     - [`.htaccess` files](#htaccess-files)
+  - [Using Composer](#using-composer)
+    - [Composer Install](#composer-install)
   - [Database development](#database-development)
   - [Pulling from the server](#pulling-from-the-server)
   - [More information](#more-information)
@@ -118,6 +120,62 @@ These are apache configuration files that exist only within the `src/public` dir
 We use .htaccess files to rewrite important paths and to set apache settings specific to our project only. **DO NOT** try to update the server's actual apache's config, it will affect EVERY project hosted by this server.
 
 [Click here for official docs on the file type](https://httpd.apache.org/docs/current/howto/htaccess.html)
+
+## Using Composer
+
+To use composer on your system, you need PHP8.3+ installed.
+To install everything, I did this:
+
+```bash
+sudo apt install php8.3 && \
+sudo apt install php8.3-xml && \
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+```
+
+If the last command was successful, you now have PHP and composer installed on your system!
+Now, you can install any composer package you want!
+
+```bash
+cd src/public
+composer require pestphp/pest --dev --with-all-dependencies 
+# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --dev --with-all-dependencies
+```
+
+> [!NOTE]
+> You might get an error when trying to require your package.
+> This is due to uninstalled PHP extensions.
+>
+> If this happens,
+> `Require` the latest version of the package, and then check composer's output.
+>
+> ![what](./docs/static/composer_dependency_error.png)
+>
+> In this example, ext-dom is not installed.
+> Installing php8.3-xml fixed the errors for me.
+> I trust that you can install this yourself.
+
+All you need to do now is to require autoload.php in your php files
+
+```php
+# Note that this is the path RELATIVE to the current file. 
+require __DIR__ . '/vendor/autoload.php'; 
+```
+
+[Official Composer Usage Docs](https://getcomposer.org/doc/01-basic-usage.md#autoloading)
+
+### Composer Install
+
+Let's say some file requires autoload and
+you haven't installed the composer files on your system.
+You can fix this by running:
+
+```bash
+cd src/public
+composer install
+```
+
+This simply reads the dependencies in composer.json
+and installs them in the vendor/ folder.
 
 ## Database development
 
