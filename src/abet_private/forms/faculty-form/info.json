@@ -34,17 +34,10 @@
             "name": "department",
             "label": "Current Working Program",
             "options": {
-                "computer_science": "Computer Science B.S.E.",
-                "computer_systems_engineering": "Computer Systems Engineering B.S.E.",
-                "other": "Other"
+                "computer_science-bse": "Computer Science B.S.E.",
+                "computer_systems_engineering-bse": "Computer Systems Engineering B.S.E."
             },
             "required": true
-        },
-        {
-            "type": "text",
-            "name": "department_other",
-            "description": "If other, please specifiy.",
-            "required": false
         },
         {
             "type": "text",

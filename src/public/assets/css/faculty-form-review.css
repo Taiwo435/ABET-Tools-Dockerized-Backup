@@ -53,6 +53,46 @@
   color: var(--asu-rich-black);
 }
 
+.review-grid {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.50);
+  border-radius: 6px;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.review-grid th,
+.review-grid td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.50);
+  border-right: 2px solid rgba(0, 0, 0, 0.50);
+  font-size: 0.9rem;
+}
+
+.review-grid th:last-child,
+.review-grid td:last-child {
+  border-right: none;
+}
+
+.review-grid th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  background: rgba(140, 29, 64, 0.06);
+  border-right: 2px solid rgba(0, 0, 0, 0.50);
+}
+
+.review-grid tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.review-grid tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .review-form-holder {
   background: transparent !important;
   border: none !important;
