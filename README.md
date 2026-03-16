@@ -19,8 +19,10 @@
   - [Important Files](#important-files)
     - [`.env` files](#env-files)
     - [`.htaccess` files](#htaccess-files)
-  - [Using Composer](#using-composer)
-    - [Composer Install](#composer-install)
+  - [Managing PHP dependencies with Composer](#managing-php-dependencies-with-composer)
+    - [Installing Composer](#installing-composer)
+    - [Using Composer](#using-composer)
+    - [Composer Install (the command)](#composer-install-the-command)
   - [Database development](#database-development)
   - [Pulling from the server](#pulling-from-the-server)
   - [More information](#more-information)
@@ -121,7 +123,9 @@ We use .htaccess files to rewrite important paths and to set apache settings spe
 
 [Click here for official docs on the file type](https://httpd.apache.org/docs/current/howto/htaccess.html)
 
-## Using Composer
+## Managing PHP dependencies with Composer
+
+### Installing Composer
 
 To use composer on your system, you need PHP8.3+ installed.
 To install everything, I did this:
@@ -131,6 +135,8 @@ sudo apt install php8.3 && \
 sudo apt install php8.3-xml && \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 ```
+
+### Using Composer
 
 If the last command was successful, you now have PHP and composer installed on your system!
 Now, you can install any composer package you want!
@@ -163,7 +169,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 [Official Composer Usage Docs](https://getcomposer.org/doc/01-basic-usage.md#autoloading)
 
-### Composer Install
+### Composer Install (the command)
 
 Let's say some file requires autoload and
 you haven't installed the composer files on your system.
