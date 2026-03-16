@@ -15,7 +15,19 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 
 run_action=false
 
-if [[ "$1" == "-y" ]]; then
+while getopts "y" opt; do
+    case "$opt" in
+        y)
+            run_action=true
+            ;;
+        *)
+            echo "Usage: $0 [-y]"
+            exit 1
+            ;;
+    esac
+done
+
+if [[ run_action ]]; then
     run_action=true
 else
     echo "WARNING: This script will deploy the current state of the repository to the server, overwriting any existing files. Make sure this is stable and ready to be deployed before proceeding. This will also stop docker services on the server, so ensure that this is the right time to deploy."
@@ -49,16 +61,20 @@ if [[ "$run_action" == true ]]; then
         echo "[INFO] Docker services stopped."
 
         # COPY EVERYTHING tracked by git
-        git ls-files -z . | rsync -avz --delete --files-from=- --from0 "$REPO_ROOT/" "$REMOTE"
+        git ls-files -z . | rsync -avz --delete --keep-dirlinks --files-from=- --from0 "$REPO_ROOT/" "$REMOTE"
         echo "[INFO] Git-tracked files copied to server."
+
+        # Run composer install
+        ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/public && composer install --no-dev --optimize-autoloader --no-interaction"
+        echo "[INFO] Composer install successful"
 
         # build new .htaccess file with the sensitive environment variables, and copy it to the server
         rsync -avz --delete "$REPO_ROOT/docker/app/build/.htaccess" "$REMOTE/src/public/.htaccess"
         echo "[INFO] Files copied to server. Setting up server..."
 
-        # Move the files into the correst locations on the server
+        # Move the files into the correct locations on the server
         # Yes, this removes the abet.asucapstonetools.com directory
-        ssh -t osburn@"$HOSTNAME" "rm -rf /home/osburn/public_html/abet.asucapstonetools.com" || true
+        # ssh -t osburn@"$HOSTNAME" "rm -rf /home/osburn/public_html/abet.asucapstonetools.com" || true
         ssh -t osburn@"$HOSTNAME" "mv $REMOTE_PATH/src/public /home/osburn/public_html/abet.asucapstonetools.com"
 
         # start up the docker services on the server

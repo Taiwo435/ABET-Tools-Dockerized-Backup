@@ -1,12 +1,27 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
+
+WORKDIR /var/www/html
+
+COPY ../../src/public/composer.json .
+COPY ../../src/public/composer.lock .
 
 RUN apt-get update && apt-get install -y \
+    git \
+    curl \ 
     zip \
-    unzip \
+    unzip 
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer 
+RUN composer install 
+
+# Stuff I want to eventually get rid of
+RUN apt-get install -y \
     python3 \
     python3-pip \
-    libreoffice-writer \
-    && rm -rf /var/lib/apt/lists/*
+    libreoffice-writer
+
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* 
 
 RUN pip3 install --no-cache-dir --break-system-packages \
     python-docx \
@@ -22,7 +37,7 @@ RUN a2enmod headers
 RUN a2enmod proxy
 RUN a2enmod proxy_http
 
-COPY config/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+COPY docker/app/config/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
 #RUN if [ "$BUILD_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
 
@@ -32,4 +47,3 @@ RUN if [ "$BUILD_ENV" = "development" ]; then mv "$PHP_INI_DIR/php.ini-developme
 
 #RUN mkdir -p /var/www/
 WORKDIR /var/www
-
