@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 WORKDIR /var/www/html
 
@@ -9,15 +9,19 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \ 
     zip \
-    unzip \
-    python3 \
-    python3-pip \
-    libreoffice-writer \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    unzip 
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer 
 RUN composer install 
+
+# Stuff I want to eventually get rid of
+RUN apt-get install -y \
+    python3 \
+    python3-pip \
+    libreoffice-writer
+
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* 
 
 RUN pip3 install --no-cache-dir --break-system-packages \
     python-docx \
