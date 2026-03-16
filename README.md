@@ -128,6 +128,7 @@ We use .htaccess files to rewrite important paths and to set apache settings spe
 ### Installing Composer
 
 To use composer on your system, you need PHP8.3+ installed.
+(The server has php8.3 installed)
 To install everything, I did this:
 
 ```bash
@@ -154,7 +155,7 @@ composer require pestphp/pest --dev --with-all-dependencies
 > If this happens,
 > `Require` the latest version of the package, and then check composer's output.
 >
-> ![what](./docs/static/composer_dependency_error.png)
+> ![Composer Dependency Error Example](./docs/static/composer_dependency_error.png)
 >
 > In this example, ext-dom is not installed.
 > Installing php8.3-xml fixed the errors for me.
