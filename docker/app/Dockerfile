@@ -5,8 +5,6 @@ WORKDIR /var/www/html
 COPY ../../src/public/composer.json .
 COPY ../../src/public/composer.lock .
 
-RUN composer install 
-
 RUN apt-get update && apt-get install -y \
     git \
     curl \ 
@@ -19,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer 
+RUN composer install 
 
 RUN pip3 install --no-cache-dir --break-system-packages \
     python-docx \
