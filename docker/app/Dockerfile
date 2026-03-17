@@ -1,18 +1,30 @@
-FROM php:8.3-apache
+FROM composer:2 as vendor
+
+WORKDIR /app
+
+COPY ../../src/abet_private .
+
+RUN composer install --no-dev --prefer-dist --no-interaction
+
+################################3
+# ORIGNAL BUILD STEP
+################################
+FROM php:8.3-apache 
+
+ARG ABET_PRIVATE_DIR
+ENV ABET_PRIVATE_DIR=$ABET_PRIVATE_DIR
+
+WORKDIR $ABET_PRIVATE_DIR
+
+COPY --from=vendor /app/vendor $ABET_PRIVATE_DIR/vendor
 
 WORKDIR /var/www/html
-
-COPY ../../src/public/composer.json .
-COPY ../../src/public/composer.lock .
 
 RUN apt-get update && apt-get install -y \
     git \
     curl \ 
     zip \
     unzip 
-
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer 
-RUN composer install 
 
 # Stuff I want to eventually get rid of
 RUN apt-get install -y \
