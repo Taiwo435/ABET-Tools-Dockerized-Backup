@@ -13,6 +13,7 @@ jobs:
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.13.0
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           target: 'https://abet.asucapstonetools.com/'
           issue_title: "[SECURITY] ZAP Security Scan Alerts"
           
