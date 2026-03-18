@@ -1,0 +1,90 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:148.0) Gecko/20100101 Firefox/148.0" version="29.4.0">
+  <diagram name="Page-1" id="r7u4SszsHG6UWmdDaQlY">
+    <mxGraphModel dx="1426" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Xel78ym_CzpmlugTycuc-9" edge="1" parent="1" source="Xel78ym_CzpmlugTycuc-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="Xel78ym_CzpmlugTycuc-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-10" connectable="0" parent="Xel78ym_CzpmlugTycuc-9" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Browser" vertex="1">
+          <mxGeometry relative="1" x="0.2" y="-1" as="geometry">
+            <mxPoint x="-6" y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Users" vertex="1">
+          <mxGeometry height="60" width="30" x="30" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-11" edge="1" parent="1" source="Xel78ym_CzpmlugTycuc-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Xel78ym_CzpmlugTycuc-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-12" connectable="0" parent="Xel78ym_CzpmlugTycuc-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;&lt;b&gt;HTTP&lt;/b&gt;&lt;/div&gt;&lt;div&gt;Requests&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1857" as="geometry">
+            <mxPoint x="-11" y="20" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;div&gt;&lt;b&gt;FRONTEND&lt;/b&gt;&lt;/div&gt;&lt;div&gt;HTML/CSS/JS&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="120" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-15" edge="1" parent="1" source="Xel78ym_CzpmlugTycuc-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="Xel78ym_CzpmlugTycuc-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-20" edge="1" parent="1" source="Xel78ym_CzpmlugTycuc-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Xel78ym_CzpmlugTycuc-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a20025;strokeColor=#6F0000;fontColor=#ffffff;" value="&lt;div&gt;&lt;b&gt;CANVAS_SCRIPTS&lt;/b&gt;&lt;/div&gt;&lt;div&gt;PYTHON&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="590" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-13" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="Server-Side" vertex="1">
+          <mxGeometry height="620" width="510" x="310" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-3" parent="Xel78ym_CzpmlugTycuc-13" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;div&gt;&lt;b&gt;BACKEND&lt;/b&gt;&lt;/div&gt;&lt;div&gt;PHP&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="55" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-19" edge="1" parent="Xel78ym_CzpmlugTycuc-13" source="Xel78ym_CzpmlugTycuc-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Xel78ym_CzpmlugTycuc-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-22" connectable="0" parent="Xel78ym_CzpmlugTycuc-19" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;DATABASE&lt;/div&gt;&lt;div&gt;CONNECTION&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.4162" y="2" as="geometry">
+            <mxPoint y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-6" parent="Xel78ym_CzpmlugTycuc-13" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontColor=#000000;" value="&lt;div&gt;&lt;b&gt;EXTRACTION&lt;/b&gt;&lt;/div&gt;&lt;div&gt;PYTHON&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="280" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-14" edge="1" parent="Xel78ym_CzpmlugTycuc-13" source="Xel78ym_CzpmlugTycuc-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="Xel78ym_CzpmlugTycuc-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-21" edge="1" parent="Xel78ym_CzpmlugTycuc-13" source="Xel78ym_CzpmlugTycuc-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Xel78ym_CzpmlugTycuc-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-4" parent="Xel78ym_CzpmlugTycuc-13" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;strokeColor=#2D7600;fontColor=#ffffff;" value="&lt;div&gt;&lt;b&gt;REPORTGEN&lt;/b&gt;&lt;/div&gt;&lt;div&gt;PYTHON&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="280" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-16" edge="1" parent="Xel78ym_CzpmlugTycuc-13" source="Xel78ym_CzpmlugTycuc-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="Xel78ym_CzpmlugTycuc-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-17" connectable="0" parent="Xel78ym_CzpmlugTycuc-16" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;&lt;b&gt;HTTP&lt;/b&gt;&lt;/div&gt;&lt;div&gt;REST API&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.7238" y="-2" as="geometry">
+            <mxPoint x="21" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-18" parent="Xel78ym_CzpmlugTycuc-13" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" value="&lt;b&gt;MySQL&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="60" x="410" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-24" edge="1" parent="Xel78ym_CzpmlugTycuc-13" source="Xel78ym_CzpmlugTycuc-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0;entryDx=0;entryDy=52.5;entryPerimeter=0;" target="Xel78ym_CzpmlugTycuc-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="120" y="493" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xel78ym_CzpmlugTycuc-25" connectable="0" parent="Xel78ym_CzpmlugTycuc-24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;DATABASE&lt;/div&gt;&lt;div&gt;CONNECTION&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.1415" y="4" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

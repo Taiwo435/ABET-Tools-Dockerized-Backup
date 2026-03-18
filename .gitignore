@@ -1,13 +1,14 @@
 # environment data, keys, and secrets
 .ssh
-*.env
-*prod*
+*.env*
+*prod
 venv
 .venv
 config.php
 *.key
 *.crt
 *cache*
+*.secrets
 
 # local data that should not be tracked
 *.pyc
@@ -17,12 +18,25 @@ mysql_data
 report_jobs
 Test-PDFs
 
+# Mac trash
+_$RECYCLE.BIN/
+.DS_Store
+Thumbs.db
+__MACOSX/
+
+src/abet_private/testData/*
+!.gitkeep
+
 
 ## stuff that I created randomly and don't want to track
 composer.phar
 vendor
+!/src/public/vendor/.htaccess
 INSTALL.sh
-apache2 
+apache2
+server_apache
+server_nginx
+src/public/debug.php
 
 # Python-generated files
 __pycache__

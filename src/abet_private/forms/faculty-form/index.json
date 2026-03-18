@@ -1,0 +1,18 @@
+{
+    "title": "Faculty Information",
+    "pages": [
+        {
+            "fileName": "info",
+            "tableName": "faculty_info"
+        },
+        {
+            "fileName": "workload",
+            "tableName": "faculty_workload"
+        },
+        {
+            "fileName": "vitae",
+            "tableName": "faculty_vitae"
+        }
+
+    ]
+}

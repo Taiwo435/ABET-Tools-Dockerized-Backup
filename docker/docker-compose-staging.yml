@@ -1,0 +1,132 @@
+######################################################
+# Docker Compose configuration for staging environment
+# This deploys the application similar to how it will be deployed in production.
+# It uses host networking to allow the containers to communicate with services running on the host machine (like a managed database service).
+# 
+# php_apache simulates the prod. web server, mysql is removed to simulate using a managed database, and extraction_api is what we deploy.
+######################################################
+
+
+services:
+  ###################################################
+  # Simulation of production web server.
+  # No direct access to environment variables. Need to set it ourselves.
+  #
+  # IMPORTANT: I REMOVE the volume to allow us to modify .htaccess without it being overwritten by the host machine. 
+  ###################################################
+  php_apache:
+    build: 
+      context: ../
+      dockerfile: docker/app/DockerfileStaging
+    container_name: php_apache
+    hostname: ${WEBSERVER_HOSTNAME:?error}
+    environment:
+      - SESSION_IDLE_TIMEOUT=1800
+      - SESSION_ABSOLUTE_TIMEOUT=28800
+      - SESSION_COOKIE_SAMESITE=Lax
+      - BUILD_ENV=staging
+    volumes:
+      - ../src/public:/var/www/html
+      - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
+    network_mode: "host"
+    ports:
+      - "${WEBSERVER_PORT:-8080}:80"
+    depends_on:
+      - mysql
+      - extraction_api
+
+  ###################################################
+  # the MySQL container provides the database service for the application.
+  # Simulates the deployment database
+  ##################################################
+
+  mysql:
+    build: 
+      context: ./mysql/
+      dockerfile: Dockerfile
+    container_name: mysql
+    hostname: ${MYSQL_HOSTNAME:?error}
+    environment:
+    # CHANGE THESE VALUES BEFORE DEPLOYING TO PRODUCTION
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASS}
+    volumes:
+      - ./mysql/mysql_data:/var/lib/mysql         # Simulates the persistent storage of the database. In production, this is a managed database service.
+      - ../src/abet_private:${ABET_PRIVATE_DIR}
+    network_mode: "host"
+
+  # ###################################################
+  # # phpMyAdmin for a web-based interface for managing the MySQL database.
+  # ###################################################
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: 127.0.0.1
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASS}
+      APACHE_PORT: ${PHP_MYADMIN_PORT:-8081}
+    ports:
+      - "${PHP_MYADMIN_PORT:-8081}:80"
+    network_mode: "host"
+    restart: always
+
+
+  ###################################################
+  # Our service
+  # We can directly control the environment variables here
+  ###################################################
+  extraction_api:
+    build: 
+      context: ../
+      dockerfile: docker/extraction_api/Dockerfile
+      args:
+        EXTRACTION_PORT: ${EXTRACTION_PORT:?error}
+    container_name: extraction_api
+    hostname: ${EXTRACTION_HOSTNAME:?error}
+    env_file:
+      - .env
+    volumes:
+      - ../src/extraction_api:/usr/src/app
+    network_mode: "host"
+
+
+  ###################################################
+  # the report generation container that hosts the fastapi backend
+  # accessed by the php_apache container to generate reports.
+  # we may optinally give it environment variables for database connections if needed in the future.
+  ###################################################
+  reportgen:
+    build: 
+      context: ../
+      dockerfile: docker/reportgen/Dockerfile
+      args:
+        REPORTGEN_PORT: ${REPORTGEN_PORT:?error}
+    container_name: reportgen
+    hostname: ${REPORTGEN_HOSTNAME:?error}
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ../src/report_generation_api:/usr/src/app
+    network_mode: "host"
+    depends_on:
+      - mysql
+
+
+  ###################################################
+  # the selenium container for running end-to-end tests with a headless browser.
+  ###################################################
+  selenium:
+    image: selenium/standalone-${SELENIUM_BROWSER:-firefox}:latest
+    container_name: selenium
+    hostname: ${SELENIUM_HOSTNAME:?error}
+    profiles:
+      - testing
+    ports:
+      - "${SELENIUM_PORT-4444}:4444"
+    network_mode: "host"

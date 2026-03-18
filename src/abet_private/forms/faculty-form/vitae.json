@@ -1,0 +1,146 @@
+{
+
+    "title": "Vitae",
+    "name": "vitae",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "expandable-grid",
+            "name": "education",
+            "label": "Education",
+            "columns": [
+                {
+                    "name": "degree",
+                    "label": "Degree Type, Field, School, and Year Completed",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": true
+        },
+        {
+            "type": "expandable-grid",
+            "name": "academic_experience",
+            "label": "Academic Experience",
+            "columns": [
+                {
+                    "name": "experience",
+                    "label": "Institution/Company, Position, Years, and Part-Time or Full-Time",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "non_academic_experience",
+            "label": "Non-Academic Experience",
+            "columns": [
+                {
+                    "name": "experience",
+                    "label": "Institution/Company, Position, Years, and Part-Time or Full-Time",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "certifications",
+            "label": "Certifications or Professional Registrations",
+            "columns": [
+                {
+                    "name": "certification_registration_name",
+                    "label": "Certification or Registration Name, Abbreviate if possible.",
+                    "type": "text"
+                },
+                {
+                    "name": "certification_registration_other_info",
+                    "label": "Other Information- unabbreviated name, year received, certifying organization, etc.",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "professional_memberships",
+            "label": "Current Memberships in Professional Organizations",
+            "columns": [
+                {
+                    "name": "organization_name",
+                    "label": "Organization Name. Abbreviate if possible.",
+                    "type": "text"
+                },
+                {
+                    "name": "organization_other_info",
+                    "label": "Other Information- role, years of membership, etc.",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "honors_and_awards",
+            "label": "Honors and Awards",
+            "columns": [
+                {
+                    "name": "award",
+                    "label": "Award Name and Year Received",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "service_activities",
+            "label": "Service Activities (within and outside of ASU)",
+            "columns": [
+                {
+                    "name": "activity",
+                    "label": "Activity and Year(s)",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "publications_presentations",
+            "label": "Most Important Publications and Presentations",
+            "description": "Only list those from the past 5 years.",
+            "columns": [
+                {
+                    "name": "publication_or_presentation",
+                    "label": "Publication or Presentation Citation",
+                    "type": "text-field"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        },
+        {
+            "type": "expandable-grid",
+            "name": "professional_development",
+            "label": "Most Recent Professional Development Activities",
+            "columns": [
+                {
+                    "name": "professional_development_activity",
+                    "label": "Activity Name and Year(s)",
+                    "type": "text"
+                }
+            ],
+            "maxRows": 10,
+            "required": false
+        }
+    ]
+}

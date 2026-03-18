@@ -7,27 +7,32 @@ services:
   ###################################################
   php_apache:
     build: 
-      context: ./app/
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/app/Dockerfile
     container_name: php_apache
+    hostname: ${WEBSERVER_HOSTNAME:?error}
+    env_file:
+      - .env
     environment:
-      - ABET_PRIVATE_DIR=${ABET_PRIVATE_DIR}
-      - DB_HOST=mysql
-      - DB_NAME=${MYSQL_DATABASE}
-      - DB_USER=${MYSQL_USER}
-      - DB_PASS=${MYSQL_PASS}
       - SESSION_IDLE_TIMEOUT=1800
       - SESSION_ABSOLUTE_TIMEOUT=28800
       - SESSION_COOKIE_SAMESITE=Lax
     ports:
-      - "${APP_PORT-8080}:80"
+      - "${WEBSERVER_PORT:-8080}:80"
+    command:
+      - sh
+      - -lc
+      - >- 
+        install -d -o www-data -g www-data -m 0770 "${ABET_PRIVATE_DIR}/report_jobs" && exec apache2-foreground
     volumes:
       - ../src/public:/var/www/html
-      - ../src/abet_private:${ABET_PRIVATE_DIR}
+      - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
+      #- ./app/apache2:/etc/apache2 # Only for development
     networks:
       - app_network
     depends_on:
       - mysql
+      - extraction_api
 
   ###################################################
   # the MySQL container provides the database service for the application.
@@ -38,6 +43,7 @@ services:
       context: ./mysql/
       dockerfile: Dockerfile
     container_name: mysql
+    hostname: ${MYSQL_HOSTNAME:?error}
     environment:
     # CHANGE THESE VALUES BEFORE DEPLOYING TO PRODUCTION
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -61,9 +67,10 @@ services:
       PMA_HOST: mysql
       PMA_USER: ${MYSQL_USER}
       PMA_PASSWORD: ${MYSQL_PASS}
+      PMA_PORT: ${MYSQL_PORT:-3306}
     restart: always
     ports:
-      - "8081:80"
+      - "${PHP_MYADMIN_PORT:?error}:80"
     networks:
       - app_network
     depends_on:
@@ -77,16 +84,37 @@ services:
     build: 
       context: ../
       dockerfile: docker/extraction_api/Dockerfile
+      args:
+        EXTRACTION_PORT: ${EXTRACTION_PORT:?error}
     container_name: extraction_api
+    hostname: ${EXTRACTION_HOSTNAME:?error}
+    env_file:
+      - .env
     ports:
-      - "8000:8000"
+      - "${EXTRACTION_PORT:?error}:${EXTRACTION_PORT:?error}" 
     volumes:
       - ../src/extraction_api:/usr/src/app
     networks:
       - app_network
-    # depends_on:
-    #   - mysql
 
+  ###################################################
+  # Canvas Formatting FastAPI Backend
+  # Generates course/ABET HTML pages and uploads to Canvas modules
+  ###################################################
+  canvas_formatting_api:
+    build:
+      context: ../
+      dockerfile: docker/canvas_formatting_api/Dockerfile
+      args:
+        CANVAS_FORMATTING_PORT: ${CANVAS_FORMATTING_PORT:?error}
+    container_name: canvas_formatting_api
+    hostname: ${CANVAS_FORMATTING_HOSTNAME:?error}
+    ports:
+      - "${CANVAS_FORMATTING_PORT:?error}:8001"
+    volumes:
+      - ../src/canvas_formatting_api:/usr/src/app
+    networks:
+      - app_network
 
   ###################################################
   # the report generation container that hosts the fastapi backend
@@ -97,13 +125,18 @@ services:
     build: 
       context: ../
       dockerfile: docker/reportgen/Dockerfile
+      args:
+        REPORTGEN_PORT: ${REPORTGEN_PORT:?error}
     container_name: reportgen
+    hostname: ${REPORTGEN_HOSTNAME:?error}
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file:
+      - .env
     volumes:
       - ../src/report_generation_api:/usr/src/app
     ports:
-      - "8001:8001"  
+      - "${REPORTGEN_PORT:?error}:${REPORTGEN_PORT:?error}"  
     networks:
       - app_network
     depends_on:
@@ -111,13 +144,15 @@ services:
 
   ###################################################
   # the selenium container for running end-to-end tests with a headless browser.
+  ###################################################
   selenium:
     image: selenium/standalone-${SELENIUM_BROWSER:-firefox}:latest
     container_name: selenium
+    hostname: ${SELENIUM_HOSTNAME:?error}
     profiles:
       - testing
     ports:
-      - "${SELENIUM_PORT-4444}:4444"
+      - "${SELENIUM_PORT:?error}:4444"   
     networks:
       - app_network
 

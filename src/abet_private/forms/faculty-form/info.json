@@ -1,0 +1,145 @@
+{
+
+    "title": "About You",
+    "name": "info",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "text",
+            "name": "first_name",
+            "label": "First Name",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "last_name",
+            "label": "Last Name",
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "asurite",
+            "label": "ASURITE ID",
+            "description": "Your 5–8 character username (e.g., jsmith2). NOT your 10 digit ASU ID number.",
+            "required": true
+        },
+
+        {
+            "type": "section-break"
+        },
+
+        {
+            "type": "select",
+            "name": "department",
+            "label": "Current Working Program",
+            "options": {
+                "computer_science-bse": "Computer Science B.S.E.",
+                "computer_systems_engineering-bse": "Computer Systems Engineering B.S.E."
+            },
+            "required": true
+        },
+        {
+            "type": "text",
+            "name": "highest_degree",
+            "label": "Highest Degree Earned- Type, Field, and Year",
+            "description": "e.g., Ph.D. Computer Science, 2010",
+            "required": true
+        },
+        {
+            "type": "select",
+            "name": "faculty_rank",
+            "label": "Rank",
+            "options": {
+                "P": "P- Professor",
+                "ASC": "ASC- Associate Professor",
+                "AST": "AST- Assistant Professor",
+                "I": "I- Instructor",
+                "A": "A- Adjunct",
+                "O": "O- Other"
+            },
+            "required": true
+        },
+        {
+            "type": "text-field",
+            "name": "areas_of_interest",
+            "label": "Areas of Interest",
+            "required": true
+        },
+        {
+            "type": "select",
+            "name": "academic_appointment",
+            "label": "Type of Academic Appointment",
+            "required": true,
+            "options": {
+                "T": "Tenured (T)",
+                "TT": "Tenure Tracked (TT)",
+                "NTT": "Non-Tenure Tracked (NTT)"
+            }
+        },
+
+        {
+            "type": "section-break"
+        },
+
+        {
+            "type": "text",
+            "name": "years_experience_gov_industry",
+            "label": "Years of Experience in Government or Individual Practice",
+            "required": true,
+            "numerical": true
+        },
+        {
+            "type": "text",
+            "name": "years_experience_teaching",
+            "label": "Years of Experience in Teaching",
+            "required": true,
+            "numerical": true
+        },
+        {
+            "type": "text",
+            "name": "years_experience_institution",
+            "label": "Years of Experience at ASU",
+            "required": true,
+            "numerical": true
+        },
+
+        {
+            "type": "section-break"
+        },
+
+        {
+            "type": "select",
+            "name": "activity_prof_orgs",
+            "label": "Level of Activity in Professional Organizations",
+            "options": {
+                "H": "High",
+                "M": "Medium",
+                "L": "Low"
+            },
+            "required": true
+        },
+        {
+            "type": "select",
+            "name": "activity_prof_dev",
+            "label": "Level of Activity in Professional Development",
+            "required": true,
+            "options": {
+                "H": "High",
+                "M": "Medium",
+                "L": "Low"
+            }
+        },
+        {
+            "type": "select",
+            "name": "activity_consulting",
+            "label": "Level of Activity in Consulting/Summer Work in the Industry",
+            "required": true,
+            "options": {
+                "H": "High",
+                "M": "Medium",
+                "L": "Low"
+            }
+        }
+    ]
+}

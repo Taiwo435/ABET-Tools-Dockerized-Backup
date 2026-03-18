@@ -1,8 +1,5 @@
 <?php
-declare(strict_types=1);
-
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
-require_login();
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
 
 // user info for the dropdown
 $user_email = $_SESSION['email'] ?? $_SESSION['user_email'] ?? 'user@asu.edu';
@@ -44,7 +41,8 @@ $asu_id = $parts[0] ?? 'user';
         <span class="logo-area">Arizona State University</span>
         <span class="logo-sub">Enterprise Technology</span>
     </div>
-
+    <div class="header-right-alligned">
+    <a class="home-link" href="/home"><img class="home-icon" src="/assets/img/home-icon.svg" alt="home page"></a>
     <div class="auth-nav">
         <?php if (is_logged_in()): ?>
             <div class="dropdown">
@@ -71,5 +69,6 @@ $asu_id = $parts[0] ?? 'user';
         <?php else: ?>
             <a href="/login" class="auth-link">Log In</a>
         <?php endif; ?>
+    </div>
     </div>
 </header>

@@ -1,7 +1,66 @@
 <?php
 
-function loadForm($formName) {
-    $path = __DIR__ . "/../forms/$formName.json";
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+
+function getPageNameFromNumber($formName, $pageNumber){
+
+    $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
+    if (!file_exists($path)) {
+        throw new Exception("Form not found.");
+    }
+    
+    $form = json_decode(file_get_contents($path), true);
+
+    if ($pageNumber < 1 || $pageNumber > getPageCount($formName)) {
+        $pageNumber = 1;
+    }
+
+    return ($form['pages'])[$pageNumber - 1]['fileName'];
+}
+
+function allPagesDone($formName) {
+    $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
+    if (!file_exists($path)) {
+        throw new Exception("Form not found.");
+    }
+    
+    $form = json_decode(file_get_contents($path), true);
+    $pdo = db();
+    foreach ($form['pages'] as $page) {
+        try {
+            $query = "SELECT EXISTS(SELECT 1 FROM " . $page['tableName'] . " WHERE user_id = :user_id)";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+            $count = $stmt->fetchColumn();
+
+            if ($count == 0) {
+                return false;
+            }
+        } catch (PDOException $e) {
+            //print_r($e);
+            return false;
+        }
+    }
+    return true;
+}
+
+function getAllPageNames($formName) {
+    $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
+    if (!file_exists($path)) {
+        throw new Exception("Form not found.");
+    }
+    
+    $form = json_decode(file_get_contents($path), true);
+
+    $pageNames = [];
+    foreach ($form['pages'] as $page) {
+        array_push($pageNames, $page['fileName']);
+    }
+    return $pageNames;
+}
+
+function loadFormPage($formName, $pageName) {
+    $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . $pageName . ".json";
 
     if (!file_exists($path)) {
         throw new Exception("Form not found.");
@@ -10,7 +69,18 @@ function loadForm($formName) {
     return json_decode(file_get_contents($path), true);
 }
 
-function validateForm($form, $data) {
+
+function getPageCount($formName) {
+    $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
+    if (!file_exists($path)) {
+        throw new Exception("Form not found.");
+    }
+    $form = json_decode(file_get_contents($path), true);
+    
+    return count($form['pages']);
+}
+
+function validateFormPage($form, $data) {
     $errors = [];
 
     foreach ($form['fields'] as $field) {
@@ -34,3 +104,5 @@ function validateForm($form, $data) {
 
     return $errors;
 }
+
+?>

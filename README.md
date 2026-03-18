@@ -1,19 +1,43 @@
-# The Frontend-Backend interface for ABET-Tools
+# The Main Application for ABET-Tools
 
-![Static Badge](https://img.shields.io/badge/ASU%20Capstone%20Project-8C1D40?logo=github&labelColor=red) ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/hoang-danny05/ABET-Tools-Dockerized) ![GitHub contributors](https://img.shields.io/github/contributors-anon/hoang-danny05/ABET-Tools-Dockerized) ![GitHub issue custom search](https://img.shields.io/github/issues-search?query=repo%3Ahoang-danny05%2FABET-Tools-Dockerized%20is%3Aopen%20&label=open%20issues) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/test.yml?logo=docsdotrs&logoColor=white)
+![Static Badge](https://img.shields.io/badge/ASU%20Capstone%20Project-8C1D40?logo=github&labelColor=red)
 
+<!--
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/hoang-danny05/ABET-Tools-Dockerized) ![GitHub contributors](https://img.shields.io/github/contributors-anon/hoang-danny05/ABET-Tools-Dockerized) ![GitHub issue custom search](https://img.shields.io/github/issues-search?query=repo%3Ahoang-danny05%2FABET-Tools-Dockerized%20is%3Aopen%20&label=open%20issues) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/test.yml?logo=docsdotrs&logoColor=white)
+-->
 
 <!-- fancy icons from shields.io -->
 <!--![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/WORKFLOW)-->
 
-This is our application, which I've containerized for easier development. Included are containers for:
+- [The Main Application for ABET-Tools](#the-main-application-for-abet-tools)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+  - [ABET private key setup](#abet-private-key-setup)
+  - [Docker Installs](#docker-installs)
+    - [Linux](#linux)
+    - [Windows](#windows)
+  - [Important Files](#important-files)
+    - [`.env` files](#env-files)
+    - [`.htaccess` files](#htaccess-files)
+  - [Managing PHP dependencies with Composer](#managing-php-dependencies-with-composer)
+    - [Installing Composer](#installing-composer)
+    - [Using Composer](#using-composer)
+    - [Composer Install (the command)](#composer-install-the-command)
+  - [Database development](#database-development)
+  - [Pulling from the server](#pulling-from-the-server)
+  - [More information](#more-information)
+
+## Overview
+
+This is our application, containerized for easier development. Included are containers for:
 
 - The PHP/Apache server
-- The MySQL database
-- PHPMyAdmin for the database
-- and the report generation API (as soon as the API is created)
-
-I do not currently have a deployment command, but I aim to create a script to be able to deploy the server by next week.
+- Canvas Formatting APIs
+- The report generation API
+- The Canvas Extraction API
+- The MySQL database (to simulate the real one)
+- PHPMyAdmin for easy database administration
+- A selenium container for E2E testing
 
 ## Getting Started
 
@@ -25,10 +49,18 @@ This requires:
 
 Once that's done, you can run these commands to view the application
 
-1) cd into `docker/` and create a `.env` file in that folder. `env.demo` is a format file that you can use. Please use this for development. [More info about .env files](#env-files)
+1) cd into `docker/` and create a `.env`. `env.demo` is a template file that is suitable for development.
 2) within `docker/`, run `docker compose up --build`
 3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
-4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin
+4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin (useful to see database state)
+
+> [!NOTE]  
+> Env files are how we configure the containers to run
+> differently on your local machine and on the server.
+> Using the env files correctly will ensure that your
+> code works as intended on the server.
+>
+> [More information about the ENV files are available in this section](#env-files).
 
 ## ABET private key setup
 
@@ -40,8 +72,6 @@ Using the CPanel
 4) `eval "$(ssh-agent -s)"`
 5) `ssh-add $PATH_TO_ABET_PRIVATE_KEY`
 6) Use the ABET ssh key password in the discord.
-
-Note: you can automate step 4 and 5 if you create your own private key and put these commands in your `~/.bashrc`
 
 ## Docker Installs
 
@@ -71,21 +101,110 @@ The rest of the project organization info is [HERE in the docs](docs/project-org
 
 ### `.env` files
 
-this is the MOST important concept of configuration in the project. On first setup, you probably run `cp env.demo .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
+This is the MOST important concept of configuration in the project. On first setup, you probably run `cp env.demo .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
 
 `.env` stores ALL of our secret keys, but also our configuratoin information. Changing .env will change how the containers are built. I made `env.demo` with the purpose of easy setup, but these values should NEVER be exposed or used in the real server.
 
-## Updating mysql tables
+> [!NOTE]  
+> The project usually has a second .env file called prod.env
+> that is meant to only run on the server and has credentials
+> that may never be exposed. You only interact with this file if
+> you are deploying the application or messing with the server.
+>
+> [More information about .env files](docs/env.md)
+>
+> [More information about project deployment](docs/deployment.md)
 
-Updating mysql tables requires a reset of the `./docker/mysql/mysql_data` directory. To update the mysql tables, I usually run:
+### `.htaccess` files
+
+These are apache configuration files that exist only within the `src/public` directory. They are local and apply to the current directory and all subdirectories. They work hieracically: htaccess files in subdirectories overwrite ones in parent directories.
+
+We use .htaccess files to rewrite important paths and to set apache settings specific to our project only. **DO NOT** try to update the server's actual apache's config, it will affect EVERY project hosted by this server.
+
+[Click here for official docs on the file type](https://httpd.apache.org/docs/current/howto/htaccess.html)
+
+## Managing PHP dependencies with Composer
+
+### Installing Composer
+
+To use composer on your system, you need PHP8.3+ installed.
+(The server has php8.3 installed)
+To install everything, I did this:
+
+```bash
+sudo apt install php8.3 && \
+sudo apt install php8.3-xml && \
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+```
+
+### Using Composer
+
+If the last command was successful, you now have PHP and composer installed on your system!
+Now, you can install any composer package you want!
+
+```bash
+cd src/public
+composer require pestphp/pest --dev --with-all-dependencies 
+# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --dev --with-all-dependencies
+```
+
+> [!NOTE]
+> You might get an error when trying to require your package.
+> This is due to uninstalled PHP extensions.
+>
+> If this happens,
+> `Require` the latest version of the package, and then check composer's output.
+>
+> ![Composer Dependency Error Example](./docs/static/composer_dependency_error.png)
+>
+> In this example, ext-dom is not installed.
+> Installing php8.3-xml fixed the errors for me.
+> I trust that you can install this yourself.
+
+All you need to do now is to require autoload.php in your php files
+
+```php
+# Note that this is the path RELATIVE to the current file. 
+require __DIR__ . '/vendor/autoload.php'; 
+```
+
+[Official Composer Usage Docs](https://getcomposer.org/doc/01-basic-usage.md#autoloading)
+
+### Composer Install (the command)
+
+Let's say some file requires autoload and
+you haven't installed the composer files on your system.
+You can fix this by running:
+
+```bash
+cd src/public
+composer install
+```
+
+This simply reads the dependencies in composer.json
+and installs them in the vendor/ folder.
+
+## Database development
+
+If you're working on the database, the most important file
+in the project for you is `docker/mysql/init.sql`, as it
+defines all of the database tables that you will interface with.
+
+> [!IMPORTANT]  
+> Restarting the `docker compose` contaienrs will NOT
+> update the mySQL tables. This is because the mysql
+> container is simply restarted, not built again.
+>
+> You can fix this by running the following commands:
 
 within the `docker/` folder
 
 ```bash
 docker compose down     # or docker-compse if you have that
-rm -rf ./mysql/mysql_data        # reset mysql_data so that tables can be updated.
 docker compose up --build
 ```
+
+[Information on how to link to the database](docs/database_link.md)
 
 ## Pulling from the server
 
@@ -100,4 +219,5 @@ docker compose up --build
 ## More information
 
 More docs are located in the [docs directory](./docs/).
-More information is found [in this master document.](https://docs.google.com/document/d/1mHOwIYyIZtg7FO8jtxTz9lPIuB3W9JVeVAR240YsTQA/edit?tab=t.88j2hx3zuwbr)
+
+Even more information is found [in this master document.](https://docs.google.com/document/d/1mHOwIYyIZtg7FO8jtxTz9lPIuB3W9JVeVAR240YsTQA/edit?tab=t.88j2hx3zuwbr)

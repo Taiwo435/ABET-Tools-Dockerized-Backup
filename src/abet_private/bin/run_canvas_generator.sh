@@ -2,6 +2,7 @@
 # Note from Danny: I have no idea what this script is even for
 set -euo pipefail
 
+# Note: we should NOT hardcode the path to abet_private. 
 SCRIPT_DIR="/home/osburn/abet_private/canvas_tools"
 PYTHON_BIN="/opt/python38/bin/python3.8"
 

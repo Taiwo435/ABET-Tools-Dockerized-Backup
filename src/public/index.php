@@ -1,8 +1,10 @@
 <?php
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 ?>
 
 <link rel="stylesheet" href="assets/css/toolcards.css">
+<link rel="stylesheet" href="assets/css/checklist.css">
 
 <section class="hero">
     <h1>ABET Tools </h1>
@@ -10,6 +12,48 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 </section>
 
 <div class="container">
+    <div class="checklist">
+        <label class="checklist-title">Your To-Do List</label>
+        <div class="checklist-item"
+            onclick="window.location.href='#';">
+            <?php if (false): ?>
+                <label class="checklist-check">&#10004;</label>
+            <?php else: ?>
+                <label class="checklist-x">&#10006;</label>
+            <?php endif; ?>
+            <label class="checklist-label">Upload your canvas token &#x279E;</label>
+        </div>
+        <div class="checklist-item"
+            onclick="window.location.href='/faculty-form';">
+            <?php if (allPagesDone('faculty-form')): ?>
+                <label class="checklist-check">&#10004;</label>
+            <?php else: ?>
+                <label class="checklist-x">&#10006;</label>
+            <?php endif; ?>
+            <label class="checklist-label">Complete the faculty information form &#x279E;</label>
+        </div>
+        <div class="checklist-item"
+            onclick="window.location.href='/AssignmentsGrades/tool1.php';">
+            <?php if (false): ?>
+                <label class="checklist-check">&#10004;</label>
+            <?php else: ?>
+                <label class="checklist-x">&#10006;</label>
+            <?php endif; ?>
+            <label class="checklist-label">Link all of your canvas courses (<?= 0 ?> added so far) &#x279E;</label>
+        </div>
+        <div class="checklist-item"
+            onclick="window.location.href='#';">
+            <?php if (false): ?>
+                <label class="checklist-check">&#10004;</label>
+            <?php else: ?>
+                <label class="checklist-x">&#10006;</label>
+            <?php endif; ?>
+            <label class="checklist-label">Upload and manage your roster and assignments &#x279E;</label>
+        </div>
+
+        
+    </div>
+
     <div class="tools-grid">
 
         <div class="tool-card">
@@ -20,20 +64,33 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Manage course performance data efficiently with a clear, structured view of assignments and outcomes-related grading. Ensure records are complete and ready for review when needed.</p>
-                    <a href="https://abet.asucapstonetools.com/AssignmentsGrades/viewClasses.php" class="action-link">Launch Tool 1 &rarr;</a>
+                    <a href="/AssignmentsGrades/tool1.php" class="action-link">Launch Tool 1 &rarr;</a>
                 </div>
             </div>
         </div>
 
         <div class="tool-card">
             <div class="card-header" onclick="triggerToggle(this)">
-                <div class="card-title">Generate Semester Report</div>
+                <div class="card-title">Faculty Form</div>
                 <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
             </div>
             <div class="card-body">
                 <div class="card-body-inner">
-                    <p>Create a polished semester summary that consolidates key course activity and performance indicators. Produce a consistent report suitable for faculty review and departmental records.</p>
-                    <a href="https://abet.asucapstonetools.com/semester-reports" class="action-link">Launch Tool 2 &rarr;</a>
+                    <p>Description text.</p>
+                    <a href="/faculty-form" class="action-link">Open Faculty Form &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="tool-card">
+            <div class="card-header" onclick="triggerToggle(this)">
+                <div class="card-title">Coordinator Form</div>
+                <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+            </div>
+            <div class="card-body">
+                <div class="card-body-inner">
+                    <p>Description text.</p>
+                    <a href="/coordinator-form/edit" class="action-link">Open Coordinator Form &rarr;</a>
                 </div>
             </div>
         </div>
@@ -46,7 +103,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Generate a comprehensive ABET report that summarizes assessment results and supporting materials. Present information clearly to streamline internal review and accreditation preparation.</p>
-                    <a href="https://abet.asucapstonetools.com/report-generator/index.php" class="action-link">Launch Tool 3 &rarr;</a>
+                    <a href="/report-generator/index.php" class="action-link">Launch Tool 3 &rarr;</a>
                 </div>
             </div>
         </div>

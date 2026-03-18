@@ -3,6 +3,7 @@
 Canvas Grades Fetcher
 Fetches grades and submission data from Canvas LMS for ABET assessment purposes.
 """
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 import json
@@ -13,15 +14,18 @@ from typing import Dict, List, Optional, Any
 import logging
 import time
 import shutil
-
+import threading
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("grades_fetch.log"), logging.StreamHandler()],
+    handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
+
+# Max concurrent file uploads to Canvas. Increase for speed, decrease if hitting rate limits.
+MAX_PARALLEL_UPLOADS = 4
 
 
 class CanvasGradesFetcher:
@@ -35,8 +39,20 @@ class CanvasGradesFetcher:
         self.canvas_domain = canvas_domain
         self.access_token = access_token or self._get_access_token()
         self.headers = {"Authorization": f"Bearer {self.access_token}"}
-        self.session = requests.Session()
-        self.session.headers.update(self.headers)
+
+        # Use thread-local storage for requests session to ensure thread safety
+        # when methods are executed concurrently via ThreadPoolExecutor
+        self._local = threading.local()
+
+    @property
+    def session(self) -> requests.Session:
+        # One session per thread, each carrying the token set at construction.
+        # This instance is expected to live for a single request; do not reuse
+        # across requests with different tokens.
+        if not hasattr(self._local, "session"):
+            self._local.session = requests.Session()
+            self._local.session.headers.update(self.headers)
+        return self._local.session
 
     def _get_access_token(self) -> str:
         """Get Canvas access token from environment variable."""
@@ -108,9 +124,15 @@ class CanvasGradesFetcher:
                     # Discover next page from Link header (if present)
                     url = None
                     if "Link" in response.headers:
-                        links = requests.utils.parse_header_links(response.headers["Link"])
+                        links = requests.utils.parse_header_links(
+                            response.headers["Link"]
+                        )
                         url = next(
-                            (link["url"] for link in links if link.get("rel") == "next"),
+                            (
+                                link["url"]
+                                for link in links
+                                if link.get("rel") == "next"
+                            ),
                             None,
                         )
 
@@ -120,7 +142,9 @@ class CanvasGradesFetcher:
                     break  # exit retry loop on success
                 else:
                     # Exhausted retries for rate limiting — log and stop.
-                    logger.error("Exceeded retry attempts due to rate limiting for %s", url)
+                    logger.error(
+                        "Exceeded retry attempts due to rate limiting for %s", url
+                    )
                     break
 
             except requests.exceptions.RequestException as e:
@@ -224,17 +248,27 @@ class CanvasGradesFetcher:
         max_retries: int = 3,
     ):
         """
-        Uploads files to a Canvas course folder, with retries.
+        Uploads files to a Canvas course folder in parallel, with retries.
+
+        Concurrency is controlled by MAX_PARALLEL_UPLOADS (module-level constant).
+        Each file goes through Canvas's 3-step upload: init → POST binary → confirm.
         """
+        if not file_paths:
+            return
+
         logger.info(
             "Uploading %d files to Canvas folder '%s'...",
             len(file_paths),
             folder_path,
         )
-        for file_path in file_paths:
+
+        failed: list[str] = []
+
+        def _upload_single(file_path: str) -> None:
+            """Upload one file with retries. Appends to `failed` on total failure."""
+            filename = os.path.basename(file_path)
             for attempt in range(max_retries):
                 try:
-                    filename = os.path.basename(file_path)
                     init_data = {
                         "name": filename,
                         "parent_folder_path": folder_path,
@@ -262,7 +296,7 @@ class CanvasGradesFetcher:
                         if confirmation.get("location"):
                             self.api_request(confirmation["location"])  # confirm
                     logger.info("Successfully uploaded %s", filename)
-                    break
+                    return
                 except Exception as e:
                     logger.error(
                         "ERROR on attempt %d/%d for %s: %s",
@@ -273,12 +307,31 @@ class CanvasGradesFetcher:
                     )
                     if attempt < max_retries - 1:
                         time.sleep(2)
-                    else:
-                        logger.error(
-                            "All %d attempts failed for %s.",
-                            max_retries,
-                            filename,
-                        )
+
+            logger.error("All %d attempts failed for %s.", max_retries, filename)
+            failed.append(filename)
+
+        start = time.time()
+        with ThreadPoolExecutor(max_workers=MAX_PARALLEL_UPLOADS) as pool:
+            pool.map(_upload_single, file_paths)
+        elapsed = time.time() - start
+
+        ok_count = len(file_paths) - len(failed)
+        logger.info(
+            "Upload complete: %d/%d succeeded in %.1fs (workers=%d)",
+            ok_count,
+            len(file_paths),
+            elapsed,
+            MAX_PARALLEL_UPLOADS,
+        )
+
+        if failed:
+            logger.warning(
+                "%d/%d uploads failed: %s",
+                len(failed),
+                len(file_paths),
+                ", ".join(failed),
+            )
 
     def fetch_course_assignments(self, course_id: int) -> List[Dict[str, Any]]:
         """Fetch all assignments for a given course.
@@ -361,7 +414,10 @@ class CanvasGradesFetcher:
         if workflow_state:
             params["workflow_state"] = workflow_state
 
-        logger.info(f"Fetching bulk submissions for course {course_id} (assignments=%s)", assignment_ids)
+        logger.info(
+            f"Fetching bulk submissions for course {course_id} (assignments=%s)",
+            assignment_ids,
+        )
         return self._get_paginated_list(url, params=params)
 
     def fetch_course_students(self, course_id: int) -> List[Dict[str, Any]]:
@@ -381,10 +437,10 @@ class CanvasGradesFetcher:
         return students
 
     def fetch_course_grades(self, course_id: int) -> Dict[str, Any]:
-        """Fetch complete grade data for a course including assignments, submissions, and students.
+        """Fetch complete grade data for a course including assignments and submissions.
 
-        N + 1 api calls right now (1 for assignments then 1 per assignment for submissions)
-        Unfortunately this is unavoidable since Canvas does not provide a bulk endpoint for grades data.
+        Uses the bulk submissions endpoint to avoid per-assignment API calls.
+
         Args:
             course_id: Canvas course ID
 
@@ -395,8 +451,14 @@ class CanvasGradesFetcher:
         grades_summary = {}
         assignments = self.fetch_course_assignments(course_id)
 
+        # Bulk-fetch all submissions instead of one call per assignment
+        all_submissions = self.fetch_all_course_submissions(course_id)
+        subs_by_assignment: Dict[int, List[Dict]] = {}
+        for sub in all_submissions:
+            subs_by_assignment.setdefault(sub["assignment_id"], []).append(sub)
+
         for assignment in assignments:
-            submissions = self.fetch_assignment_submissions(course_id, assignment["id"])
+            submissions = subs_by_assignment.get(assignment["id"], [])
             graded_submissions = [s for s in submissions if s.get("grade") is not None]
             if graded_submissions:
                 scores = [
@@ -533,6 +595,7 @@ class CanvasGradesFetcher:
         endpoint = f"courses/{course_id}/assignment_groups"
         assignment_groups = self.get_paginated_list(endpoint=endpoint)
         return assignment_groups
+
 
 if __name__ == "__main__":
     try:

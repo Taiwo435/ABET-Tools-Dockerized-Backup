@@ -14,7 +14,6 @@ class WorkloadRequest(BaseModel):
 class ElectiveCoursesRequest(BaseModel):
     year: Optional[int] = 2026  # Default to 2026 if not provided
 
-
 # Endpoint to get professor workload information for all semesters taught by the professor with the given ASURITE ID.
 @app.post("/professor-workload")
 def professor_workload(request: WorkloadRequest):

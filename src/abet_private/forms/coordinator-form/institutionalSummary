@@ -1,0 +1,140 @@
+{
+  "title": "APPENDIX D - Institutional Summary: Table D-1 Program Enrollment and Degree Data",
+  "name": "program_enrollment_and_degree_data",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "expandable-grid",
+      "name": "program_enrollment_degree_data",
+      "label": "Table D-1. Program Enrollment and Degree Data",
+      "description": "Enter one row for each academic year and enrollment status combination (FT or PT).",
+      "columns": [
+        {
+          "name": "academic_year",
+          "label": "Academic Year",
+          "type": "text"
+        },
+        {
+          "name": "enrollment_status",
+          "label": "Enrollment Status (FT/PT)",
+          "type": "select",
+          "options": {
+            "FT": "FT",
+            "PT": "PT"
+          }
+        },
+        {
+          "name": "first_year",
+          "label": "1st",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "second_year",
+          "label": "2nd",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "third_year",
+          "label": "3rd",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "fourth_year",
+          "label": "4th",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "fifth_year",
+          "label": "5th",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "total_undergrad",
+          "label": "Total Undergrad",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "total_grad",
+          "label": "Total Grad",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "associates",
+          "label": "Associates",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "bachelors",
+          "label": "Bachelors",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "masters",
+          "label": "Masters",
+          "type": "text",
+          "numerical": true
+        },
+        {
+          "name": "doctorates",
+          "label": "Doctorates",
+          "type": "text",
+          "numerical": true
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Table D-2. Personnel"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "personnel",
+      "label": "Table D-2. Personnel",
+      "columns": [
+        {
+          "name": "category",
+          "label": "Personnel Category",
+          "type": "text"
+        },
+        {
+          "name": "subcategory",
+          "label": "Subcategory",
+          "type": "text"
+        },
+        {
+          "name": "head_count",
+          "label": "Head Count",
+          "type": "text-field"
+        },
+        {
+          "name": "fte",
+          "label": "FTE",
+          "type": "text-field"
+        },
+        {
+          "name": "ft_pt",
+          "label": "FT/PT",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 30,
+      "required": false
+    }
+  ]
+}

@@ -373,6 +373,24 @@ function e(string $v): string {
     </section>
   </main>
 
+  <main class="container">
+    <section class="card">
+      <h1>Generate Long Report</h1>
+      <p class="sub">
+        Generate the long faculty report and download it as a DOCX file.
+      </p>
+      <div class="actions">
+        <button id="LRbtn" class="btn prim" type="button">Generate Long Report</button>
+        <a id="downloadLongDocxBtn" class="btn outline" href="#" style="display:none;">
+          Download Long Report DOCX
+        </a>
+      </div>
+      <div id="lrStatus" class="status test">
+      </div>
+    </section>
+  </main>
+
+
   <script>
     // ===== Profile dropdown =====
     const profileBtn = document.getElementById('profileBtn');
@@ -401,11 +419,21 @@ function e(string $v): string {
     const downloadDocxBtn = document.getElementById('downloadDocxBtn');
     const pdfHint = document.getElementById('pdfHint');
 
+    const LRbtn = document.getElementById('LRbtn');
+    const lrStatusEl = document.getElementById('lrStatus');
+    const downloadLongDocxBtn = document.getElementById('downloadLongDocxBtn');
+
     let selectedFile = null;
+
+
 
     function setStatus(type, msg) {
       statusEl.className = 'status ' + type;
       statusEl.textContent = msg;
+    }
+    function setLRStatus(type, msg) {
+      lrStatusEl.className = 'status test ' + type;
+      lrStatusEl.textContent = msg;
     }
 
     function resetResults() {
@@ -416,6 +444,11 @@ function e(string $v): string {
       pdfHint.textContent = '';
       openPdfBtn.href = '#';
       downloadDocxBtn.href = '#';
+    }
+
+    function resetLongResults() {
+      downloadLongDocxBtn.style.display = 'none';
+      downloadLongDocxBtn.href = '#';
     }
 
     function isJsonFile(file) {
@@ -531,6 +564,54 @@ function e(string $v): string {
         generateBtn.disabled = false;
       }
     });
+
+    LRbtn.addEventListener('click', async () => {
+      resetLongResults();
+
+      const fd = new FormData();
+      fd.append('csrf_token', '<?php echo e($csrfToken); ?>');
+
+      LRbtn.disabled = true;
+      setLRStatus('info', 'Generating long report...');
+
+      try {
+        const res = await fetch('/report-generator/generateLR.php', {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        let data = null;
+
+        if (ct.includes('application/json')) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          throw new Error(`Server returned non-JSON response (HTTP ${res.status}).`);
+        }
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data?.error || `Request failed (HTTP ${res.status})`);
+        }
+
+        if (!data.docx_url) {
+          throw new Error('Long report did not return a DOCX URL.');
+        }
+
+        //added this to show the download button after generation
+        downloadLongDocxBtn.href = data.docx_url;
+        downloadLongDocxBtn.style.display = 'inline-flex';
+        setLRStatus('ok', 'Long report generated successfully.');
+      } catch (err) {
+        setLRStatus('err', err.message || 'Long report generation failed.');
+      } finally {
+        LRbtn.disabled = false;
+      }
+    });
+    
+
   </script>
 </body>
 </html>

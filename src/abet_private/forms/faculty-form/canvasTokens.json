@@ -1,0 +1,25 @@
+{
+
+    "title": "Canvas Tokens",
+    "name": "canvasTokens",
+    "action": "submit.php",
+    "method": "POST",
+    "fields": [
+        {
+            "type": "expandable-grid",
+            "name": "canvas_tokens",
+            "label": "Canvas Tokens",
+            "description": "Input the token from each of your canvas courses. Add a new row for each new token.",
+            "columns": [
+                {
+                    "name": "token",
+                    "label": "Token",
+                    "type": "text-field"
+                }
+            ],
+            "maxRows": 10,
+            "required": true
+            
+        }
+    ]
+}
