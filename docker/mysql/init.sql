@@ -136,14 +136,14 @@ CREATE TABLE IF NOT EXISTS admission_major_map (
 -- *unmarked table 2 (pg 80): JOIN faculty_info on itself basically — first_name, last_name, faculty_rank, areas_of_interest is all already there, no join even needed
 
 
-CREATE TABLE IF NOT EXISTS faculty_info (
-    faculty_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    program_id INT NOT NULL,
-    first_name VARCHAR(255) NOT NULL,-- Resets the database every time - DEVELOPMENT ONLY, will remove for production and use migrations instead
+-- CREATE TABLE IF NOT EXISTS faculty_info (
+    -- faculty_id INT AUTO_INCREMENT PRIMARY KEY,
+    -- user_id INT NOT NULL,
+    -- program_id INT NOT NULL,
+    -- first_name VARCHAR(255) NOT NULL,-- Resets the database every time - DEVELOPMENT ONLY, will remove for production and use migrations instead
 -- DROP DATABASE IF EXISTS osburn_abet_tools_dev;
 -- CREATE DATABASE IF NOT EXISTS osburn_abet_tools_dev;
-USE osburn_abet_tools_dev; 
+-- USE osburn_abet_tools_dev; 
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -513,237 +513,145 @@ CREATE TABLE IF NOT EXISTS cv_information (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-    last_name VARCHAR(255) NOT NULL,
-    highest_degree VARCHAR(255) NOT NULL,
-    asurite VARCHAR(255) NOT NULL,
-    areas_of_interest TEXT,
-    faculty_rank ENUM('P', 'ASC', 'AST', 'I', 'A', 'O') NOT NULL,
-    academic_appointment ENUM('T', 'TT', 'NTT') NOT NULL,
-    time_commitment ENUM('FT', 'PT') NOT NULL,
-    years_experience_gov_industry DECIMAL(4,1) DEFAULT 0.0,
-    years_experience_teaching DECIMAL(4,1) DEFAULT 0.0,
-    years_experience_institution DECIMAL(4,1) DEFAULT 0.0,
-    professional_registration VARCHAR(255),
-    activity_prof_orgs ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
-    activity_prof_dev  ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
-    activity_consulting ENUM('H','M','L','NA') NOT NULL DEFAULT 'NA',
-    professional_orgs_names TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+
+-- -----------------------------------------------
+-- CRITERION 7. FACILITIES: Computer Resources
+-- -----------------------------------------------
+
+CREATE TABLE IF NOT EXISTS facility_rooms (
+    room_id INT AUTO_INCREMENT PRIMARY KEY,
+    bldg_code VARCHAR(50),
+    room_number VARCHAR(50),
+    capacity VARCHAR(50),
+    use_description TEXT,
+    zoom_level VARCHAR(10),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- table 6-2
-CREATE TABLE IF NOT EXISTS faculty_workload (
-    workload_id INT AUTO_INCREMENT PRIMARY KEY,
-    faculty_id INT NOT NULL,
-    academic_year VARCHAR(20) NOT NULL,
-    pt_or_ft ENUM('FT', 'PT') NOT NULL,
-    classes_taught TEXT,
-    teaching_pct INT NOT NULL,
-    research_or_scholarship_pct INT NOT NULL,
-    other_pct INT NOT NULL,
-    pct_time_devoted_to_program INT NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (faculty_id) REFERENCES faculty_info(faculty_id) ON DELETE CASCADE,
-    CONSTRAINT chk_workload_pct_range
-        CHECK (
-            teaching_pct <= 100 AND
-            research_or_scholarship_pct <= 100 AND
-            other_pct <= 100 AND
-            pct_time_devoted_to_program <= 100
-        ),   
-    CONSTRAINT chk_workload_sum
-      CHECK (teaching_pct + research_or_scholarship_pct + other_pct = 100)
+-- -----------------------------------------------
+-- CRITERION 8. INSTITUTIONAL SUPPORT
+-- SCAI Staff table
+-- -----------------------------------------------
 
+CREATE TABLE IF NOT EXISTS scai_staff (
+    staff_id INT AUTO_INCREMENT PRIMARY KEY,
+    function_description TEXT,
+    manager VARCHAR(255),
+    staff_size VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- One row per faculty member.
--- Foreign keys to users so vitae is tied to a specific faculty account.
--- All fields are TEXT since they are long form input fields in the form.
--- Use join (faculty_info) if we want names
+-- -----------------------------------------------
+-- APPENDIX C. EQUIPMENT
+-- General University Lab Computers Provided by UTO (Central IT)
+-- Total could be a SUM query 
+-- -----------------------------------------------
 
-CREATE TABLE IF NOT EXISTS faculty_vitae (
-    vitae_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    department TEXT,
-    education TEXT,
-    academic_experience TEXT,
-    non_academic_experience TEXT,
-    certification TEXT,
-    professional_memberships TEXT,
-    honors_and_awards TEXT,
-    service_activities TEXT,
-    publications_presentations TEXT,
-    professional_development TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS uto_lab_computers (
+    computer_id INT AUTO_INCREMENT PRIMARY KEY,
+    room_name VARCHAR(100),           -- e.g. 'CPCOM102', 'Coor 150'
+    pc_workstation VARCHAR(255),
+    quantity VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Software Available in the UTO Labs & Classrooms
+-- Windows/Linux/macOS stored as booleans since questionnaire uses X to mark availability
+CREATE TABLE IF NOT EXISTS uto_lab_software (
+    software_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_name VARCHAR(255),
+    installed_windows BOOLEAN DEFAULT FALSE,
+    installed_osx BOOLEAN DEFAULT FALSE,
+    installed_citrix BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
+-- SCIA Instructional Labs Equipment
+CREATE TABLE IF NOT EXISTS scia_lab_computers (
+    scia_computer_id INT AUTO_INCREMENT PRIMARY KEY,
+    pc_workstation VARCHAR(255),
+    quantity VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
--- Criterion 2: Program Education Objectives. table 1-1
--- the title changes based on which program is being worked on so program_id as foreign key
+-- Printers
+CREATE TABLE IF NOT EXISTS scia_printers (
+    printer_id INT AUTO_INCREMENT PRIMARY KEY,
+    printer_description TEXT,
+    quantity VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
-CREATE TABLE IF NOT EXISTS peo_review (
-    peo_review_id INT AUTO_INCREMENT PRIMARY KEY,
-    input_method TEXT,
-    schedule TEXT,
-    constituencies TEXT,
+-- SCIA Brickyard Software
+-- Windows/Linux/macOS/VDI stored as booleans since questionnaire uses X to mark availability
+CREATE TABLE IF NOT EXISTS scia_brickyard_software (
+    brickyard_software_id INT AUTO_INCREMENT PRIMARY KEY,
+    software_name VARCHAR(255),
+    version_num VARCHAR(100),
+    windows_version BOOLEAN DEFAULT FALSE,
+    linux BOOLEAN DEFAULT FALSE,
+    macos BOOLEAN DEFAULT FALSE,
+    vdi_lab BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------
+-- APPENDIX D. INSTITUTIONAL SUMMARY
+-- -----------------------------------------------
+
+-- Table D-1: Program Enrollment and Degree Data
+-- Total Undergrad, Total Grad, Degrees Awarded (Associates, Bachelors, Masters, Doctorates)
+CREATE TABLE IF NOT EXISTS program_enrollment (
+    enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
     program_id INT NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,    
-    FOREIGN KEY (program_id)   REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
--- CRITERION 4. CONTINUOUS IMPROVEMENT: Student Outcomes. table 4-1
--- Rows = outcome numbers 1-7; outcome_number
--- Columns = course codes (CSE 301, CSE 320, etc.);course_name
--- Cells = assessment method text (Essay, Assignment, Report, etc.); assessment_method
--- Empty cells = just no row stored for that outcome/course combination
-
-CREATE TABLE IF NOT EXISTS outcome_assessment (
-    assessment_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    outcome_number INT NOT NULL,
-    course_name VARCHAR(100) NOT NULL,
-    assessment_method TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id)   REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
--- Unmarked table pg 40
--- Number of assessments and criteria for meeting outcome
-
-CREATE TABLE IF NOT EXISTS outcome_attainment_criteria (
-    criteria_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    num_assessments INT NOT NULL,
-    criteria_for_meeting_outcome TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
--- Table 4-2: Required level of attainment per outcome per course
-
-CREATE TABLE IF NOT EXISTS outcome_attainment_level (
-    attainment_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    outcome_number INT NOT NULL,
-    course_name VARCHAR(100) NOT NULL,
-    attainment_level VARCHAR(20),           -- e.g. '70/70', empty cell = no row stored
+    academic_year VARCHAR(20),
+    enrollment_ft TEXT,
+    enrollment_pt TEXT,
+    enrollment_1st TEXT,
+    enrollment_2nd TEXT,
+    enrollment_3rd TEXT,
+    enrollment_4th TEXT,
+    enrollment_5th TEXT,
+    total_undergrad TEXT,
+    total_grad TEXT,
+    degrees_associates TEXT,
+    degrees_bachelors TEXT,
+    degrees_masters TEXT,
+    degrees_doctorates TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
 );
 
-
--- Table 4-3: Summary of assessment results
-
-CREATE TABLE IF NOT EXISTS assessment_summary (
-    summary_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Table D-2: Personnel
+-- Columns: FT headcount, PT headcount, FTE
+CREATE TABLE IF NOT EXISTS personnel (
+    personnel_id INT AUTO_INCREMENT PRIMARY KEY,
     program_id INT NOT NULL,
-    outcome_number INT NOT NULL,
-    semester VARCHAR(10) NOT NULL,    -- e.g. 'F21', 'S22'
-    result ENUM('Met', 'Not Met') NOT NULL,
+    category VARCHAR(255) NOT NULL,
+    headcount_ft TEXT,
+    headcount_pt TEXT,
+    fte TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
 );
 
--- Table 4-6: Percentages of met outcomes and consecutive not met semesters
+-- -----------------------------------------------
+-- APPENDIX E. ASSESSMENT AND CONTINUOUS IMPROVEMENT PLAN
+-- -----------------------------------------------
 
-CREATE TABLE IF NOT EXISTS outcome_met_percentages (
-    met_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    outcome_number INT NOT NULL,
-    semesters_assessed TEXT,
-    percentage_met TEXT,
-    times_consecutive_not_met TEXT,
-    percentage_met_secondary TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+-- Role and Responsibilities table
+CREATE TABLE IF NOT EXISTS assessment_roles (
+    role_id INT AUTO_INCREMENT PRIMARY KEY,
+    role VARCHAR(255),
+    responsibilities TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Continuous improvement tables (pg 46-52)
--- One generic table for all improvement types
-
-CREATE TABLE IF NOT EXISTS continuous_improvement (
-    improvement_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    type ENUM('hardware', 'semester_improvement', 'peo_update', 'new_course', 'concentration_update', 'concentration_flowchart', 'adhoc') NOT NULL,
-    semester_year VARCHAR(50),              -- only relevant for semester_improvement type
-    source TEXT,
-    problem_analysis TEXT,
-    actions_plans TEXT,
-    status_actions TEXT,
-    result TEXT,                            -- only relevant for peo_update type
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+-- Constituency Input table
+CREATE TABLE IF NOT EXISTS assessment_constituency (
+    constituency_id INT AUTO_INCREMENT PRIMARY KEY,
+    constituency TEXT,
+    method TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
--- Unmarked concentration table pg 55
--- Courses required for each concentration
-CREATE TABLE IF NOT EXISTS concentration_courses (
-    conc_course_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    department VARCHAR(50) NOT NULL,       -- e.g. 'CSE'
-    course_number VARCHAR(20) NOT NULL,    -- e.g. '365'
-    course_title TEXT,
-    required_for VARCHAR(100),             -- e.g. 'CbS'
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
--- Table 5-1 / 5-1a Curriculum
-CREATE TABLE IF NOT EXISTS curriculum (
-    curriculum_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    concentration VARCHAR(100),            
-    semester_year VARCHAR(50),             -- e.g. 'Semester 1', 'Year 1'
-    course VARCHAR(255) NOT NULL,
-    course_type ENUM('R', 'E', 'SE') NOT NULL,  -- Required, Elective, Selected Elective
-    credit_hours_math_science DECIMAL(4,1),
-    credit_hours_engineering DECIMAL(4,1),
-    credit_hours_other DECIMAL(4,1),
-    last_two_terms VARCHAR(100),
-    max_section_enrollment INT,            
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
--- Table 5-2: Course alignment with program educational objectives
-CREATE TABLE IF NOT EXISTS curriculum_peo_alignment (
-    alignment_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    objective_number INT NOT NULL,         -- 1-4, could be auto increment too
-    year_level VARCHAR(255) NOT NULL,
-    courses TEXT,                          -- e.g. 'CSE220, CSE230'
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
--- Table 5-3: Course alignment with ABET student outcomes
-CREATE TABLE IF NOT EXISTS curriculum_outcome_alignment (
-    alignment_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    student_outcome TEXT NOT NULL,           -- 1-7 with theor outcome description
-    year_level VARCHAR(255) NOT NULL,
-    courses TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
--- unmarked table pg 75
-CREATE TABLE IF NOT EXISTS course_pre_co_requisite (
-    pre_co_requisite_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
-    pre_co_requisite TEXT NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS cv_information (
-    cv_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+ 
