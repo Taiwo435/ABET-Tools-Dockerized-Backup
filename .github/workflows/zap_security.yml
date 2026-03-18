@@ -8,6 +8,9 @@ jobs:
   security-scan:
     name: ZAP Security Scan
     runs-on: ubuntu-latest
+    
+    permissions:
+      issues: write
 
     steps:
       - name: ZAP Scan
