@@ -145,7 +145,7 @@ try {
     // }
     $pythonBin     = '';
     
-    foreach (['/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
+    foreach (['/home/osburn/venv/bin/python', '/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
         if (is_file($candidate) && is_executable($candidate)) {
             $pythonBin = $candidate;
             break;
