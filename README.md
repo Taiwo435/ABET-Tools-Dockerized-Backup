@@ -1,6 +1,7 @@
 # The Main Application for ABET-Tools
 
 ![Static Badge](https://img.shields.io/badge/ASU%20Capstone%20Project-8C1D40?logo=github&labelColor=red)
+[![Run Selenium Tests](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml/badge.svg)](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml)
 
 <!--
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/hoang-danny05/ABET-Tools-Dockerized) ![GitHub contributors](https://img.shields.io/github/contributors-anon/hoang-danny05/ABET-Tools-Dockerized) ![GitHub issue custom search](https://img.shields.io/github/issues-search?query=repo%3Ahoang-danny05%2FABET-Tools-Dockerized%20is%3Aopen%20&label=open%20issues) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/test.yml?logo=docsdotrs&logoColor=white)
