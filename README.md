@@ -204,6 +204,24 @@ docker compose down     # or docker-compse if you have that
 docker compose up --build
 ```
 
+### Using Migrations
+
+Installing dependencies
+
+```bash
+sudo apt install php8.3-cli
+sudo apt install php8.3-xml
+sudo apt install composer
+```
+
+Install compser packages
+
+```bash
+cd src/abet_private
+composer install
+```
+
+
 [Information on how to link to the database](docs/database_link.md)
 
 ## Pulling from the server
