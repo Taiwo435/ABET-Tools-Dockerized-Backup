@@ -55,5 +55,6 @@ class ReportBuilder:
             print(f"Building {section_name}")
             section_module.build(self.questionnaire)
 
+        self.questionnaire.render()
         self.questionnaire.save(output_path)
         return output_path

@@ -29,5 +29,6 @@ fastapi==0.110.0
 uvicorn==0.29.0
 beautifulsoup4==4.12.3
 PyMySQL==1.1.2
+docxtpl==0.20.2
 cryptography
 mysql-connector-python
