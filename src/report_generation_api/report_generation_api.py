@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any
 
 import getProfessorWorkload
 import getElectiveCourses
+import getdatabaseConnection
 
 app = FastAPI()
 
@@ -13,6 +14,13 @@ class WorkloadRequest(BaseModel):
 
 class ElectiveCoursesRequest(BaseModel):
     year: Optional[int] = 2026  # Default to 2026 if not provided
+
+class ReportBuilder(BaseModel):
+    year: Optional[int] = 2026  # Default to 2026 if not provided
+    department: str
+    degree_type: str
+
+
 
 # Endpoint to get professor workload information for all semesters taught by the professor with the given ASURITE ID.
 @app.post("/professor-workload")
@@ -27,6 +35,25 @@ def elective_courses(request: ElectiveCoursesRequest):
     try:
         result = getElectiveCourses.build_merged_cse_courses_json_from_url(request.year)
         return {"data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint to generate a report based on the provided year, department, and degree type. 
+# The report is built using the ReportBuilder class and saved to a specified output path. 
+@app.post("/generate-report")
+def generate_report(request: ReportBuilder):
+    try:
+        from .report.report_builder import ReportBuilder as ReportBuilderClass
+        report_builder = ReportBuilderClass(
+            template_path="src/report_generation_api/report/template.docx",
+            db= getdatabaseConnection.get_database_connection(),
+            year=request.year,
+            department=request.department,
+            degree_type=request.degree_type
+        )
+        output_path = f"report_{request.department}_{request.degree_type}_{request.year}.docx"
+        report_builder.build(output_path)
+        return {"message": "Report generated successfully", "output_path": output_path}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
