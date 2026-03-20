@@ -15,6 +15,18 @@
         }
     },
     "scripts": {
-        "doctrine": "./vendor/bin/doctrine-migrations"
+        "doctrine": "./vendor/bin/doctrine-migrations",
+        "pest": "./vendor/bin/pest",
+        "test": "./vendor/bin/pest"
+    },
+    "autoload": {
+        "psr-4": {
+            "Entity\\": "database/entities"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
     }
 }

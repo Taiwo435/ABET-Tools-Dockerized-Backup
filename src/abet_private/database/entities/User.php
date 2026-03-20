@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace App\Entity;
+namespace Entity;
 
 use Doctrine\DBAL\Schema\DefaultExpression\CurrentTimestamp;
 

@@ -9,16 +9,14 @@
 
 require 'vendor/autoload.php';
 
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
-use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
-use Doctrine\Migrations\DependencyFactory;
-use Doctrine\Migrations\Configuration\Migration\JsonFile;
-use Doctrine\DBAL\DriverManager;
-
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__."/../../docker");
 $dotenv->load();
 
+
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\ORMSetup;
+use Doctrine\Migrations\Configuration\Migration\JsonFile;
+use Doctrine\DBAL\DriverManager;
 
 // config file (maybe make a config dir?)
 $config = new JsonFile('database/migrations.json'); // Or use one of the Doctrine\Migrations\Configuration\Configuration\* loaders
@@ -29,21 +27,16 @@ $isDevMode = true;
 $ORMConfig = ORMSetup::createAttributeMetadataConfiguration($paths, $isDevMode);
 
 $connectionParams = [
-    'dbname' => getenv('MYSQL_DATABASE'),
-    'user' => getenv('MYSQL_USER'),
-    'password' => getenv('MYSQL_PASS'),
-    'host' => getenv('MYSQL_HOSTNAME'),
+    'dbname' => $_ENV['MYSQL_DATABASE'],
+    'user' => $_ENV['MYSQL_USER'],
+    'password' => $_ENV['MYSQL_PASS'],
+    'host' => "127.0.0.1",
     'driver' => 'pdo_mysql',
 ];
 
 $connection = DriverManager::getConnection($connectionParams);
 
 
-// $connection = DriverManager::getConnection(
-//     ['driver' => 'pdo_mysql', 'memory' => true]);
-
 $entityManager = new EntityManager(
     $connection, 
     $ORMConfig);
-
-return DependencyFactory::fromEntityManager($config, new ExistingEntityManager($entityManager));  

@@ -25,6 +25,7 @@
     - [Using Composer](#using-composer)
     - [Composer Install (the command)](#composer-install-the-command)
   - [Database development](#database-development)
+    - [Using Migrations](#using-migrations)
   - [Pulling from the server](#pulling-from-the-server)
   - [More information](#more-information)
 
@@ -135,6 +136,7 @@ To install everything, I did this:
 ```bash
 sudo apt install php8.3 && \
 sudo apt install php8.3-xml && \
+sudo apt install php8.3-mysql && \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 ```
 
@@ -146,7 +148,8 @@ Now, you can install any composer package you want!
 ```bash
 cd src/public
 composer require pestphp/pest --dev --with-all-dependencies 
-# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --dev --with-all-dependencies
+# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --with-all-dependencies
+# --dev specifies that Pest (testing) is only for development (not deployment)
 ```
 
 > [!NOTE]
@@ -178,7 +181,7 @@ you haven't installed the composer files on your system.
 You can fix this by running:
 
 ```bash
-cd src/public
+cd src/abet_private
 composer install
 ```
 
