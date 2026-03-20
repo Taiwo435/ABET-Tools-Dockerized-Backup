@@ -2,47 +2,48 @@
 declare(strict_types=1);
 namespace App\Entity;
 
-// need to figure out how php namespace imports work
-// use DateTime;
-// use Doctrine\DBAL\Schema\DefaultExpression\CurrentTimestamp;
-// use Doctrine\ORM\Mapping\Column;
-// use Doctrine\ORM\Mapping\Entity;
+use Doctrine\DBAL\Schema\DefaultExpression\CurrentTimestamp;
 
+use DateTime;
 
 
 // generated php import
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Column;
 
-#[ORM\Entity]
-#[ORM\Table(name: "users")]
+#[Entity]
+#[Table(name: "users")]
 class User
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: "integer")]
+    #[Id]
+    #[GeneratedValue]
+    #[Column(type: "integer")]
     private ?int $id = null;
 
-    #[ORM\Column(type: "string", length: 255, unique: true)]
+    #[Column(type: "string", length: 255, unique: true)]
     private string $email;
 
-    #[ORM\Column(name: "password_hash", type: "string", length: 255)]
+    #[Column(name: "password_hash", type: "string", length: 255)]
     private string $passwordHash;
 
-    #[ORM\Column(type: "string", columnDefinition: "ENUM('admin', 'faculty')")]
+    #[Column(type: "string", columnDefinition: "ENUM('admin', 'faculty')")]
     private string $role = 'faculty';
 
-    #[ORM\Column(name: "is_active", type: "boolean", options: ["default" => true])]
+    #[Column(name: "is_active", type: "boolean", options: ["default" => true])]
     private bool $isActive = true;
 
-    #[ORM\Column(name: "last_login", type: "datetime", nullable: true)]
+    #[Column(name: "last_login", type: "datetime", nullable: true)]
     private ?\DateTimeInterface $lastLogin = null;
 
-    #[ORM\Column(name: "created_at", type: "datetime", options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[Column(name: "created_at", type: "datetime", options: ["default" => "CURRENT_TIMESTAMP"])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTime();
+        $this->createdAt = new DateTime();
     }
 
     // Getters and Setters
