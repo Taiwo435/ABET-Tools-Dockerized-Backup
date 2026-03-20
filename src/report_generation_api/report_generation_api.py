@@ -63,13 +63,6 @@ def generate_report(request: ReportBuilder):
             tmpfd, tmpname = tempfile.mkstemp(suffix='.docx')
             os.close(tmpfd)
 
-            #docx creation is made here
-            doc = DocxDocument()
-            doc.add_paragraph('meep')
-            doc.add_paragraph('this is just to make a docx file for report building to work if template is missing')
-            doc.save(tmpname)
-            template_path = tmpname
-
         report_builder = ReportBuilderClass(
             template_path=template_path,
             db= getdatabaseConnection.get_database_connection(),
@@ -78,9 +71,10 @@ def generate_report(request: ReportBuilder):
             degree_type=request.degree_type
         )
 
-        OUTPUT_PATH = BASE_DIR / "output" / f"report_{request.department}_{request.degree_type}_{request.year}.docx"
+        OUTPUT_PATH = BASE_DIR / "output"/ "Long_report.docx"
         # ensure output directory exists so writing the report won't fail
-        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True) 
+
         report_builder.build(str(OUTPUT_PATH))
         return FileResponse(path=OUTPUT_PATH, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document', filename="Long_report.docx")
         #return {"message": "Report generated successfully", "output_path": str(OUTPUT_PATH)}

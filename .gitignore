@@ -51,4 +51,5 @@ abet.asucapstonetools.com
 server_clone
 
 #report gen files
-template/* 
+src/report_generation_api/template/*
+src/report_generation_api/output/*
