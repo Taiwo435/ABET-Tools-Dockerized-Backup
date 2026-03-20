@@ -16,7 +16,6 @@ class Questionnaire:
 
         # Optional cache for reused query results
         self.cache = {}
-
         
     def get_cached(self, key):
         return self.cache.get(key)
@@ -24,8 +23,8 @@ class Questionnaire:
     def set_cached(self, key, value):
         self.cache[key] = value
 
-    def render(self):
-        self.document.render(self.context)
+    def render(self, context):
+        self.document.render(context)
 
     def save(self, output_path):
         self.document.save(output_path)

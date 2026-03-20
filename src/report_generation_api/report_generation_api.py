@@ -6,7 +6,16 @@ import getProfessorWorkload
 import getElectiveCourses
 import getdatabaseConnection
 
+from report.report_builder import ReportBuilder as ReportBuilderClass
+from pathlib import Path
+
 app = FastAPI()
+
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+TEMPLATE_PATH = BASE_DIR / "template" / "QuestTemplate.docx"
 
 #This is just to make sure the shape of the json is correct. The get_professor_workload function expects a string. 
 class WorkloadRequest(BaseModel):
@@ -43,17 +52,18 @@ def elective_courses(request: ElectiveCoursesRequest):
 @app.post("/generate-report")
 def generate_report(request: ReportBuilder):
     try:
-        from .report.report_builder import ReportBuilder as ReportBuilderClass
         report_builder = ReportBuilderClass(
-            template_path="src/report_generation_api/report/template.docx",
+            template_path=str(TEMPLATE_PATH),
             db= getdatabaseConnection.get_database_connection(),
             year=request.year,
             department=request.department,
             degree_type=request.degree_type
         )
-        output_path = f"report_{request.department}_{request.degree_type}_{request.year}.docx"
-        report_builder.build(output_path)
-        return {"message": "Report generated successfully", "output_path": output_path}
+
+        OUTPUT_PATH = BASE_DIR / "output" / f"report_{request.department}_{request.degree_type}_{request.year}.docx"
+        report_builder.build(str(OUTPUT_PATH))
+        return {"message": "Report generated successfully", "output_path": str(OUTPUT_PATH)}
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

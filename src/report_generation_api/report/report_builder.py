@@ -1,42 +1,42 @@
-from .questionnaire import Questionnaire
+from report.questionnaire import Questionnaire
 
-from .general import background
-from .general import sub_attest_to_comp
+from report.general import background
+from report.general import sub_attest_to_comp
 
-from .criteria import accred_policies_procedures_man
-from .criteria import criterion_cont_improv
-from .criteria import criterion_curriculum
-from .criteria import criterion_faculty
-from .criteria import criterion_facilities
-from .criteria import criterion_inst_support
-from .criteria import criterion_program_edu_obj
-from .criteria import criterion_students
-from .criteria import program_criteria
+from report.criteria import accred_policies_procedures_man
+from report.criteria import criterion_cont_improv
+from report.criteria import criterion_curriculum
+from report.criteria import criterion_faculty
+from report.criteria import criterion_facilities
+from report.criteria import criterion_inst_support
+from report.criteria import criterion_program_edu_obj
+from report.criteria import criterion_students
+from report.criteria import program_criteria
 
-from .appendices import appendix_a
-from .appendices import appendix_b
-from .appendices import appendix_c
-from .appendices import appendix_d
-from .appendices import appendix_e
+from report.appendices import appendix_a
+from report.appendices import appendix_b
+from report.appendices import appendix_c
+from report.appendices import appendix_d
+from report.appendices import appendix_e
 
 
 SECTIONS = [
-    ("Background", background),
-    ("Criterion 1 - Students", criterion_students),
-    ("Criterion 2 - Program Educational Objectives", criterion_program_edu_obj),
-    ("Criterion 3 - Continuous Improvement", criterion_cont_improv),
-    ("Criterion 4 - Curriculum", criterion_curriculum),
-    ("Criterion 5 - Faculty", criterion_faculty),
-    ("Criterion 6 - Facilities", criterion_facilities),
-    ("Criterion 7 - Institutional Support", criterion_inst_support),
-    ("Program Criteria", program_criteria),
-    ("Accreditation Policies and Procedures", accred_policies_procedures_man),
-    ("Submission Attestation to Compliance", sub_attest_to_comp),
-    ("Appendix A", appendix_a),
-    ("Appendix B", appendix_b),
-    ("Appendix C", appendix_c),
-    ("Appendix D", appendix_d),
-    ("Appendix E", appendix_e),
+    ("Background", "background", background),
+    ("Criterion 1 - Students", "criterion_students", criterion_students),
+    ("Criterion 2 - Program Educational Objectives", "criterion_program_edu_obj", criterion_program_edu_obj),
+    ("Criterion 3 - Continuous Improvement", "criterion_cont_improv", criterion_cont_improv),
+    ("Criterion 4 - Curriculum", "criterion_curriculum", criterion_curriculum),
+    ("Criterion 5 - Faculty", "criterion_faculty", criterion_faculty),
+    ("Criterion 6 - Facilities", "criterion_facilities", criterion_facilities),
+    ("Criterion 7 - Institutional Support", "criterion_inst_support", criterion_inst_support),
+    ("Program Criteria", "program_criteria", program_criteria),
+    ("Accreditation Policies and Procedures", "accred_policies_procedures_man", accred_policies_procedures_man),
+    ("Submission Attestation to Compliance", "sub_attest_to_comp", sub_attest_to_comp),
+    ("Appendix A", "appendix_a", appendix_a),
+    ("Appendix B", "appendix_b", appendix_b),
+    ("Appendix C", "appendix_c", appendix_c),
+    ("Appendix D", "appendix_d", appendix_d),
+    ("Appendix E", "appendix_e", appendix_e),
 ]
 
 
@@ -51,10 +51,19 @@ class ReportBuilder:
         )
 
     def build(self, output_path):
-        for section_name, section_module in SECTIONS:
-            print(f"Building {section_name}")
-            section_module.build(self.questionnaire)
+        context = {}
 
-        self.questionnaire.render()
+        for section_name, context_key, section_module in SECTIONS:
+            print(f"Building {section_name}")
+
+            # Each section module has a build function that takes the questionnaire as input and returns the data for that section.
+            section_data = section_module.build(self.questionnaire)
+            # Add the section data to the context using the specified context key. If section_data is None, use an empty dictionary.
+            context[context_key] = section_data or {}
+        # After building the context for all sections, render the document and save it to the specified output path.
+        self.questionnaire.render(context)
+        
+        # Save the rendered document to the specified output path and return the path.
         self.questionnaire.save(output_path)
+
         return output_path

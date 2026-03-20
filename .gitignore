@@ -49,3 +49,6 @@ wheels/
 ## sync directories
 abet.asucapstonetools.com
 server_clone
+
+#report gen files
+template/* 
