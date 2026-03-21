@@ -29,7 +29,7 @@ beforeEach(function () {
     $this->entityManager = getEntityManager();
 });
 
-it('User synchronization with DB Example', function () {
+test('User synchronization with DB Example', function () {
     $entityManager = $this->entityManager;
 
     $email = "test@doctrine.orm";
@@ -81,4 +81,11 @@ test("User Permissions Interface Example", function () {
     $perm = $user->hasPermission(Permissions::AdminPanel);
     // not yet due to implementation
     // expect($perm)->toBeFalse(); 
+});
+
+// it is the same as test
+it("checks if all Permissions have unique values, just in case.", function () {
+    // unique values
+    $values = array_column(Permissions::cases(), 'value');
+    expect(count($values) === count(array_unique($values)))->toBe(true);
 });

@@ -157,13 +157,13 @@ class User
  * NOTE: If this is in production, ALWAYS add values afterward! (by production i mean has REAL user data)
  * Otherwise, you WILL ruin the implementation!!
  * 
- * Uses a bitmask implementation, max of 32 permissions unless we change column length (very possible)
+ * Uses a bitmask implementation, max of 64 permissions unless we change column length (very possible)
  */
-enum Permissions {
-    case AdminPanel;
-    case GradeDataTool;
-    case CanvasFormattingTool;
-    case ReportGenTool;
-    case FacultyFormTool;
-    case CoordinatorFormTool;
+enum Permissions : int {
+    case AdminPanel = 1 << 0;
+    case GradeDataTool = 1 << 1;
+    case CanvasFormattingTool = 1 << 2;
+    case ReportGenTool = 1 << 3;
+    case FacultyFormTool = 1 << 4;
+    case CoordinatorFormTool = 1 << 5;
 }
