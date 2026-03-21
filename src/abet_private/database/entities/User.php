@@ -13,6 +13,7 @@ use Doctrine\ORM\Mapping\Table;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Column;
+use InvalidArgumentException;
 
 #[Entity]
 #[Table(name: "users")]
@@ -122,4 +123,47 @@ class User
         $this->createdAt = $createdAt;
         return $this;
     }
+
+    /////////////////////////////////
+    // PERMISSIONS INTERFACE
+    // Getters and setters for user permissions
+    /////////////////////////////////
+
+    /**
+     * Returns whether the user has a certian permission
+     * @param \Entity\Permissions $permission   The permission you want to read
+     * @throws InvalidArgumentException         If the input is not a valid permission (or is not handled...)
+     * @return bool                             The value of the user's access.
+     */
+    public function hasPermission(Permissions $permission) : bool {
+        return true;
+
+        throw new InvalidArgumentException("Invalid permission being checked. Please use the Permissions ENUM.", 1);
+    }
+
+    /**
+     * Sets a certain permission to the indicated Value
+     * @param \Entity\Permissions $permission   The permission you want to change
+     * @param bool $active                      The new state of the permission
+     * @return void
+     */
+    public function setPermission(Permissions $permission, bool $active) : void {
+    }
+}
+
+
+/**
+ * The Matrix of possible permissions a user can have
+ * NOTE: If this is in production, ALWAYS add values afterward! (by production i mean has REAL user data)
+ * Otherwise, you WILL ruin the implementation!!
+ * 
+ * Uses a bitmask implementation, max of 32 permissions unless we change column length (very possible)
+ */
+enum Permissions {
+    case AdminPanel;
+    case GradeDataTool;
+    case CanvasFormattingTool;
+    case ReportGenTool;
+    case FacultyFormTool;
+    case CoordinatorFormTool;
 }

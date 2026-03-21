@@ -1,9 +1,11 @@
 <?php
 
+use Entity\Permissions;
+
 require_once(__DIR__."/../../vendor/autoload.php");
+require_once(__DIR__."/../../bootstrap.php");
 
 use Entity\User;
-use Doctrine\ORM\Tools\Setup;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -22,8 +24,13 @@ function getUserByEmail(EntityManager $em, string $email)
     return $user;
 }
 
-test('User Save to database', function () {
-    require_once(__DIR__."/../../bootstrap.php");
+
+beforeEach(function () {
+    $this->entityManager = getEntityManager();
+});
+
+it('User synchronization with DB Example', function () {
+    $entityManager = $this->entityManager;
 
     $email = "test@doctrine.orm";
     $user = getUserByEmail($entityManager, $email);
@@ -51,4 +58,27 @@ test('User Save to database', function () {
     echo $user->getEmail();
     expect($user->getEmail() === $email)->toBeTrue();
 
+});
+
+test("User Permissions Interface Example", function () {
+    $entityManager = $this->entityManager;
+
+    $email = "test@doctrine.orm";
+    $user = getUserByEmail($entityManager, $email);
+
+    if ($user === null) {
+        $user = new User();
+    }
+
+    $perm = $user->hasPermission(Permissions::AdminPanel);
+    // true for NOW
+    expect($perm)->toBeTrue();
+
+    // now it should be false
+    $user->setPermission(Permissions::AdminPanel, false);
+
+
+    $perm = $user->hasPermission(Permissions::AdminPanel);
+    // not yet due to implementation
+    // expect($perm)->toBeFalse(); 
 });

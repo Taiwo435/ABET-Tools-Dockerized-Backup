@@ -23,26 +23,29 @@ use Doctrine\DBAL\DriverManager;
 // config file (maybe make a config dir?)
 $config = new JsonFile('database/migrations.json'); // Or use one of the Doctrine\Migrations\Configuration\Configuration\* loaders
 
-$paths = [
-    __DIR__.'/database/entities',
-    __DIR__.'/database/yourmom'];
 
-echo $paths[0].'\n';
-$isDevMode = true;
+function getEntityManager() {
+    $paths = [
+        __DIR__.'/database/entities',
+        __DIR__.'/database/yourmom'];
 
-$ORMConfig = ORMSetup::createAttributeMetadataConfiguration($paths, $isDevMode);
+    $isDevMode = true;
 
-$connectionParams = [
-    'dbname' => $_ENV['MYSQL_DATABASE'],
-    'user' => $_ENV['MYSQL_USER'],
-    'password' => $_ENV['MYSQL_PASS'],
-    'host' => "127.0.0.1",
-    'driver' => 'pdo_mysql',
-];
+    $ORMConfig = ORMSetup::createAttributeMetadataConfiguration($paths, $isDevMode);
 
-$connection = DriverManager::getConnection($connectionParams);
+    $connectionParams = [
+        'dbname' => $_ENV['MYSQL_DATABASE'],
+        'user' => $_ENV['MYSQL_USER'],
+        'password' => $_ENV['MYSQL_PASS'],
+        'host' => "127.0.0.1",
+        'driver' => 'pdo_mysql',
+    ];
 
+    $connection = DriverManager::getConnection($connectionParams);
 
-$entityManager = new EntityManager(
-    $connection, 
-    $ORMConfig);
+    return new EntityManager(
+        $connection, 
+        $ORMConfig);
+}
+
+$entityManager = getEntityManager();
