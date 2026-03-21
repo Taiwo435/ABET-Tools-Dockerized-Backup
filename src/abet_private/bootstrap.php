@@ -9,7 +9,7 @@
  * run "composer doctrine" to get more info
  */
 
-require 'vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__."/../../docker");
 $dotenv->load();
@@ -21,13 +21,11 @@ use Doctrine\Migrations\Configuration\Migration\JsonFile;
 use Doctrine\DBAL\DriverManager;
 
 // config file (maybe make a config dir?)
-$config = new JsonFile('database/migrations.json'); // Or use one of the Doctrine\Migrations\Configuration\Configuration\* loaders
+$config = new JsonFile('database/migrations.json');
 
 
 function getEntityManager() {
-    $paths = [
-        __DIR__.'/database/entities',
-        __DIR__.'/database/yourmom'];
+    $paths = [__DIR__.'/database/entities'];
 
     $isDevMode = true;
 
@@ -37,7 +35,7 @@ function getEntityManager() {
         'dbname' => $_ENV['MYSQL_DATABASE'],
         'user' => $_ENV['MYSQL_USER'],
         'password' => $_ENV['MYSQL_PASS'],
-        'host' => "127.0.0.1",
+        'host' => $_ENV['MYSQL_HOSTNAME'],
         'driver' => 'pdo_mysql',
     ];
 
