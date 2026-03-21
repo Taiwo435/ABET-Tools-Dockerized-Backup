@@ -22,7 +22,7 @@ function getUserByEmail(EntityManager $em, string $email)
     return $user;
 }
 
-test('User Functionality', function () {
+test('User Save to database', function () {
     require_once(__DIR__."/../../bootstrap.php");
 
     $email = "test@doctrine.orm";
