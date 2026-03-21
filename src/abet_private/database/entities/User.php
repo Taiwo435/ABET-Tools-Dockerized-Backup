@@ -8,6 +8,7 @@ use DateTime;
 
 
 // generated php import
+use Doctrine\DBAL\Types\BigIntType;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\Table;
 use Doctrine\ORM\Mapping\Id;
@@ -32,6 +33,9 @@ class User
 
     #[Column(type: "string", columnDefinition: "ENUM('admin', 'faculty')")]
     private string $role = 'faculty';
+
+    #[Column(name:'permissions', type:'integer', nullable: false, options: ["default" => 0])]
+    private int $permissions = 0;
 
     #[Column(name: "is_active", type: "boolean", options: ["default" => true])]
     private bool $isActive = true;
@@ -84,7 +88,7 @@ class User
     public function setRole(string $role): self
     {
         if (!in_array($role, ['admin', 'faculty'])) {
-            throw new \InvalidArgumentException("Invalid role");
+            throw new InvalidArgumentException("Invalid role");
         }
 
         $this->role = $role;
@@ -136,9 +140,7 @@ class User
      * @return bool                             The value of the user's access.
      */
     public function hasPermission(Permissions $permission) : bool {
-        return true;
-
-        throw new InvalidArgumentException("Invalid permission being checked. Please use the Permissions ENUM.", 1);
+        return ($this->permissions & $permission->value) != 0;
     }
 
     /**
@@ -148,6 +150,12 @@ class User
      * @return void
      */
     public function setPermission(Permissions $permission, bool $active) : void {
+        if ($active) {
+            $this->permissions |= $permission->value;
+        }
+        else {
+            $this->permissions &= ~$permission->value;
+        }
     }
 }
 
@@ -157,7 +165,7 @@ class User
  * NOTE: If this is in production, ALWAYS add values afterward! (by production i mean has REAL user data)
  * Otherwise, you WILL ruin the implementation!!
  * 
- * Uses a bitmask implementation, max of 64 permissions unless we change column length (very possible)
+ * Uses a bitmask implementation, max of 32 permissions unless we change column length (very possible)
  */
 enum Permissions : int {
     case AdminPanel = 1 << 0;

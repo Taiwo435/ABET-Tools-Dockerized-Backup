@@ -70,17 +70,15 @@ test("User Permissions Interface Example", function () {
         $user = new User();
     }
 
+    $user->setPermission(Permissions::AdminPanel, true);
+
     $perm = $user->hasPermission(Permissions::AdminPanel);
-    // true for NOW
     expect($perm)->toBeTrue();
 
-    // now it should be false
     $user->setPermission(Permissions::AdminPanel, false);
 
-
     $perm = $user->hasPermission(Permissions::AdminPanel);
-    // not yet due to implementation
-    // expect($perm)->toBeFalse(); 
+    expect($perm)->toBeFalse(); 
 });
 
 // it is the same as test
