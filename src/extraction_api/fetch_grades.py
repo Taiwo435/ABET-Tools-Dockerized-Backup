@@ -262,6 +262,21 @@ class CanvasGradesFetcher:
             folder_path,
         )
 
+        # Fix for race condition when multiple workers try to create the same folder simultaneously, which resulted in multiple of the same Folders being created.
+        
+        # Create just the folder first before uploading anything
+        self.api_request(
+            f"courses/{course_id}/folders",
+            method="POST",
+            data={
+                "name": folder_path.rsplit("/", 1)[-1],
+                "parent_folder_path": (
+                    folder_path.rsplit("/", 1)[0] if "/" in folder_path else "/"
+                ),
+                "on_duplicate": "overwrite",
+            },
+        )
+
         failed: list[str] = []
 
         def _upload_single(file_path: str) -> None:
