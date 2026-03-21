@@ -7,7 +7,7 @@
        "execution_time_column_name": "execution_time"
     },
     "migrations_paths": {
-       "Migrations": "/database/migrations"
+       "Migrations": "database/migrations"
     },
     "all_or_nothing": true,
     "transactional": true,
