@@ -160,6 +160,7 @@ if ($action === 'start-extraction') {
     $token    = $_SESSION['canvas_token']     ?? '';
     $sourceId = $_SESSION['source_course_id'] ?? '';
     $destId   = $_SESSION['dest_course_id']   ?? '';
+    $userId = (int)($_SESSION['user_id'] ?? 0);
 
     if ($token === '' || $sourceId === '' || $destId === '') {
         json_response(['success' => false, 'message' => 'No credentials in session. Please connect first.'], 401);
@@ -192,11 +193,18 @@ if ($action === 'start-extraction') {
         $_FILES['roster_file']['name']
     );
 
+    $headers = ['canvas-access-token: ' . $token];
+    if ($userId <= 0) {
+        json_response(['success' => false, 'message' => 'Session is missing user identity. Please log in again.'], 401);
+    }
+
+    $headers[] = 'submitted-by-user-id: ' . $userId;
+
     $ch = curl_init($extractionUrl);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => ['canvas-access-token: ' . $token],
+        CURLOPT_HTTPHEADER     => $headers,
         CURLOPT_TIMEOUT        => 30, // Background tasks return immediately
         CURLOPT_POSTFIELDS     => ['roster_file' => $rosterCurl],
     ]);

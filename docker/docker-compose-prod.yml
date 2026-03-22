@@ -24,6 +24,7 @@ services:
       - .env
     volumes:
       - ../src/extraction_api:/usr/src/app
+      - ../src/shared:/usr/src/app/shared
     network_mode: "host"
     dns:
       - 8.8.8.8
@@ -72,3 +73,55 @@ services:
     dns:
       - 8.8.8.8
       - 1.1.1.1
+
+  ###################################################
+  # Redis - message broker + result backend for Celery
+  ###################################################
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 64mb
+      --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  ###################################################
+  # Celery Worker - executes background tasks from all services
+  ###################################################
+  celery_worker:
+    build:
+      context: ../
+      dockerfile: docker/celery_worker/Dockerfile
+    container_name: celery_worker
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ../src/extraction_api:/usr/src/app/extraction_api
+      - ../src/canvas_formatting_api:/usr/src/app/canvas_formatting_api
+      - ../src/shared:/usr/src/app/shared
+    stop_grace_period: 120s
+    networks:
+      - app_network
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8

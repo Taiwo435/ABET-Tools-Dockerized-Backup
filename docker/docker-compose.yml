@@ -96,6 +96,7 @@ services:
       - "${EXTRACTION_PORT:?error}:${EXTRACTION_PORT:?error}" 
     volumes:
       - ../src/extraction_api:/usr/src/app
+      - ../src/shared:/usr/src/app/shared
     networks:
       - app_network
     dns:
@@ -123,6 +124,7 @@ services:
     dns:
       - 8.8.8.8
       - 1.1.1.1
+
 
   ###################################################
   # the report generation container that hosts the fastapi backend
@@ -168,9 +170,95 @@ services:
       - app_network
 
   ###################################################
+  # Redis - message broker + result backend for Celery
+  ###################################################
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 64mb
+      --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  ###################################################
+  # Celery Worker - executes background tasks from all services
+  ###################################################
+  celery_worker:
+    build:
+      context: ../
+      dockerfile: docker/celery_worker/Dockerfile
+    container_name: celery_worker
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ../src/extraction_api:/usr/src/app/extraction_api
+      - ../src/canvas_formatting_api:/usr/src/app/canvas_formatting_api
+      - ../src/shared:/usr/src/app/shared
+    stop_grace_period: 120s
+    networks:
+      - app_network
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  ###################################################
+  # Flower - Celery monitoring dashboard (this is optional as we can implement our own admin view, but I added it to check it out for now)
+  ###################################################
+  flower:
+    build:
+      context: ../
+      dockerfile: docker/celery_worker/Dockerfile
+    container_name: flower
+    command: >
+      celery -A shared.celery_app:celery_app flower
+      --port=5555 --persistent=True --db=/data/flower.db
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    volumes:
+      - flower_data:/data
+    networks:
+      - app_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  ###################################################
   # the default network that allows the containers to communicate with each other.
   # just in case we want to change network settings in the future, we define it explicitly here.
   ###################################################
+
+volumes:
+  redis_data:
+  flower_data:
+
 networks:
   app_network:
     name: app_network
