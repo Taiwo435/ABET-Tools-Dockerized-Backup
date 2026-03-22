@@ -96,6 +96,9 @@ services:
       - ../src/extraction_api:/usr/src/app
     networks:
       - app_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # Canvas Formatting FastAPI Backend
@@ -115,6 +118,9 @@ services:
       - ../src/canvas_formatting_api:/usr/src/app
     networks:
       - app_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # the report generation container that hosts the fastapi backend
