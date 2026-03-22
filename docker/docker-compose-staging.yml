@@ -92,7 +92,9 @@ services:
     volumes:
       - ../src/extraction_api:/usr/src/app
     network_mode: "host"
-
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # the report generation container that hosts the fastapi backend
@@ -116,6 +118,9 @@ services:
     network_mode: "host"
     depends_on:
       - mysql
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 
   ###################################################

@@ -25,6 +25,9 @@ services:
     volumes:
       - ../src/extraction_api:/usr/src/app
     network_mode: "host"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # Canvas Formatting FastAPI Backend
@@ -41,6 +44,10 @@ services:
       - "${CANVAS_FORMATTING_PORT:?error}:8001"
     volumes:
       - ../src/canvas_formatting_api:/usr/src/app
+    network_mode: "host"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 
   ###################################################
@@ -62,3 +69,6 @@ services:
     volumes:
       - ../src/report_generation_api:/usr/src/app
     network_mode: "host"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
