@@ -44,6 +44,8 @@ services:
       dockerfile: Dockerfile
     container_name: mysql
     hostname: ${MYSQL_HOSTNAME:?error}
+    ports: 
+      - 3306:3306
     environment:
     # CHANGE THESE VALUES BEFORE DEPLOYING TO PRODUCTION
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}

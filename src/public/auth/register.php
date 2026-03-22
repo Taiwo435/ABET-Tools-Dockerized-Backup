@@ -38,6 +38,27 @@ function password_policy_check(string $password): array {
   ];
 }
 
+/**
+ * Returns the default permissions bitmask for a given role.
+ * Must stay in sync with the Permissions enum in User.php.
+ *
+ * Permissions bit positions:
+ *   AdminPanel           = 1 << 0 =  1
+ *   GradeDataTool        = 1 << 1 =  2
+ *   CanvasFormattingTool = 1 << 2 =  4
+ *   ReportGenTool        = 1 << 3 =  8
+ *   FacultyFormTool      = 1 << 4 = 16
+ *   CoordinatorFormTool  = 1 << 5 = 32
+ */
+function default_permissions_for_role(string $role): int {
+  if ($role === 'admin') {
+    // Admin gets all permissions
+    return (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+  }
+  // Faculty gets GradeDataTool + CanvasFormattingTool + FacultyFormTool
+  return (1 << 1) | (1 << 2) | (1 << 4);
+}
+
 $email = '';
 $role = 'faculty';
 
@@ -75,10 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->fetch()) {
       $errors[] = 'An account with that email already exists.';
     } else {
-      $hash = password_hash($password, getenv("PASSWORD_DEFAULT"));
+      $hash = password_hash($password, PASSWORD_BCRYPT);
+      $permissions = default_permissions_for_role($role);
 
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, ?, 1)");
-      $stmt->execute([$email, $hash, $role]);
+      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active, permissions) VALUES (?, ?, ?, 1, ?)");
+      $stmt->execute([$email, $hash, $role, $permissions]);
 
       $success = true;
     }
