@@ -83,7 +83,7 @@ function curl_api_raw(string $url, string $jsonPayload, array $curlExtra = []): 
     
     
     if ($error) {
-        return ['ok' => false, 'status' => 502, 'body' => $body, 'error' => $error];
+        return ['ok' => false, 'status' => 502, 'body' => $body, 'error' => 'CURL ERROR: ['.$error.']'];
     }
 
     $ok = $httpCode >= 200 && $httpCode < 300;
