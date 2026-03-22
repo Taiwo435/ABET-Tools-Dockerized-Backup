@@ -76,6 +76,23 @@ MAX_PARALLEL_ASSIGNMENTS = 2
 TEMP_DIR_PREFIX = "abet_extraction_"
 
 
+def _extract_teacher_names(course_info: dict) -> list[str]:
+    """Extract display names from the teachers list in course_info. Final course folder name is Course Name (Season Year) [Teacher1, Teacher2, ...]"""
+    teachers = course_info.get("teachers") or []
+    return [t["display_name"] for t in teachers if t.get("display_name")]
+
+
+def _build_course_folder_name(
+    course_info: dict, course_code: str, teacher_names: list[str]
+) -> str:
+    """Build the Canvas folder name: course name + (term) [teacher1, teacher2, ...]."""
+    base = re.sub(r'[<>:"/\\|?*]', "", course_info.get("name") or course_code)
+    if teacher_names:
+        teachers_str = ", ".join(teacher_names)
+        base = f"{base} [{teachers_str}]"
+    return base
+
+
 class CourseData(NamedTuple):
     """Pre-fetched data for a single course, can be used by multiple endpoints now."""
 
@@ -84,6 +101,7 @@ class CourseData(NamedTuple):
     semester_code: str
     term_display: str
     course_folder_name: str
+    teachers_display: str
     all_assignments: list[dict]
     assignment_groups: dict[int, str]
     submissions_by_assignment: dict[int, list[dict]]
@@ -114,6 +132,7 @@ def _prepare_course_data(
 
     course_code = course_info.get("course_code", "course")
     term_name = course_info.get("term", {}).get("name", "")
+    teacher_names = _extract_teacher_names(course_info)
 
     all_assignments = get_all_assignments(course_id, grades_fetcher)
     if not all_assignments:
@@ -122,20 +141,28 @@ def _prepare_course_data(
     # Data Gathering Phase (Always Runs)
     logger.info("Starting Data Gathering Phase")
 
-    # Prefetch all submissions once and index by assignment
+    # Prefetch all submissions once and index by assignment.
+    # Deduplicate by (assignment_id, user_id)
     all_submissions = grades_fetcher.fetch_all_course_submissions(int(course_id))
     submissions_by_assignment: dict[int, list[dict]] = defaultdict(list)
+    _seen_sub_keys: set[tuple[int, int]] = set()
     for sub in all_submissions:
-        submissions_by_assignment[sub["assignment_id"]].append(sub)
+        key = (sub["assignment_id"], sub.get("user_id", 0))
+        if key not in _seen_sub_keys:
+            _seen_sub_keys.add(key)
+            submissions_by_assignment[sub["assignment_id"]].append(sub)
+
+    term_display = get_term_display_name(term_name)
 
     return CourseData(
         course_info=course_info,
         course_code=course_code,
         semester_code=get_semester_short_code(term_name),
-        term_display=get_term_display_name(term_name),  # e.g., Fall 2023
-        course_folder_name=re.sub(
-            r'[<>:"/\\|?*]', "", course_info.get("name") or course_code
+        term_display=term_display,
+        course_folder_name=_build_course_folder_name(
+            course_info, course_code, teacher_names, term_display
         ),
+        teachers_display=", ".join(teacher_names),
         all_assignments=all_assignments,
         assignment_groups=assignment_groups,
         submissions_by_assignment=submissions_by_assignment,
@@ -756,9 +783,13 @@ def build_outcome_report_data(
             )
 
             if has_rubric_data:
+                _seen: set[tuple[int, int]] = set()
                 for sub in all_submissions_flat:
                     # submissions returned by the bulk endpoint include assignment_id
-                    submission_cache[sub["assignment_id"]].append(sub)
+                    key = (sub["assignment_id"], sub.get("user_id", 0))
+                    if key not in _seen:
+                        _seen.add(key)
+                        submission_cache[sub["assignment_id"]].append(sub)
             else:
                 # Roll back to per-assignment fetching if rubric details are missing
                 logger.warning(
@@ -1023,8 +1054,9 @@ def generate_outcome_reports(
 def verify_course(
     course_id: str,
     canvas_access_token: Annotated[str, Header()],
+    dest_course_id: Optional[str] = None,
 ):
-    """Validates a Canvas token against a course. Returns basic course info."""
+    """Validates a Canvas token against a course. Returns basic course info and duplicate status."""
     if not canvas_access_token or not str(canvas_access_token).strip():
         raise HTTPException(status_code=401, detail="Canvas access token is required.")
 
@@ -1037,11 +1069,36 @@ def verify_course(
             status_code=404, detail="Course not found or invalid token."
         )
 
+    duplicate = False
+    if dest_course_id:
+        try:
+            course_name = course_info.get("name", "").replace(":", "")
+            modules = client.get_paginated_list(f"courses/{dest_course_id}/modules")
+            for module in modules:
+                module_id = module.get("id")
+                items = client.get_paginated_list(
+                    f"courses/{dest_course_id}/modules/{module_id}/items"
+                )
+                for item in items:
+                    item_title = item.get("title", "")
+                    if item_title and (item_title in course_name or course_name in item_title):
+                        duplicate = True
+                        break
+                if duplicate:
+                    break
+        except Exception:
+            logging.exception(
+                "Error while checking for duplicate modules for course_id=%s, dest_course_id=%s",
+                course_id,
+                dest_course_id,
+            )
+
     return {
         "course_id": course_id,
         "name": course_info.get("name"),
         "course_code": course_info.get("course_code"),
         "term": course_info.get("term", {}).get("name"),
+        "duplicate_status": duplicate,
     }
 
 
@@ -1262,6 +1319,7 @@ def generate_report_json(
                 "semester": cd.semester_code,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "course_folder_name": cd.course_folder_name,
+                "teachers_display": cd.teachers_display,
             },
             # # Corresponds to requirement 1.c (Class number)
             # "course_identification": course_info,
@@ -1381,7 +1439,7 @@ def _run_extraction_pipeline_sync(
             last_term_display = cd.term_display
             last_course_code = cd.course_code
 
-            # Extract and upload syllabus
+            # Extract and save syllabus
             syllabus_path = extract_and_save_syllabus(
                 course_id_to_pull, cd.course_info, grades_fetcher, temp_dir
             )
@@ -1391,11 +1449,12 @@ def _run_extraction_pipeline_sync(
                 else []
             )
 
+            # Upload syllabus files to Canvas
             if syllabus_files:
                 grades_fetcher.upload_files(
-                    course_id_to_push,
-                    f"{cd.course_folder_name}/({cd.term_display})/Syllabus",
-                    syllabus_files,
+                    course_id=course_id_to_push,
+                    folder_path=f"{cd.course_folder_name}/({cd.term_display})/Syllabus",
+                    file_paths=syllabus_files,
                 )
 
             _set_job_status(
@@ -1492,6 +1551,7 @@ def _run_extraction_pipeline_sync(
                             "semester": cd.semester_code,
                             "term_display": cd.term_display,
                             "course_folder_name": cd.course_folder_name,
+                            "teachers_display": cd.teachers_display,
                         },
                         "outcomes": [
                             {
