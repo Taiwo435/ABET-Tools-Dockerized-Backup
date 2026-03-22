@@ -76,7 +76,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
             </div>
             <div class="card-body">
                 <div class="card-body-inner">
-                    <p>Description text.</p>
+                    <p>Fill out information about yourself that will be used on the ABET accreditation reports.</p>
                     <a href="/faculty-form" class="action-link">Open Faculty Form &rarr;</a>
                 </div>
             </div>
