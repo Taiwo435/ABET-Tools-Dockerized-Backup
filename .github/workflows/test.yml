@@ -36,26 +36,22 @@ jobs:
         run: |
           cp ./env.demo ./.env
           echo -e "\nSELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
-      
-      - name: Install composer dependencies
-        working-directory: ./src/abet_private
-        run: composer install
-      
+
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
           docker compose --profile testing up --build -d
 
-      - name: Install composer dependencies
-        working-directory: ./src/abet_private
-        run: |
-          composer install --no-interaction --prefer-dist --optimize-autoloader
-        
       - name: Setup PHP with PECL extension
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           extensions: xml, mysql, cli
+
+      - name: Install composer dependencies
+        working-directory: ./src/abet_private
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-redis
 
       - name: Wait for services to be ready 
         run: |
