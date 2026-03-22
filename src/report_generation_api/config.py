@@ -16,7 +16,7 @@ else:
 
 
 # --- Database configuration ---
-MYSQL_HOSTNAME = os.getenv("MYSQL_HOSTNAME", "mysql")
+MYSQL_HOSTNAME = os.getenv("MYSQL_HOSTNAME")
 MYSQL_USER = os.getenv("MYSQL_USER")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASS")
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
