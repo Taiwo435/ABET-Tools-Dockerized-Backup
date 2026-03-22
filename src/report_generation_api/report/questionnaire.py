@@ -1,10 +1,10 @@
-from docxtpl import DocxTemplate
+from docx import Document
 
 
 class Questionnaire:
     def __init__(self, template_path, db, year, department, degree_type):
         # Load the Word template
-        self.document = DocxTemplate(template_path)
+        self.document = Document(template_path)
 
         # Shared database connection for all sections
         self.db = db
@@ -16,6 +16,7 @@ class Questionnaire:
 
         # Optional cache for reused query results
         self.cache = {}
+
         
     def get_cached(self, key):
         return self.cache.get(key)

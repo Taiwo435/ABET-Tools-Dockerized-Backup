@@ -102,8 +102,25 @@ try {
     }
 
 
-    #paths
-    $jobsRoot = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
+    // Paths
+    $jobsRoot      = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
+    $LongReportPath = realpath(__DIR__ . '/../api/FacultyInfoDB.py');
+    // IMPORTANT USE THIS FOR DOCKER AND $pythonBin = '/home/osburn/venv/bin/python'; FOR CPANEL
+    // $pythonBin     = '';
+    // foreach (['/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
+    //     if (is_file($candidate) && is_executable($candidate)) {
+    //         $pythonBin = $candidate;
+    //         break;
+    //     }
+    // }
+    $pythonBin     = '';
+    
+    foreach (['/home/osburn/venv/bin/python', '/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
+        if (is_file($candidate) && is_executable($candidate)) {
+            $pythonBin = $candidate;
+            break;
+        }
+    }
 
     if (!is_dir($jobsRoot) && !mkdir($jobsRoot, 0700, true)) {
         json_response(500, ['ok' => false, 'error' => 'Cannot create jobs directory']);

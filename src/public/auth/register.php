@@ -39,11 +39,13 @@ function password_policy_check(string $password): array {
 }
 
 $email = '';
+$role = 'faculty';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = strtolower(trim($_POST['email'] ?? ''));
   $password = (string)($_POST['password'] ?? '');
   $confirm = (string)($_POST['confirm_password'] ?? '');
+  $role = in_array($_POST['role'] ?? '', ['admin', 'faculty']) ? $_POST['role'] : 'faculty';
 
   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Please enter a valid email address.';
@@ -75,9 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       $hash = password_hash($password, getenv("PASSWORD_DEFAULT"));
 
-      // Default role is faculty, active by default
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, 'faculty', 1)");
-      $stmt->execute([$email, $hash]);
+      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, ?, 1)");
+      $stmt->execute([$email, $hash, $role]);
 
       $success = true;
     }
@@ -139,6 +140,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               required
               value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>"
             />
+          </div>
+
+          <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role" name="role">
+              <option value="faculty" <?php echo $role === 'faculty' ? 'selected' : ''; ?>>Faculty</option>
+              <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>Admin</option>
+            </select>
           </div>
 
           <div class="form-group">

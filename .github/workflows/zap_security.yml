@@ -1,0 +1,22 @@
+name: ZAP Automated Security Scan
+
+on:
+  workflow_dispatch:
+  release:
+    
+jobs:
+  security-scan:
+    name: ZAP Security Scan
+    runs-on: ubuntu-latest
+    
+    permissions:
+      issues: write
+
+    steps:
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.13.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'https://abet.asucapstonetools.com/'
+          issue_title: "[SECURITY] ZAP Security Scan Alerts"
+          
