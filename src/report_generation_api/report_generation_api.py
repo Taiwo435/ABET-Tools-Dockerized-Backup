@@ -1,12 +1,25 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 
 import getProfessorWorkload
 import getElectiveCourses
 import getdatabaseConnection
+import os
+import tempfile
+from docx import Document as DocxDocument
+
+from report.report_builder import ReportBuilder as ReportBuilderClass
+from pathlib import Path
 
 app = FastAPI()
+
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+TEMPLATE_PATH = BASE_DIR / "template" / "QuestTemplate.docx"
 
 #This is just to make sure the shape of the json is correct. The get_professor_workload function expects a string. 
 class WorkloadRequest(BaseModel):

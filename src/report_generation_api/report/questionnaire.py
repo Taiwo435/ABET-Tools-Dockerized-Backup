@@ -24,5 +24,8 @@ class Questionnaire:
     def set_cached(self, key, value):
         self.cache[key] = value
 
+    def render(self, context):
+        self.document.render(context)
+
     def save(self, output_path):
         self.document.save(output_path)
