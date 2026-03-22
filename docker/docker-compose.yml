@@ -44,6 +44,8 @@ services:
       dockerfile: Dockerfile
     container_name: mysql
     hostname: ${MYSQL_HOSTNAME:?error}
+    ports: 
+      - 3306:3306
     environment:
     # CHANGE THESE VALUES BEFORE DEPLOYING TO PRODUCTION
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -96,6 +98,9 @@ services:
       - ../src/extraction_api:/usr/src/app
     networks:
       - app_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # Canvas Formatting FastAPI Backend
@@ -115,6 +120,9 @@ services:
       - ../src/canvas_formatting_api:/usr/src/app
     networks:
       - app_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # the report generation container that hosts the fastapi backend
@@ -141,6 +149,9 @@ services:
       - app_network
     depends_on:
       - mysql
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # the selenium container for running end-to-end tests with a headless browser.

@@ -98,6 +98,21 @@ $csrfToken = csrf_token('tool1_proxy');
       </div>
     </div>
 
+    <div class="alert alert-duplicate" id="duplicateAlert">
+      <div class="alert-content">
+        <strong>This course has already been uploaded to the destination.</strong>
+        <strong>Cancel the upload or continue to overwrite the previous upload.</strong>
+        <div style="margin-top: 5px;">
+          <strong>Course:</strong> <span id="duplicateCourse"></span><br>
+          <strong>Term:</strong> <span id="duplicateTerm"></span>
+        </div>
+        <div style="margin-top: 15px;">
+          <a href="tool1.php" class="btn btn-primary">Cancel the Upload</a>
+          <a href="roster-upload.php?overwrite=1" class="btn btn-primary">Overwrite &amp; Continue to Roster Upload →</a>
+        </div>
+      </div>
+    </div>
+
     <div class="alert alert-error" id="errorAlert">
       <div class="alert-content">
         <strong>Connection failed</strong>
@@ -111,6 +126,7 @@ $csrfToken = csrf_token('tool1_proxy');
     const form = document.getElementById('canvasConnectionForm');
     const connectBtn = document.getElementById('connectBtn');
     const successAlert = document.getElementById('successAlert');
+    const duplicateAlert = document.getElementById('duplicateAlert');
     const errorAlert = document.getElementById('errorAlert');
 
     function showError(msg) {
@@ -123,12 +139,24 @@ $csrfToken = csrf_token('tool1_proxy');
 
     function showSuccess(course) {
       errorAlert.style.display = 'none';
+      duplicateAlert.style.display = 'none';
       document.getElementById('connectedCourse').textContent =
         course.name + ' (' + course.course_code + ')';
       document.getElementById('connectedTerm').textContent =
         course.term || 'N/A';
       successAlert.style.display = 'block';
       successAlert.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showDuplicateCase(course) {
+      errorAlert.style.display = 'none';
+      successAlert.style.display = 'none';
+      document.getElementById('duplicateCourse').textContent =
+        course.name + ' (' + course.course_code + ')';
+      document.getElementById('duplicateTerm').textContent =
+        course.term || 'N/A';
+      duplicateAlert.style.display = 'block';
+      duplicateAlert.scrollIntoView({ behavior: 'smooth' });
     }
 
     form.addEventListener('submit', async (e) => {
@@ -239,7 +267,12 @@ $csrfToken = csrf_token('tool1_proxy');
           return;
         }
 
-        showSuccess(verifyData.course);
+        const course = verifyData.course;
+        if (course.duplicate_status) {
+          showDuplicateCase(course);
+        } else {
+          showSuccess(course);
+        }
 
       } catch (err) {
         showError('Network error: ' + err.message);

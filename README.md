@@ -25,6 +25,7 @@
     - [Using Composer](#using-composer)
     - [Composer Install (the command)](#composer-install-the-command)
   - [Database development](#database-development)
+    - [Using Migrations](#using-migrations)
   - [Pulling from the server](#pulling-from-the-server)
   - [More information](#more-information)
 
@@ -135,6 +136,7 @@ To install everything, I did this:
 ```bash
 sudo apt install php8.3 && \
 sudo apt install php8.3-xml && \
+sudo apt install php8.3-mysql && \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 ```
 
@@ -146,7 +148,8 @@ Now, you can install any composer package you want!
 ```bash
 cd src/public
 composer require pestphp/pest --dev --with-all-dependencies 
-# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --dev --with-all-dependencies
+# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --with-all-dependencies
+# --dev specifies that Pest (testing) is only for development (not deployment)
 ```
 
 > [!NOTE]
@@ -178,7 +181,7 @@ you haven't installed the composer files on your system.
 You can fix this by running:
 
 ```bash
-cd src/public
+cd src/abet_private
 composer install
 ```
 
@@ -203,6 +206,43 @@ within the `docker/` folder
 ```bash
 docker compose down     # or docker-compse if you have that
 docker compose up --build
+```
+
+### Using Migrations
+
+Migrations are how we can set scripts so syncrhonize tables on your end with prod.
+Please use this when altering tables. Otherwise, you will need to delete the tables manually and recreate them on the server. New tables added with `IF NOT NULL` can stay in init.sql, but you may make migrations for that too just to show off.
+
+Installing dependencies
+
+```bash
+sudo apt install php8.3-cli
+sudo apt install php8.3-xml
+sudo apt install php8.3-mysql
+sudo apt install composer
+```
+
+Install compser packages
+
+```bash
+cd src/abet_private
+composer install
+```
+
+Generate migrations (will be in `src/abet_private/database/migrations`)
+A new file with the dated version will appear.
+The other migrations can be a template to show you how to implement a migration.
+
+```bash
+composer doctrine generate
+```
+
+This is how you test migrations:
+Note that you need your mysql docker container up to test this.
+Remove the `--dry-run` to actually run it.
+
+```bash
+compser doctrine migrate --dry-run
 ```
 
 [Information on how to link to the database](docs/database_link.md)

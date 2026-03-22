@@ -129,8 +129,9 @@ if ($action === 'store-credentials') {
 if ($action === 'verify-course') {
     $token    = $_SESSION['canvas_token']     ?? '';
     $courseId = $_SESSION['source_course_id'] ?? '';
+    $destId   = $_SESSION['dest_course_id']   ?? '';
 
-    if ($token === '' || $courseId === '') {
+    if ($token === '' || $courseId === '' || $destId === '') {
         json_response(['success' => false, 'message' => 'No credentials in session. Please connect first.'], 401);
     }
 
@@ -140,7 +141,8 @@ if ($action === 'verify-course') {
         json_response(['success' => false, 'message' => 'Session credentials expired. Please reconnect.'], 401);
     }
 
-    $url    = api_base('extraction') . '/verify-course/' . urlencode($courseId);
+    $url    = api_base('extraction') . '/verify-course/' . urlencode($courseId)
+        . '?' . http_build_query(['dest_course_id' => $destId]);
     $result = curl_api($url, 'GET', $token);
 
     if (!$result['ok']) {
@@ -252,6 +254,7 @@ if ($action === 'run-formatting') {
     
     $courseFolderName = post_str('course_folder_name');
     $termDisplay      = post_str('term_display');
+    $overwrite        = post_str('overwrite') === '1';
 
     if ($token === '' || $destId === '') {
         json_response(['success' => false, 'message' => 'No credentials in session. Please connect first.'], 401);
@@ -268,6 +271,9 @@ if ($action === 'run-formatting') {
     }
     if (!empty($termDisplay)) {
         $formatQuery['term_display'] = $termDisplay;
+    }
+    if ($overwrite) {
+        $formatQuery['overwrite'] = 'true';
     }
 
     $formattingUrl = api_base('formatting')

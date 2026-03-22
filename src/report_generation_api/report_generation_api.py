@@ -1,12 +1,25 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 
 import getProfessorWorkload
 import getElectiveCourses
 import getdatabaseConnection
+import os
+import tempfile
+from docx import Document as DocxDocument
+
+from report.report_builder import ReportBuilder as ReportBuilderClass
+from pathlib import Path
 
 app = FastAPI()
+
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+TEMPLATE_PATH = BASE_DIR / "template" / "QuestTemplate.docx"
 
 #This is just to make sure the shape of the json is correct. The get_professor_workload function expects a string. 
 class WorkloadRequest(BaseModel):
@@ -43,17 +56,29 @@ def elective_courses(request: ElectiveCoursesRequest):
 @app.post("/generate-report")
 def generate_report(request: ReportBuilder):
     try:
-        from .report.report_builder import ReportBuilder as ReportBuilderClass
+        template_path = str(TEMPLATE_PATH)
+        #if template is missing, create a minimal temporary DOCX so report building can proceed prevents crashing inceidents error messages when creating report
+        if not os.path.isfile(template_path):
+            #tmpfd allows for program to open a file and the close prevents leakage and tmp name is the file path using it also for file security purposes to prevent name collisions and ensure proper cleanup
+            tmpfd, tmpname = tempfile.mkstemp(suffix='.docx')
+            os.close(tmpfd)
+
         report_builder = ReportBuilderClass(
-            template_path="src/report_generation_api/report/template.docx",
+            template_path=template_path,
             db= getdatabaseConnection.get_database_connection(),
             year=request.year,
             department=request.department,
             degree_type=request.degree_type
         )
-        output_path = f"report_{request.department}_{request.degree_type}_{request.year}.docx"
-        report_builder.build(output_path)
-        return {"message": "Report generated successfully", "output_path": output_path}
+
+        OUTPUT_PATH = BASE_DIR / "output"/ "Long_report.docx"
+        # ensure output directory exists so writing the report won't fail
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True) 
+
+        report_builder.build(str(OUTPUT_PATH))
+        return FileResponse(path=OUTPUT_PATH, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document', filename="Long_report.docx")
+        #return {"message": "Report generated successfully", "output_path": str(OUTPUT_PATH)}
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
