@@ -57,10 +57,9 @@ jobs:
           sleep 5
         
       - name: Run Pest tests
+        working-directory: ./src/abet_private
         run: |
           composer test
-
-  
 
   selenium-tests: 
     name: Test General Functionality
