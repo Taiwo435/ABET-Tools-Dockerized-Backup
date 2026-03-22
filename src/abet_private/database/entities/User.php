@@ -135,11 +135,15 @@ class User
 
     /**
      * Returns whether the user has a certian permission
+     * Will always be true if the user is an admin
      * @param \Entity\Permissions $permission   The permission you want to read
      * @throws InvalidArgumentException         If the input is not a valid permission (or is not handled...)
      * @return bool                             The value of the user's access.
      */
     public function hasPermission(Permissions $permission) : bool {
+        if ($this->getRole() === 'admin') {
+            return true;
+        }
         return ($this->permissions & $permission->value) != 0;
     }
 
@@ -155,6 +159,18 @@ class User
         }
         else {
             $this->permissions &= ~$permission->value;
+        }
+    }
+
+    /**
+     * Only for development
+     * Really useless since I gave the admins all permissions anyways
+     * @return void
+     */
+    public function giveAllPermissions() : void {
+        $numPerms = Permissions::cases();
+        foreach ($numPerms as $perm) {
+            $this->permissions |= $perm->value;
         }
     }
 }
