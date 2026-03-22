@@ -55,9 +55,19 @@ class ReportBuilder:
         )
 
     def build(self, output_path):
-        for section_name, section_module in SECTIONS:
-            print(f"Building {section_name}")
-            section_module.build(self.questionnaire)
+        context = {}
 
+        for section_name, context_key, section_module in SECTIONS:
+            print(f"Building {section_name}")
+
+            # Each section module has a build function that takes the questionnaire as input and returns the data for that section.
+            section_data = section_module.build(self.questionnaire)
+            # Add the section data to the context using the specified context key. If section_data is None, use an empty dictionary.
+            context[context_key] = section_data or {}
+        # After building the context for all sections, render the document and save it to the specified output path.
+        self.questionnaire.render(context)
+        
+        # Save the rendered document to the specified output path and return the path.
         self.questionnaire.save(output_path)
+
         return output_path
