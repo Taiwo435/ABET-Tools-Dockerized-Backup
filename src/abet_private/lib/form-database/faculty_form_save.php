@@ -1,32 +1,42 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 
-function handleSaveError($message) {
+
+/*
+    Sets up an error message to be shown to the user, and logs an error message on the server.
+    For unforseen errors such as an sql error, messages shown to the user should be generic.
+    Stops execution of this file and redirects back to the edit page that was attempting to save.
+    Args:
+        $message (String): The error message that will be shown to the user.
+        $loggedMessage (int): The error message that will be logged onto the backend.
+    Returns:
+        None
+*/
+function handleSaveError($message, $loggedMessage) {
     $_SESSION['faculty_form_error_flag'] = true;
     $_SESSION['faculty_form_old'] = $_POST;
     $_SESSION['faculty_form_error_message'] = $message;
     
     $url = '/faculty-form/edit/?page=' . $_POST['current_page_number'];
     header('Location: ' . $url);
+
+    $loggedMessageFull = "FACULTY FORM SAVE ERROR FOR USER WITH ID " . $_SESSION['user_id'] . ": " . $loggedMessage;
+    error_log($loggedMessageFull);
     die();
 }
 
+
+
 $pdo = db();
+
+// A generic message to show to the user in case of unforseen errors.
+$genericErrorMessage = "Something went wrong while saving the form.";
 
 
 $jsonData = $_POST;
 $jsonString = json_encode($jsonData, JSON_PRETTY_PRINT);
 
-$formName = "";
-$pageName = "form_not_found";
-
 switch ($_POST['page_name']) {
-case 'canvasSyllabus':
-    $pageName = 'canvasSyllabus';
-    break;
-case 'canvasTokens':
-    $pageName = 'canvasTokens';
-    break;
 case 'info':
     // If the program doesn't exist in the table, add it and get the id. If it does exist, just get the id.
     $program_id = null;
@@ -35,7 +45,8 @@ case 'info':
         //[1] => program_code
         $department = explode('-', $_POST['department']);
         if (count($department) != 2) {
-            handleSaveError("Department field must be in the format '[ProgramName]-[ProgramCode]'. Currently, it is '" . $_POST['department'] . "'.");
+            $message = "Department field must be in the format '[ProgramName]-[ProgramCode]'. Currently, it is '" . $_POST['department'] . "'.";
+            handleSaveError($message, $message);
             die();
         }
 
@@ -60,10 +71,11 @@ case 'info':
             $program_id = $result['program_id'];
         }
     } catch(PDOException $e) {
-        handleSaveError($e->getMessage());
+        handleSaveError($genericErrorMessage, $e->getMessage());
         die();
     }
 
+    
     $fields = [
         'user_id' => $_SESSION['user_id'],
         'program_id' => $program_id,
@@ -102,7 +114,7 @@ case 'info':
         ");
         $stmt->execute($fields);
     } catch (PDOException $e) {
-        handleSaveError($e->getMessage());
+        handleSaveError($genericErrorMessage, $e->getMessage());
         die();
     }
     
@@ -141,12 +153,14 @@ case 'vitae':
         ");
         $stmt->execute($fields);
     } catch (PDOException $e) {
-        handleSaveError($e->getMessage());
+        handleSaveError($genericErrorMessage, $e->getMessage());
         die();
     }
     
     break;
 case 'workload':
+    $current_academic_year = 'S26';
+
     $teaching_pct = str_replace('%', '', $_POST['teaching_pct']);
     $research_or_scholarship_pct = str_replace('%', '', $_POST['research_or_scholarship_pct']);
     $other_pct = str_replace('%', '', $_POST['other_pct']);
@@ -154,20 +168,22 @@ case 'workload':
 
     $percentSum = $teaching_pct + $research_or_scholarship_pct + $other_pct;
     if ($percentSum != 100) {
-        handleSaveError("Teaching, Research/Service, and Other Work Percentages should sum to 100%. Currently, they sum to " . $percentSum . "%.");
+        $message = "Teaching, Research/Service, and Other Work Percentages should sum to 100%. Currently, they sum to " . $percentSum . "%.";
+        handleSaveError($message, $message);
         die();
     }
 
     if ($pct_time_devoted_to_program > 100) {
-        handleSaveError("Percentage of time devoted to program cannot exceed 100. Currently, it is " . $pct_time_devoted_to_program . "%.");
+        $message = "Percentage of time devoted to program cannot exceed 100. Currently, it is " . $pct_time_devoted_to_program . "%.";
+        handleSaveError($message, $message);
         die();
     }
 
     $fields = [
         'user_id' => $_SESSION['user_id'],
-        'academic_year' => "S26", // Fix
+        'academic_year' => $current_academic_year,
         'pt_or_ft' => ($_POST['pt_or_ft'] !== '') ? $_POST['pt_or_ft'] : 'FT',
-        'classes_taught' => $_POST['classes_taught'],
+        'classes_taught' => json_encode([]), // Placeholder value, Information will be pulled automatically from a script instead
         'teaching_pct' => $teaching_pct,
         'research_or_scholarship_pct' => $research_or_scholarship_pct,
         'other_pct' => $other_pct,
@@ -179,7 +195,7 @@ case 'workload':
 
     $updateFields = array_filter(
         array_keys($fields),
-        fn($field) => $field !== 'user_id'
+        fn($field) => $field !== 'user_id' && $field !== 'classes_taught'
     );
 
     $updateClause = implode(", ", array_map(
@@ -194,22 +210,13 @@ case 'workload':
         ");
         $stmt->execute($fields);
     } catch (PDOException $e) {
-        handleSaveError($e->getMessage());
+        handleSaveError($e->getMessage(), $e->getMessage());
         die();
     }
     break;
     
 default:
-    handleSaveError("Page " . $_POST['page_name'] . " not recognized.");
+    $message = "Page " . $_POST['page_name'] . " not recognized.";
+    handleSaveError($genericErrorMessage, $message);
     break;
 }
-
-/*$filePath = getenv('ABET_PRIVATE_DIR') . '/' . 'testData' . '/' . $pageName . "_data.json";
-if (file_put_contents($filePath, $jsonString) !== false) {
-    echo "Data has been successfully written to $filePath.";
-} else {
-    $errorMessage = "Error occurred while trying to write to the file: " . $filePath;
-    handleSaveError($errorMessage);
-}*/
-
-?>

@@ -1,24 +1,20 @@
 <?php
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+
+/*
+    Loads data from the SQL db for a specific page.
+    Args:
+        $pageName (String): The name of the page.
+    Returns:
+        (Object): The data loaded from the table.
+*/
 function loadFormData ($pageName) {
-
-/*$path = getenv('ABET_PRIVATE_DIR') . "/" . "testData" . "/" . $pageName . "_data.json";
-if (!file_exists($path)) {
-    //echo "Debug info: FILE $path NOT FOUND";
-    return null;
-}*/
-
-//$jsonData = json_decode(file_get_contents($path), true);
 
 $pdo = db();
 
 $formData = [];
 switch ($pageName) {
-case "canvasSyllabus":
-    break;
-case "canvasTokens":
-    break;
 case "info":
     try {
         // Checks if the data exists, if not returns null
@@ -56,7 +52,6 @@ case "info":
             $formData['department'] = null;
         }
 
-        //print_r($formData);
     } catch (PDOException $e) {
         print_r($e);
         return null;
@@ -121,4 +116,4 @@ case "workload":
 return $formData;
 
 }
-?>
+

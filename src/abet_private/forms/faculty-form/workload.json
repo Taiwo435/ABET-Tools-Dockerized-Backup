@@ -8,47 +8,12 @@
         {
             "type": "select",
             "name": "pt_or_ft",
-            "label": "Part-Time or Full-Time?",
+            "label": "Do you work part-time or full-time for ASU?",
             "required": true,
             "options": {
                 "PT": "Part-Time",
                 "FT": "Full-Time"
             }
-        },
-        {
-            "type": "expandable-grid",
-            "name": "classes_taught",
-            "label": "Classes Taught in the Last Year",
-            "description": "If you taught the same course during multiple semesters, use different rows to specify each semester.",
-            "columns": [
-                {
-                    "name": "course_number",
-                    "label": "Course Number",
-                    "type": "text"
-                },
-                {
-                    "name": "credit_hours",
-                    "label": "# of Credit Hours",
-                    "type": "text"
-                },
-                {
-                    "name": "semester",
-                    "label": "Semester taught",
-                    "type": "select",
-                    "options": [
-                        "Fall 2025",
-                        "Spring 2026",
-                        "Summer 2026"
-                    ]
-                },
-                {
-                    "name": "sections_taught",
-                    "label": "# of Sections that Semester",
-                    "type": "text"
-                }
-            ],
-            "maxRows": 20,
-            "required": false
         },
 
         {
@@ -94,7 +59,7 @@
             "type": "text",
             "name": "pct_time_devoted_to_program",
             "label": "What percentage of your time at ASU is devoted to the program?",
-            "description": "*Description to explain this. Is it as opposed to other programs at ASU?*",
+            "description": "I.e., the percentage of your work that directly supports your current academic program out of all your work at ASU.",
             "required": true,
             "numerical": true
         }

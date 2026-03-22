@@ -24,9 +24,6 @@ _$RECYCLE.BIN/
 Thumbs.db
 __MACOSX/
 
-src/abet_private/testData/*
-!.gitkeep
-
 
 ## stuff that I created randomly and don't want to track
 composer.phar
