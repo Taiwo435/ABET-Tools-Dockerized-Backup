@@ -19,13 +19,26 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\Migrations\Configuration\Migration\JsonFile;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 
 // config file (maybe make a config dir?)
 class Services {
     private static ?EntityManager $instance = null;
 
+    public static function getConnection() : Connection {
+        $connectionParams = [
+            'dbname' => $_ENV['MYSQL_DATABASE'],
+            'user' => $_ENV['MYSQL_USER'],
+            'password' => $_ENV['MYSQL_PASS'],
+            'host' => "127.0.0.1",
+            'driver' => 'pdo_mysql',
+        ];
 
-//     }
+        return DriverManager::getConnection($connectionParams);
+    } 
+
+
 
     public static function getEntityManager() {
         if (static::$instance === null) {
@@ -53,6 +66,29 @@ class Services {
         }
 
        return static::$instance;
+    }
+
+    public static function doesColumnExist(string $tableName, string $columnName) : bool {
+        $conn = self::getConnection();
+        $schemaManager = $conn->createSchemaManager(); // DBAL 3.x
+        $columnName = '"'.$columnName.'"';
+
+
+        if ($schemaManager->tablesExist([$tableName])) {
+            $columns = $schemaManager->introspectTableColumnsByUnquotedName($tableName);
+
+            foreach ($columns as $column) {
+                if ($column->getObjectName()->toString() === $columnName) {
+                    return true;
+                }
+            }
+
+            // echo "Column $columnName does not exist. Safe to add.";
+            return false;
+        } else {
+            echo "Table $tableName does not exist!";
+            throw new InvalidArgumentException("Table ".$tableName."Does not exist!!");
+        }
     }
 }
 
