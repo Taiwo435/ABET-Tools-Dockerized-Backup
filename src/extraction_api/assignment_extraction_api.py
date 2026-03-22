@@ -1087,7 +1087,11 @@ def verify_course(
                 if duplicate:
                     break
         except Exception:
-            pass
+            logging.exception(
+                "Error while checking for duplicate modules for course_id=%s, dest_course_id=%s",
+                course_id,
+                dest_course_id,
+            )
 
     return {
         "course_id": course_id,
