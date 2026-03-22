@@ -25,12 +25,8 @@ function getUserByEmail(EntityManager $em, string $email)
 }
 
 
-beforeEach(function () {
-    $this->entityManager = getEntityManager();
-});
-
 test('User synchronization with DB Example', function () {
-    $entityManager = $this->entityManager;
+    $entityManager = Services::getEntityManager();
 
     $email = "test@doctrine.orm";
     $user = getUserByEmail($entityManager, $email);
@@ -61,7 +57,7 @@ test('User synchronization with DB Example', function () {
 });
 
 test("User Permissions Interface Example", function () {
-    $entityManager = $this->entityManager;
+    $entityManager = Services::getEntityManager();
 
     $email = "test@doctrine.orm";
     $user = getUserByEmail($entityManager, $email);
