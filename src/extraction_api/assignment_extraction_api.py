@@ -160,7 +160,7 @@ def _prepare_course_data(
         semester_code=get_semester_short_code(term_name),
         term_display=term_display,
         course_folder_name=_build_course_folder_name(
-            course_info, course_code, teacher_names, term_display
+            course_info, course_code, teacher_names
         ),
         teachers_display=", ".join(teacher_names),
         all_assignments=all_assignments,
