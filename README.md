@@ -210,11 +210,15 @@ docker compose up --build
 
 ### Using Migrations
 
+Migrations are how we can set scripts so syncrhonize tables on your end with prod.
+Please use this when altering tables. Otherwise, you will need to delete the tables manually and recreate them on the server. New tables added with `IF NOT NULL` can stay in init.sql, but you may make migrations for that too just to show off.
+
 Installing dependencies
 
 ```bash
 sudo apt install php8.3-cli
 sudo apt install php8.3-xml
+sudo apt install php8.3-mysql
 sudo apt install composer
 ```
 
@@ -225,6 +229,21 @@ cd src/abet_private
 composer install
 ```
 
+Generate migrations (will be in `src/abet_private/database/migrations`)
+A new file with the dated version will appear.
+The other migrations can be a template to show you how to implement a migration.
+
+```bash
+composer doctrine generate
+```
+
+This is how you test migrations:
+Note that you need your mysql docker container up to test this.
+Remove the `--dry-run` to actually run it.
+
+```bash
+compser doctrine migrate --dry-run
+```
 
 [Information on how to link to the database](docs/database_link.md)
 
