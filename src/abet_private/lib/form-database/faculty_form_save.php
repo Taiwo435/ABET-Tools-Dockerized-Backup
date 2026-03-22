@@ -11,6 +11,47 @@ function handleSaveError($message) {
     die();
 }
 
+//Calls the professor workload API to get the current workload data for the professor with the given asurite id. Returns the raw JSON string response from the API.
+function getProfessorWorkloadJson($asurite) {
+    $url = "http://reportgen:8002/professor-workload";
+
+    $payload = json_encode([
+        "asurite_id" => $asurite
+    ]);
+
+    $ch = curl_init($url);
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_HTTPHEADER => [
+            'accept: application/json',
+            'Content-Type: application/json'
+        ],
+        CURLOPT_TIMEOUT => 120,
+        CURLOPT_CONNECTTIMEOUT => 10
+    ]);
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        $error = curl_error($ch);
+        $errno = curl_errno($ch);
+        curl_close($ch);
+        throw new Exception("cURL error [$errno]: $error");
+    }
+
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode >= 400) {
+        throw new Exception("API returned HTTP $httpCode: $response");
+    }
+
+    return $response;
+}
+
 $pdo = db();
 
 
@@ -105,6 +146,7 @@ case 'info':
         handleSaveError($e->getMessage());
         die();
     }
+
     
     break;
 case 'vitae':
@@ -163,11 +205,41 @@ case 'workload':
         die();
     }
 
+    try{
+        $stmt = $pdo->prepare("SELECT asurite FROM faculty_info WHERE user_id = :user_id");
+        $stmt->execute(['user_id' => $_SESSION['user_id']]);
+        $result = $stmt->fetch();
+
+        if (!$result) {
+            handleSaveError("No program found for the current user. Please fill out the Info page first.");
+            die();
+        }
+
+        if (!$result) {
+            handleSaveError("User not found.");
+            die();
+        }
+
+        $asurite = $result['asurite'];
+
+
+    } catch(PDOException $e) {
+        handleSaveError($e->getMessage());
+        die();
+    }
+
+    try {
+        $workloadData = getProfessorWorkloadJson($asurite);
+
+    } catch (Exception $e) {
+        handleSaveError($e->getMessage());
+    }
+
     $fields = [
         'user_id' => $_SESSION['user_id'],
         'academic_year' => "S26", // Fix
         'pt_or_ft' => ($_POST['pt_or_ft'] !== '') ? $_POST['pt_or_ft'] : 'FT',
-        'classes_taught' => $_POST['classes_taught'],
+        'classes_taught' => $workloadData,
         'teaching_pct' => $teaching_pct,
         'research_or_scholarship_pct' => $research_or_scholarship_pct,
         'other_pct' => $other_pct,

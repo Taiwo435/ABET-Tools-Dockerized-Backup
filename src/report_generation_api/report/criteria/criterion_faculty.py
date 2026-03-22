@@ -19,7 +19,7 @@ def build(questionnaire):
         classes_taught = json.loads(row["classes_taught"])
         #print(f"Classes Taught: {classes_taught}")
 
-        semesters = classes_taught[0]["data"]["semesters"]
+        semesters = classes_taught["data"]["semesters"]
 
         #String used to capture taught classes
         classes = ""
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         classes_taught = json.loads(row["classes_taught"])
         #print(f"Classes Taught: {classes_taught}")
 
-        semesters = classes_taught[0]["data"]["semesters"]
+        semesters = classes_taught["data"]["semesters"]
 
         #String used to capture taught classes
         classes = ""
