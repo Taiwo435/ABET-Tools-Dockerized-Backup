@@ -88,6 +88,9 @@ def format_and_upload(
     term_display: str = Query(
         "", description="Term display string from extraction (e.g., 'Fall 2023')"
     ),
+    overwrite: bool = Query(
+        False, description="Delete existing duplicate pages/module items before uploading"
+    ),
 ):
     """
     Run the full pipeline: fetch course data, build HTML, create module,
@@ -105,6 +108,7 @@ def format_and_upload(
             instructor_name=instructor_name,
             course_folder_name=course_folder_name,
             term_display=term_display,
+            overwrite=overwrite,
         )
         return {
             "message": "Formatting and upload complete.",

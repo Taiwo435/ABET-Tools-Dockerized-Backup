@@ -659,6 +659,9 @@ $csrfToken = csrf_token('tool1_proxy');
       }
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const overwriteFlag = urlParams.get('overwrite') === '1';
+
     async function runFormatting(folderName, termDisplay) {
       setStatus('running',
         '<span class="spinner"></span>' +
@@ -672,6 +675,9 @@ $csrfToken = csrf_token('tool1_proxy');
         body.append('course_folder_name', folderName || '');
         body.append('term_display', termDisplay || '');
         body.append('csrf_token', currentCsrfToken);
+        if (overwriteFlag) {
+          body.append('overwrite', '1');
+        }
 
         const res = await fetch('api-proxy.php', { method: 'POST', body });
         const data = await res.json();

@@ -1054,8 +1054,9 @@ def generate_outcome_reports(
 def verify_course(
     course_id: str,
     canvas_access_token: Annotated[str, Header()],
+    dest_course_id: Optional[str] = None,
 ):
-    """Validates a Canvas token against a course. Returns basic course info."""
+    """Validates a Canvas token against a course. Returns basic course info and duplicate status."""
     if not canvas_access_token or not str(canvas_access_token).strip():
         raise HTTPException(status_code=401, detail="Canvas access token is required.")
 
@@ -1068,11 +1069,36 @@ def verify_course(
             status_code=404, detail="Course not found or invalid token."
         )
 
+    duplicate = False
+    if dest_course_id:
+        try:
+            course_name = course_info.get("name", "").replace(":", "")
+            modules = client.get_paginated_list(f"courses/{dest_course_id}/modules")
+            for module in modules:
+                module_id = module.get("id")
+                items = client.get_paginated_list(
+                    f"courses/{dest_course_id}/modules/{module_id}/items"
+                )
+                for item in items:
+                    item_title = item.get("title", "")
+                    if item_title and (item_title in course_name or course_name in item_title):
+                        duplicate = True
+                        break
+                if duplicate:
+                    break
+        except Exception:
+            logging.exception(
+                "Error while checking for duplicate modules for course_id=%s, dest_course_id=%s",
+                course_id,
+                dest_course_id,
+            )
+
     return {
         "course_id": course_id,
         "name": course_info.get("name"),
         "course_code": course_info.get("course_code"),
         "term": course_info.get("term", {}).get("name"),
+        "duplicate_status": duplicate,
     }
 
 
