@@ -1,6 +1,6 @@
 {
     "title": "General Criteria",
-    "name": "background",
+    "name": "generalCriteria",
     "action": "submit.php",
     "method": "POST",
     "fields": [

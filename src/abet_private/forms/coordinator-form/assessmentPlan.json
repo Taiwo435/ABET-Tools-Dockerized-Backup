@@ -1,0 +1,58 @@
+{
+  "title": "Assessment and Continuous Assessment Plan",
+  "name": "assessment_plan",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Role and Responsibilities"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "roles_and_responsibilities",
+      "label": "Role and Responsibilities",
+      "columns": [
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "text-field"
+        },
+        {
+          "name": "responsibilities",
+          "label": "Responsibilities",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Constituency Input"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "constituency_input",
+      "label": "Constituency Input",
+      "columns": [
+        {
+          "name": "constituency",
+          "label": "Constituency",
+          "type": "text-field"
+        },
+        {
+          "name": "method",
+          "label": "Method",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    }
+  ]
+}

@@ -16,7 +16,8 @@
 
 <form action="<?= htmlspecialchars($form['action']) ?>" 
     method="<?= htmlspecialchars($form['method']) ?>" novalidate
-    data-name="<?= $form['name'] ?>">
+    data-name="<?= $form['name'] ?>"
+    data-form-group="<?= htmlspecialchars($formName) ?>">
 
     <?php foreach ($form['fields'] as $field): 
         $name = $field['name'];
@@ -342,7 +343,9 @@ function removeExpandableGridRow (expandableGridRow) {
 }
 
 function returnToPageSelect() {
-    window.location.assign('/faculty-form');
+    const form = document.querySelector('form');
+    const formName = form.getAttribute('data-form-group');
+    window.location.assign('/' + formName);
 }
 
 

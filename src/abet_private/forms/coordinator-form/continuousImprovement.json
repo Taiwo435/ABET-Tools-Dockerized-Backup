@@ -1,0 +1,293 @@
+{
+  "title": "Continuous Improvement",
+  "name": "continuous_improvement",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Improvement of Hardware Sequence Consideration"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "hardware_sequence_consideration",
+      "label": "Improvement of Hardware Sequence Consideration",
+      "columns": [
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text-field"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Improvement Based on Semester and Year Assessment Outcome"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "semester_year_assessment_improvements",
+      "label": "Improvement based on (Semester and Year) assessment outcome",
+      "description": "Add one row per semester and year entry.",
+      "columns": [
+        {
+          "name": "semester_year",
+          "label": "Semester and Year",
+          "type": "text"
+        },
+        {
+          "name": "source",
+          "label": "Source",
+          "type": "text-field"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text-field"
+        },
+        {
+          "name": "actions_plans",
+          "label": "Actions / Plans",
+          "type": "text-field"
+        },
+        {
+          "name": "status_of_actions",
+          "label": "Status of Actions",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Program Educational Objectives Update"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "program_educational_objectives_update",
+      "label": "(Program) Program educational objectives update",
+      "description": "Program name may be rendered dynamically based on the active program.",
+      "columns": [
+        {
+          "name": "source",
+          "label": "Source",
+          "type": "text-field"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text-field"
+        },
+        {
+          "name": "actions",
+          "label": "Actions",
+          "type": "text-field"
+        },
+        {
+          "name": "result",
+          "label": "Result",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "New Course Development"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "new_course_development",
+      "label": "New Course Development",
+      "columns": [
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text-field"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text-field"
+        },
+        {
+          "name": "actions_plans",
+          "label": "Actions / Plans",
+          "type": "text-field"
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Concentration Update"
+    },
+    {
+      "type": "select",
+      "name": "has_concentration_updates",
+      "label": "Have updates happened to a related degree concentration?",
+      "required": true,
+      "options": {
+        "yes": "Yes",
+        "no": "No"
+      }
+    },
+    {
+      "type": "expandable-grid",
+      "name": "concentration_update",
+      "label": "(Degree Program) concentration update",
+      "description": "Complete this table only if concentration updates have occurred.",
+      "columns": [
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text-field"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text-field"
+        },
+        {
+          "name": "actions_plans",
+          "label": "Actions / Plans",
+          "type": "text-field"
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Concentration Flowchart Update"
+    },
+    {
+      "type": "select",
+      "name": "has_concentration_flowchart_updates",
+      "label": "Have updates happened to a related degree concentration flowchart?",
+      "required": true,
+      "options": {
+        "yes": "Yes",
+        "no": "No"
+      }
+    },
+    {
+      "type": "expandable-grid",
+      "name": "concentration_flowchart_update",
+      "label": "(Degree Program) concentration flowchart update",
+      "description": "Complete this table only if concentration flowchart updates have occurred.",
+      "columns": [
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text-field"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text-field"
+        },
+        {
+          "name": "actions_plans",
+          "label": "Actions / Plans",
+          "type": "text-field"
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "Ad Hoc Changes"
+    },
+    {
+      "type": "select",
+      "name": "has_adhoc_changes",
+      "label": "Have changes happened to a degree program that are not covered above?",
+      "required": true,
+      "options": {
+        "yes": "Yes",
+        "no": "No"
+      }
+    },
+    {
+      "type": "expandable-grid",
+      "name": "adhoc_changes",
+      "label": "ADHOC Table for anything else not covered above",
+      "description": "Complete this table only if additional changes have occurred.",
+      "columns": [
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text-field"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text-field"
+        },
+        {
+          "name": "actions_plans",
+          "label": "Actions / Plans",
+          "type": "text-field"
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    }
+  ]
+}
