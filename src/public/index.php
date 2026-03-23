@@ -117,7 +117,7 @@ if (empty($_SESSION['user_id'])) {
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Description text.</p>
-                    <a href="/coordinator-form/edit" class="action-link">Open Coordinator Form &rarr;</a>
+                    <a href="/coordinator-form" class="action-link">Open Coordinator Form &rarr;</a>
                 </div>
             </div>
         </div>

@@ -5,8 +5,9 @@
     "method": "POST",
     "fields": [
         {
-            "type": "section-label",
-            "label": "Contact Information"
+            "name": "contact-information",
+            "label": "Contact Information",
+            "type": "text-field"
         }
     ]
 }

@@ -1,0 +1,43 @@
+{
+  "title": "Faculty Qualifications",
+  "name": "faculty_qualifications",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "expandable-grid",
+      "name": "faculty_qualifications_by_program",
+      "label": "Faculty Qualifications",
+      "description": "Add one row per academic program or non-concentrated degree program name.",
+      "columns": [
+        {
+          "name": "academic_program",
+          "label": "Academic Program",
+          "type": "text"
+        },
+        {
+          "name": "professors",
+          "label": "Professors",
+          "type": "text-field"
+        },
+        {
+          "name": "associate_professors",
+          "label": "Associate Professors",
+          "type": "text-field"
+        },
+        {
+          "name": "assistant_professors",
+          "label": "Assistant Professors",
+          "type": "text-field"
+        },
+        {
+          "name": "lecturers_pop",
+          "label": "Lecturers/PoP",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    }
+  ]
+}
