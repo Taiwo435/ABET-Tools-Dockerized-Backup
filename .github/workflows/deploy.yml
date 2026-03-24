@@ -4,6 +4,7 @@ on:
         branches: [ "prod" ]
     workflow_dispatch:
     release:
+      types: [published]
 jobs:
     deploy:
         runs-on: ubuntu-latest
