@@ -68,8 +68,8 @@ if [[ "$run_action" == true ]]; then
         ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer install --no-dev --optimize-autoloader --no-interaction"
         echo "[INFO] Composer install successful"
 
-        # ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer doctrine migrate --no-interaction"
-        # echo "[INFO] Migrations Ran"
+        ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer doctrine migrate --no-interaction"
+        echo "[INFO] Migrations Ran"
 
         # build new .htaccess file with the sensitive environment variables, and copy it to the server
         rsync -avz --delete "$REPO_ROOT/docker/app/build/.htaccess" "$REMOTE/src/public/.htaccess"
