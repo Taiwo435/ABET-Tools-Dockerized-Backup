@@ -25,6 +25,7 @@
     - [Using Composer](#using-composer)
     - [Composer Install (the command)](#composer-install-the-command)
   - [Database development](#database-development)
+    - [Editing the init.sql directly](#editing-the-initsql-directly)
     - [Using Migrations](#using-migrations)
   - [Pulling from the server](#pulling-from-the-server)
   - [More information](#more-information)
@@ -190,6 +191,16 @@ and installs them in the vendor/ folder.
 
 ## Database development
 
+There are two ways to work on the database now.
+
+- You may choose to [make a migration](#using-migrations) (newer, easier integration).
+- Or you may choose to edit the init.sql file (might get deprecated.)
+
+Don't worry, Migrations are not that much different than making raw sql.
+In fact, it allows you to prototype stuff quicker.
+
+### Editing the init.sql directly
+
 If you're working on the database, the most important file
 in the project for you is `docker/mysql/init.sql`, as it
 defines all of the database tables that you will interface with.
@@ -211,7 +222,10 @@ docker compose up --build
 ### Using Migrations
 
 Migrations are how we can set scripts so syncrhonize tables on your end with prod.
-Please use this when altering tables. Otherwise, you will need to delete the tables manually and recreate them on the server. New tables added with `IF NOT NULL` can stay in init.sql, but you may make migrations for that too just to show off.
+Please use this when altering tables.
+Otherwise, during deployment, not updating the tables on the server can cause big problems.
+
+New tables added with `IF NOT NULL` can stay in init.sql, but we can put ALTER TABLE statements in these migrations to version the database.
 
 Installing dependencies
 
@@ -237,9 +251,17 @@ The other migrations can be a template to show you how to implement a migration.
 composer doctrine generate
 ```
 
+> [!TIP]
+> All migrations are stored in `src/abet_private/database/migrations`.
+> A simple example of how to use these migrations exist here.
+>
+> [This migration uses small ALTER tables](src/abet_private/database/migrations/Version20260322173456.php)
+>
+> [This migration uses a PHP heredoc to use SQL syntax highlighting](src/abet_private/database/migrations/Version20260319051758.php)
+
 This is how you test migrations:
 Note that you need your mysql docker container up to test this.
-Remove the `--dry-run` to actually run it.
+Remove the `--dry-run` argument to actually execute it.
 
 ```bash
 compser doctrine migrate --dry-run
