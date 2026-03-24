@@ -23,8 +23,8 @@ on:
 
 # jobs to be executed on runner machines
 jobs:
-  pestphp-tests:
-    name: Run Pest Unit Tests
+  php-tests:
+    name: PestPHP tests + Composer migrations
     runs-on: ubuntu-latest
 
     steps:
@@ -51,7 +51,7 @@ jobs:
       - name: Install composer dependencies
         working-directory: ./src/abet_private
         run: |
-          composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-redis
+          composer install --no-interaction --prefer-dist --optimize-autoloader 
 
       - name: Wait for services to be ready 
         run: |
@@ -62,6 +62,12 @@ jobs:
         working-directory: ./src/abet_private
         run: |
           composer test
+      
+      - name: Run migrations
+        working-directory: ./src/abet_private
+        run: |
+          composer doctrine migrate --no-interaction
+        
 
   selenium-tests: 
     name: Test General Functionality
