@@ -2,6 +2,7 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="en">

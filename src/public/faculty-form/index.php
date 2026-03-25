@@ -2,6 +2,8 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/faculty_form_load.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
+
 
 $formName = "faculty-form";
 
