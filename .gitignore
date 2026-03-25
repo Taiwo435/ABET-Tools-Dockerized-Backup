@@ -49,4 +49,6 @@ server_clone
 
 #report gen files
 src/report_generation_api/template/*
+!src/report_generation_api/template/QuestTemplate.docx
+
 src/report_generation_api/output/*

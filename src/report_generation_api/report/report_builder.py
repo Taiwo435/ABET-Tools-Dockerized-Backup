@@ -69,5 +69,6 @@ class ReportBuilder:
         
         # Save the rendered document to the specified output path and return the path.
         self.questionnaire.save(output_path)
+        appendix_c.apply_post_render_formatting(output_path)
 
         return output_path
