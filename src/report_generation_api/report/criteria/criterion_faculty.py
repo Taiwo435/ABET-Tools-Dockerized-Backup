@@ -59,9 +59,35 @@ def build(questionnaire):
             "percent_time": row["pct_time_devoted_to_program"]
         })
 
-    context = {
-        "faculty_workload": faculty_list
-    }
+    # context = {
+    #     "faculty_workload": faculty_list
+    # }
+    # Fetch and attach faculty profile info (handle rows as tuples or dicts)
+    try:
+        profile_rows = criterion_faculty_data.get_faculty_info(questionnaire)
+    except Exception:
+        profile_rows = []
+
+    profile_list = []
+    for row in profile_rows:
+        if isinstance(row, dict):
+
+
+            profile_list.append({
+                "name": row["name"],
+                "status": row["pt_or_ft"],
+                "highest_degree": row["highest_degree"],
+                "faculty_rank": row["faculty_rank"],
+                "academic_appointment": row["academic_appointment"],
+                "faculty_id": row["faculty_id"],
+                "years_experience_gov_industry": row["years_experience_gov_industry"],
+                "years_experience_teaching": row["years_experience_teaching"],
+                "years_experience_institution": row["years_experience_institution"],
+                "activity_prof_orgs": row["activity_prof_orgs"],
+                "activity_prof_dev": row["activity_prof_dev"],
+                "activity_consulting": row["activity_consulting"]
+            })
+    context = {"faculty_profile": profile_list, "faculty_workload": faculty_list}
     return context
 
 if __name__ == "__main__":
@@ -137,6 +163,34 @@ if __name__ == "__main__":
     context = {
         "faculty_workload": faculty_list
     }
+        # Fetch and attach faculty profile info
+    try:
+        profile_data = criterion_faculty_data.get_faculty_info(questionnaire)
+    except Exception:
+        profile_data = []
+
+    profile_list = []
+    for row in profile_data:
+
+
+        profile_list.append({
+            "name": row["name"],
+            "status": row["pt_or_ft"],
+            "highest_degree": row["highest_degree"],
+            "faculty_rank": row["faculty_rank"],
+            "academic_appointment": row["academic_appointment"],
+            "faculty_id": row["faculty_id"],
+            "years_experience_gov_industry": row["years_experience_gov_industry"],
+            "years_experience_teaching": row["years_experience_teaching"],
+            "years_experience_institution": row["years_experience_institution"],
+            "activity_prof_orgs": row["activity_prof_orgs"],
+            "activity_prof_dev": row["activity_prof_dev"],
+            "activity_consulting": row["activity_consulting"]
+        })
+
+    context["faculty_profile"] = profile_list
+
+
 
     print("Context for criterion_faculty:")
     context = json.dumps(context, indent=4)  # Pretty-print the context dictionary
