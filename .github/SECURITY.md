@@ -18,6 +18,7 @@ Please send reports to:
 - **Primary contact:** Dont know who to add here yet, maybe osburn?
 - **Email:** dont know who to add here yet, maybe osburn?
 - **Backup contact:** dont know who to add here yet, maybe osburn?
+- **Maintainer:**: <dchoang@asu.edu>
 
 If possible, include the following information in your report:
 
