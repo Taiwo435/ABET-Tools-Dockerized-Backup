@@ -44,4 +44,6 @@ Steps for docs:
    1) `export PATH="$HOME/.symfony5/bin:$PATH"`
    2) `source ~/.bashrc`
 3) `symfony new symfony-test --version="7.4.*" --webapp`
-4) 
+4) `symfony check:security`
+
+[Symfony 7.4 docs](https://symfony.com/doc/7.4)
