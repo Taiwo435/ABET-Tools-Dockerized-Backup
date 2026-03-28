@@ -5,8 +5,9 @@
   "method": "POST",
   "fields": [
     {
-      "type": "section-label",
-      "label": "General University Lab Computers Provided by UTO (Central IT)"
+      "name": "equipment_overview",
+      "label": "Equipment Overview",
+      "type": "text-field"
     },
     {
       "type": "expandable-grid",
@@ -14,8 +15,8 @@
       "label": "General University Lab Computers Provided by UTO (Central IT)",
       "columns": [
         {
-          "name": "pc_workstations",
-          "label": "PC Workstations",
+          "name": "equipment_item",
+          "label": "Equipment Item",
           "type": "text-field"
         },
         {
@@ -27,18 +28,10 @@
       "maxRows": 20,
       "required": false
     },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Software Available in the UTO Labs & Classrooms"
-    },
     {
       "type": "expandable-grid",
       "name": "uto_lab_software",
-      "label": "Software Available in the UTO Labs & Classrooms",
+      "label": "Software Available in the UTO Labs and Classrooms",
       "columns": [
         {
           "name": "program",
@@ -64,22 +57,14 @@
       "maxRows": 50,
       "required": false
     },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "SCIA Instructional Labs Equipment"
-    },
     {
       "type": "expandable-grid",
       "name": "scia_instructional_lab_equipment",
       "label": "SCIA Instructional Labs Equipment",
       "columns": [
         {
-          "name": "pc_workstations",
-          "label": "PC Workstations",
+          "name": "equipment_item",
+          "label": "Equipment Item",
           "type": "text-field"
         },
         {
@@ -91,14 +76,6 @@
       "maxRows": 20,
       "required": false
     },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Printers"
-    },
     {
       "type": "expandable-grid",
       "name": "printers",
@@ -106,7 +83,7 @@
       "columns": [
         {
           "name": "printer",
-          "label": "Printers",
+          "label": "Printer",
           "type": "text-field"
         },
         {
@@ -118,22 +95,14 @@
       "maxRows": 20,
       "required": false
     },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Software Available in School of Computing & Informatics Instructional Labs and Virtual Labs"
-    },
     {
       "type": "expandable-grid",
       "name": "scia_brickyard_software_list",
-      "label": "SCIA Brickyard Software List",
+      "label": "Software Available in School of Computing and Informatics Instructional Labs and Virtual Labs",
       "columns": [
         {
           "name": "software_name",
-          "label": "SCIA Brickyard Software List",
+          "label": "Software Name",
           "type": "text-field"
         },
         {

@@ -1,13 +1,43 @@
 {
-    "title": "Background Information",
-    "name": "background",
-    "action": "submit.php",
-    "method": "POST",
-    "fields": [
-        {
-            "name": "contact-information",
-            "label": "Contact Information",
-            "type": "text-field"
-        }
-    ]
+  "title": "Background Information",
+  "name": "background",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "contact_information",
+      "label": "Contact Information",
+      "type": "text-field"
+    },
+    {
+      "name": "program_history",
+      "label": "Program History",
+      "type": "text-field"
+    },
+    {
+      "name": "options",
+      "label": "Options",
+      "type": "text-field"
+    },
+    {
+      "name": "program_delivery_modes",
+      "label": "Program Delivery Modes",
+      "type": "text-field"
+    },
+    {
+      "name": "program_locations",
+      "label": "Program Locations",
+      "type": "text-field"
+    },
+    {
+      "name": "public_disclosure",
+      "label": "Public Disclosure",
+      "type": "text-field"
+    },
+    {
+      "name": "deficiencies_weaknesses_or_concerns",
+      "label": "Deficiencies, Weaknesses, or Concerns from Previous Evaluation(s) and the Actions Taken to Address Them",
+      "type": "text-field"
+    }
+  ]
 }

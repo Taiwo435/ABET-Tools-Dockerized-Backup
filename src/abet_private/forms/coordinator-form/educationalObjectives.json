@@ -1,13 +1,43 @@
 {
-  "title": "Educational Objectives",
+  "title": "Program Educational Objectives",
   "name": "educationalObjectives",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
+      "name": "mission_statement",
+      "label": "Mission Statement",
+      "type": "text-field"
+    },
+    {
+      "name": "program_educational_objectives",
+      "label": "Program Educational Objectives",
+      "type": "text-field"
+    },
+    {
+      "name": "public_availability_of_peos",
+      "label": "Where are the Program Educational Objectives publicly available?",
+      "type": "text-field"
+    },
+    {
+      "name": "consistency_with_mission",
+      "label": "Consistency of Program Educational Objectives with Institutional Mission",
+      "type": "text-field"
+    },
+    {
+      "name": "program_constituencies",
+      "label": "Program Constituencies",
+      "type": "text-field"
+    },
+    {
+      "name": "how_peos_meet_constituencies",
+      "label": "How Program Educational Objectives Meet Constituency Needs",
+      "type": "text-field"
+    },
+    {
       "type": "expandable-grid",
-      "name": "educational_objectives",
-      "label": "Review of educational objectives for the Computer Systems Engineering program.",
+      "name": "peo_review_process",
+      "label": "Process for Review of Program Educational Objectives",
       "columns": [
         {
           "name": "input_method",
@@ -20,8 +50,8 @@
           "type": "text"
         },
         {
-          "name": "constituencies",
-          "label": "Constituencies",
+          "name": "constituencies_involved",
+          "label": "Constituencies Involved",
           "type": "text"
         }
       ],

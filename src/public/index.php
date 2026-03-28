@@ -116,7 +116,7 @@ if (empty($_SESSION['user_id'])) {
             </div>
             <div class="card-body">
                 <div class="card-body-inner">
-                    <p>Description text.</p>
+                    <p>Fill out information to be used in the Questionnaire form.</p>
                     <a href="/coordinator-form" class="action-link">Open Coordinator Form &rarr;</a>
                 </div>
             </div>
