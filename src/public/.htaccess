@@ -26,7 +26,7 @@ RewriteRule ^$ /login [R=302,L]
 # Canonicalize direct script URLs -> pretty URLs
 # -------------------------------------------------
 RewriteCond %{THE_REQUEST} \s/+index\.php(?:[?\s]|$) [NC]
-RewriteRule ^index\.php$ /home [R=302,L]
+#RewriteRule ^index\.php$ /home [R=302,L]
 
 RewriteCond %{THE_REQUEST} \s/+auth/login\.php(?:[?\s]|$) [NC]
 RewriteRule ^auth/login\.php$ /login [R=302,L]
