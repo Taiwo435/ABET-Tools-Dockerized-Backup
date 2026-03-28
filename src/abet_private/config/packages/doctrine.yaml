@@ -1,8 +1,8 @@
 doctrine:
     dbal:
         user: '%env(MYSQL_USER)%'
-        password: '%env(MYSQL_PASSWORD)%'
-        host: '%env(MYSQL_HOST)%'
+        password: '%env(MYSQL_PASS)%'
+        host: '%env(MYSQL_HOSTNAME)%'
         port: '%env(MYSQL_PORT)%'
         dbname: '%env(MYSQL_DATABASE)%'
         driver: pdo_mysql # Or your specific driver like pdo_pgsql
