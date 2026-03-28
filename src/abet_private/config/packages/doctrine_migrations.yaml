@@ -10,9 +10,6 @@ doctrine_migrations:
     connection: default
     enable_profiler: false
 
-    # Entity manager to use for migrations. This overrides the "connection" setting.
-    em: default
-
     storage:
         # Default (SQL table) metadata storage configuration
         table_storage:

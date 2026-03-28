@@ -14,19 +14,24 @@
         "symfony/form": "^7.4.7",
         "symfony/framework-bundle": "^7.4.7",
         "symfony/http-kernel": "^7.4.7",
+        "symfony/monolog-bundle": "^4.0.1",
         "symfony/runtime": "^7.4.1",
         "symfony/security-bundle": "^7.4.6",
+        "symfony/stimulus-bundle": "^2.34",
         "symfony/translation": "^7.4.6",
         "symfony/twig-bundle": "^7.4.4",
+        "symfony/ux-turbo": "^2.34",
         "symfony/validator": "^7.4.7",
         "symfony/yaml": "^7.4.6",
+        "twig/extra-bundle": "^3.24",
         "vlucas/phpdotenv": "^5.6.3"
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^4.3.1",
         "symfony/debug-bundle": "^7.4.7",
         "symfony/maker-bundle": "^1.67",
-        "symfony/test-pack": "^1.2"
+        "symfony/test-pack": "^1.2",
+        "symfony/web-profiler-bundle": "^7.4.7"
     },
     "config": {
         "allow-plugins": {
@@ -59,7 +64,8 @@
             "require": "7.4.*"
         },
         "runtime": {
-            "dotenv_path": "../../docker/.env"
+            "dotenv_path": "../../docker/.env",
+            "public-dir": "../public"
         }
     }
 }
