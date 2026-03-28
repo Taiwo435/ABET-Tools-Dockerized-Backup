@@ -37,6 +37,18 @@ Symfony has built-in security, ORM, and everything.
 I'm using Symfony 7.4 which is compatible with our current PHP version.
 It is also a LTS version, meaning it will be supported much longer than the most recent version (8.0).
 
+### Why Symfony??
+
+I chose Symfony over Laravel because symfony is VERY modular.
+It allows us to migrate slowly into the symfony framework, which I really appreciate.
+As an added bonus, their organization was very similar to ours, which I also love.
+
+Their documentation is so good, they even give you guidelines on how to migrate to symfony
+
+[Migrating To Symfony](https://symfony.com/doc/current/migration.html)
+
+### My steps so far
+
 Steps for docs:
 
 1) Install [Symfony CLI](https://symfony.com/download)
