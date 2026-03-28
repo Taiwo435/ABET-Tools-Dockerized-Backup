@@ -51,10 +51,10 @@ RUN a2enmod proxy_http
 
 COPY docker/app/config/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
-#RUN if [ "$BUILD_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
+#RUN if [ "$APP_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
 
 # change php.ini based on environment variable
-RUN if [ "$BUILD_ENV" = "development" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+RUN if [ "$APP_ENV" = "dev" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
 
 
 #RUN mkdir -p /var/www/

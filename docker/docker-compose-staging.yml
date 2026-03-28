@@ -28,6 +28,7 @@ services:
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
+      - .:${ABET_PRIVATE_DIR:?error}/../../docker    # for the .env variable
     network_mode: "host"
     ports:
       - "${WEBSERVER_PORT:-8080}:80"
