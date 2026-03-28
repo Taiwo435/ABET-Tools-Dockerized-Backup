@@ -3,6 +3,7 @@
 use App\Kernel;
 use App\LegacyBridge;
 
+// not the same for prod?
 require_once getenv("ABET_PRIVATE_DIR").'/vendor/autoload_runtime.php';
 
 return function (array $context) {

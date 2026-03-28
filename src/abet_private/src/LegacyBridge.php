@@ -32,6 +32,11 @@ class LegacyBridge
             return "{$legacyRoot}inc/ajax_cust_details.php";
         }
 
+        // default please
+        if ($requestPathInfo == '/') {
+            return "{$legacyRoot}homepage.php";
+        }
+
         // ... etc.
 
         throw new \Exception("Unhandled legacy mapping for $requestPathInfo");

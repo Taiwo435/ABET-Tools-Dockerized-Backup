@@ -3,6 +3,8 @@ Options -MultiViews
 
 RewriteEngine On
 
+#only on local
+SetEnv ABET_PRIVATE_DIR "/home/src/abet_private"
 # -------------------------------------------------
 # Deny access to json, lock, py directories
 # -------------------------------------------------
