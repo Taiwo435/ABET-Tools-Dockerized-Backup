@@ -87,7 +87,45 @@ def build(questionnaire):
                 "activity_prof_dev": row["activity_prof_dev"],
                 "activity_consulting": row["activity_consulting"]
             })
-    context = {"faculty_profile": profile_list, "faculty_workload": faculty_list}
+
+    try:
+        profile_info = criterion_faculty_data.get_more_faculty_info(questionnaire)
+    except Exception:
+        profile_info = []
+
+    profile_info_list = []
+    for row in profile_info:
+
+
+        profile_info_list.append({
+            "name": row["name"],
+            "faculty_rank": row["faculty_rank"],
+            "areas_of_interest": row["areas_of_interest"]
+
+        })
+
+    #gets number of faculty by rank
+    try:
+        profile_nums = criterion_faculty_data.get_faculty_nums(questionnaire)
+    except Exception:
+        profile_nums = []
+    result = {}
+
+    for row in profile_nums:
+        result[row["faculty_rank"]] = row["num_faculty"]
+
+    profile_nums_dict = {
+        "professors": result.get("P", 0),
+        "associate_professors": result.get("ASC", 0),
+        "assistant_professors": result.get("AST", 0),
+        "other": result.get("I", 0) + result.get("O", 0)+ result.get("A", 0),
+    }
+    profile_nums_list = []
+    profile_nums_list.append(profile_nums_dict)
+    # for row in profile_nums:
+
+
+    context = {"faculty_profile": profile_list, "faculty_workload": faculty_list, "faculty_info": profile_info_list, "faculty_nums": profile_nums_list, "faculty_nums_dict": profile_nums_dict}
     return context
 
 if __name__ == "__main__":
@@ -189,6 +227,40 @@ if __name__ == "__main__":
         })
 
     context["faculty_profile"] = profile_list
+
+     # Fetch and attach faculty profile info
+    try:
+        profile_info = criterion_faculty_data.get_faculty_info(questionnaire)
+    except Exception:
+        profile_info = []
+
+    profile_info_list = []
+    for row in profile_info:
+
+
+        profile_info_list.append({
+            "name": row["name"],
+            "faculty_rank": row["faculty_rank"],
+            "areas_of_interest": row["areas_of_interest"]
+
+        })
+
+    context["faculty_profile"] = profile_info_list
+
+    try:
+        profile_nums = criterion_faculty_data.get_more_faculty_info(questionnaire)
+    except Exception:
+        profile_nums = []
+
+    profile_nums_list = []
+    for row in profile_nums:
+
+
+        profile_nums_list.append({
+            "faculty_rank": row["faculty_rank"]
+
+        })
+    context["faculty_nums"] = profile_nums_list
 
 
 

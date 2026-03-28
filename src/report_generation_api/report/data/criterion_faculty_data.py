@@ -50,6 +50,37 @@ def get_faculty_info(questionnaire):
 
     return cursor.fetchall()
 
+def get_more_faculty_info(questionnaire):
+    """
+    Fetch basic faculty info (concatenated name and other profile fields).
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT CONCAT(first_name, ' ', last_name) AS name,
+            faculty_rank,
+            areas_of_interest
+        FROM faculty_info;
+                   """)
+
+    return cursor.fetchall()
+
+def get_faculty_nums(questionnaire):
+    """
+    Fetch amount of faculty members by rank.
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT faculty_rank, COUNT(*) AS num_faculty
+        FROM faculty_info
+        GROUP BY faculty_rank;
+                   """)
+
+    return cursor.fetchall()
+
 if __name__ == "__main__":
 
     
