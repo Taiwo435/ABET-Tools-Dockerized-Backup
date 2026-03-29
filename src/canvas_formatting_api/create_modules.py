@@ -384,16 +384,14 @@ def run_formatting_pipeline(
         raise ValueError("Canvas access token is required.")
 
     # Derive semester/year: prefer term_display, then fall back to course_folder_name
+    parsed_sem, parsed_yr = "", ""
     if term_display:
         parsed_sem, parsed_yr = _parse_term_display(term_display)
-        if parsed_sem and parsed_yr:
-            semester = parsed_sem
-            year = parsed_yr
-    elif course_folder_name:
+    if (not parsed_sem or not parsed_yr) and course_folder_name:
         parsed_sem, parsed_yr = _extract_term_from_folder_name(course_folder_name)
-        if parsed_sem and parsed_yr:
-            semester = parsed_sem
-            year = parsed_yr
+    if parsed_sem and parsed_yr:
+        semester = parsed_sem
+        year = parsed_yr
 
     dest_id = destination_course_id or source_course_id
     api_base_url = _get_api_base_url(canvas_domain)
