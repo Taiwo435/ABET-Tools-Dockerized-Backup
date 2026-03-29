@@ -1,38 +1,70 @@
-{% extends 'base.html.twig' %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASU ABET Tools | Login</title>
+  <link rel="stylesheet" href="/assets/css/auth.css" />
+</head>
+<body>
 
-{% block title %}Log in!{% endblock %}
+  <div class="login-container">
+    
+    <div class="brand-section">
+      <div class="brand-content">
+        <h2>Arizona State University</h2>
+        <p>Enterprise Technology & ABET Accreditation Tools.</p>
+        <div style="width: 60px; height: 4px; background: var(--asu-gold); margin-top: 20px;"></div>
+      </div>
+    </div>
 
-{% block body %}
-    <form method="post">
-        {% if error %}
-            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
+    <div class="form-section">
+      <a href="https://www.asu.edu/about/contact" class="help-link">Need Help?</a>
 
-        {% if app.user %}
-            <div class="mb-3">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
-            </div>
-        {% endif %}
+      <div class="form-header">
+        <h1>Welcome Back</h1>
+        <p>Please sign in to access your dashboard.</p>
+      </div>
 
-        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-        <label for="username">Email</label>
-        <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="email" required autofocus>
-        <label for="password">Password</label>
-        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
-        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+      {% if error %}
+        <div class="error-box">
+          <strong>Error:</strong> <?php echo e($error); ?>
+        </div>
+      {% endif %}
 
-        {#
-            Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
-            See https://symfony.com/doc/current/security/remember_me.html
+      {# <?php if ($error): ?>
+        <div class="error-box">
+          <strong>Error:</strong> <?php echo e($error); ?>
+        </div>
+      <?php endif; ?> #}
 
-            <div class="checkbox mb-3">
-                <input type="checkbox" name="_remember_me" id="_remember_me">
-                <label for="_remember_me">Remember me</label>
-            </div>
-        #}
+      <form method="POST" action="/login" autocomplete="on">
+        <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>">
 
-        <button class="btn btn-lg btn-primary" type="submit">
-            Sign in
-        </button>
-    </form>
-{% endblock %}
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="asurite@asu.edu" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" class="btn-submit">Sign In</button>
+
+        <div class="footer-links">
+          <div>
+            <span>Don't have an account?</span>
+            <a href="/auth/register.php">Create Account</a>
+          </div>
+          <div style="margin-top: 15px;">
+            <a href="/auth/forgot_password.php" style="margin-left: 0;">Forgot Password?</a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+</body>
+</html>
