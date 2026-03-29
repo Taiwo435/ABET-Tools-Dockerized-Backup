@@ -1,0 +1,100 @@
+{
+  "title": "Assessment and Continuous Assessment Plan",
+  "name": "assessment_plan",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "introduction",
+      "label": "Introduction",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "roles_and_responsibilities",
+      "label": "Roles and Responsibilities",
+      "columns": [
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "text-field"
+        },
+        {
+          "name": "responsibilities",
+          "label": "Responsibilities",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "constituency_input",
+      "label": "Constituency Input",
+      "columns": [
+        {
+          "name": "constituency",
+          "label": "Constituency",
+          "type": "text-field"
+        },
+        {
+          "name": "method",
+          "label": "Method",
+          "type": "text-field"
+        },
+        {
+          "name": "frequency",
+          "label": "Frequency",
+          "type": "text-field"
+        },
+        {
+          "name": "use_of_input",
+          "label": "Use of Input",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "name": "assessment_details",
+      "label": "Assessment Details",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "assessment_processes",
+      "label": "Assessment Processes",
+      "columns": [
+        {
+          "name": "process_or_method",
+          "label": "Process or Method",
+          "type": "text-field"
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "text-field"
+        },
+        {
+          "name": "frequency",
+          "label": "Frequency",
+          "type": "text-field"
+        },
+        {
+          "name": "responsible_party",
+          "label": "Responsible Party",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "name": "hardware_sequence_improvement_process",
+      "label": "Elaboration of CSE Hardware Sequence Improvement Process",
+      "type": "text-field"
+    }
+  ]
+}

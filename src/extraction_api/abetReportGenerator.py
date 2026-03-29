@@ -237,6 +237,17 @@ def get_enrollment_count(js: Dict[str, Any]) -> int:
     return 0
 
 
+def get_course_teachers(js: Dict[str, Any]) -> str:
+    """
+    Returns a comma-separated string of teacher display names from the
+    course_identification.teachers list.
+    """
+    ci = js.get("course_identification") or {}
+    teachers = ci.get("teachers") or []
+    names = [t["display_name"] for t in teachers if t.get("display_name")]
+    return ", ".join(names) if names else "N/A"
+
+
 def normalize_course_line_for_template(course_code: str) -> str:
     r"""
     Docstring for normalize_course_line_for_template
@@ -897,6 +908,8 @@ def update_section1_in_doc(
         outcome_line = f"Outcome assessed ({outcome_title})"
 
     class_line = normalize_course_line_for_template(get_course_code(js))
+    instructor_names = get_course_teachers(js)
+    instructor_line = f"Instructor(s): {instructor_names}"
     metric_line = f"Metric Instrument Type: {infer_metric_instrument_type(js)}"
     thr = get_threshold(js)
     enrollment_count = get_enrollment_count(js)
@@ -940,6 +953,12 @@ def update_section1_in_doc(
 
         if re.fullmatch(r"[A-Z]{2,4}\s*#\s*\d{3}", t):
             replace_paragraph_text_preserve_style(p, class_line)
+            # Insert instructor line right after the course number
+            insert_paragraph_after(p, instructor_line)
+            continue
+
+        if t.startswith("Instructor(s):"):
+            replace_paragraph_text_preserve_style(p, instructor_line)
             continue
 
         if t.startswith("Metric Instrument Type:"):

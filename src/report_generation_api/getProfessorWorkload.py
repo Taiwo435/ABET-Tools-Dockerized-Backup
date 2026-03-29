@@ -171,6 +171,7 @@ def create_json_reponse(rawjson: Dict) -> Optional[Dict[str, Any]]:
 
     #Allows for the course to be counted
     trackCourses = {}
+    cache = {}
     
     response = {
 
@@ -209,15 +210,25 @@ def create_json_reponse(rawjson: Dict) -> Optional[Dict[str, Any]]:
                 dataForCourse["course"] = course
 
                 splitCourse = course.split(" ")
+
+                if course in cache:
+                    dataForCourse["units"] = cache[course]["units"]
+                    dataForCourse["amountTaught"] = dataForCourse["amountTaught"] + 1 
+                else:
+
+                    dataForCourse["units"] = search_for_class_catalog_info_by_title(splitCourse[1], splitCourse[0])[0]["HOURS"]
                 
-                dataForCourse["units"] = search_for_class_catalog_info_by_title(splitCourse[1], splitCourse[0])[0]["HOURS"]
-            
-                dataForCourse["amountTaught"] = dataForCourse["amountTaught"] + 1 
-                
+                    dataForCourse["amountTaught"] = dataForCourse["amountTaught"] + 1 
+                    
                 #Addes key (Course Number) tied to dataForCourse
                 trackCourses[course] = dataForCourse
+                cache[course] = dataForCourse
         
                 #print(trackCourses[course])
+
+
+                
+
 
         for courses in trackCourses.values():
             

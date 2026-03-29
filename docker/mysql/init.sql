@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('admin', 'faculty') NOT NULL DEFAULT 'faculty',
+    permissions INT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -145,119 +146,6 @@ CREATE TABLE IF NOT EXISTS admission_major_map (
 -- CREATE DATABASE IF NOT EXISTS osburn_abet_tools_dev;
 -- USE osburn_abet_tools_dev; 
 
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'faculty') NOT NULL DEFAULT 'faculty',
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    last_login TIMESTAMP NULL DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS user_profiles (
-    profile_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    display_name VARCHAR(255),
-    department VARCHAR(255),
-    phone VARCHAR(50),
-    office_location VARCHAR(255),
-    bio VARCHAR(512),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-
-
-
-
-
---
--- Logging tables for audit and login events
---
-
-CREATE TABLE IF NOT EXISTS audit_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    actor_user_id INT NOT NULL,
-    action VARCHAR(255) NOT NULL,
-    target_type VARCHAR(255) NOT NULL,
-    target_id VARCHAR(255) NOT NULL,
-    metadata JSON,
-    ip_address VARCHAR(45),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS login_events (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    email_attempted VARCHAR(255),
-    result ENUM('success', 'failed_password', 'failed_mfa', 'locked') NOT NULL,
-    reason VARCHAR(255),
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- -----------------------------------------------
--- REPORT GENERATION TABLES
--- -----------------------------------------------
-
--- ALL OUTCOMES FOR A COURSE
--- data from assignment_extraction.py, we don't need a form 
--- course_data is a JSON field that stores all the extracted data for a course, including outcomes, assignments, etc. 
-
-CREATE TABLE IF NOT EXISTS courses (
-    course_id INT AUTO_INCREMENT PRIMARY KEY,
-    course_code VARCHAR(50) NOT NULL,                                               -- the course code found in ASU class search e.g. 40803. NOT the end number in the canvas URL.
-    course_term VARCHAR(50),
-    professor_id INT NOT NULL,
-    course_data JSON,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- General Criteria: Students Adissions
--- Idea: store admission “rules text” once, then link it to one or many majors.
-
--- Table 1: programss
--- global anchor table
--- program_id keeps data separated per ABET program (so multiple programs don’t mix).
-
-CREATE TABLE IF NOT EXISTS programs (
-    program_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_name VARCHAR(255) NOT NULL,   -- e.g. "Computer Science"
-    program_code VARCHAR(50) NOT NULL -- e.g. BS, BSE
-);
-
--- Table 2: student_admission_requirements
--- One row = one “admissions criteria row” from the screenshot (the 4 text cells).
--- We keep the 4 criteria fields nullable because some programs/majors may not use a category (N/A).
-
-CREATE TABLE IF NOT EXISTS student_admission_requirements (
-    admission_id INT AUTO_INCREMENT PRIMARY KEY,
-    freshman TEXT,
-    transfer_12_23 TEXT,
-    transfer_24_primary TEXT,
-    transfer_24_secondary TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-
-);
-
--- Table 3: admission_major_map
--- Junction table to support “multiple majors in one cell”:
--- many majors can point to the same admission_id (shared criteria), and a major can be linked to a criteria row.
-
-CREATE TABLE IF NOT EXISTS admission_major_map (
-    admission_id INT NOT NULL,
-    program_id INT NOT NULL,
-    PRIMARY KEY(admission_id, program_id),
-    FOREIGN KEY (admission_id) REFERENCES student_admission_requirements(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (program_id)   REFERENCES programs(program_id) ON DELETE CASCADE
-      
-);
 
 -- -----------------------------------------------
 -- data that we retrieve from forms 
@@ -655,3 +543,34 @@ CREATE TABLE IF NOT EXISTS assessment_constituency (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
  
+
+-- -----------------------------------------------
+-- JOB HISTORY
+-- Tracks all background task executions.
+-- Written to by TrackedTask base class (shared/base_task.py).
+-- -----------------------------------------------
+
+CREATE TABLE IF NOT EXISTS job_history (
+    id VARCHAR(36) PRIMARY KEY,
+    job_type VARCHAR(100) NOT NULL,
+    service VARCHAR(100) NOT NULL,
+    submitted_by INT DEFAULT NULL,
+    status ENUM('pending', 'processing', 'completed', 'failed') NOT NULL DEFAULT 'pending',
+    progress TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    message TEXT DEFAULT NULL,
+    error_message TEXT DEFAULT NULL,
+    params JSON DEFAULT NULL,
+    result_meta JSON DEFAULT NULL,
+    attempts INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP NULL DEFAULT NULL,
+    completed_at TIMESTAMP NULL DEFAULT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_service (service),
+    INDEX idx_created (created_at),
+    INDEX idx_submitted_by (submitted_by),
+    -- Foreign key to users table for submitted_by, nullable in case we want to allow system-submitted jobs in the future
+    FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE
+    SET NULL
+);

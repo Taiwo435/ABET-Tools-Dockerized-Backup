@@ -14,6 +14,7 @@ import shutil
 from datetime import datetime, timezone
 import threading
 import uuid
+from typing import Callable
 from fetch_grades import CanvasGradesFetcher
 from fastapi import (
     FastAPI,
@@ -76,6 +77,23 @@ MAX_PARALLEL_ASSIGNMENTS = 2
 TEMP_DIR_PREFIX = "abet_extraction_"
 
 
+def _extract_teacher_names(course_info: dict) -> list[str]:
+    """Extract display names from the teachers list in course_info. Final course folder name is Course Name (Season Year) [Teacher1, Teacher2, ...]"""
+    teachers = course_info.get("teachers") or []
+    return [t["display_name"] for t in teachers if t.get("display_name")]
+
+
+def _build_course_folder_name(
+    course_info: dict, course_code: str, teacher_names: list[str]
+) -> str:
+    """Build the Canvas folder name: course name + (term) [teacher1, teacher2, ...]."""
+    base = re.sub(r'[<>:"/\\|?*]', "", course_info.get("name") or course_code)
+    if teacher_names:
+        teachers_str = ", ".join(teacher_names)
+        base = f"{base} [{teachers_str}]"
+    return base
+
+
 class CourseData(NamedTuple):
     """Pre-fetched data for a single course, can be used by multiple endpoints now."""
 
@@ -84,6 +102,7 @@ class CourseData(NamedTuple):
     semester_code: str
     term_display: str
     course_folder_name: str
+    teachers_display: str
     all_assignments: list[dict]
     assignment_groups: dict[int, str]
     submissions_by_assignment: dict[int, list[dict]]
@@ -114,6 +133,7 @@ def _prepare_course_data(
 
     course_code = course_info.get("course_code", "course")
     term_name = course_info.get("term", {}).get("name", "")
+    teacher_names = _extract_teacher_names(course_info)
 
     all_assignments = get_all_assignments(course_id, grades_fetcher)
     if not all_assignments:
@@ -122,20 +142,28 @@ def _prepare_course_data(
     # Data Gathering Phase (Always Runs)
     logger.info("Starting Data Gathering Phase")
 
-    # Prefetch all submissions once and index by assignment
+    # Prefetch all submissions once and index by assignment.
+    # Deduplicate by (assignment_id, user_id)
     all_submissions = grades_fetcher.fetch_all_course_submissions(int(course_id))
     submissions_by_assignment: dict[int, list[dict]] = defaultdict(list)
+    _seen_sub_keys: set[tuple[int, int]] = set()
     for sub in all_submissions:
-        submissions_by_assignment[sub["assignment_id"]].append(sub)
+        key = (sub["assignment_id"], sub.get("user_id", 0))
+        if key not in _seen_sub_keys:
+            _seen_sub_keys.add(key)
+            submissions_by_assignment[sub["assignment_id"]].append(sub)
+
+    term_display = get_term_display_name(term_name)
 
     return CourseData(
         course_info=course_info,
         course_code=course_code,
         semester_code=get_semester_short_code(term_name),
-        term_display=get_term_display_name(term_name),  # e.g., Fall 2023
-        course_folder_name=re.sub(
-            r'[<>:"/\\|?*]', "", course_info.get("name") or course_code
+        term_display=term_display,
+        course_folder_name=_build_course_folder_name(
+            course_info, course_code, teacher_names
         ),
+        teachers_display=", ".join(teacher_names),
         all_assignments=all_assignments,
         assignment_groups=assignment_groups,
         submissions_by_assignment=submissions_by_assignment,
@@ -150,12 +178,12 @@ def _process_single_assignment(
     assignment_groups: dict,
     course_folder_name: str,
     term_display: str,
-) -> tuple[int, dict, tuple | None]:
+) -> tuple[int, dict, list]:
     """Extract artifacts and generate a grade report for one assignment.
 
     Returns:
-        (assignment_id, extracted_texts, upload_task | None)
-        where upload_task is (canvas_folder, file_paths) or None if no files.
+        (assignment_id, extracted_texts, upload_tasks)
+        where upload_tasks is a list of (canvas_folder, file_paths) tuples.
     """
     prefetched = submissions_by_assignment.get(assignment["id"])
 
@@ -178,7 +206,7 @@ def _process_single_assignment(
     if report_path:
         local_files.append(report_path)
 
-    upload_task = None
+    upload_tasks = []
     if local_files:
         assignment_type = assignment_groups.get(
             assignment.get("assignment_group_id", 0), "Uncategorized"
@@ -187,9 +215,22 @@ def _process_single_assignment(
             f"{course_folder_name}/({term_display})"
             f"/Test_Assignments/{assignment_type}/{sanitized_name}"
         )
-        upload_task: tuple[str, list[str]] = (canvas_folder, local_files)
+        upload_tasks.append((canvas_folder, local_files))
 
-    return assignment["id"], extracted_texts, upload_task
+        outcome_map, outcome_details = find_abet_outcomes([assignment])
+        if outcome_map:
+            for oid, info in outcome_details.items():
+                title = info.get("title", "")
+                m = re.search(r"ABET\s*(\d+)", title, re.IGNORECASE)
+                outcome_num = m.group(1) if m else title.replace(" ", "_")
+
+                abet_folder = (
+                    f"{course_folder_name}/({term_display})"
+                    f"/Test_Assignments/Project Evaluations/Abet {outcome_num}"
+                )
+                upload_tasks.append((abet_folder, local_files))
+
+    return assignment["id"], extracted_texts, upload_tasks
 
 
 # Helpers
@@ -756,9 +797,13 @@ def build_outcome_report_data(
             )
 
             if has_rubric_data:
+                _seen: set[tuple[int, int]] = set()
                 for sub in all_submissions_flat:
                     # submissions returned by the bulk endpoint include assignment_id
-                    submission_cache[sub["assignment_id"]].append(sub)
+                    key = (sub["assignment_id"], sub.get("user_id", 0))
+                    if key not in _seen:
+                        _seen.add(key)
+                        submission_cache[sub["assignment_id"]].append(sub)
             else:
                 # Roll back to per-assignment fetching if rubric details are missing
                 logger.warning(
@@ -1023,8 +1068,9 @@ def generate_outcome_reports(
 def verify_course(
     course_id: str,
     canvas_access_token: Annotated[str, Header()],
+    dest_course_id: Optional[str] = None,
 ):
-    """Validates a Canvas token against a course. Returns basic course info."""
+    """Validates a Canvas token against a course. Returns basic course info and duplicate status."""
     if not canvas_access_token or not str(canvas_access_token).strip():
         raise HTTPException(status_code=401, detail="Canvas access token is required.")
 
@@ -1037,11 +1083,38 @@ def verify_course(
             status_code=404, detail="Course not found or invalid token."
         )
 
+    duplicate = False
+    if dest_course_id:
+        try:
+            course_name = course_info.get("name", "").replace(":", "")
+            modules = client.get_paginated_list(f"courses/{dest_course_id}/modules")
+            for module in modules:
+                module_id = module.get("id")
+                items = client.get_paginated_list(
+                    f"courses/{dest_course_id}/modules/{module_id}/items"
+                )
+                for item in items:
+                    item_title = item.get("title", "")
+                    if item_title and (
+                        item_title in course_name or course_name in item_title
+                    ):
+                        duplicate = True
+                        break
+                if duplicate:
+                    break
+        except Exception:
+            logging.exception(
+                "Error while checking for duplicate modules for course_id=%s, dest_course_id=%s",
+                course_id,
+                dest_course_id,
+            )
+
     return {
         "course_id": course_id,
         "name": course_info.get("name"),
         "course_code": course_info.get("course_code"),
         "term": course_info.get("term", {}).get("name"),
+        "duplicate_status": duplicate,
     }
 
 
@@ -1262,6 +1335,7 @@ def generate_report_json(
                 "semester": cd.semester_code,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "course_folder_name": cd.course_folder_name,
+                "teachers_display": cd.teachers_display,
             },
             # # Corresponds to requirement 1.c (Class number)
             # "course_identification": course_info,
@@ -1280,76 +1354,91 @@ def generate_report_json(
         cleanup_temp_dir(temp_dir)
 
 
-class _JobStatusRequired(TypedDict):
-    status: str
-
-
-class JobStatusData(_JobStatusRequired, total=False):
-    """Typed dict for background job progress tracking.
-
-    ``status`` is always present (``processing``, ``completed``, or ``failed``).
-    Other keys are populated as the pipeline progresses.
-    """
-
-    message: str
-    error: str
-    course_folder_name: str
-    term_display: str
-    course_code: str
-    progress: int
-    completed_at: float  # time.time() — used for TTL eviction
-
-
-# In-memory job store.  Safe for a single-worker uvicorn process.
-JOB_STATUS: dict[str, JobStatusData] = {}
-_job_status_lock = threading.Lock()
-
-# Completed/failed jobs are evicted after this many seconds.
-_JOB_TTL_SECONDS = 3600  # 1 hour
-
-
-def _evict_stale_jobs() -> None:
-    """Remove finished jobs older than ``_JOB_TTL_SECONDS``."""
-    now = time.time()
-    with _job_status_lock:
-        stale = [
-            jid
-            for jid, data in JOB_STATUS.items()
-            if "completed_at" in data
-            and now - data.get("completed_at", 0) > _JOB_TTL_SECONDS
-        ]
-        for jid in stale:
-            JOB_STATUS.pop(jid, None)
-    if stale:
-        logger.info("Evicted %d stale job(s) from JOB_STATUS.", len(stale))
-
-
-def _set_job_status(job_id: str, data: JobStatusData) -> None:
-    """Thread-safe update of a job's status entry."""
-    with _job_status_lock:
-        JOB_STATUS[job_id] = data
-
-
 @app.get("/job-status/{job_id}")
-def get_job_status(job_id: str) -> JobStatusData:
-    # Do eviction on reads so we don't need a background timer.
-    _evict_stale_jobs()
-    with _job_status_lock:
-        if job_id not in JOB_STATUS:
-            raise HTTPException(status_code=404, detail="Job not found")
-        return JOB_STATUS[job_id]
+def get_job_status(job_id: str):
+    """Check job status from Redis with MySQL fallback."""
+    from celery.result import AsyncResult
+    from shared.celery_app import celery_app
+    from shared.db import get_job
+
+    # Try Redis first
+    result = AsyncResult(job_id, app=celery_app)
+    celery_state = result.state  # PENDING, STARTED, PROGRESS, SUCCESS, FAILURE, RETRY
+
+    # If Celery knows about it, build response from Redis
+    if celery_state == "PROGRESS":
+        meta = result.info or {}
+        return {
+            "status": "processing",
+            "progress": meta.get("progress", 0),
+            "message": meta.get("message", ""),
+        }
+    elif celery_state == "STARTED":
+        return {"status": "processing", "progress": 0, "message": "Task started..."}
+    elif celery_state == "SUCCESS":
+        meta = result.result or {}
+        return {
+            "status": "completed",
+            "progress": 100,
+            "message": "Data transfer complete.",
+            "course_folder_name": meta.get("course_folder_name", ""),
+            "term_display": meta.get("term_display", ""),
+            "course_code": meta.get("course_code", ""),
+        }
+    elif celery_state == "FAILURE":
+        error_msg = str(result.result) if result.result else "Unknown error"
+        return {"status": "failed", "error": error_msg}
+    elif celery_state == "RETRY":
+        return {"status": "processing", "progress": 0, "message": "Retrying..."}
+
+    # check MySQL
+    job = get_job(job_id)
+    if job:
+        resp = {
+            "status": job["status"],
+            "progress": job.get("progress", 0),
+            "message": job.get("message", ""),
+        }
+        if job["status"] == "completed":
+            meta = job.get("result_meta") or {}
+            if isinstance(meta, str):
+                import json as _json
+
+                meta = _json.loads(meta)
+            resp["course_folder_name"] = meta.get("course_folder_name", "")
+            resp["term_display"] = meta.get("term_display", "")
+            resp["course_code"] = meta.get("course_code", "")
+        if job["status"] == "failed":
+            resp["error"] = job.get("error_message", "Unknown error")
+        return resp
+
+    raise HTTPException(status_code=404, detail="Job not found")
 
 
-def _run_extraction_pipeline_sync(
-    job_id: str,
+def run_pipeline_sync(
     course_id_to_push: str,
     canvas_access_token: str,
     course_ids_to_pull: list[str],
     student_major_map: RosterMap,
-):
+    on_progress: Callable[[int, str], None] | None = None,
+) -> dict:
     """
     Abstacted away logic for running the full extraction and report generation pipeline out of the endpoint.
+    Run the full extraction and report generation pipeline.
+
+    Args:
+        on_progress: optional callback(percent, message) for progress reporting.
+            When called from a Celery task, this is wired to TrackedTask.update_progress.
+            When called from tests or scripts, can be None or a custom function.
+
+    Returns:
+        dict with keys: course_folder_name, term_display, course_code
     """
+
+    def report(pct: int, msg: str):
+        if on_progress:
+            on_progress(pct, msg)
+
     temp_dir = create_temp_dir()
     try:
         grades_fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
@@ -1367,13 +1456,9 @@ def _run_extraction_pipeline_sync(
             course_slice = 90 / total_courses
             course_base = int(course_idx * course_slice)
 
-            _set_job_status(
-                job_id=job_id,
-                data={
-                    "status": "processing",
-                    "progress": course_base + int(course_slice * 0.05),
-                    "message": f"Course {course_idx + 1}/{total_courses}: Fetching course data...",
-                },
+            report(
+                course_base + int(course_slice * 0.05),
+                f"Course {course_idx + 1}/{total_courses}: Fetching course data...",
             )
 
             cd: CourseData = _prepare_course_data(course_id_to_pull, grades_fetcher)
@@ -1381,7 +1466,7 @@ def _run_extraction_pipeline_sync(
             last_term_display = cd.term_display
             last_course_code = cd.course_code
 
-            # Extract and upload syllabus
+            # Extract and save syllabus
             syllabus_path = extract_and_save_syllabus(
                 course_id_to_pull, cd.course_info, grades_fetcher, temp_dir
             )
@@ -1391,20 +1476,17 @@ def _run_extraction_pipeline_sync(
                 else []
             )
 
+            # Upload syllabus files to Canvas
             if syllabus_files:
                 grades_fetcher.upload_files(
-                    course_id_to_push,
-                    f"{cd.course_folder_name}/({cd.term_display})/Syllabus",
-                    syllabus_files,
+                    course_id=course_id_to_push,
+                    folder_path=f"{cd.course_folder_name}/({cd.term_display})/Syllabus",
+                    file_paths=syllabus_files,
                 )
 
-            _set_job_status(
-                job_id=job_id,
-                data={
-                    "status": "processing",
-                    "progress": course_base + int(course_slice * 0.33),
-                    "message": f"Course {course_idx + 1}/{total_courses}: Gathering Canvas assignments...",
-                },
+            report(
+                course_base + int(course_slice * 0.33),
+                f"Course {course_idx + 1}/{total_courses}: Gathering Canvas assignments...",
             )
 
             # Phase 1: Process all assignments locally (concurrent)
@@ -1429,44 +1511,34 @@ def _run_extraction_pipeline_sync(
 
                 # For better progress reporting
                 for future in as_completed(futures):
-                    assign_id, texts, upload_task = future.result()
+                    # More explicit name for upload tasks
+                    assign_id, texts, upload_tasks_for_assign = future.result()
                     assignment_texts_map[assign_id] = texts
-                    if upload_task:
-                        upload_tasks.append(upload_task)
+                    if upload_tasks_for_assign:
+                        upload_tasks.extend(upload_tasks_for_assign)
                     done_count += 1
                     pct = course_base + int(
                         course_slice * (0.33 + 0.22 * done_count / total_assignments)
                     )
-                    _set_job_status(
-                        job_id=job_id,
-                        data={
-                            "status": "processing",
-                            "progress": pct,
-                            "message": f"Course {course_idx + 1}/{total_courses}: Processing assignment {done_count}/{total_assignments}...",
-                        },
+                    report(
+                        pct,
+                        f"Course {course_idx + 1}/{total_courses}: Processing assignment {done_count}/{total_assignments}...",
                     )
 
-            _set_job_status(
-                job_id=job_id,
-                data={
-                    "status": "processing",
-                    "progress": course_base + int(course_slice * 0.55),
-                    "message": f"Course {course_idx + 1}/{total_courses}: Uploading files to Canvas...",
-                },
+            report(
+                course_base + int(course_slice * 0.55),
+                f"Course {course_idx + 1}/{total_courses}: Uploading files to Canvas...",
             )
+
             # Phase 2: Upload all collected files to Canvas
             for canvas_folder, files in upload_tasks:
                 grades_fetcher.upload_files(course_id_to_push, canvas_folder, files)
 
             logger.info("Data Gathering Complete")
 
-            _set_job_status(
-                job_id=job_id,
-                data={
-                    "status": "processing",
-                    "progress": course_base + int(course_slice * 0.75),
-                    "message": f"Course {course_idx + 1}/{total_courses}: Generating ABET outcome reports...",
-                },
+            report(
+                course_base + int(course_slice * 0.75),
+                f"Course {course_idx + 1}/{total_courses}: Generating ABET outcome reports...",
             )
 
             abet_assignments = find_abet_assignments(cd.all_assignments)
@@ -1492,6 +1564,7 @@ def _run_extraction_pipeline_sync(
                             "semester": cd.semester_code,
                             "term_display": cd.term_display,
                             "course_folder_name": cd.course_folder_name,
+                            "teachers_display": cd.teachers_display,
                         },
                         "outcomes": [
                             {
@@ -1507,49 +1580,12 @@ def _run_extraction_pipeline_sync(
                         "Uploaded ABET reports for course '%s'", course_id_to_pull
                     )
 
-        _set_job_status(
-            job_id=job_id,
-            data={
-                "status": "completed",
-                "message": "Data transfer complete.",
-                "course_folder_name": last_course_folder_name,
-                "term_display": last_term_display,
-                "course_code": last_course_code,
-                "progress": 100,
-                "completed_at": time.time(),
-            },
-        )
+        return {
+            "course_folder_name": last_course_folder_name,
+            "term_display": last_term_display,
+            "course_code": last_course_code,
+        }
 
-    except requests.exceptions.RequestException as e:
-        logger.exception("Canvas API error in background task: %s", e)
-        _set_job_status(
-            job_id=job_id,
-            data={
-                "status": "failed",
-                "error": "A Canvas API error occurred. Please check your token and try again.",
-                "completed_at": time.time(),
-            },
-        )
-    except ValueError as e:
-        logger.error("Pipeline configuration error: %s", e)
-        _set_job_status(
-            job_id=job_id,
-            data={
-                "status": "failed",
-                "error": str(e),
-                "completed_at": time.time(),
-            },
-        )
-    except Exception as e:
-        logger.exception("Unexpected error in background task: %s", e)
-        _set_job_status(
-            job_id=job_id,
-            data={
-                "status": "failed",
-                "error": "An unexpected error occurred. Please try again or contact support.",
-                "completed_at": time.time(),
-            },
-        )
     finally:
         cleanup_temp_dir(temp_dir)
 
@@ -1561,9 +1597,12 @@ def move_data_between_courses(
     course_ids_to_pull: Annotated[
         List[str], Query(min_length=1, description="Enter all Course IDs to pull from")
     ],
-    background_tasks: BackgroundTasks,
     roster_file: UploadFile = File(...),
+    submitted_by_user_id: Annotated[int | None, Header()] = None,
 ):
+    from shared.celery_app import celery_app
+    from shared.db import insert_job
+
     # Validate Course IDs
     if not course_ids_to_pull or not course_id_to_push:
         raise HTTPException(status_code=400, detail="Course IDs must both be filled")
@@ -1587,16 +1626,37 @@ def move_data_between_courses(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse roster file: {e}")
 
-    job_id = str(uuid.uuid4())
-    _set_job_status(job_id=job_id, data={"status": "processing"})
+    # Serialize RosterMap to plain dict for Celery
+    job_params = {
+        "course_id_to_push": course_id_to_push,
+        "canvas_access_token": canvas_access_token,
+        "course_ids_to_pull": course_ids_to_pull,
+        "roster": {
+            "by_asurite": dict(student_major_map.by_asurite),
+            "by_id": dict(student_major_map.by_id),
+        },
+    }
 
-    background_tasks.add_task(
-        _run_extraction_pipeline_sync,
+    job_id = str(uuid.uuid4())
+
+    # Create MySQL row
+    insert_job(
         job_id=job_id,
-        course_id_to_push=course_id_to_push,
-        canvas_access_token=canvas_access_token,
-        course_ids_to_pull=course_ids_to_pull,
-        student_major_map=student_major_map,
+        job_type="extraction_pipeline",
+        service="extraction",
+        submitted_by=submitted_by_user_id,
+        params={
+            "course_id_to_push": course_id_to_push,
+            "course_ids_to_pull": course_ids_to_pull,
+        },
+    )
+
+    # Dispatch to Celery worker by task name
+    celery_app.send_task(
+        "extraction.run_pipeline",
+        args=[job_params],
+        task_id=job_id,
+        queue="extraction",
     )
 
     return {

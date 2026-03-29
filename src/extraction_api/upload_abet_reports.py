@@ -51,6 +51,9 @@ def upload_abet_report(
                 template_name, res.get("outcomes", {}), out_dir=tmpdir
             )
 
+            # Group files by their target destination folder
+            uploads_by_folder = {}
+
             # Rename report files to format: CSE423_ABET_3_f23.docx
             outcomes = res.get("outcomes", [])
             for outcome in outcomes:
@@ -64,21 +67,21 @@ def upload_abet_report(
                 if old_path.exists():
                     old_path.rename(new_path)
                     logger.info("Renamed %s -> %s", old_name, new_name)
+                    
+                    # Store this specific report in its designated outcome folder
+                    if new_path.name != "_ABET_TEMPLATE.docx":
+                        folder_path = f"{course_folder_name}/({term_display})/Test_Assignments/Project Evaluations/Abet {outcome_num}"
+                        if folder_path not in uploads_by_folder:
+                            uploads_by_folder[folder_path] = []
+                        uploads_by_folder[folder_path].append(str(new_path))
 
-            # Upload files to Canvas, excluding the template
-            file_paths = [
-                str(file)
-                for file in Path(tmpdir).iterdir()
-                if file.is_file() and file.name != "_ABET_TEMPLATE.docx"
-            ]
-
-            # Upload to folder: {course_folder_name}/({term_display})/Test_Assignments/Project Evaluations
-            folder_path = f"{course_folder_name}/({term_display})/Test_Assignments/Project Evaluations"
-            grades_fetcher.upload_files(
-                course_id=course_id,
-                folder_path=folder_path,
-                file_paths=file_paths,
-            )
+            # Batch upload files to their respective folders
+            for folder_path, file_paths in uploads_by_folder.items():
+                grades_fetcher.upload_files(
+                    course_id=course_id,
+                    folder_path=folder_path,
+                    file_paths=file_paths,
+                )
 
     except Exception as e:
         logger.error("Failed to generate/upload ABET reports: %s", e)

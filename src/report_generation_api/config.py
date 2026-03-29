@@ -2,16 +2,21 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+print("Loading configuration...")
 # Locate project root (where .env should live)
 BASE_DIR = Path(__file__).resolve().parents[2]
 
 # Load .env only if it exists (dev environments)
-env_file = BASE_DIR / ".env"
+env_file = BASE_DIR / "docker" / ".env"
 if env_file.exists():
     load_dotenv(env_file, override=False)
+    print(".env loaded")
+else:
+    print(".env not found")
+
 
 # --- Database configuration ---
-MYSQL_HOSTNAME = os.getenv("MYSQL_HOSTNAME", "mysql")
+MYSQL_HOSTNAME = os.getenv("MYSQL_HOSTNAME")
 MYSQL_USER = os.getenv("MYSQL_USER")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASS")
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")

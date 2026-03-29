@@ -660,6 +660,9 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
       }
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const overwriteFlag = urlParams.get('overwrite') === '1';
+
     async function runFormatting(folderName, termDisplay) {
       setStatus('running',
         '<span class="spinner"></span>' +
@@ -673,6 +676,9 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
         body.append('course_folder_name', folderName || '');
         body.append('term_display', termDisplay || '');
         body.append('csrf_token', currentCsrfToken);
+        if (overwriteFlag) {
+          body.append('overwrite', '1');
+        }
 
         const res = await fetch('api-proxy.php', { method: 'POST', body });
         const data = await res.json();

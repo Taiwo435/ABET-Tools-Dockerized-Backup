@@ -16,7 +16,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": true
         },
         {
@@ -30,7 +30,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         },
         {
@@ -44,7 +44,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         },
         {
@@ -63,7 +63,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         },
         {
@@ -82,7 +82,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         },
         {
@@ -96,7 +96,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         },
         {
@@ -110,7 +110,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         },
         {
@@ -125,7 +125,7 @@
                     "type": "text-field"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         },
         {
@@ -139,7 +139,7 @@
                     "type": "text"
                 }
             ],
-            "maxRows": 10,
+            "maxRows": 20,
             "required": false
         }
     ]

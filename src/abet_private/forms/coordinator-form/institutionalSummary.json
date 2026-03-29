@@ -1,14 +1,44 @@
 {
-  "title": "APPENDIX D - Institutional Summary: Table D-1 Program Enrollment and Degree Data",
-  "name": "program_enrollment_and_degree_data",
+  "title": "Institutional Summary",
+  "name": "institutional_summary",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
+      "name": "institution",
+      "label": "The Institution",
+      "type": "text-field"
+    },
+    {
+      "name": "type_of_control",
+      "label": "Type of Control",
+      "type": "text-field"
+    },
+    {
+      "name": "educational_unit",
+      "label": "Educational Unit",
+      "type": "text-field"
+    },
+    {
+      "name": "academic_support_units",
+      "label": "Academic Support Units",
+      "type": "text-field"
+    },
+    {
+      "name": "non_academic_support_units",
+      "label": "Non-academic Support Units",
+      "type": "text-field"
+    },
+    {
+      "name": "credit_unit",
+      "label": "Credit Unit",
+      "type": "text-field"
+    },
+    {
       "type": "expandable-grid",
       "name": "program_enrollment_degree_data",
-      "label": "Table D-1. Program Enrollment and Degree Data",
-      "description": "Enter one row for each academic year and enrollment status combination (FT or PT).",
+      "label": "Table D-1 Program Enrollment and Degree Data",
+      "description": "Enter one row for each academic year and enrollment status combination.",
       "columns": [
         {
           "name": "academic_year",
@@ -94,18 +124,10 @@
       "maxRows": 20,
       "required": false
     },
-    
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Table D-2. Personnel"
-    },
     {
       "type": "expandable-grid",
       "name": "personnel",
-      "label": "Table D-2. Personnel",
+      "label": "Table D-2 Personnel",
       "columns": [
         {
           "name": "category",
@@ -120,17 +142,17 @@
         {
           "name": "head_count",
           "label": "Head Count",
-          "type": "text-field"
+          "type": "text"
         },
         {
           "name": "fte",
           "label": "FTE",
-          "type": "text-field"
+          "type": "text"
         },
         {
           "name": "ft_pt",
           "label": "FT/PT",
-          "type": "text-field"
+          "type": "text"
         }
       ],
       "maxRows": 30,

@@ -1,0 +1,116 @@
+{
+  "title": "Faculty",
+  "name": "faculty",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "faculty_qualifications_narrative",
+      "label": "Faculty Qualifications",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "faculty_qualifications_by_program",
+      "label": "Faculty Qualifications Table",
+      "columns": [
+        {
+          "name": "academic_program",
+          "label": "Academic Program",
+          "type": "text-field"
+        },
+        {
+          "name": "professors",
+          "label": "Professors",
+          "type": "text-field"
+        },
+        {
+          "name": "associate_professors",
+          "label": "Associate Professors",
+          "type": "text-field"
+        },
+        {
+          "name": "assistant_professors",
+          "label": "Assistant Professors",
+          "type": "text-field"
+        },
+        {
+          "name": "lecturers_pop",
+          "label": "Lecturers/PoP",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "required": false
+    },
+    {
+      "name": "faculty_workload",
+      "label": "Faculty Workload",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "faculty_workload_summary",
+      "label": "Table 6-2 Faculty Workload Summary",
+      "columns": [
+        {
+          "name": "faculty_member",
+          "label": "Faculty Member",
+          "type": "text-field"
+        },
+        {
+          "name": "rank",
+          "label": "Rank",
+          "type": "text-field"
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "text-field"
+        },
+        {
+          "name": "fall_courses_taught",
+          "label": "Fall Courses Taught",
+          "type": "text-field"
+        },
+        {
+          "name": "spring_courses_taught",
+          "label": "Spring Courses Taught",
+          "type": "text-field"
+        },
+        {
+          "name": "summer_courses_taught",
+          "label": "Summer Courses Taught",
+          "type": "text-field"
+        },
+        {
+          "name": "other_program_activity",
+          "label": "Other Program Activity",
+          "type": "text-field"
+        },
+        {
+          "name": "workload_notes",
+          "label": "Workload Notes",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 75,
+      "required": false
+    },
+    {
+      "name": "faculty_size",
+      "label": "Faculty Size",
+      "type": "text-field"
+    },
+    {
+      "name": "professional_development",
+      "label": "Professional Development",
+      "type": "text-field"
+    },
+    {
+      "name": "faculty_authority_and_responsibility",
+      "label": "Authority and Responsibility of Faculty",
+      "type": "text-field"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-<?php // requires $form, $backendErrorMessage, and $old to be set beforehand ?>
+<?php // Requires $form, $backendErrorMessage, and $old to be set beforehand. Likely in whatever other php script imports this one. ?>
 
 <link rel="stylesheet" href="/assets/css/form.css">
 
@@ -16,7 +16,8 @@
 
 <form action="<?= htmlspecialchars($form['action']) ?>" 
     method="<?= htmlspecialchars($form['method']) ?>" novalidate
-    data-name="<?= $form['name'] ?>">
+    data-name="<?= $form['name'] ?>"
+    data-form-group="<?= htmlspecialchars($formName) ?>">
 
     <?php foreach ($form['fields'] as $field): 
         $name = $field['name'];
@@ -57,9 +58,9 @@
 
 
 
-            <?php if ($type === 'select' || $type === 'select-multiple'): ?>
+            <?php if ($type === 'select'): ?>
 
-                <select class="form-select" name="<?= $name ?>" <?php if ($type === 'select-multiple') { echo 'multiple'; } ?>>
+                <select class="form-select" name="<?= $name ?>">
                     <option value="">Select...</option>
                     <?php foreach ($field['options'] as $key => $option): ?>
                         <option value="<?= $key ?>" <?= $value === $key ? 'selected' : '' ?>>
@@ -69,7 +70,29 @@
                 </select>
 
 
-
+            <?php /*
+            expandable-grid element hierarchy:
+            >expandable-grid
+                >expandable-grid-container
+                    >expandable-grid-label-row
+                        >expandable-grid-label
+                        >expandable-grid-label
+                        ...
+                    >expandable-grid-input-row
+                        >expandable-grid-[element]
+                        >expandable-grid-[element]
+                        ...
+                        >expandable-grid-remove-button
+                    >expandable-grid-input-row
+                        ...
+                    >expandable-grid-input-row
+                        ...
+                    ...
+                >expandable-grid-add-button
+                
+            Some information is stored in data-option-* attributes so data can be transfered from
+            php to javascript
+            */?>
             <?php elseif ($type === 'expandable-grid'): ?>
                 <?php
                 $gridOldJson = "";
@@ -103,7 +126,7 @@
                                 </label>
                             <?php endforeach; ?>
                         </div>
-                        <!--input rows will be added here-->
+                        <?php //input rows will be added here ?>
                     </div>
                     <button type="button" class="expandable-grid-add-button"
                         onclick="addExpandableGridRow(this.parentElement)">Add Row</button>
@@ -258,7 +281,6 @@ function prepareDataFromGridElements() {
 function addExtendableGridRow(expandableGrid) {
     addExtendableGridRow(extendableGrid, null);
 }
-
 function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
     const gridContainer = expandableGrid.querySelector('.expandable-grid-container');
     
@@ -285,7 +307,7 @@ function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
         const columnName = label.getAttribute('data-name');
         let inputField;
         
-        if (columnType === 'select' || columnType === 'select-multiple') {
+        if (columnType === 'select') {
             inputField = document.createElement('select');
             const optionCount = labelRow.children[i].getAttribute('data-option-count');
 
@@ -298,9 +320,6 @@ function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
                 newOption.value = label.getAttribute('data-option-' + j);
                 newOption.textContent = label.getAttribute('data-option-' + j);
                 inputField.appendChild(newOption);
-            }
-            if (columnType === 'select-multiple') {
-                inputField.multiple = true;
             }
             inputField.className = 'expandable-grid-select';
             if (oldRowDataJSON != null) {
@@ -342,7 +361,9 @@ function removeExpandableGridRow (expandableGridRow) {
 }
 
 function returnToPageSelect() {
-    window.location.assign('/faculty-form');
+    const form = document.querySelector('form');
+    const formName = form.getAttribute('data-form-group');
+    window.location.assign('/' + formName);
 }
 
 

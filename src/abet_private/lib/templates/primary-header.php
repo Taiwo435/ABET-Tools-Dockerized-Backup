@@ -1,4 +1,11 @@
 <?php
+/*
+    This file contains a header that can be used across many pages.
+    It contains some basic auth code, the html <head>, and the <header> for the html body.
+    It also imports the main.css file.
+    To be used with primary-footer.php.
+*/
+
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
 
 // user info for the dropdown
@@ -16,6 +23,8 @@ $asu_id = $parts[0] ?? 'user';
     <link rel="stylesheet" href="/assets/css/main.css">
 
     <script>
+
+        // Code to control to dropdown bar in the header
         function toggleProfile(event) {
             if (event) event.stopPropagation();
             const menu = document.getElementById("profileDropdown");
