@@ -24,6 +24,65 @@ def get_data(questionnaire):
     faculty_data = cursor.fetchall()
     return faculty_data
 
+def get_faculty_info(questionnaire):
+    """
+    Fetch basic faculty info (concatenated name and other profile fields).
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT CONCAT(fi.first_name, ' ', fi.last_name) AS name,
+            fw.pt_or_ft,
+            fi.highest_degree,
+            fi.faculty_rank,
+            fi.academic_appointment,
+            fi.faculty_id,
+            fv.certifications,
+            fi.years_experience_gov_industry,
+            fi.years_experience_teaching,
+            fi.years_experience_institution,
+            fi.activity_prof_orgs,
+            fi.activity_prof_dev,
+            fi.activity_consulting
+        FROM faculty_info fi
+        LEFT JOIN faculty_workload fw
+            ON fi.user_id = fw.user_id
+        LEFT JOIN faculty_vitae fv
+            ON fi.user_id = fv.user_id;""")
+
+    return cursor.fetchall()
+
+def get_more_faculty_info(questionnaire):
+    """
+    Fetch basic faculty info (concatenated name and other profile fields).
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT CONCAT(first_name, ' ', last_name) AS name,
+            faculty_rank,
+            areas_of_interest
+        FROM faculty_info;
+                   """)
+
+    return cursor.fetchall()
+
+def get_faculty_nums(questionnaire):
+    """
+    Fetch amount of faculty members by rank.
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT faculty_rank, COUNT(*) AS num_faculty
+        FROM faculty_info
+        GROUP BY faculty_rank;
+                   """)
+
+    return cursor.fetchall()
 
 if __name__ == "__main__":
 
