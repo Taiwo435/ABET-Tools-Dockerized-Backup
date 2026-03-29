@@ -22,6 +22,10 @@ services:
     container_name: extraction_api
     env_file:
       - .env
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
     volumes:
       - ../src/extraction_api:/usr/src/app
       - ../src/shared:/usr/src/app/shared
@@ -41,6 +45,9 @@ services:
       args:
         CANVAS_FORMATTING_PORT: ${CANVAS_FORMATTING_PORT:?error}
     container_name: canvas_formatting_api
+    environment:
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
     ports:
       - "${CANVAS_FORMATTING_PORT:?error}:8001"
     volumes:
@@ -65,6 +72,8 @@ services:
     container_name: reportgen
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
     env_file:
       - .env
     volumes:
@@ -92,6 +101,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    ports:
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -108,15 +119,14 @@ services:
     env_file:
       - .env
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
     volumes:
       - ../src/extraction_api:/usr/src/app/extraction_api
       - ../src/canvas_formatting_api:/usr/src/app/canvas_formatting_api
       - ../src/shared:/usr/src/app/shared
     stop_grace_period: 120s
-    networks:
-      - app_network
+    network_mode: "host"
     depends_on:
       redis:
         condition: service_healthy
