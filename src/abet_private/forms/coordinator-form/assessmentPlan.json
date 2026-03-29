@@ -5,13 +5,14 @@
   "method": "POST",
   "fields": [
     {
-      "type": "section-label",
-      "label": "Role and Responsibilities"
+      "name": "introduction",
+      "label": "Introduction",
+      "type": "text-field"
     },
     {
       "type": "expandable-grid",
       "name": "roles_and_responsibilities",
-      "label": "Role and Responsibilities",
+      "label": "Roles and Responsibilities",
       "columns": [
         {
           "name": "role",
@@ -27,14 +28,6 @@
       "maxRows": 20,
       "required": false
     },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Constituency Input"
-    },
     {
       "type": "expandable-grid",
       "name": "constituency_input",
@@ -49,10 +42,59 @@
           "name": "method",
           "label": "Method",
           "type": "text-field"
+        },
+        {
+          "name": "frequency",
+          "label": "Frequency",
+          "type": "text-field"
+        },
+        {
+          "name": "use_of_input",
+          "label": "Use of Input",
+          "type": "text-field"
         }
       ],
       "maxRows": 20,
       "required": false
+    },
+    {
+      "name": "assessment_details",
+      "label": "Assessment Details",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "assessment_processes",
+      "label": "Assessment Processes",
+      "columns": [
+        {
+          "name": "process_or_method",
+          "label": "Process or Method",
+          "type": "text-field"
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "text-field"
+        },
+        {
+          "name": "frequency",
+          "label": "Frequency",
+          "type": "text-field"
+        },
+        {
+          "name": "responsible_party",
+          "label": "Responsible Party",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "name": "hardware_sequence_improvement_process",
+      "label": "Elaboration of CSE Hardware Sequence Improvement Process",
+      "type": "text-field"
     }
   ]
 }

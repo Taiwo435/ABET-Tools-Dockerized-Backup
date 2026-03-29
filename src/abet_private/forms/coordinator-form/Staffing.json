@@ -5,8 +5,9 @@
   "method": "POST",
   "fields": [
     {
-      "type": "section-label",
-      "label": "SCAI Staff"
+      "name": "staffing_narrative",
+      "label": "Staffing",
+      "type": "text-field"
     },
     {
       "type": "expandable-grid",
@@ -30,6 +31,35 @@
         }
       ],
       "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "support_staffing_summary",
+      "label": "Support Staffing Summary",
+      "columns": [
+        {
+          "name": "unit_or_area",
+          "label": "Unit or Area",
+          "type": "text"
+        },
+        {
+          "name": "staff_role",
+          "label": "Staff Role",
+          "type": "text"
+        },
+        {
+          "name": "head_count",
+          "label": "Head Count",
+          "type": "text"
+        },
+        {
+          "name": "responsibilities",
+          "label": "Responsibilities",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 30,
       "required": false
     }
   ]
