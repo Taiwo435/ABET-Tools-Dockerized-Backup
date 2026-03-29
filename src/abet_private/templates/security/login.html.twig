@@ -38,16 +38,30 @@
       <?php endif; ?> #}
 
       <form method="POST" action="/login" autocomplete="on">
-        <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>">
+        {# <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>"> #}
+        {% if error %}
+            <div class="error-box">
+              <strong>Error:</strong>
+              {{ error.messageKey|trans(error.messageData, 'security') }}
+            </div>
+        {% endif %}
+
+        {% if app.user %}
+            <div class="mb-3">
+                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+            </div>
+        {% endif %}
 
         <div class="form-group">
           <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" placeholder="asurite@asu.edu" required />
+          {# _username is for symfony auth...  #}
+          <input type="email" value="{{ last_username }}" name="_username" id="email"  placeholder="asurite@asu.edu" autocomplete="email" required autofocus />
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="••••••••" required />
+          <input type="password" name="_password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+          <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
         </div>
 
         <button type="submit" class="btn-submit">Sign In</button>
