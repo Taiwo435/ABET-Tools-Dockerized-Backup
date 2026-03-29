@@ -188,3 +188,13 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
+
+volumes:
+  redis_data:
+  flower_data:
+
+networks:
+  app_network:
+    name: app_network
+    driver: bridge
+
