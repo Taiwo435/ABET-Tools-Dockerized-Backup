@@ -30,8 +30,7 @@ function handleSaveError($message, $loggedMessage) {
 $pdo = db();
 
 // A generic message to show to the user in case of unforseen errors.
-$genericErrorMessage = "Something went wrong while saving the form.";
-
+$genericErrorMessage = "Something went wrong while saving the form. Please contact sdosburn@asu.edu if the problem persists.";
 
 $jsonData = $_POST;
 $jsonString = json_encode($jsonData, JSON_PRETTY_PRINT);

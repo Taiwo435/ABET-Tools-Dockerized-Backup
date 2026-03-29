@@ -34,15 +34,6 @@ if (empty($_SESSION['user_id'])) {
     <div class="checklist">
         <label class="checklist-title">Your To-Do List</label>
 
-        <div class="checklist-item" onclick="window.location.href='#';">
-            <?php if (false): ?>
-                <label class="checklist-check">&#10004;</label>
-            <?php else: ?>
-                <label class="checklist-x">&#10006;</label>
-            <?php endif; ?>
-            <label class="checklist-label">Upload your canvas token &#x279E;</label>
-        </div>
-
         <?php if (hasPermission($permissions, PERM_FACULTY_FORM_TOOL)): ?>
         <div class="checklist-item" onclick="window.location.href='/faculty-form';">
             <?php if (allPagesDone('faculty-form')): ?>
@@ -50,7 +41,7 @@ if (empty($_SESSION['user_id'])) {
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Complete the faculty information form &#x279E;</label>
+            <label class="checklist-label">Complete the faculty information form. &#x279E;</label>
         </div>
         <?php endif; ?>
 
@@ -61,18 +52,20 @@ if (empty($_SESSION['user_id'])) {
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Link all of your canvas courses (<?= 0 ?> added so far) &#x279E;</label>
+            <label class="checklist-label">Connect your Canvas class. &#x279E;</label>
         </div>
         <?php endif; ?>
 
-        <div class="checklist-item" onclick="window.location.href='#';">
+        <?php if (hasPermission($permissions, PERM_GRADE_DATA_TOOL)): ?>
+        <div class="checklist-item" onclick="window.location.href='/AssignmentsGrades/roster-upload.php';">
             <?php if (false): ?>
                 <label class="checklist-check">&#10004;</label>
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Upload and manage your roster and assignments &#x279E;</label>
+            <label class="checklist-label">Upload your roster, and run the extraction tool. &#x279E;</label>
         </div>
+        <?php endif; ?>
 
     </div>
 
