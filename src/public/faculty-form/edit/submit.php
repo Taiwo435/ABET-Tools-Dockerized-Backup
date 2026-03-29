@@ -1,5 +1,6 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: /faculty-form');
