@@ -1,0 +1,43 @@
+{
+  "title": "Facilities",
+  "name": "computer_resources",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "expandable-grid",
+      "name": "computer_resources_table",
+      "label": "Computer Resources",
+      "description": "Add one row per room or computer resource entry.",
+      "columns": [
+        {
+          "name": "building_code",
+          "label": "Bldg. Code",
+          "type": "text"
+        },
+        {
+          "name": "room_number",
+          "label": "Rm. No.",
+          "type": "text"
+        },
+        {
+          "name": "capacity",
+          "label": "Cap",
+          "type": "text"
+        },
+        {
+          "name": "use",
+          "label": "Use",
+          "type": "text-field"
+        },
+        {
+          "name": "zoom_level",
+          "label": "Zoom Level",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    }
+  ]
+}

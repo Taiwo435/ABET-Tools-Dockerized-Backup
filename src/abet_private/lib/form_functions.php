@@ -2,6 +2,18 @@
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 
+
+/*
+    Returns the name of a page corresponding to a page number.
+    The pages are numbered by their order in the form's index.json file
+    Pages are 1-indexed
+    If the page number is invalid, it defaults to the page name at page 1.
+    Args:
+        $formName (String): The name of the form.
+        $pageNumber (int): The needed page number.
+    Returns:
+        (String): The name of the page.
+*/
 function getPageNameFromNumber($formName, $pageNumber){
 
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
@@ -18,6 +30,16 @@ function getPageNameFromNumber($formName, $pageNumber){
     return ($form['pages'])[$pageNumber - 1]['fileName'];
 }
 
+
+/*
+    Checks if all the pages for a form are completed.
+    In the index.json file, each page has a sql table specified.
+    If the user has an entry in that table, the page is considered done.
+    Args:
+        $formName (String): The name of the form.
+    Returns:
+        (Boolean): True if the form is done.
+*/
 function allPagesDone($formName) {
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
     if (!file_exists($path)) {
@@ -37,13 +59,22 @@ function allPagesDone($formName) {
                 return false;
             }
         } catch (PDOException $e) {
-            //print_r($e);
             return false;
         }
     }
     return true;
 }
 
+
+/*
+    Returns the names of pages for a form
+    Looks in the index.json file of the specified form to retreive the page names
+    Available form names are the names of the sub-folders under the "forms" folder.
+    Args:
+        $formName (String): The name of the form.
+    Returns:
+        (String Array): A list of all the page names for the form.
+*/
 function getAllPageNames($formName) {
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
     if (!file_exists($path)) {
@@ -59,6 +90,15 @@ function getAllPageNames($formName) {
     return $pageNames;
 }
 
+
+/*
+    Loads the data from the json file of a form page
+    Args:
+        $formName (String): The name of the form.
+        $pageNumber (Int): The name of the page.
+    Returns:
+        (Object): A PHP object of the data.
+*/
 function loadFormPage($formName, $pageName) {
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . $pageName . ".json";
 
@@ -70,6 +110,14 @@ function loadFormPage($formName, $pageName) {
 }
 
 
+/*
+    Gets the count of pages for a specified form.
+    The number of pages is equal to the number of objects listed in the 'pages' array of the form's index.json file.
+    Args:
+        $formName (String): The name of the form.
+    Returns:
+        (Int): The number of pages.
+*/
 function getPageCount($formName) {
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . "index.json";
     if (!file_exists($path)) {
@@ -78,31 +126,6 @@ function getPageCount($formName) {
     $form = json_decode(file_get_contents($path), true);
     
     return count($form['pages']);
-}
-
-function validateFormPage($form, $data) {
-    $errors = [];
-
-    foreach ($form['fields'] as $field) {
-
-        $name = $field['name'];
-        $value = trim($data[$name] ?? '');
-
-        if (!empty($field['required']) && $value === '') {
-            $errors[$name] = $field['label'] . " is required.";
-            continue;
-        }
-
-        if (!empty($field['minLength']) && strlen($value) < $field['minLength']) {
-            $errors[$name] = $field['label'] . " must be at least " . $field['minLength'] . " characters.";
-        }
-
-        if ($field['type'] === 'email' && $value !== '' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-            $errors[$name] = "Invalid email format.";
-        }
-    }
-
-    return $errors;
 }
 
 ?>

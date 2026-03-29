@@ -1,9 +1,34 @@
 <?php
+
+
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 
+start_session();
+
 $errors = [];
 $success = false;
+
+function e(string $s): string {
+  return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+}
+
+function register_csrf_token(): string {
+  if (empty($_SESSION['csrf_token_register'])) {
+    $_SESSION['csrf_token_register'] = bin2hex(random_bytes(32));
+  }
+  return $_SESSION['csrf_token_register'];
+}
+
+function verify_register_csrf(?string $token): bool {
+  if (!isset($_SESSION['csrf_token_register']) || !is_string($token)) {
+    return false;
+  }
+
+  return hash_equals($_SESSION['csrf_token_register'], $token);
+}
+
+
 
 /**
  * Password policy:
@@ -38,10 +63,35 @@ function password_policy_check(string $password): array {
   ];
 }
 
+/**
+ * Returns the default permissions bitmask for a given role.
+ * Must stay in sync with the Permissions enum in User.php.
+ *
+ * Permissions bit positions:
+ *   AdminPanel           = 1 << 0 =  1
+ *   GradeDataTool        = 1 << 1 =  2
+ *   CanvasFormattingTool = 1 << 2 =  4
+ *   ReportGenTool        = 1 << 3 =  8
+ *   FacultyFormTool      = 1 << 4 = 16
+ *   CoordinatorFormTool  = 1 << 5 = 32
+ */
+function default_permissions_for_role(string $role): int {
+  if ($role === 'admin') {
+    // Admin gets all permissions
+    return (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+  }
+  // Faculty gets GradeDataTool + CanvasFormattingTool + FacultyFormTool
+  return (1 << 1) | (1 << 2) | (1 << 4);
+}
+
 $email = '';
 $role = 'faculty';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (!verify_register_csrf($_POST['csrf_token'] ?? null)) {
+    $errors[] = 'Invalid or missing form token. Please refresh the page and try again.';
+  }
+
   $email = strtolower(trim($_POST['email'] ?? ''));
   $password = (string)($_POST['password'] ?? '');
   $confirm = (string)($_POST['confirm_password'] ?? '');
@@ -75,10 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->fetch()) {
       $errors[] = 'An account with that email already exists.';
     } else {
-      $hash = password_hash($password, getenv("PASSWORD_DEFAULT"));
+      $hash = password_hash($password, PASSWORD_BCRYPT);
+      $permissions = default_permissions_for_role($role);
 
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, ?, 1)");
-      $stmt->execute([$email, $hash, $role]);
+      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active, permissions) VALUES (?, ?, ?, 1, ?)");
+      $stmt->execute([$email, $hash, $role, $permissions]);
 
       $success = true;
     }
@@ -130,6 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form id="registerForm" method="post" autocomplete="off" novalidate>
+  <input type="hidden" name="csrf_token" value="<?php echo e(register_csrf_token()); ?>">
           <div class="form-group">
             <label for="email">Email Address</label>
             <input

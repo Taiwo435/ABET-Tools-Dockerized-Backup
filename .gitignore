@@ -24,9 +24,6 @@ _$RECYCLE.BIN/
 Thumbs.db
 __MACOSX/
 
-src/abet_private/testData/*
-!.gitkeep
-
 
 ## stuff that I created randomly and don't want to track
 composer.phar
@@ -52,4 +49,6 @@ server_clone
 
 #report gen files
 src/report_generation_api/template/*
+!src/report_generation_api/template/QuestTemplate.docx
+
 src/report_generation_api/output/*

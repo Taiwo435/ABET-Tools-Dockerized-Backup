@@ -1,5 +1,5 @@
 {
-  "title": "APPENDIX D - Institutional Summary: Table D-1 Program Enrollment and Degree Data",
+  "title": "Institutional Summary",
   "name": "program_enrollment_and_degree_data",
   "action": "submit.php",
   "method": "POST",
@@ -7,7 +7,7 @@
     {
       "type": "expandable-grid",
       "name": "program_enrollment_degree_data",
-      "label": "Table D-1. Program Enrollment and Degree Data",
+      "label": "Program Enrollment and Degree Data",
       "description": "Enter one row for each academic year and enrollment status combination (FT or PT).",
       "columns": [
         {
@@ -100,12 +100,12 @@
     },
     {
       "type": "section-label",
-      "label": "Table D-2. Personnel"
+      "label": "Personnel"
     },
     {
       "type": "expandable-grid",
       "name": "personnel",
-      "label": "Table D-2. Personnel",
+      "label": "Personnel",
       "columns": [
         {
           "name": "category",

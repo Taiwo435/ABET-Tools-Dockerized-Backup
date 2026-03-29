@@ -61,12 +61,15 @@ if [[ "$run_action" == true ]]; then
         echo "[INFO] Docker services stopped."
 
         # COPY EVERYTHING tracked by git
-        git ls-files -z . | rsync -avz --delete --keep-dirlinks --files-from=- --from0 "$REPO_ROOT/" "$REMOTE"
+        git ls-files -z $REPO_ROOT | rsync -avz --delete --keep-dirlinks --files-from=- --from0 "$REPO_ROOT/" "$REMOTE"
         echo "[INFO] Git-tracked files copied to server."
 
         # Run composer install
         ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer install --no-dev --optimize-autoloader --no-interaction"
         echo "[INFO] Composer install successful"
+
+        ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer doctrine migrate --no-interaction"
+        echo "[INFO] Migrations Ran"
 
         # build new .htaccess file with the sensitive environment variables, and copy it to the server
         rsync -avz --delete "$REPO_ROOT/docker/app/build/.htaccess" "$REMOTE/src/public/.htaccess"
@@ -74,8 +77,9 @@ if [[ "$run_action" == true ]]; then
 
         # Move the files into the correct locations on the server
         # Yes, this removes the abet.asucapstonetools.com directory
-        # ssh -t osburn@"$HOSTNAME" "rm -rf /home/osburn/public_html/abet.asucapstonetools.com" || true
-        ssh -t osburn@"$HOSTNAME" "mv $REMOTE_PATH/src/public /home/osburn/public_html/abet.asucapstonetools.com"
+        # Don't try to optimize this, I've already tried.
+        ssh -t osburn@"$HOSTNAME" "rm -rf /home/osburn/public_html/abet.asucapstonetools.com" || true
+        ssh -t osburn@"$HOSTNAME" "mv -f $REMOTE_PATH/src/public /home/osburn/public_html/abet.asucapstonetools.com"
 
         # start up the docker services on the server
         ssh -t osburn@"$HOSTNAME" "cd $REMOTE_PATH/docker && docker compose -f docker-compose-prod.yml up -d --build"

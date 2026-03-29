@@ -1,7 +1,7 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
-//require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/coordinator_form_load.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/coordinator_form_load.php';
 
 $pageNumber = $_GET['page']; // pageNumber is 1-indexed
 $formName = "coordinator-form";
@@ -35,15 +35,14 @@ $form = loadFormPage($formName, $pageName);
 
 $old; // The JSON data that will be autofilled onto the elements
 $backendErrorMessage = '';
-if ($_SESSION['coordinator_form_error_flag'] === true) {
+if (!empty($_SESSION['coordinator_form_error_flag']) && $_SESSION['coordinator_form_error_flag'] === true) {
     $_SESSION['coordinator_form_error_flag'] = false;
     $old = $_SESSION['coordinator_form_old'];
     $backendErrorMessage = $_SESSION['coordinator_form_error_message'];
 } else {
-    //$old = loadFormData($pageName);
+    $loadedData = loadFormData($pageName);
+    $old = is_array($loadedData) ? $loadedData : [];
 }
-
-//print_r($old);
 ?>
 
 
