@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 /**
  * report-generator/generate.php
@@ -25,6 +26,7 @@ register_shutdown_function(function () {
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
+
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();

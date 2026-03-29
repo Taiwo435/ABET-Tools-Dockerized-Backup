@@ -1,6 +1,7 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 // Permission bit positions - must match Permissions enum in User.php
 const PERM_ADMIN_PANEL            = 1 << 0; // 1

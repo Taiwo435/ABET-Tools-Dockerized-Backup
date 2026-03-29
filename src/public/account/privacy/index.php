@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../_guard.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 ?>
 <!doctype html>
 <html lang="en">

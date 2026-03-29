@@ -3,6 +3,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 
 header('Content-Type: application/json; charset=utf-8');
 
