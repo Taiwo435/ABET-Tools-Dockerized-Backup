@@ -5,6 +5,7 @@ All functions accept headers and config as parameters for API use.
 
 import logging
 import os
+import re
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urljoin
@@ -14,6 +15,35 @@ import requests
 from create_html import WriteAbetHtml
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_term_display(term_display: str) -> Tuple[str, str]:
+    """Extract (semester, year) from a term_display string like 'Fall 2023' or 'Summer 2025'.
+
+    Returns lowercased semester and 4-digit year, or empty strings if unparseable.
+    """
+    match = re.match(r"(Fall|Spring|Summer)\s+(\d{4})", term_display.strip(), re.IGNORECASE)
+    if match:
+        return match.group(1).lower(), match.group(2)
+    return "", ""
+
+
+def _extract_term_from_folder_name(folder_name: str) -> Tuple[str, str]:
+    """Extract (semester, year) from a Canvas folder name like
+    ``CSE 485 Computer Sci Capstone Proj I (2024 Fall C)``.
+
+    Handles both ``(2024 Fall C)`` and ``(Fall 2024)`` conventions.
+    Returns lowercased semester and 4-digit year, or empty strings if unparseable.
+    """
+    # Try "(year semester ...)" — e.g. "(2024 Fall C)"
+    match = re.search(r"\((\d{4})\s+(Fall|Spring|Summer)", folder_name, re.IGNORECASE)
+    if match:
+        return match.group(2).lower(), match.group(1)
+    # Try "(semester year)" — e.g. "(Fall 2024)"
+    match = re.search(r"\((Fall|Spring|Summer)\s+(\d{4})", folder_name, re.IGNORECASE)
+    if match:
+        return match.group(1).lower(), match.group(2)
+    return "", ""
 
 
 def _get_api_base_url(canvas_domain: str) -> str:
@@ -92,11 +122,15 @@ def find_file_folder(
     course_code: str = "",
     instructor_name: str = "",
 ) -> List[dict]:
-    """Find folders matching (year semester) and optionally course_code in course."""
+    """Find folders matching the term (semester + year) and optionally course_code in course.
+
+    Matches both naming conventions: ``(Fall 2023)`` and ``(2023 Fall)``.
+    """
+    sem_cap = semester.capitalize()
     logger.info(
         "Finding all (%s %s) folders for %s in course %s...",
+        sem_cap,
         year,
-        semester.capitalize(),
         course_code or "(all)",
         course_id,
     )
@@ -104,10 +138,14 @@ def find_file_folder(
     file_folders = get_paginated_list(
         endpoint, headers, api_base_url, params={"include[]": "folders"}
     )
+
+    term_a = f"({sem_cap} {year})"
+    term_b = f"({year} {sem_cap})"
+
     results = [
         f
         for f in file_folders
-        if f"({year} {semester.capitalize()})" in f.get("full_name", "")
+        if (term_a in f.get("full_name", "") or term_b in f.get("full_name", ""))
         and (not course_code or course_code in f.get("full_name", ""))
     ]
     return results
@@ -345,6 +383,16 @@ def run_formatting_pipeline(
     if not canvas_access_token or not str(canvas_access_token).strip():
         raise ValueError("Canvas access token is required.")
 
+    # Derive semester/year: prefer term_display, then fall back to course_folder_name
+    parsed_sem, parsed_yr = "", ""
+    if term_display:
+        parsed_sem, parsed_yr = _parse_term_display(term_display)
+    if (not parsed_sem or not parsed_yr) and course_folder_name:
+        parsed_sem, parsed_yr = _extract_term_from_folder_name(course_folder_name)
+    if parsed_sem and parsed_yr:
+        semester = parsed_sem
+        year = parsed_yr
+
     dest_id = destination_course_id or source_course_id
     api_base_url = _get_api_base_url(canvas_domain)
     canvas_base_url = _get_canvas_base_url(canvas_domain)
@@ -372,7 +420,7 @@ def run_formatting_pipeline(
         )
     if not file_folders:
         raise RuntimeError(
-            f"No folders found matching '{course_folder_name or f'({year} {semester.capitalize()})'}'. "
+            f"No folders found matching '{course_folder_name or f'({semester.capitalize()} {year})'}'. "
             "Ensure course has the expected folder structure."
         )
 
@@ -452,6 +500,7 @@ def generate_course_html(
     canvas_domain: str = "canvas.asu.edu",
     course_code: str = "",
     instructor_name: str = "",
+    term_display: str = "",
 ) -> dict:
     """
     Generate course page HTML and ABET HTML without uploading to Canvas.
@@ -459,6 +508,12 @@ def generate_course_html(
     """
     if not canvas_access_token or not str(canvas_access_token).strip():
         raise ValueError("Canvas access token is required.")
+
+    if term_display:
+        parsed_sem, parsed_yr = _parse_term_display(term_display)
+        if parsed_sem and parsed_yr:
+            semester = parsed_sem
+            year = parsed_yr
 
     api_base_url = _get_api_base_url(canvas_domain)
     canvas_base_url = _get_canvas_base_url(canvas_domain)
@@ -475,7 +530,7 @@ def generate_course_html(
     )
     if not file_folders:
         raise RuntimeError(
-            f"No folders found for ({year} {semester.capitalize()}). "
+            f"No folders found for ({semester.capitalize()} {year}). "
             "Ensure course has folder structure with that term in the path."
         )
 
