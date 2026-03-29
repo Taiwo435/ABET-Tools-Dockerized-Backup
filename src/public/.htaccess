@@ -5,6 +5,15 @@ RewriteEngine On
 
 #only on local
 SetEnv ABET_PRIVATE_DIR "/home/src/abet_private"
+SetEnv ABET_PUBLIC_DIR "/var/www/html"
+
+SetEnvIfNoCase Remote_Host "(.*)" HTTP_MY_REMOTE_HOST=$1
+SetEnvIfNoCase Remote_Addr "(.*)" HTTP_MY_REMOTE_ADDR=$1
+SetEnvIfNoCase Server_Addr "(.*)" HTTP_MY_SERVER_ADDR=$1
+SetEnvIfNoCase Request_Method "(.*)" HTTP_MY_REQUEST_METHOD=$1
+SetEnvIfNoCase Request_Protocol "(.*)" HTTP_MY_REQUEST_PROTOCOL=$1
+SetEnvIfNoCase Request_URI "(.*)" HTTP_MY_REQUEST_URI=$1
+
 # -------------------------------------------------
 # Deny access to json, lock, py directories
 # -------------------------------------------------
