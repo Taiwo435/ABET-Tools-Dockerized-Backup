@@ -3,6 +3,8 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
 $role = $_SESSION['user_role'] ?? 'faculty';
+$config = require getenv('ABET_PRIVATE_DIR') . '/config.php';
+$destCourses = $config['dest_courses'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,9 +60,14 @@ $role = $_SESSION['user_role'] ?? 'faculty';
                 <div class="form-help">The canvas course to push data into</div>
               <?php else: ?>
                 <select class="form-input" id="destCourseId" required>
-                  <option value="240102">240102</option>
+                  <option value="" disabled selected>Select the destination course</option>
+                  <?php foreach ($destCourses as $course): ?>
+                    <option value="<?= htmlspecialchars($course['id'], ENT_QUOTES, 'UTF-8') ?>">
+                      <?= htmlspecialchars($course['label'], ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars($course['id'], ENT_QUOTES, 'UTF-8') ?>
+                    </option>
+                  <?php endforeach; ?>
                 </select>
-                <div class="form-help">Your assigned destination course</div>
+                <div class="form-help">Select your program's destination course</div>
               <?php endif; ?>
 
             </div>
@@ -83,21 +90,6 @@ $role = $_SESSION['user_role'] ?? 'faculty';
       </div>
     </div>
 
-    <div class="alert alert-duplicate" id="duplicateAlert">
-      <div class="alert-content">
-        <strong>This course has already been uploaded to the destination.</strong>
-        <strong>Cancel the upload or continue to overwrite the previous upload.</strong>
-        <div style="margin-top: 5px;">
-          <strong>Course:</strong> <span id="duplicateCourse"></span><br>
-          <strong>Term:</strong> <span id="duplicateTerm"></span>
-        </div>
-        <div style="margin-top: 15px;">
-          <a href="tool1.php" class="btn btn-primary">Cancel the Upload</a>
-          <a href="roster-upload.php?overwrite=1" class="btn btn-primary">Overwrite &amp; Continue to Roster Upload →</a>
-        </div>
-      </div>
-    </div>
-
     <div class="alert alert-error" id="errorAlert">
       <div class="alert-content">
         <strong>Connection failed</strong>
@@ -111,7 +103,6 @@ $role = $_SESSION['user_role'] ?? 'faculty';
     const form = document.getElementById('canvasConnectionForm');
     const connectBtn = document.getElementById('connectBtn');
     const successAlert = document.getElementById('successAlert');
-    const duplicateAlert = document.getElementById('duplicateAlert');
     const errorAlert = document.getElementById('errorAlert');
 
     function showError(msg) {
@@ -124,24 +115,12 @@ $role = $_SESSION['user_role'] ?? 'faculty';
 
     function showSuccess(course) {
       errorAlert.style.display = 'none';
-      duplicateAlert.style.display = 'none';
       document.getElementById('connectedCourse').textContent =
         course.name + ' (' + course.course_code + ')';
       document.getElementById('connectedTerm').textContent =
         course.term || 'N/A';
       successAlert.style.display = 'block';
       successAlert.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function showDuplicateCase(course) {
-      errorAlert.style.display = 'none';
-      successAlert.style.display = 'none';
-      document.getElementById('duplicateCourse').textContent =
-        course.name + ' (' + course.course_code + ')';
-      document.getElementById('duplicateTerm').textContent =
-        course.term || 'N/A';
-      duplicateAlert.style.display = 'block';
-      duplicateAlert.scrollIntoView({ behavior: 'smooth' });
     }
 
     form.addEventListener('submit', async (e) => {
@@ -191,12 +170,7 @@ $role = $_SESSION['user_role'] ?? 'faculty';
           return;
         }
 
-        const course = verifyData.course;
-        if (course.duplicate_status) {
-          showDuplicateCase(course);
-        } else {
-          showSuccess(course);
-        }
+        showSuccess(verifyData.course);
 
       } catch (err) {
         showError('Network error: ' + err.message);
