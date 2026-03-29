@@ -1,6 +1,19 @@
 import json
+import ast
 from report.data import criterion_faculty_data
 
+#using this to get certifcations too lazy to rebuild the query in criterion_faculty_data
+from report.data import appendix_b_data
+
+#converting letters into full rank names
+_RANK_LABELS: dict[str, str] = {
+    "P": "Professor",
+    "ASC": "Associate Professor",
+    "AST": "Assistant Professor",
+    "I": "Instructor",
+    "A": "Adjunct",
+    "O": "Other",
+}
 def build(questionnaire):
 
     faculty_data = criterion_faculty_data.get_data(questionnaire)
@@ -62,32 +75,50 @@ def build(questionnaire):
     # context = {
     #     "faculty_workload": faculty_list
     # }
-    # Fetch and attach faculty profile info (handle rows as tuples or dicts)
+    #table 6-1
+    # Fetch and attach faculty profile info (handle rows as tuples or dicts) 
     try:
         profile_rows = criterion_faculty_data.get_faculty_info(questionnaire)
     except Exception:
         profile_rows = []
 
     profile_list = []
+
+
     for row in profile_rows:
         if isinstance(row, dict):
+            #this section gets rid of json formatting for certifications and converts into string
+            certifications = appendix_b_data.json_to_list(row.get("certifications", "[]"))
+
+            cert_list = []
+            for c in certifications:
+
+                parsed = ast.literal_eval(c)
+                if isinstance(parsed, dict):
+                    name = parsed.get("certification_registration_name", "") or ""
+                    other = parsed.get("certification_registration_other_info", "") or ""
+                    cert_list.append(f"{name} {other}")
 
 
-            profile_list.append({
-                "name": row["name"],
-                "status": row["pt_or_ft"],
-                "highest_degree": row["highest_degree"],
-                "faculty_rank": row["faculty_rank"],
-                "academic_appointment": row["academic_appointment"],
-                "faculty_id": row["faculty_id"],
-                "years_experience_gov_industry": row["years_experience_gov_industry"],
-                "years_experience_teaching": row["years_experience_teaching"],
-                "years_experience_institution": row["years_experience_institution"],
-                "activity_prof_orgs": row["activity_prof_orgs"],
-                "activity_prof_dev": row["activity_prof_dev"],
-                "activity_consulting": row["activity_consulting"]
-            })
+            certifications_text = "\n".join(cert_list).strip() or "NA"
 
+
+        profile_list.append({
+            "name": row["name"],
+            "status": row["pt_or_ft"],
+            "highest_degree": row["highest_degree"],
+            "faculty_rank": row["faculty_rank"],
+            "academic_appointment": row["academic_appointment"],
+            "faculty_id": row["faculty_id"],
+            "certifications_text": certifications_text,
+            "years_experience_gov_industry": row["years_experience_gov_industry"],
+            "years_experience_teaching": row["years_experience_teaching"],
+            "years_experience_institution": row["years_experience_institution"],
+            "activity_prof_orgs": row["activity_prof_orgs"],
+            "activity_prof_dev": row["activity_prof_dev"],
+            "activity_consulting": row["activity_consulting"]
+        })
+    #faculty qualification table
     try:
         profile_info = criterion_faculty_data.get_more_faculty_info(questionnaire)
     except Exception:
@@ -95,11 +126,13 @@ def build(questionnaire):
 
     profile_info_list = []
     for row in profile_info:
-
+        #based on appendix b which is getting rank full names 
+        rank_code = (row.get("faculty_rank") or "").strip()
+        rank = _RANK_LABELS.get(rank_code, rank_code or "N/A")
 
         profile_info_list.append({
             "name": row["name"],
-            "faculty_rank": row["faculty_rank"],
+            "faculty_rank": rank,
             "areas_of_interest": row["areas_of_interest"]
 
         })

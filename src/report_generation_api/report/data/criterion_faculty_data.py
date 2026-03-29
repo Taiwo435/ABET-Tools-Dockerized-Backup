@@ -38,6 +38,7 @@ def get_faculty_info(questionnaire):
             fi.faculty_rank,
             fi.academic_appointment,
             fi.faculty_id,
+            fv.certifications,
             fi.years_experience_gov_industry,
             fi.years_experience_teaching,
             fi.years_experience_institution,
@@ -46,7 +47,9 @@ def get_faculty_info(questionnaire):
             fi.activity_consulting
         FROM faculty_info fi
         LEFT JOIN faculty_workload fw
-            ON fi.user_id = fw.user_id;""")
+            ON fi.user_id = fw.user_id
+        LEFT JOIN faculty_vitae fv
+            ON fi.user_id = fv.user_id;""")
 
     return cursor.fetchall()
 
