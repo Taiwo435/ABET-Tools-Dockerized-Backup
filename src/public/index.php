@@ -132,6 +132,21 @@ if (empty($_SESSION['user_id'])) {
         </div>
         <?php endif; ?>
 
+        <?php if (hasPermission($permissions, PERM_ADMIN_PANEL)): ?>
+        <div class="tool-card">
+            <div class="card-header" onclick="triggerToggle(this)">
+                <div class="card-title">Admin Panel</div>
+                <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+            </div>
+            <div class="card-body">
+                <div class="card-body-inner">
+                    <p>Manage destination course IDs, user permissions, and other admin settings.</p>
+                    <a href="/AssignmentsGrades/admin.php" class="action-link">Open Admin Panel &rarr;</a>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
     </div>
 </div>
 

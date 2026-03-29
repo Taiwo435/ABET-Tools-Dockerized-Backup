@@ -3,6 +3,8 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
 $role = $_SESSION['user_role'] ?? 'faculty';
+$config = require getenv('ABET_PRIVATE_DIR') . '/config.php';
+$destCourses = $config['dest_courses'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,6 +34,7 @@ $role = $_SESSION['user_role'] ?? 'faculty';
       </div>
     </div>
 
+      <div>
         <form id="canvasConnectionForm">
           <div class="form-grid">
             <div class="form-group" style="grid-column: 1 / -1;">
@@ -61,13 +64,19 @@ $role = $_SESSION['user_role'] ?? 'faculty';
                 <div class="form-help">The canvas course to push data into</div>
               <?php else: ?>
                 <select class="form-input" id="destCourseId" required>
-                  <option value="240102">240102</option>
+                  <option value="" disabled selected>Select the destination course</option>
+                  <?php foreach ($destCourses as $course): ?>
+                    <option value="<?= htmlspecialchars($course['id'], ENT_QUOTES, 'UTF-8') ?>">
+                      <?= htmlspecialchars($course['label'], ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars($course['id'], ENT_QUOTES, 'UTF-8') ?>
+                    </option>
+                  <?php endforeach; ?>
                 </select>
-                <div class="form-help">Your assigned destination course</div>
+                <div class="form-help">Select your program's destination course</div>
               <?php endif; ?>
 
             </div>
           </div>
+        </div>
 
           <button type="submit" class="btn btn-primary" id="connectBtn">
             <span class="btn-icon">🔗</span> Validate Token
