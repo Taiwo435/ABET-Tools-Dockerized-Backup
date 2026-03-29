@@ -20,7 +20,7 @@ class LegacyBridge
     public static function getLegacyScript(Request $request): string
     {
         $requestPathInfo = $request->getPathInfo();
-        $legacyRoot = __DIR__ . '/../public/';
+        $legacyRoot = getenv("ABET_PUBLIC_DIR");
 
         // Map a route to a legacy script:
         if ($requestPathInfo == '/customer/') {
@@ -34,8 +34,12 @@ class LegacyBridge
 
         // default please
         if ($requestPathInfo == '/') {
-            return "{$legacyRoot}homepage.php";
+            return "{$legacyRoot}/home.php";
         }
+
+        var_dump(phpinfo());
+        var_dump($requestPathInfo);
+        var_dump($legacyRoot);
 
         // ... etc.
 

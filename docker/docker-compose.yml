@@ -23,7 +23,7 @@ services:
       - sh
       - -lc
       - >- 
-        install -d -o www-data -g www-data -m 0776 "${ABET_PRIVATE_DIR}/report_jobs" && exec apache2-foreground
+        install -d -o www-data -g www-data -m 0777 "${ABET_PRIVATE_DIR}/report_jobs" && exec apache2-foreground
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
