@@ -20,23 +20,40 @@ class LegacyBridge
     public static function getLegacyScript(Request $request): string
     {
         $requestPathInfo = $request->getPathInfo();
+        // note that public files will now NOT be copied into the apache folder. only index and .htaccess will be synced now.
         $legacyRoot = getenv("ABET_PUBLIC_DIR");
+        // $legacyRoot = __DIR__.'/../../public';
 
-        // Map a route to a legacy script:
-        if ($requestPathInfo == '/customer/') {
-            return "{$legacyRoot}src/customers/list.php";
+        $filepath = "{$legacyRoot}{$requestPathInfo}";
+        /**
+         * SECURITY: Prevent domain traversal
+         * WARNING: DO NOT use $filepath! This is dangerous!
+         * use $resolved path AFTER here!!
+         */
+        // obvious attacks begone
+        if (str_contains($requestPathInfo, "\0") || str_contains($requestPathInfo, '..')) {
+            throw new \Exception('Invalid path');
+        }
+        // Resolve to absolute canonical path
+        $resolvedPath = realpath($filepath);
+        // check if they are in legacyRoot. Else reject.
+        if ($resolvedPath === false || strncmp($resolvedPath, $legacyRoot, strlen($legacyRoot)) !== 0) {
+            #throw new \Exception('Invalid path');
+            throw new \Exception("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
         }
 
-        // Map a direct file call, e.g. an ajax call:
-        if ($requestPathInfo == 'inc/ajax_cust_details.php') {
-            return "{$legacyRoot}inc/ajax_cust_details.php";
-        }
-
-        // default please
+        // Example 
         if ($requestPathInfo == '/') {
             return "{$legacyRoot}/home.php";
         }
 
+        //TODO: add pretty rewrites in .htaccess
+        // Example 
+        if (is_file($filepath)) {
+            return "{$filepath}";
+        }
+
+        // Need to only show in DEVELOPMENT
         var_dump(phpinfo());
         var_dump($requestPathInfo);
         var_dump($legacyRoot);
