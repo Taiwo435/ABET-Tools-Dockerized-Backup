@@ -27,11 +27,241 @@ class LegacyBridge
         // check if they are in legacyRoot. Else reject.
 
         //TODO: add pretty rewrites in .htaccess
-        // Example 
+        
+        // ----------------------------
+        // .htaccess pretty paths but here
+        // ----------------------------
+
         if ($requestPathInfo == '/') {
+            return "{$legacyRoot}/auth/login.php";
+        }
+
+        // this is a template...
+        if ($requestPathInfo == '/URI') {
+        }
+
+        // skipped RewriteCond %{THE_REQUEST} \s/+index\.php(?:[?\s]|$) [NC]
+
+        // #RewriteRule ^index\.php$ /home [R=302,L]
+        if ($requestPathInfo == '/home') {
             return "{$legacyRoot}/home.php";
         }
 
+        // you probably can tell the pattern. Next line in .htaccess
+        if ($requestPathInfo == '/login') {
+            return "{$legacyRoot}/auth/login.php";
+        }
+
+        if ($requestPathInfo == '/register') {
+            return "{$legacyRoot}/auth/register.php";
+        }
+
+        if ($requestPathInfo == '/logout') {
+            return "{$legacyRoot}/auth/logout.php";
+        }
+
+        // account profile stuff
+        // NOTE: I had to change paths because some links ended with /
+        if ($requestPathInfo == '/account/profile/') {
+            return "{$legacyRoot}/account/profile/index.php";
+        }
+
+        if ($requestPathInfo == '/account/me/') {
+            return "{$legacyRoot}/account/me/index.php";
+        }
+
+        if ($requestPathInfo == '/account/settings/') {
+            return "{$legacyRoot}/account/settings/index.php";
+        }
+
+        if ($requestPathInfo == '/account/privacy/') {
+            return "{$legacyRoot}/account/privacy/index.php";
+        }
+
+        if ($requestPathInfo == '/account/help/') {
+            return "{$legacyRoot}/account/help/index.php";
+        }
+
+        // account actions
+        if ($requestPathInfo == '/account/profile/update/') {
+            return "{$legacyRoot}/account/profile/update.php";
+        }
+
+        if ($requestPathInfo == '/account/settings/email') {
+            return "{$legacyRoot}/account/settings/email.php";
+        }
+
+        if ($requestPathInfo == '/account/settings/password/') {
+            return "{$legacyRoot}/account/settings/password.php";
+        }
+
+        if ($requestPathInfo == '/account/privacy/consent/') {
+            return "{$legacyRoot}/account/privacy/consent.php";
+        }
+        
+        if ($requestPathInfo == '/account/privacy/export-data/') {
+            return "{$legacyRoot}/account/privacy/export-data.php";
+        }
+        
+        if ($requestPathInfo == '/account/privacy/delete-request/') {
+            return "{$legacyRoot}/account/privacy/delete-request.php";
+        }
+        
+        // faq
+        if ($requestPathInfo == '/account/help/faq/') {
+            return "{$legacyRoot}/account/help/faq.php";
+        }
+        
+        // contact
+        if ($requestPathInfo == '/account/help/contact/') {
+            return "{$legacyRoot}/account/help/contact.php";
+        }
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
         LegacyBridge::doSecurityChecks($legacyRoot, $requestPathInfo);
         // Resolve to absolute canonical path
         $resolvedPath = realpath("{$legacyRoot}{$requestPathInfo}");
@@ -42,6 +272,14 @@ class LegacyBridge
 
         // Need to only show in DEVELOPMENT
         var_dump(phpinfo());
+        var_dump("
+        <br>
+        request path: {$requestPathInfo}
+        <br>
+        fullPath: {$legacyRoot}{$requestPathInfo}
+        <br>
+        resolved path: {$resolvedPath}
+        ");
         var_dump($requestPathInfo);
         var_dump($legacyRoot);
 
@@ -81,7 +319,7 @@ class LegacyBridge
             throw new \Exception("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
         }
 
-        $allowedExtensions = ['php'];
+        $allowedExtensions = ['php', ''];
 
         $ext = pathinfo($resolvedPath, PATHINFO_EXTENSION);
         if (!in_array($ext, $allowedExtensions, true)) {
