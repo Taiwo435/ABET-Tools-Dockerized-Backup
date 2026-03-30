@@ -24,33 +24,20 @@ class LegacyBridge
         $legacyRoot = getenv("ABET_PUBLIC_DIR");
         // $legacyRoot = __DIR__.'/../../public';
 
-        $filepath = "{$legacyRoot}{$requestPathInfo}";
-        /**
-         * SECURITY: Prevent domain traversal
-         * WARNING: DO NOT use $filepath! This is dangerous!
-         * use $resolved path AFTER here!!
-         */
-        // obvious attacks begone
-        if (str_contains($requestPathInfo, "\0") || str_contains($requestPathInfo, '..')) {
-            throw new \Exception('Invalid path');
-        }
-        // Resolve to absolute canonical path
-        $resolvedPath = realpath($filepath);
         // check if they are in legacyRoot. Else reject.
-        if ($resolvedPath === false || strncmp($resolvedPath, $legacyRoot, strlen($legacyRoot)) !== 0) {
-            #throw new \Exception('Invalid path');
-            throw new \Exception("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
-        }
 
+        //TODO: add pretty rewrites in .htaccess
         // Example 
         if ($requestPathInfo == '/') {
             return "{$legacyRoot}/home.php";
         }
 
-        //TODO: add pretty rewrites in .htaccess
-        // Example 
-        if (is_file($filepath)) {
-            return "{$filepath}";
+        LegacyBridge::doSecurityChecks($legacyRoot, $requestPathInfo);
+        // Resolve to absolute canonical path
+        $resolvedPath = realpath("{$legacyRoot}{$requestPathInfo}");
+
+        if (is_file($resolvedPath)) {
+            return "{$resolvedPath}";
         }
 
         // Need to only show in DEVELOPMENT
@@ -61,6 +48,45 @@ class LegacyBridge
         // ... etc.
 
         throw new \Exception("Unhandled legacy mapping for $requestPathInfo");
+    }
+
+        /**
+         * SECURITY: Prevent domain traversal
+         * WARNING: DO NOT use $filepath! This is dangerous!
+         * use $resolved path AFTER here!!
+         */
+
+    /**
+     * SECURITY: Prevent domain traversal
+     * Helper function to prevent attackers from accessing any file they want.
+     * @param mixed $legacyRoot
+     * @param mixed $requestPathInfo
+     * @throws \Exception
+     * @return void
+     */
+    private static function doSecurityChecks($legacyRoot, $requestPathInfo) {
+
+        // obvious attacks begone
+        if (str_contains($requestPathInfo, "\0") || str_contains($requestPathInfo, '..')) {
+            throw new \Exception('Invalid path');
+        }
+
+        // absolute canonical path
+        $filepath = "{$legacyRoot}{$requestPathInfo}";
+        $resolvedPath = realpath($filepath);
+
+        // NOTE: security auditors can easily log attack attempts if $resolvedPath is valid but is outside of $legacyRoot
+        if ($resolvedPath === false || strncmp($resolvedPath, $legacyRoot, strlen($legacyRoot)) !== 0) {
+            #throw new \Exception('Invalid path');
+            throw new \Exception("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
+        }
+
+        $allowedExtensions = ['php'];
+
+        $ext = pathinfo($resolvedPath, PATHINFO_EXTENSION);
+        if (!in_array($ext, $allowedExtensions, true)) {
+            throw new \Exception('Forbidden file type');
+        }
     }
 
     public static function handleRequest(Request $request, Response $response, string $publicDirectory): void
