@@ -117,141 +117,16 @@ class LegacyBridge
             return "{$legacyRoot}/account/help/contact.php";
         }
 
-        
+        // TOOL 2: Faculty form
+        if ($requestPathInfo == '/faculty-form/') {
+            return "{$legacyRoot}/faculty-form/index.php";
+        }
+
+        // TOOL 3: Faculty form
+        if ($requestPathInfo == '/coordinator-form/') {
+            return "{$legacyRoot}/coordinator-form/index.php";
+        }
 
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
 
         
 
