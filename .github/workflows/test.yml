@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main", "prod" ]
     paths-ignore:
-      - '*.md'
+      - '**.md'
       - 'docs/**'
       - '.github/workflows/**'
   workflow_dispatch:
@@ -34,7 +34,7 @@ jobs:
       - name: Set up .env file
         working-directory: ./docker
         run: |
-          cp ./env.demo ./.env
+          cp ./demo.env ./.env
           echo -e "\nSELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
 
       - name: run docker compose to start the application 
@@ -80,7 +80,7 @@ jobs:
       - name: Set up .env file
         working-directory: ./docker
         run: |
-          cp ./env.demo ./.env
+          cp ./demo.env ./.env
           echo -e "\nSELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
 
       - name: Set up Python
