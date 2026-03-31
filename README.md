@@ -1,7 +1,7 @@
 # The Main Application for ABET-Tools
 
 ![Static Badge](https://img.shields.io/badge/ASU%20Capstone%20Project-8C1D40?logo=github&labelColor=red)
-[![Run Selenium Tests](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml/badge.svg)](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml)
+[![Project Continuous Integration](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml/badge.svg)](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml)
 
 <!--
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/hoang-danny05/ABET-Tools-Dockerized) ![GitHub contributors](https://img.shields.io/github/contributors-anon/hoang-danny05/ABET-Tools-Dockerized) ![GitHub issue custom search](https://img.shields.io/github/issues-search?query=repo%3Ahoang-danny05%2FABET-Tools-Dockerized%20is%3Aopen%20&label=open%20issues) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/test.yml?logo=docsdotrs&logoColor=white)
@@ -24,6 +24,7 @@
     - [Installing Composer](#installing-composer)
     - [Using Composer](#using-composer)
     - [Composer Install (the command)](#composer-install-the-command)
+  - [The Symfony Framework](#the-symfony-framework)
   - [Database development](#database-development)
     - [Editing the init.sql directly](#editing-the-initsql-directly)
     - [Using Migrations](#using-migrations)
@@ -193,6 +194,24 @@ composer install
 
 This simply reads the dependencies in composer.json
 and installs them in the vendor/ folder.
+
+## The Symfony Framework
+
+Symfony is a framework to route the website.
+It is modular and has a lot of built-in security tools that we should use.
+The version that we are using (7.4) is compatible with PHP 8.3 and has LTS.
+
+It's best practice to use well-known frameworks because their security has been tested throughout time.
+Since security isn't optional for this app, we are migrating to Symfony to take advantage of these security features.
+
+Symfony may not be fully implemented at the time of reading. To check, see if the [Github Milestone](https://github.com/hoang-danny05/ABET-Tools-Dockerized/milestone/1) is met. If it is, then you should use it when developing.
+
+> [!NOTE]
+> Migrating to Symfony will change a lot of our normal workflow.
+> While our previous tools will work,
+> creating new pages will follow Symfony's pattern.
+> All of the process changes are listed [in the Symfony Docs](./docs/app/symfony.md).
+> Please read it to make sure you're developing correctly.
 
 ## Database development
 
