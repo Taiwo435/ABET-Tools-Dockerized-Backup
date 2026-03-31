@@ -9,6 +9,7 @@ config.php
 *.crt
 *cache*
 *.secrets
+!/docker/demo.env
 
 # local data that should not be tracked
 *.pyc

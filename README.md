@@ -52,7 +52,7 @@ This requires:
 
 Once that's done, you can run these commands to view the application
 
-1) cd into `docker/` and create a `.env`. `env.demo` is a template file that is suitable for development.
+1) cd into `docker/` and create a `.env`. `demo.env` is a template file that is suitable for development.
 2) within `docker/`, run `docker compose up --build`
 3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
 4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin (useful to see database state)
@@ -104,9 +104,9 @@ The rest of the project organization info is [HERE in the docs](docs/project-org
 
 ### `.env` files
 
-This is the MOST important concept of configuration in the project. On first setup, you probably run `cp env.demo .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
+This is the MOST important concept of configuration in the project. On first setup, you probably run `cp demo.env .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
 
-`.env` stores ALL of our secret keys, but also our configuratoin information. Changing .env will change how the containers are built. I made `env.demo` with the purpose of easy setup, but these values should NEVER be exposed or used in the real server.
+`.env` stores ALL of our secret keys, but also our configuratoin information. Changing .env will change how the containers are built. I made `demo.env` with the purpose of easy setup, but these values should NEVER be exposed or used in the real server.
 
 > [!NOTE]  
 > The project usually has a second .env file called prod.env
@@ -125,6 +125,11 @@ These are apache configuration files that exist only within the `src/public` dir
 We use .htaccess files to rewrite important paths and to set apache settings specific to our project only. **DO NOT** try to update the server's actual apache's config, it will affect EVERY project hosted by this server.
 
 [Click here for official docs on the file type](https://httpd.apache.org/docs/current/howto/htaccess.html)
+
+> [!WARNING]
+> Using .htaccess for pretty file rewrites is about to be deprecated.
+> We are migrating to, or are already using Symfony for routing.
+> Check the [github milestone](https://github.com/hoang-danny05/ABET-Tools-Dockerized/milestone/1) to see if people should use Symfony.
 
 ## Managing PHP dependencies with Composer
 
