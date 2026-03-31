@@ -1,6 +1,7 @@
 # The Main Application for ABET-Tools
 
 ![Static Badge](https://img.shields.io/badge/ASU%20Capstone%20Project-8C1D40?logo=github&labelColor=red)
+[![Project Continuous Integration](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml/badge.svg)](https://github.com/hoang-danny05/ABET-Tools-Dockerized/actions/workflows/test.yml)
 
 <!--
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/hoang-danny05/ABET-Tools-Dockerized) ![GitHub contributors](https://img.shields.io/github/contributors-anon/hoang-danny05/ABET-Tools-Dockerized) ![GitHub issue custom search](https://img.shields.io/github/issues-search?query=repo%3Ahoang-danny05%2FABET-Tools-Dockerized%20is%3Aopen%20&label=open%20issues) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/test.yml?logo=docsdotrs&logoColor=white)
@@ -23,7 +24,10 @@
     - [Installing Composer](#installing-composer)
     - [Using Composer](#using-composer)
     - [Composer Install (the command)](#composer-install-the-command)
+  - [The Symfony Framework](#the-symfony-framework)
   - [Database development](#database-development)
+    - [Editing the init.sql directly](#editing-the-initsql-directly)
+    - [Using Migrations](#using-migrations)
   - [Pulling from the server](#pulling-from-the-server)
   - [More information](#more-information)
 
@@ -49,7 +53,7 @@ This requires:
 
 Once that's done, you can run these commands to view the application
 
-1) cd into `docker/` and create a `.env`. `env.demo` is a template file that is suitable for development.
+1) cd into `docker/` and create a `.env`. `demo.env` is a template file that is suitable for development.
 2) within `docker/`, run `docker compose up --build`
 3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
 4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin (useful to see database state)
@@ -101,9 +105,9 @@ The rest of the project organization info is [HERE in the docs](docs/project-org
 
 ### `.env` files
 
-This is the MOST important concept of configuration in the project. On first setup, you probably run `cp env.demo .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
+This is the MOST important concept of configuration in the project. On first setup, you probably run `cp demo.env .env`, but you don't really know what that does. `docker/.env` stores all of the filled environment variables, and is used by `docker-compose.yml` which then may set the environment variables of the containers to those values.
 
-`.env` stores ALL of our secret keys, but also our configuratoin information. Changing .env will change how the containers are built. I made `env.demo` with the purpose of easy setup, but these values should NEVER be exposed or used in the real server.
+`.env` stores ALL of our secret keys, but also our configuratoin information. Changing .env will change how the containers are built. I made `demo.env` with the purpose of easy setup, but these values should NEVER be exposed or used in the real server.
 
 > [!NOTE]  
 > The project usually has a second .env file called prod.env
@@ -123,6 +127,11 @@ We use .htaccess files to rewrite important paths and to set apache settings spe
 
 [Click here for official docs on the file type](https://httpd.apache.org/docs/current/howto/htaccess.html)
 
+> [!WARNING]
+> Using .htaccess for pretty file rewrites is about to be deprecated.
+> We are migrating to, or are already using Symfony for routing.
+> Check the [github milestone](https://github.com/hoang-danny05/ABET-Tools-Dockerized/milestone/1) to see if people should use Symfony.
+
 ## Managing PHP dependencies with Composer
 
 ### Installing Composer
@@ -134,6 +143,7 @@ To install everything, I did this:
 ```bash
 sudo apt install php8.3 && \
 sudo apt install php8.3-xml && \
+sudo apt install php8.3-mysql && \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 ```
 
@@ -145,7 +155,8 @@ Now, you can install any composer package you want!
 ```bash
 cd src/public
 composer require pestphp/pest --dev --with-all-dependencies 
-# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --dev --with-all-dependencies
+# FORMAT: composer require PACKAGE_NAME:PACKAGE_VERSION --with-all-dependencies
+# --dev specifies that Pest (testing) is only for development (not deployment)
 ```
 
 > [!NOTE]
@@ -177,14 +188,42 @@ you haven't installed the composer files on your system.
 You can fix this by running:
 
 ```bash
-cd src/public
+cd src/abet_private
 composer install
 ```
 
 This simply reads the dependencies in composer.json
 and installs them in the vendor/ folder.
 
+## The Symfony Framework
+
+Symfony is a framework to route the website.
+It is modular and has a lot of built-in security tools that we should use.
+The version that we are using (7.4) is compatible with PHP 8.3 and has LTS.
+
+It's best practice to use well-known frameworks because their security has been tested throughout time.
+Since security isn't optional for this app, we are migrating to Symfony to take advantage of these security features.
+
+Symfony may not be fully implemented at the time of reading. To check, see if the [Github Milestone](https://github.com/hoang-danny05/ABET-Tools-Dockerized/milestone/1) is met. If it is, then you should use it when developing.
+
+> [!NOTE]
+> Migrating to Symfony will change a lot of our normal workflow.
+> While our previous tools will work,
+> creating new pages will follow Symfony's pattern.
+> All of the process changes are listed [in the Symfony Docs](./docs/app/symfony.md).
+> Please read it to make sure you're developing correctly.
+
 ## Database development
+
+There are two ways to work on the database now.
+
+- You may choose to [make a migration](#using-migrations) (newer, easier integration).
+- Or you may choose to edit the init.sql file (might get deprecated.)
+
+Don't worry, Migrations are not that much different than making raw sql.
+In fact, it allows you to prototype stuff quicker.
+
+### Editing the init.sql directly
 
 If you're working on the database, the most important file
 in the project for you is `docker/mysql/init.sql`, as it
@@ -202,6 +241,54 @@ within the `docker/` folder
 ```bash
 docker compose down     # or docker-compse if you have that
 docker compose up --build
+```
+
+### Using Migrations
+
+Migrations are how we can set scripts so syncrhonize tables on your end with prod.
+Please use this when altering tables.
+Otherwise, during deployment, not updating the tables on the server can cause big problems.
+
+New tables added with `IF NOT NULL` can stay in init.sql, but we can put ALTER TABLE statements in these migrations to version the database.
+
+Installing dependencies
+
+```bash
+sudo apt install php8.3-cli
+sudo apt install php8.3-xml
+sudo apt install php8.3-mysql
+sudo apt install composer
+```
+
+Install compser packages
+
+```bash
+cd src/abet_private
+composer install
+```
+
+Generate migrations (will be in `src/abet_private/database/migrations`)
+A new file with the dated version will appear.
+The other migrations can be a template to show you how to implement a migration.
+
+```bash
+composer doctrine generate
+```
+
+> [!TIP]
+> All migrations are stored in `src/abet_private/database/migrations`.
+> A simple example of how to use these migrations exist here.
+>
+> [This migration uses small ALTER tables](src/abet_private/database/migrations/Version20260322173456.php)
+>
+> [This migration uses a PHP heredoc to use SQL syntax highlighting](src/abet_private/database/migrations/Version20260319051758.php)
+
+This is how you test migrations:
+Note that you need your mysql docker container up to test this.
+Remove the `--dry-run` argument to actually execute it.
+
+```bash
+compser doctrine migrate --dry-run
 ```
 
 [Information on how to link to the database](docs/database_link.md)

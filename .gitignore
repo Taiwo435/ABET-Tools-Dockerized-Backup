@@ -9,6 +9,7 @@ config.php
 *.crt
 *cache*
 *.secrets
+!/docker/demo.env
 
 # local data that should not be tracked
 *.pyc
@@ -24,9 +25,6 @@ _$RECYCLE.BIN/
 Thumbs.db
 __MACOSX/
 
-src/abet_private/testData/*
-!.gitkeep
-
 
 ## stuff that I created randomly and don't want to track
 composer.phar
@@ -37,6 +35,7 @@ apache2
 server_apache
 server_nginx
 src/public/debug.php
+symfony-test
 
 # Python-generated files
 __pycache__
@@ -49,3 +48,9 @@ wheels/
 ## sync directories
 abet.asucapstonetools.com
 server_clone
+
+#report gen files
+src/report_generation_api/template/*
+!src/report_generation_api/template/QuestTemplate.docx
+
+src/report_generation_api/output/*

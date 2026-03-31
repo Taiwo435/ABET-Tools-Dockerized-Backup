@@ -41,7 +41,7 @@ git clone git@github.com:hoang-danny05/ABET-Tools-Dockerized.git
 
 Covered in the [main README](../README.md#getting-started) but here more thouroghly.
 
-1) cd into `docker/` and create a `.env` file in that folder. `env.demo` is a format file that you can use. Please use this for development. [More info about .env files](../README.md#env-files)
+1) cd into `docker/` and create a `.env` file in that folder. `demo.env` is a format file that you can use. Please use this for development. [More info about .env files](../README.md#env-files)
 2) within `docker/`, run `docker compose up --build`. This is a command that will be super helpful for you. It forces the containers to rebuild, even if they are already created, which is crucial if you change certain files like `docker/mysql/init.sql` and you want the containers to reflect the changes.
 3) you can visit [localhost port 8080](https://localhost:8080) to see the interface
 4) you can visit [localhost port 8081](https://localhost:8081) to use phpMyAdmin

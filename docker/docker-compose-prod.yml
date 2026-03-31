@@ -22,9 +22,17 @@ services:
     container_name: extraction_api
     env_file:
       - .env
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
     volumes:
       - ../src/extraction_api:/usr/src/app
+      - ../src/shared:/usr/src/app/shared
     network_mode: "host"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   ###################################################
   # Canvas Formatting FastAPI Backend
@@ -37,10 +45,17 @@ services:
       args:
         CANVAS_FORMATTING_PORT: ${CANVAS_FORMATTING_PORT:?error}
     container_name: canvas_formatting_api
+    environment:
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
     ports:
       - "${CANVAS_FORMATTING_PORT:?error}:8001"
     volumes:
       - ../src/canvas_formatting_api:/usr/src/app
+    network_mode: "host"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 
   ###################################################
@@ -57,8 +72,73 @@ services:
     container_name: reportgen
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
     env_file:
       - .env
     volumes:
       - ../src/report_generation_api:/usr/src/app
     network_mode: "host"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+  ###################################################
+  # Redis - message broker + result backend for Celery
+  ###################################################
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 64mb
+      --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  ###################################################
+  # Celery Worker - executes background tasks from all services
+  ###################################################
+  celery_worker:
+    build:
+      context: ../
+      dockerfile: docker/celery_worker/Dockerfile
+    container_name: celery_worker
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
+    volumes:
+      - ../src/extraction_api:/usr/src/app/extraction_api
+      - ../src/canvas_formatting_api:/usr/src/app/canvas_formatting_api
+      - ../src/shared:/usr/src/app/shared
+    stop_grace_period: 120s
+    network_mode: "host"
+    depends_on:
+      redis:
+        condition: service_healthy
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+volumes:
+  redis_data:
+  flower_data:
+
+networks:
+  app_network:
+    name: app_network
+    driver: bridge

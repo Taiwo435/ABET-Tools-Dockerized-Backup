@@ -1,6 +1,8 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
+
 $form = loadForm('testform');
 $errors = [];
 $old = [];

@@ -46,6 +46,9 @@ def generate_html(
     canvas_domain: str = Query("canvas.asu.edu", description="Canvas instance domain"),
     course_code: str = Query("", description="Course code filter (e.g., CSE 423)"),
     instructor_name: str = Query("", description="Instructor name filter"),
+    term_display: str = Query(
+        "", description="Term display string from extraction (e.g., 'Fall 2023')"
+    ),
 ):
     """
     Generate course page HTML and ABET HTML without uploading to Canvas.
@@ -60,6 +63,7 @@ def generate_html(
             canvas_domain=canvas_domain,
             course_code=course_code,
             instructor_name=instructor_name,
+            term_display=term_display,
         )
         return result
     except ValueError as e:
@@ -88,6 +92,9 @@ def format_and_upload(
     term_display: str = Query(
         "", description="Term display string from extraction (e.g., 'Fall 2023')"
     ),
+    overwrite: bool = Query(
+        False, description="Delete existing duplicate pages/module items before uploading"
+    ),
 ):
     """
     Run the full pipeline: fetch course data, build HTML, create module,
@@ -105,6 +112,7 @@ def format_and_upload(
             instructor_name=instructor_name,
             course_folder_name=course_folder_name,
             term_display=term_display,
+            overwrite=overwrite,
         )
         return {
             "message": "Formatting and upload complete.",

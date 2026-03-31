@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 
 start_session();
 
@@ -11,7 +12,6 @@ function e(string $s): string {
 }
 
 function client_ip(): ?string {
-  // Keep simple/trusted source. If behind proxy later, handle X-Forwarded-For safely.
   return $_SERVER['REMOTE_ADDR'] ?? null;
 }
 
@@ -27,7 +27,7 @@ function log_login_event(?int $userId, ?string $emailAttempted, string $result, 
     )->execute([
       ':user_id' => $userId,
       ':email_attempted' => $emailAttempted,
-      ':result' => $result, // success | failed_password | failed_mfa | locked
+      ':result' => $result,
       ':reason' => $reason,
       ':ip' => client_ip(),
       ':ua' => user_agent(),
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error = 'Please enter a valid email.';
       log_login_event(null, $email, 'failed_password', 'invalid_email_format');
     } else {
-      $stmt = db()->prepare('SELECT id, email, password_hash, role, is_active FROM users WHERE email = :email LIMIT 1');
+      $stmt = db()->prepare('SELECT id, email, password_hash, role, is_active, permissions FROM users WHERE email = :email LIMIT 1');
       $stmt->execute([':email' => $email]);
       $user = $stmt->fetch();
 
@@ -82,16 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid email or password.';
         log_login_event(isset($user['id']) ? (int)$user['id'] : null, $email, 'failed_password', 'bad_credentials_or_inactive');
       } else {
-        // ---- Future Duo hook point ----
-        // If you add Duo challenge later, place it HERE before finalizing session.
-        // Example:
-        // if (duo_required_for_user((int)$user['id'])) { redirect to duo challenge; exit; }
-
         session_regenerate_id(true);
 
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_email'] = (string)$user['email'];
         $_SESSION['user_role'] = (string)$user['role'];
+        $_SESSION['user_permissions'] = (int)$user['permissions'];
         $_SESSION['created_at'] = time();
         $_SESSION['last_activity'] = time();
 

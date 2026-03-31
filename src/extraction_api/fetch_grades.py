@@ -248,8 +248,10 @@ class CanvasGradesFetcher:
         max_retries: int = 3,
     ):
         """
-        Uploads files to a Canvas course folder in parallel, with retries.
+        Uploads files to a Canvas course folder, with retries.
 
+        The first file is uploaded synchronously to materialize the folder path.
+        Rest uploaded in parallel
         Concurrency is controlled by MAX_PARALLEL_UPLOADS (module-level constant).
         Each file goes through Canvas's 3-step upload: init → POST binary → confirm.
         """
@@ -264,7 +266,7 @@ class CanvasGradesFetcher:
 
         failed: list[str] = []
 
-        def _upload_single(file_path: str) -> None:
+        def _upload_single(file_path: str) -> bool:
             """Upload one file with retries. Appends to `failed` on total failure."""
             filename = os.path.basename(file_path)
             for attempt in range(max_retries):
@@ -296,7 +298,7 @@ class CanvasGradesFetcher:
                         if confirmation.get("location"):
                             self.api_request(confirmation["location"])  # confirm
                     logger.info("Successfully uploaded %s", filename)
-                    return
+                    return True
                 except Exception as e:
                     logger.error(
                         "ERROR on attempt %d/%d for %s: %s",
@@ -310,10 +312,25 @@ class CanvasGradesFetcher:
 
             logger.error("All %d attempts failed for %s.", max_retries, filename)
             failed.append(filename)
+            return False
 
         start = time.time()
-        with ThreadPoolExecutor(max_workers=MAX_PARALLEL_UPLOADS) as pool:
-            pool.map(_upload_single, file_paths)
+        first_file = file_paths[0]
+        remaining_files = file_paths[1:]
+        # Before spawning any thread, upload first file 
+        # Since canvas doesnt offer on_duplicate for folders, we need to use file upload to ensure no race conditions occur on folder creation
+        if not _upload_single(first_file):
+            elapsed = time.time() - start
+            logger.warning(
+                "Upload aborted: file failed for folder '%s' in %.1fs",
+                folder_path,
+                elapsed,
+            )
+            return
+
+        if remaining_files:
+            with ThreadPoolExecutor(max_workers=MAX_PARALLEL_UPLOADS) as pool:
+                list(pool.map(_upload_single, remaining_files))
         elapsed = time.time() - start
 
         ok_count = len(file_paths) - len(failed)
