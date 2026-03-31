@@ -13,4 +13,4 @@ Our application is a bit different. We have legacy PHP code that we want to hand
 For every URI (the path after the site name), it checks if there exists a Symfony route for it.
 If it doesn't exist, it falls back to looking for existing PHP files in the `public/` directory with the same name.
 
-<insert flowchart here>
+<img alt="flowchart showing the flow of HTTP requests to the server" src="../readme/Symfony Flowchart.png">
