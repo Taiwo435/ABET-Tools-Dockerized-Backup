@@ -23,7 +23,7 @@ root
     └── 📁reportgen
     └── 📁test
     ├── docker_compose.yml
-    └── env.demo
+    └── demo.env
 ```
 
 - **app/**: the PHP/Apache server that hosts the website on port 8080
@@ -37,7 +37,7 @@ This file is what orchestrates every docker container to work together
 
 ### .env
 
-There should be a .env that docker-compose.yml relies on. `.env` will hold important environment variables for production that I can't track. A template of the required .env files are in `env.demo` that has variables that we MUST change for progression.
+There should be a .env that docker-compose.yml relies on. `.env` will hold important environment variables for production that I can't track. A template of the required .env files are in `demo.env` that has variables that we MUST change for progression.
 
 ## Scripts Directory (/scripts)
 
