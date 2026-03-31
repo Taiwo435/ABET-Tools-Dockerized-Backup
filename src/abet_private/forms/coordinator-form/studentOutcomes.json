@@ -5,8 +5,14 @@
   "method": "POST",
   "fields": [
     {
-      "type": "section-label",
-      "label": "Courses and Method of Assessment for Each Outcome"
+      "name": "student_outcomes_definition",
+      "label": "Student Outcomes",
+      "type": "text-field"
+    },
+    {
+      "name": "relationship_to_peos",
+      "label": "Relationship of Student Outcomes to Program Educational Objectives",
+      "type": "text-field"
     },
     {
       "type": "expandable-grid",
@@ -15,7 +21,7 @@
       "columns": [
         {
           "name": "abet_outcome",
-          "label": "ABET",
+          "label": "ABET Outcome",
           "type": "text"
         },
         {
@@ -32,12 +38,9 @@
       "maxRows": 50,
       "required": false
     },
+
     {
       "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Summary of Assessment Results"
     },
     {
       "type": "expandable-grid",
@@ -58,17 +61,14 @@
       "maxRows": 10,
       "required": false
     },
+
     {
       "type": "section-break"
     },
     {
-      "type": "section-label",
-      "label": "Percentages of Met and Times of 2 Consecutive Semester with Not Met"
-    },
-    {
       "type": "expandable-grid",
       "name": "percentages_met_table",
-      "label": "Table 4-6: Percentages of Met and times of 2 consecutive semester with Not Met",
+      "label": "Table: Percentages of Met and Consecutive Not Met",
       "columns": [
         {
           "name": "outcome",
@@ -87,7 +87,7 @@
         },
         {
           "name": "times_two_consecutive_semesters_not_met",
-          "label": "Times of 2 Consecutive Sem. Not Met",
+          "label": "Times of 2 Consecutive Semesters Not Met",
           "type": "text"
         },
         {

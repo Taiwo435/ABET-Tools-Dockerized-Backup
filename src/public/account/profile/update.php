@@ -7,6 +7,8 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/validators.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/account_profile_service.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
+
 
 // this must be a POST request
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {

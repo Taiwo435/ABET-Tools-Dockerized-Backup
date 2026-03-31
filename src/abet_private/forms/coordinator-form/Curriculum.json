@@ -1,18 +1,44 @@
 {
   "title": "Curriculum",
-  "name": "cse_elective_courses",
+  "name": "curriculum",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
-      "type": "section-label",
-      "label": "Computer Systems Engineering 400-Level Elective Courses"
+      "name": "program_curriculum",
+      "label": "Program Curriculum",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "table_5_1_curriculum",
+      "label": "Table 5-1 Curriculum",
+      "columns": [
+        { "name": "course", "label": "Course", "type": "text" },
+        { "name": "title", "label": "Title", "type": "text" },
+        { "name": "credit_hours", "label": "Credit Hours", "type": "text" },
+        { "name": "category", "label": "Category", "type": "text" }
+      ],
+      "maxRows": 50,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "table_5_1a_curriculum",
+      "label": "Table 5-1a Curriculum",
+      "columns": [
+        { "name": "course", "label": "Course", "type": "text" },
+        { "name": "title", "label": "Title", "type": "text" },
+        { "name": "credit_hours", "label": "Credit Hours", "type": "text" },
+        { "name": "category", "label": "Category", "type": "text" }
+      ],
+      "maxRows": 50,
+      "required": false
     },
     {
       "type": "expandable-grid",
       "name": "cse_400_level_courses",
       "label": "Computer Systems Engineering Elective Courses",
-      "description": "List the 400-level elective courses and indicate whether they are required for the Cybersecurity concentration.",
       "columns": [
         {
           "name": "course_number",
@@ -36,6 +62,11 @@
       ],
       "maxRows": 50,
       "required": false
+    },
+    {
+      "name": "course_syllabi",
+      "label": "Course Syllabi",
+      "type": "text-field"
     }
   ]
 }

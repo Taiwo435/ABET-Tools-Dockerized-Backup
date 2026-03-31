@@ -1,5 +1,5 @@
 <?php
-
+// Need to implement DB tables still
 function handleSaveError($message) {
     $_SESSION['coordinator_form_error_flag'] = true;
     $_SESSION['coordinator_form_old'] = $_POST;

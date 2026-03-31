@@ -9,6 +9,7 @@ config.php
 *.crt
 *cache*
 *.secrets
+!/docker/demo.env
 
 # symlink to env, not harmful
 !/src/abet_private/.env

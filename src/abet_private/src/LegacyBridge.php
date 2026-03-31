@@ -131,12 +131,6 @@ class LegacyBridge
         
 
         
-
-        
-
-        
-
-        
         LegacyBridge::doSecurityChecks($legacyRoot, $requestPathInfo);
         // Resolve to absolute canonical path
         $resolvedPath = realpath("{$legacyRoot}{$requestPathInfo}");

@@ -1,6 +1,7 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/coordinator_form_load.php';
 
 $pageNumber = $_GET['page']; // pageNumber is 1-indexed

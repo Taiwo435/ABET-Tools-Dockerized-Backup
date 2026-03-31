@@ -1,3 +1,7 @@
+<?php
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

@@ -1,43 +1,47 @@
 {
   "title": "Facilities",
-  "name": "computer_resources",
+  "name": "facilities",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
+      "name": "offices_classrooms_labs",
+      "label": "Offices, Classrooms, and Laboratories",
+      "type": "text-field"
+    },
+    {
       "type": "expandable-grid",
       "name": "computer_resources_table",
       "label": "Computer Resources",
-      "description": "Add one row per room or computer resource entry.",
       "columns": [
-        {
-          "name": "building_code",
-          "label": "Bldg. Code",
-          "type": "text"
-        },
-        {
-          "name": "room_number",
-          "label": "Rm. No.",
-          "type": "text"
-        },
-        {
-          "name": "capacity",
-          "label": "Cap",
-          "type": "text"
-        },
-        {
-          "name": "use",
-          "label": "Use",
-          "type": "text-field"
-        },
-        {
-          "name": "zoom_level",
-          "label": "Zoom Level",
-          "type": "text"
-        }
+        { "name": "building_code", "label": "Bldg. Code", "type": "text-field" },
+        { "name": "room_number", "label": "Room Number", "type": "text-field" },
+        { "name": "capacity", "label": "Capacity", "type": "text-field" },
+        { "name": "use", "label": "Use", "type": "text-field" },
+        { "name": "zoom_level", "label": "Zoom Level", "type": "text-field" }
       ],
       "maxRows": 20,
       "required": false
+    },
+    {
+      "name": "guidance",
+      "label": "Guidance",
+      "type": "text-field"
+    },
+    {
+      "name": "maintenance_and_upgrading",
+      "label": "Maintenance and Upgrading of Facilities",
+      "type": "text-field"
+    },
+    {
+      "name": "library_services",
+      "label": "Library Services",
+      "type": "text-field"
+    },
+    {
+      "name": "overall_comments",
+      "label": "Overall Comments on Facilities",
+      "type": "text-field"
     }
   ]
 }
