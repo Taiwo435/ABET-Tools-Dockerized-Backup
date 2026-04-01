@@ -26,11 +26,6 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
-
-
-
-
 --
 -- Logging tables for audit and login events
 --
@@ -68,13 +63,14 @@ CREATE TABLE IF NOT EXISTS login_events (
 -- course_data is a JSON field that stores all the extracted data for a course, including outcomes, assignments, etc. 
 
 CREATE TABLE IF NOT EXISTS courses (
-    course_id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT AUTO_INCREMENT,
     course_code VARCHAR(50) NOT NULL,                                               -- the course code found in ASU class search e.g. 40803. NOT the end number in the canvas URL.
     course_term VARCHAR(50),
     professor_id INT NOT NULL,
     course_data JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (course_id, professor_id),
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -620,3 +616,5 @@ CREATE TABLE IF NOT EXISTS job_history (
     FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE
     SET NULL
 );
+
+

@@ -33,6 +33,7 @@ import docx
 from csv_filter import RosterMap, parse_roster_for_major_map
 from xhtml2pdf import pisa
 from upload_abet_reports import upload_abet_report
+from update_database import DatabaseManager
 from quiz_statistics import render_quiz_statistics_pdf
 
 # Logging setup
@@ -54,6 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+db_manager = DatabaseManager()
 
 # Enums
 class TaskType(str, enum.Enum):
@@ -1354,6 +1356,42 @@ def generate_report_json(
         cleanup_temp_dir(temp_dir)
 
 
+# Canvas course listing (used by select-courses.php)
+
+ALLOWED_COURSE_IDS = {240102}  # Always show Testing Ground course if present in response
+
+@app.get("/canvas/courses")
+def list_canvas_courses(
+    canvas_access_token: Annotated[str, Header()],
+    enrollment_type: str = Query(default="teacher"),
+):
+    """Fetch instructor courses from Canvas, filtered to CSE + allowed IDs."""
+    fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
+    courses = fetcher.get_paginated_list(
+        "courses",
+        params={"enrollment_type": enrollment_type, "include[]": ["term", "total_students"]},
+    )
+    # Keep only CSE courses + explicitly allowed course IDs
+    filtered = [
+        c for c in courses
+        if c.get("id") in ALLOWED_COURSE_IDS
+        or (c.get("course_code") or "").upper().startswith("CSE")
+        # Also match term-prefixed codes like "2023Fall-T-CSE423-70483"
+        or "CSE" in (c.get("course_code") or "").upper()
+    ]
+    return filtered
+
+@app.get("/jobs")
+def get_jobs(
+    submitted_by_user_id: Annotated[int | None, Header(alias="submitted-by-user-id")] = None,
+    limit: int = 50,
+):
+    from shared.db import list_jobs
+
+    jobs = list_jobs(service="extraction", submitted_by=submitted_by_user_id, limit=limit)
+    return {"success": True, "jobs": jobs}
+
+
 @app.get("/job-status/{job_id}")
 def get_job_status(job_id: str):
     """Check job status from Redis with MySQL fallback."""
@@ -1418,6 +1456,7 @@ def get_job_status(job_id: str):
 def run_pipeline_sync(
     course_id_to_push: str,
     canvas_access_token: str,
+    user_id: str,
     course_ids_to_pull: list[str],
     student_major_map: RosterMap,
     on_progress: Callable[[int, str], None] | None = None,
@@ -1576,6 +1615,7 @@ def run_pipeline_sync(
                         ],
                     }
                     upload_abet_report(course_id_to_push, report_json, grades_fetcher)
+                    db_manager.update_course_data(report_json=report_json, user_id=user_id, table="courses")
                     logger.info(
                         "Uploaded ABET reports for course '%s'", course_id_to_pull
                     )
@@ -1598,6 +1638,7 @@ def move_data_between_courses(
         List[str], Query(min_length=1, description="Enter all Course IDs to pull from")
     ],
     roster_file: UploadFile = File(...),
+    course_name: Annotated[str | None, Query()] = None,
     submitted_by_user_id: Annotated[int | None, Header()] = None,
 ):
     from shared.celery_app import celery_app
@@ -1626,11 +1667,28 @@ def move_data_between_courses(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse roster file: {e}")
 
+    from shared.locks import acquire_course_lock, release_course_lock
+
+    # Prevent duplicate extraction of the same source course
+    locked_ids = []
+    for cid in course_ids_to_pull:
+        if not acquire_course_lock(cid, course_id_to_push):
+            # Roll back any locks we just acquired
+            for acquired in locked_ids:
+                release_course_lock(acquired, course_id_to_push)
+            raise HTTPException(
+                status_code=409,
+                detail=f"Course {cid} is already being extracted (by you or another user). Please wait for the current extraction to finish before trying again.",
+            )
+        locked_ids.append(cid)
+
     # Serialize RosterMap to plain dict for Celery
     job_params = {
         "course_id_to_push": course_id_to_push,
         "canvas_access_token": canvas_access_token,
+        "submitted_by_user_id": submitted_by_user_id,
         "course_ids_to_pull": course_ids_to_pull,
+        "course_name": course_name,
         "roster": {
             "by_asurite": dict(student_major_map.by_asurite),
             "by_id": dict(student_major_map.by_id),

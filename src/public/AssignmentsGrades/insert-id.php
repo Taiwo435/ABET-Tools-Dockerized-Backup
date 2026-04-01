@@ -1,0 +1,318 @@
+<?php
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_login();
+$csrfToken = csrf_token('tool1_proxy');
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connect to Class | ABET Tools</title>
+  <link rel="stylesheet" href="/assets/css/tool1.css">
+  <style></style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="site-title">ABET Tools - Connect to Class</div>
+    <a href="/../index.php" class="nav-link">← Back to Dashboard</a>
+  </header>
+
+  <div class="main-container">
+    
+    <div class="page-header">
+      <div class="page-title">
+        <h1>Connect to Canvas Class</h1>
+        <p>Enter your Canvas Access Token</p>
+      </div>
+    </div>
+
+        <form id="canvasConnectionForm">
+          <div class="form-grid">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">
+                Canvas Access Token <span class="required">*</span>
+              </label>
+              <input type="password" class="form-input" id="classToken" placeholder="Paste your Canvas access token" required>
+              <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Source Course ID <span class="required">*</span>
+              </label>
+              <input type="text" class="form-input" id="sourceCourseId" placeholder="e.g., 240102" required
+                     pattern="\d+" title="Numeric Course ID only">
+              <div class="form-help">The canvas course to extract data from.</div>
+              <div class="form-help">Look at url for the id, eg.: https://canvas.asu.edu/courses/<span style="font-weight: bold;">240102</span></div>
+              <button type="button" id="addSourceId" class="btn btn-secondary">Add Source ID</button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Destination Course ID <span class="required">*</span>
+              </label>
+              <input type="text" class="form-input" id="destCourseId" placeholder="e.g., 240102" required
+                     pattern="\d+" title="Numeric Course ID only">
+              <div class="form-help">The canvas course to push data into</div>
+            </div>
+            <div class>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="connectBtn">
+            <span class="btn-icon">🔗</span> Verify & Connect
+          </button>
+        <!-- </form>
+                <div class="divider">
+          <span class="divider-text">OR</span>
+        </div>
+
+        Existing Classes
+        <div class="form-group">
+          <label class="form-label">Select from Previously Connected Classes</label>
+          <select class="form-select" id="existingClass" onchange="selectExistingClass()">
+            <option value="">-- Choose a class --</option>
+            <option value="cse445-fall24">CSE 445 - Software Security (Fall 2024)</option>
+            <option value="cse310-fall24">CSE 310 - Data Structures (Fall 2024)</option>
+          </select>
+          <div class="form-help">Previously connected classes in this semester</div>
+        </div>
+
+      </div>
+    </div>
+
+    Connection Status (hidden initially)
+    <div class="alert alert-success" id="successAlert" style="display: none;">
+
+        </form> -->
+
+    <div class="alert alert-success" id="successAlert">
+      <div class="alert-content">
+        <strong>Successfully connected!</strong>
+        <div style="margin-top: 5px;">
+          <strong>Course:</strong> <span id="connectedCourse"></span><br>
+          <strong>Term:</strong> <span id="connectedTerm"></span>
+        </div>
+        <div style="margin-top: 15px;">
+          <a href="roster-upload.php" class="btn btn-primary">Continue to Roster Upload →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-duplicate" id="duplicateAlert">
+      <div class="alert-content">
+        <strong>This course has already been uploaded to the destination.</strong>
+        <strong>Cancel the upload or continue to overwrite the previous upload.</strong>
+        <div style="margin-top: 5px;">
+          <strong>Course:</strong> <span id="duplicateCourse"></span><br>
+          <strong>Term:</strong> <span id="duplicateTerm"></span>
+        </div>
+        <div style="margin-top: 15px;">
+          <a href="tool1.php" class="btn btn-primary">Cancel the Upload</a>
+          <a href="roster-upload.php?overwrite=1" class="btn btn-primary">Overwrite &amp; Continue to Roster Upload →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-error" id="errorAlert">
+      <div class="alert-content">
+        <strong>Connection failed</strong>
+        <span id="errorMessage"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('canvasConnectionForm');
+    const connectBtn = document.getElementById('connectBtn');
+    const successAlert = document.getElementById('successAlert');
+    const duplicateAlert = document.getElementById('duplicateAlert');
+    const errorAlert = document.getElementById('errorAlert');
+
+    function showError(msg) {
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'block';
+      document.getElementById('errorMessage').textContent =
+        typeof msg === 'string' ? msg : JSON.stringify(msg);
+      errorAlert.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showSuccess(course) {
+      errorAlert.style.display = 'none';
+      duplicateAlert.style.display = 'none';
+      document.getElementById('connectedCourse').textContent =
+        course.name + ' (' + course.course_code + ')';
+      document.getElementById('connectedTerm').textContent =
+        course.term || 'N/A';
+      successAlert.style.display = 'block';
+      successAlert.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showDuplicateCase(course) {
+      errorAlert.style.display = 'none';
+      successAlert.style.display = 'none';
+      document.getElementById('duplicateCourse').textContent =
+        course.name + ' (' + course.course_code + ')';
+      document.getElementById('duplicateTerm').textContent =
+        course.term || 'N/A';
+      duplicateAlert.style.display = 'block';
+      duplicateAlert.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('addSourceId').addEventListener('click', () => {
+      const container = document.getElementById('sourceCourseId').closest('.form-group')
+      
+      const addSourceIdDiv = document.createElement('div');
+      addSourceIdDiv.className = 'form-group';
+
+      const newInput = document.createElement('input');
+      newInput.className = 'form-input';
+      newInput.name = 'sourceCourseId[]';
+      newInput.placeholder = 'e.g., 240102';
+      newInput.pattern = '\\d+';
+      newInput.title = 'Numeric Course ID Only';
+      const addButton = document.getElementById('addSourceId');
+
+      const removeButton = document.createElement('button');
+      removeButton.type = 'button';
+      removeButton.textContent = 'Remove';
+      removeButton.className = 'btn btn-secondary';
+      removeButton.addEventListener('click', () => {
+                addSourceIdDiv.remove();}
+     );
+     addSourceIdDiv.appendChild(newInput);
+     addSourceIdDiv.appendChild(removeButton); 
+
+     container.insertBefore(addSourceIdDiv, addButton);
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const token    = document.getElementById('classToken').value.trim();
+      const sourceId =  [...new Set([document.getElementById('sourceCourseId').value.trim(),
+          ...Array.from(document.querySelectorAll('input[name="sourceCourseId[]"]')).map(el => el.value.trim())])
+        ].filter(Boolean)
+      const destId   = document.getElementById('destCourseId').value.trim();
+      console.log('source ids:', sourceId);
+      if (!token || !sourceId || !destId) {
+        showError('All fields are required.');
+        return;
+      }
+
+    
+
+    //   // Simulate connection
+    //   setTimeout(() => {
+    //     const classInfo = {
+    //       name: 'CSE 445 - Software Security',
+    //       semester: 'Fall 2024',
+    //       studentCount: '48',
+    //       token: token,
+    //       classId: classId
+    //     };
+        
+    //     // Save to localStorage
+    //     localStorage.setItem('selectedClass', JSON.stringify(classInfo));
+        
+    //     document.getElementById('connectedClass').textContent = classInfo.name + ' (' + classInfo.semester + ')';
+    //     document.getElementById('studentCount').textContent = classInfo.studentCount;
+    //     document.getElementById('successAlert').style.display = 'flex';
+        
+    //     // Scroll to success message
+    //     document.getElementById('successAlert').scrollIntoView({ behavior: 'smooth' });
+    //   }, 1000);
+    // });
+
+    // function selectExistingClass() {
+    //   const select = document.getElementById('existingClass');
+    //   const value = select.value;
+      
+    //   if (value) {
+    //     const text = select.options[select.selectedIndex].text;
+        
+    //     // Parse class info from dropdown text
+    //     const match = text.match(/^(.+?)\s*\((.+?)\)$/);
+    //     let className = text;
+    //     let semester = 'Fall 2024';
+        
+    //     if (match) {
+    //       className = match[1].trim();
+    //       semester = match[2].trim();
+    //     }
+        
+    //     // Simulate loading existing class
+    //     setTimeout(() => {
+    //       const classInfo = {
+    //         name: className,
+    //         semester: semester,
+    //         studentCount: '48',
+    //         token: 'existing_token',
+    //         classId: value
+    //       };
+          
+    //       // Save to localStorage
+    //       localStorage.setItem('selectedClass', JSON.stringify(classInfo));
+          
+    //       document.getElementById('connectedClass').textContent = text;
+    //       document.getElementById('studentCount').textContent = classInfo.studentCount;
+    //       document.getElementById('successAlert').style.display = 'flex';
+          
+    //       // Scroll to success message
+    //       document.getElementById('successAlert').scrollIntoView({ behavior: 'smooth' });
+    //     }, 500);
+    //   }
+    // }
+      let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>';
+
+      connectBtn.disabled = true;
+      connectBtn.textContent = 'Verifying…';
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'none';
+
+      try {
+        const storeBody = new FormData();
+        storeBody.append('action', 'store-credentials');
+        storeBody.append('canvas_token', token);
+        storeBody.append('source_course_id', sourceId);
+        storeBody.append('dest_course_id', destId);
+        storeBody.append('csrf_token', csrfToken);
+
+        const storeRes = await fetch('api-proxy.php', { method: 'POST', body: storeBody });
+        const storeData = await storeRes.json();
+        if (storeData.next_csrf) csrfToken = storeData.next_csrf;
+        if (!storeData.success) {
+          showError(storeData.message || 'Failed to store credentials.');
+          return;
+        }
+
+        const verifyBody = new FormData();
+        verifyBody.append('action', 'verify-course');
+        verifyBody.append('csrf_token', csrfToken);
+
+        const verifyRes = await fetch('api-proxy.php', { method: 'POST', body: verifyBody });
+        const verifyData = await verifyRes.json();
+        if (verifyData.next_csrf) csrfToken = verifyData.next_csrf;
+        if (!verifyData.success) {
+          showError(verifyData.message || 'Course verification failed.');
+          return;
+        }
+
+        const course = verifyData.course;
+        if (course.duplicate_status) {
+          showDuplicateCase(course);
+        } else {
+          showSuccess(course);
+        }
+
+      } catch (err) {
+        showError('Network error: ' + err.message);
+      } finally {
+        connectBtn.disabled = false;
+        connectBtn.textContent = '🔗 Verify & Connect';
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -13,8 +13,8 @@ from extraction_api.assignment_extraction_api import run_pipeline_sync
 
 @shared_task(
     name="extraction.run_pipeline",
-    bind=True, # Means the first argument will be the task instance(self)
-    base=TrackedTask, # Specifies the base class to use for the task
+    bind=True,  # Means the first argument will be the task instance(self)
+    base=TrackedTask,  # Specifies the base class to use for the task
     queue="extraction",
 )
 def run_extraction_pipeline(self, job_params: dict):
@@ -24,12 +24,19 @@ def run_extraction_pipeline(self, job_params: dict):
         by_id=job_params["roster"]["by_id"],
     )
 
-    result = run_pipeline_sync(
-        course_id_to_push=job_params["course_id_to_push"],
-        canvas_access_token=job_params["canvas_access_token"],
-        course_ids_to_pull=job_params["course_ids_to_pull"],
-        student_major_map=roster,
-        on_progress=lambda pct, msg: self.update_progress(pct, msg),
-    )
+    course_ids = job_params["course_ids_to_pull"]
+    try:
+        result = run_pipeline_sync(
+            course_id_to_push=job_params["course_id_to_push"],
+            canvas_access_token=job_params["canvas_access_token"],
+            user_id=str(job_params.get("submitted_by_user_id") or ""),
+            course_ids_to_pull=course_ids,
+            student_major_map=roster,
+            on_progress=lambda pct, msg: self.update_progress(pct, msg),
+        )
+        return result
+    finally:
+        from shared.locks import release_course_lock
 
-    return result
+        for cid in course_ids:
+            release_course_lock(cid, job_params["course_id_to_push"])

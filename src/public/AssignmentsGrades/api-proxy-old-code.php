@@ -3,7 +3,6 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -71,25 +70,6 @@ function curl_api(string $url, string $method, string $token, array $curlExtra =
     return ['ok' => $ok, 'status' => $httpCode, 'body' => $decoded, 'error' => null];
 }
 
-function getCoursesFromSemester(string $term, array $courses): array
-{
-    $filtered = array_filter($courses, function($course) use ($term) {
-        // Always include Testing Ground course regardless of term
-        if (($course['id'] ?? 0) === 240102) return true;
-        return isset($course['term']['name']) && str_contains($course['term']['name'], $term);
-    });
-
-    // only return fields the frontend needs
-    return array_values(array_map(function($c) {
-        return [
-            'id'           => $c['id'],
-            'name'         => $c['name'] ?? '',
-            'course_code'  => $c['course_code'] ?? '',
-            'total_students' => $c['total_students'] ?? 0,
-            'term'         => ['name' => $c['term']['name'] ?? ''],
-        ];
-    }, $filtered));
-}
 //  Gate 
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -102,16 +82,11 @@ if ($action === '') {
 }
 
 $allowed_actions = [
-    'verify-token',
     'store-credentials', 
     'verify-course', 
     'start-extraction', 
-    'start-extraction-v2',
     'check-extraction-status', 
-    'check-job-history',
-    'run-formatting',
-    'fetch-classes-from-semester',
-    'store-class-data-from-grid'
+    'run-formatting'
 ];
 if (!in_array($action, $allowed_actions, true)) {
     json_response(['success' => false, 'message' => 'Unknown action.'], 400);
@@ -126,134 +101,56 @@ if (!csrf_validate($csrf, 'tool1_proxy')) {
 // Actions 
 
 if ($action === 'store-credentials') {
-    $token = post_str('canvas_token');
+    $token    = post_str('canvas_token');
+    $sourceId = post_str('source_course_id');
+    $destId   = post_str('dest_course_id');
 
     if ($token === '') {
         json_response(['success' => false, 'message' => 'Canvas token is required.'], 400);
     }
 
+    $errors = array_filter([
+        validate_course_id($sourceId, 'Source Course ID'),
+        validate_course_id($destId, 'Destination Course ID'),
+    ]);
     if ($errors) {
         json_response(['success' => false, 'message' => 'Validation failed.', 'errors' => array_values($errors)], 422);
     }
- 
+
     $_SESSION['canvas_token']     = $token;
+    $_SESSION['source_course_id'] = $sourceId;
+    $_SESSION['dest_course_id']   = $destId;
     $_SESSION['token_stored_at']  = time();
 
     json_response(['success' => true, 'message' => 'Credentials stored.']);
 }
 
 
-if ($action === 'fetch-classes-from-semester')
-{   
-    $term = post_str('term');
-    $token = $_SESSION['canvas_token'] ?? '';
-
-    if ($token === '') {
-        json_response(['success' => false, 'message' => 'No token found. Please connect first.'], 401);
-    }
-
-    // Call Python extraction API instead of Canvas directly
-    $url = api_base('extraction') . '/canvas/courses?' . http_build_query(['enrollment_type' => 'teacher']);
-    $result = curl_api($url, 'GET', $token);
-
-    if ($result['error']) {
-        json_response(['success' => false, 'message' => 'cURL error: ' . $result['error']], 502);
-    }
-
-    if ($result['status'] === 401) {
-        json_response(['success' => false, 'message' => 'Token is invalid or expired.'], 401);
-    }
-
-    if ($result['status'] !== 200) {
-        $detail = $result['body']['detail'] ?? ('Unexpected response HTTP {' . $result['status'] . '}');
-        json_response(['success' => false, 'message' => $detail], $result['status']);
-    }
-
-    $courses = getCoursesFromSemester($term, $result['body']);
-    json_response(['success' => true, 'courses' => $courses]);
-} 
-
-if ($action === 'store-class-data-from-grid')
-{   
-    $_SESSION['class_data'] = json_decode(post_str('selected_courses_data'), true);
-    json_response(['success' => true]);
-} 
-
-if ($action === 'verify-token'){
-
-    if ($_SESSION['canvas_token'] === '')
-    {
-        json_response(['success' => false, 'message' => 'No token found']);
-    }
-
-    $canvas_endpoint = "https://canvas.asu.edu/api/v1/users/self";
-    $ch = curl_init($canvas_endpoint);
-
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => ["Authorization: Bearer " . $_SESSION['canvas_token']],
-        CURLOPT_TIMEOUT => 10
-    ]);
-    $body = curl_exec($ch);
-    $httpcode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
-
-    if ($error)
-    {
-        json_response(['success' => false, 'message' => 'cURL error: ' . $error]);
-    }
-
-    if ($httpcode === 401)
-    {
-        json_response(['success' => false, 'message' => 'Token is invalid or expired']);
-    }
-    
-    if ($httpcode !== 200)
-    {
-        json_response(['success' => false, 'message' => 'Unexpected reponse HTTP {$httpcode}']);
-    }
-
-     json_response(['success' => true]);
-
-}
-
 if ($action === 'verify-course') {
-    $courseId = post_str('course_id');
-    $token = $_SESSION['canvas_token'] ?? '';
+    $token    = $_SESSION['canvas_token']     ?? '';
+    $courseId = $_SESSION['source_course_id'] ?? '';
+    $destId   = $_SESSION['dest_course_id']   ?? '';
 
-    if ($token === '') {
-        json_response(['success' => false, 'message' => 'No canvas token found.'], 401);
-    }
-    if ($courseId === '') {
-        json_response(['success' => false, 'message' => 'Course ID is required.'], 400);
+    if ($token === '' || $courseId === '' || $destId === '') {
+        json_response(['success' => false, 'message' => 'No credentials in session. Please connect first.'], 401);
     }
 
-    $url = api_base('extraction') . '/verify-course/' . urlencode($courseId);
+    // Token TTL — 30 minutes
+    if (time() - ($_SESSION['token_stored_at'] ?? 0) > 1800) {
+        unset($_SESSION['canvas_token'], $_SESSION['source_course_id'], $_SESSION['dest_course_id'], $_SESSION['token_stored_at']);
+        json_response(['success' => false, 'message' => 'Session credentials expired. Please reconnect.'], 401);
+    }
+
+    $url    = api_base('extraction') . '/verify-course/' . urlencode($courseId)
+        . '?' . http_build_query(['dest_course_id' => $destId]);
     $result = curl_api($url, 'GET', $token);
 
-    if ($result['error']) {
-        json_response(['success' => false, 'message' => 'cURL error: ' . $result['error']], 502);
-    }
-    if ($result['status'] === 401) {
-        json_response(['success' => false, 'message' => 'Token is invalid or expired.'], 401);
-    }
-    if ($result['status'] === 404) {
-        json_response(['success' => false, 'message' => 'Course not found. Check the ID and try again.'], 404);
-    }
-    if ($result['status'] !== 200) {
-        $detail = $result['body']['detail'] ?? "Unexpected response HTTP {$result['status']}";
+    if (!$result['ok']) {
+        $detail = $result['error'] ?? ($result['body']['detail'] ?? 'Verification failed.');
         json_response(['success' => false, 'message' => $detail], $result['status']);
     }
 
-    json_response([
-        'success' => true,
-        'course' => [
-            'id'          => $result['body']['course_id'] ?? $courseId,
-            'name'        => $result['body']['name'] ?? '',
-            'course_code' => $result['body']['course_code'] ?? '',
-        ]
-    ]);
+    json_response(['success' => true, 'course' => $result['body']]);
 }
 
 
@@ -263,7 +160,6 @@ if ($action === 'start-extraction') {
     $token    = $_SESSION['canvas_token']     ?? '';
     $sourceId = $_SESSION['source_course_id'] ?? '';
     $destId   = $_SESSION['dest_course_id']   ?? '';
-    $userId = (int)($_SESSION['user_id'] ?? 0);
 
     if ($token === '' || $sourceId === '' || $destId === '') {
         json_response(['success' => false, 'message' => 'No credentials in session. Please connect first.'], 401);
@@ -296,19 +192,11 @@ if ($action === 'start-extraction') {
         $_FILES['roster_file']['name']
     );
 
-    $headers = ['canvas-access-token: ' . $token];
-    if ($userId <= 0) {
-        json_response(['success' => false, 'message' => 'Session is missing user identity. Please log in again.'], 401);
-    }
-
-    $headers[] = 'submitted-by-user-id: ' . $userId;
-    $headers[] = 'user-id: ' . $userId;
-
     $ch = curl_init($extractionUrl);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => $headers,
+        CURLOPT_HTTPHEADER     => ['canvas-access-token: ' . $token, 'user-id: ' . $_SESSION['user_id']],
         CURLOPT_TIMEOUT        => 30, // Background tasks return immediately
         CURLOPT_POSTFIELDS     => ['roster_file' => $rosterCurl],
     ]);
@@ -404,117 +292,6 @@ if ($action === 'run-formatting') {
         'message' => 'Pipeline complete. Data extracted, formatted, and uploaded to Canvas.',
         'formatting' => $formatResult['body'],
     ]);
-}
-
-if ($action === 'start-extraction-v2') {
-    set_time_limit(60);
-
-    $token     = $_SESSION['canvas_token'] ?? '';
-    $sourceId  = post_str('source_course_id');
-    $destId    = post_str('dest_course_id');
-    $overwrite = post_str('overwrite') === '1';
-    $userId    = (int)($_SESSION['user_id'] ?? 0);
-
-    if ($token === '') {
-        json_response(['success' => false, 'message' => 'No token in session.'], 401);
-    }
-    if ($sourceId === '' || $destId === '') {
-        json_response(['success' => false, 'message' => 'Course IDs are required.'], 400);
-    }
-    if (!isset($_FILES['roster_file']) || $_FILES['roster_file']['error'] !== UPLOAD_ERR_OK) {
-        json_response(['success' => false, 'message' => 'Roster file is required.'], 400);
-    }
-
-    $ext = strtolower(pathinfo($_FILES['roster_file']['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, ['csv', 'xls'], true)) {
-        json_response(['success' => false, 'message' => 'Only .csv and .xls roster files are accepted.'], 400);
-    }
-
-    // Build extraction API URL — single course
-    $courseName = post_str('course_name');
-    $queryArgs  = ['course_ids_to_pull' => $sourceId];
-    if ($courseName !== '') {
-        $queryArgs['course_name'] = $courseName;
-    }
-
-    $extractionUrl = api_base('extraction')
-        . '/move-data-between-courses/' . urlencode($destId)
-        . '?' . http_build_query($queryArgs);
-
-    $rosterCurl = new CURLFile(
-        $_FILES['roster_file']['tmp_name'],
-        $_FILES['roster_file']['type'] ?: 'text/csv',
-        $_FILES['roster_file']['name']
-    );
-
-    $headers = ['canvas-access-token: ' . $token];
-    if ($userId > 0) {
-        $headers[] = 'submitted-by-user-id: ' . $userId;
-        $headers[] = 'user-id: ' . $userId;
-    }
-
-    $ch = curl_init($extractionUrl);
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => $headers,
-        CURLOPT_TIMEOUT        => 30,
-        CURLOPT_POSTFIELDS     => ['roster_file' => $rosterCurl],
-    ]);
-
-    $extractBody  = curl_exec($ch);
-    $extractCode  = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $extractError = curl_error($ch);
-    curl_close($ch);
-
-    if ($extractError || $extractCode < 200 || $extractCode >= 300) {
-        $decoded = json_decode((string) $extractBody, true);
-        $msg = $extractError ?: ($decoded['detail'] ?? 'Failed to start extraction.');
-        json_response(['success' => false, 'message' => $msg], $extractCode ?: 502);
-    }
-
-    $extractData = json_decode((string) $extractBody, true) ?: [];
-    json_response([
-        'success' => true,
-        'message' => 'Extraction started.',
-        'job_id'  => $extractData['job_id'] ?? null
-    ]);
-}
-
-if ($action === 'check-job-history') {
-    $token  = $_SESSION['canvas_token'] ?? '';
-    $userId = (int)($_SESSION['user_id'] ?? 0);
-
-    if ($token === '') {
-        json_response(['success' => false, 'message' => 'No token in session.'], 401);
-    }
-
-    $url = api_base('extraction') . '/jobs?limit=50';
-    $headers = ['canvas-access-token: ' . $token];
-    if ($userId > 0) {
-        $headers[] = 'submitted-by-user-id: ' . $userId;
-    }
-
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => $headers,
-        CURLOPT_TIMEOUT        => 10,
-    ]);
-
-    $body = curl_exec($ch);
-    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $err  = curl_error($ch);
-    curl_close($ch);
-
-    if ($err || $code !== 200) {
-        $decoded = json_decode((string) $body, true) ?: [];
-        $msg = $err ?: ($decoded['detail'] ?? 'Failed to fetch jobs.');
-        json_response(['success' => false, 'message' => $msg], $code ?: 502);
-    }
-
-    $data = json_decode((string) $body, true) ?: [];
-    json_response(['success' => true, 'jobs' => $data['jobs'] ?? []]);
 }
 
 json_response(['success' => false, 'message' => 'Unknown action.'], 400);

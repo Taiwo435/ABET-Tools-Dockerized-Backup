@@ -10,3 +10,4 @@ PyMySQL
 pytest
 python-dotenv
 openai
+mysql-connector-python

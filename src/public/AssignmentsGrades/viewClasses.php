@@ -340,6 +340,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
       <a href="/AssignmentsGrades/canvasTest.php" class="btn-primary">+ Add New Class</a>
     </div>
 
+  
     <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="filter-group">
