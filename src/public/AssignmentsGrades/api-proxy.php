@@ -87,6 +87,7 @@ function getCoursesFromSemester(string $term, array $courses): array
             'course_code'  => $c['course_code'] ?? '',
             'total_students' => $c['total_students'] ?? 0,
             'term'         => ['name' => $c['term']['name'] ?? ''],
+            'teachers'     => $c['teachers'] ?? [],
         ];
     }, $filtered));
 }
@@ -230,6 +231,15 @@ if ($action === 'verify-course') {
     }
 
     $url = api_base('extraction') . '/verify-course/' . urlencode($courseId);
+    $checkDuplicate = post_str('check_duplicate') === '1';
+    $destCourseId = post_str('dest_course_id');
+    
+    if ($checkDuplicate) {
+        if ($destCourseId === '') {
+            json_response(['success' => false, 'message' => 'Destination Course ID is required to verify duplicates.'], 400);
+        }
+        $url .= '?dest_course_id=' . urlencode($destCourseId);
+    }
     $result = curl_api($url, 'GET', $token);
 
     if ($result['error']) {
@@ -252,6 +262,8 @@ if ($action === 'verify-course') {
             'id'          => $result['body']['course_id'] ?? $courseId,
             'name'        => $result['body']['name'] ?? '',
             'course_code' => $result['body']['course_code'] ?? '',
+            'duplicate_status' => $result['body']['duplicate_status'] ?? false,
+            'teachers'    => $result['body']['teachers'] ?? []
         ]
     ]);
 }
@@ -435,6 +447,9 @@ if ($action === 'start-extraction-v2') {
     $queryArgs  = ['course_ids_to_pull' => $sourceId];
     if ($courseName !== '') {
         $queryArgs['course_name'] = $courseName;
+    }
+    if ($overwrite) {
+        $queryArgs['overwrite'] = 'true';
     }
 
     $extractionUrl = api_base('extraction')
