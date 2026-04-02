@@ -2,7 +2,6 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
-$role = $_SESSION['user_role'] ?? 'faculty';
 $config = require getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
 $destCourses = $config['dest_courses'];
 ?>
@@ -35,52 +34,22 @@ $destCourses = $config['dest_courses'];
     </div>
 
       <div>
-        <form id="canvasConnectionForm">
-          <div class="form-grid">
-            <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">
-                Canvas Access Token <span class="required">*</span>
-              </label>
-              <input type="password" class="form-input" id="classToken" placeholder="Paste your Canvas access token" required>
-              <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                Source Course ID <span class="required">*</span>
-              </label>
-              <input type="text" class="form-input" id="sourceCourseId" placeholder="e.g., 240102" required
-                     pattern="\d+" title="Numeric Course ID only">
-              <div class="form-help">The canvas course to extract data from.</div>
-              <div class="form-help">Look at url for the id, eg.: https://canvas.asu.edu/courses/<span style="font-weight: bold;">240102</span></div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                Destination Course ID <span class="required">*</span>
-              </label>
+            <form id="canvasConnectionForm">
+              <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label">
+                    Canvas Access Token <span class="required">*</span>
+                  </label>
+                  <input type="password" class="form-input" id="classToken" placeholder="Paste your Canvas access token" required>
+                  <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
+                </div>
+              <button type="submit" class="btn btn-primary" id="connectBtn">
+                <span class="btn-icon">🔗</span> Validate Token
+              </button>
+              </div>
+            </form>
 
-              <?php if ($role === 'admin'): ?>
-                <input type="text" class="form-input" id="destCourseId" placeholder="e.g., 240102" required
-                       pattern="\d+" title="Numeric Course ID only">
-                <div class="form-help">The canvas course to push data into</div>
-              <?php else: ?>
-                <select class="form-input" id="destCourseId" required>
-                  <option value="" disabled selected>Select the destination course</option>
-                  <?php foreach ($destCourses as $course): ?>
-                    <option value="<?= htmlspecialchars($course['id'], ENT_QUOTES, 'UTF-8') ?>">
-                      <?= htmlspecialchars($course['label'], ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars($course['id'], ENT_QUOTES, 'UTF-8') ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-                <div class="form-help">Select your program's destination course</div>
-              <?php endif; ?>
-
-            </div>
-          </div>
         </div>
-
-          <button type="submit" class="btn btn-primary" id="connectBtn">
-            <span class="btn-icon">🔗</span> Validate Token
-          </button>
 
     <div class="alert alert-success" id="successAlert">
       <div class="alert-content">
@@ -98,7 +67,7 @@ $destCourses = $config['dest_courses'];
       </div>
     </div>
 
-    <div class = "info-banner">
+    <div class = "info-banner" style ="width: fit-content; height: 15px;">
        <span>Your token is used only to fetch your courses from Canvas. It is not stored permanently.</span>
     </div>
   </div>
