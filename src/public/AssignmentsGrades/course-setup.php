@@ -2,7 +2,8 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
-
+$role = $_SESSION['user_role'] ?? 'faculty';
+error_log("user role: " . $role);
 if (empty($_SESSION['class_data'])) {
     header('Location: select-courses.php');
     exit;
@@ -54,7 +55,7 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
         <div class="card">
           <div class="card-title">Destination Course ID</div>
           <p style="font-size:0.85rem;color:#555;margin:0 0 12px">Enter the Canvas course ID where extracted data will be uploaded.</p>
-          <div style="display:flex;gap:10px;align-items:center">
+          <div style="display:flex;gap:10px;align-items:center" id="locationDestCourse">
             <input type="text" id="destCourseInput" placeholder="e.g. 240102" style="padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:0.9rem;flex:1">
             <button class="btn btn-outline" id="verifyDestBtn" onclick="verifyDestCourse()">Verify</button>
           </div>
@@ -94,6 +95,22 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
     // Per-course roster files: { courseId: File }
     const rosterFiles = {};
     let verifiedDestCourse = null; // { id, name, course_code }
+    const role = <?php echo json_encode($role); ?>;
+    console.log(role)
+    //Changed Destination-Course-Id input type Depending on faculty/admin role
+    function destCourseInputAbility()
+    {
+      const destCourseInput = document.getElementById('destCourseInput');
+      if (role === 'faculty')
+      {
+        destCourseInput.style.display = 'none'; 
+        const selectCourseId = document.createElement('select'); 
+
+        const locationDestCourse = document.getElementById('locationDestCourse');
+        locationDestCourse.insertBefore(selectCourseId, locationDestCourse.children[0]);
+        
+      }
+    }
 
     // Build sidebar
     function buildSidebar() {
@@ -298,6 +315,16 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
     // Init
     selectCourse(0);
+    destCourseInputAbility();
+    const sessionDestId = sessionStorage.getItem('abet_dest_course_id');
+    if (sessionDestId) {
+      document.getElementById('destCourseInput').value = sessionDestId;
+      verifyDestCourse().then(() => {
+        if (!verifiedDestCourse) selectCourse(0); // fallback if verification fails
+      });
+    } else {
+      selectCourse(0);
+    }
   </script>
 
 </body>
