@@ -5,6 +5,7 @@ Main business logic lives in assignment_extraction_api.py.
 """
 
 from celery import shared_task
+import requests
 
 from shared.base_task import TrackedTask
 from extraction_api.csv_filter import RosterMap
@@ -34,6 +35,29 @@ def run_extraction_pipeline(self, job_params: dict):
             student_major_map=roster,
             on_progress=lambda pct, msg: self.update_progress(pct, msg),
         )
+
+        self.update_progress(95, "Extraction complete. Starting Canvas module formatting...")
+        
+        formatting_base = "http://canvas_formatting_api:8001"
+        format_url = f"{formatting_base}/format-and-upload/{job_params['course_id_to_push']}"
+        
+        params = {
+            "course_folder_name": result.get("course_folder_name"),
+            "term_display": result.get("term_display"),
+        }
+        
+        if job_params.get("overwrite"):
+            params["overwrite"] = "true"
+            
+        headers = {"canvas-access-token": job_params["canvas_access_token"]}
+        
+        try:
+            resp = requests.post(format_url, params=params, headers=headers, timeout=600)
+            resp.raise_for_status()
+            self.update_progress(100, "Extraction and formatting complete.")
+        except Exception as e:
+            raise Exception(f"Extraction succeeded, but formatting failed: {str(e)}")
+
         return result
     finally:
         from shared.locks import release_course_lock

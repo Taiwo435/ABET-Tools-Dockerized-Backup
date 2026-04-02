@@ -53,18 +53,7 @@ if (empty($_SESSION['user_id'])) {
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Connect your Canvas class. &#x279E;</label>
-        </div>
-        <?php endif; ?>
-
-        <?php if (hasPermission($permissions, PERM_GRADE_DATA_TOOL)): ?>
-        <div class="checklist-item" onclick="window.location.href='/AssignmentsGrades/roster-upload.php';">
-            <?php if (false): ?>
-                <label class="checklist-check">&#10004;</label>
-            <?php else: ?>
-                <label class="checklist-x">&#10006;</label>
-            <?php endif; ?>
-            <label class="checklist-label">Upload your roster, and run the extraction tool. &#x279E;</label>
+            <label class="checklist-label">Connect your Canvas class and run extraction. &#x279E;</label>
         </div>
         <?php endif; ?>
 

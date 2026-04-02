@@ -39,6 +39,16 @@ $csrfToken = csrf_token('tool1_proxy');
             <select class="filter-select" id="semesterFilter"></select>
         </div>  
         <div class="filter-group">
+          <label class="filter-label">Destination</label>
+          <!-- TODO(Admin Settings): 
+               Currently, the destination course IDs for CS and CSE are hardcoded placeholders.
+               In the future, fetch these from the admin portal settings. -->
+          <select id="programFilter" class="filter-select">
+            <option value="CSE" data-dest-id="240102" selected>Computer Systems Engineering (CSE)</option>
+            <option value="CS" data-dest-id="240102">Computer Science (CS)</option>
+          </select>
+        </div>
+        <div class="filter-group">
             <label for="departmentFilter" class ="filter-label"> Department </label>
             <select class="filter-select" id="departmentFilter">
                 <option value="Biological and Health Systems Engineering"> School of Biological and Health Systems Engineering </option>
@@ -51,7 +61,9 @@ $csrfToken = csrf_token('tool1_proxy');
                 <option value="Integrated Engineering"> School of Integrated Engineering </option>
             </select>
         </div>  
-
+        <div class="filter-group" style="margin-left: auto; align-self: flex-end;">
+            <button id="go-btn" class="btn btn-primary" style="padding: 10px 20px;">Load Courses</button>
+        </div>
         </div>
 
         <div id="selection-bar" style="display: none; justify-content: space-between; align-items: center; margin: 15px 0; padding: 15px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border-color);">
@@ -77,7 +89,7 @@ $csrfToken = csrf_token('tool1_proxy');
 
         <div class="alert alert-error" id="errorAlert">
           <div class="alert-content">
-            <strong>Connection failed</strong>
+            <strong></strong>
             <span id="errorMessage"></span>
           </div>
         </div>
@@ -118,6 +130,13 @@ $csrfToken = csrf_token('tool1_proxy');
                 return;
             }
 
+            // Ensure duplicates have overwrite checked
+            const unhandledDuplicates = selected_courses.filter(c => c.duplicate_status && !c.overwrite);
+            if (unhandledDuplicates.length > 0) {
+                showError(`Cannot proceed: Some courses have already been extracted. Please check the overwrite box or deselect them.`);
+                return;
+            }
+
             try {
               const storeBody = new FormData()
               storeBody.append('action', 'store-class-data-from-grid')
@@ -135,8 +154,13 @@ $csrfToken = csrf_token('tool1_proxy');
             } finally {
               //connectBtn.disabled = false;
               //connectBtn.textContent = '🔗 Verify & Connect';
+                
+                const programSelect = document.getElementById('programFilter');
+                const destId = programSelect.options[programSelect.selectedIndex].getAttribute('data-dest-id');
+                sessionStorage.setItem('abet_dest_course_id', destId);
+                
+                window.location.href = 'course-setup.php'
             }
-            window.location.href = 'course-setup.php'
           })
         
         function showSuccess(course) {
@@ -196,7 +220,7 @@ $csrfToken = csrf_token('tool1_proxy');
             return class_header_div
         }
 
-        function createClassBody()
+        function createClassBody(course)
         {
             const class_body_div = document.createElement('div')
             class_body_div.className = "class-body"
@@ -212,7 +236,13 @@ $csrfToken = csrf_token('tool1_proxy');
             info_label_div.className = "info-label"
             info_label_div.textContent = "Instructor"
             info_value_div.className = "info-value"
-            info_value_div.textContent = "TBD" // To be populated from whitelist API later
+            
+            let instructorName = "";
+            if (course.teachers && course.teachers.length > 0) {
+                instructorName = course.teachers.map(t => t.display_name || t.name).join(", ");
+            }
+            info_value_div.textContent = instructorName;
+            course._instructorField = info_value_div;
             
             info_item_div.append(info_label_div, info_value_div)
             class_info_grid_div.appendChild(info_item_div)
@@ -223,24 +253,32 @@ $csrfToken = csrf_token('tool1_proxy');
         function createClassActions(course)
         {
             const class_actions_div = document.createElement('div')
-            class_actions_div.className = "class-actions"
+            class_actions_div.className = "class-actions-warning"
 
-            const view_assignments = document.createElement('a')
-            view_assignments.href = "index.php"
-            view_assignments.className = "action-btn"
-            view_assignments.textContent = "View Assignments"
+            const warning_text = document.createElement('div');
+            warning_text.className = "warning-text-label";
+            warning_text.innerHTML = "<strong>Duplicate Warning:</strong> This course has already been extracted and formatted.";
 
-            const gradebook = document.createElement('a')
-            gradebook.href = "#"
-            gradebook.className = "action-btn"
-            gradebook.textContent = "Gradebook"
+            const overwrite_label = document.createElement('label');
+            overwrite_label.className = "overwrite-checkbox-wrapper";
 
-            const analytics = document.createElement('a')
-            analytics.href = "#"
-            analytics.className = "action-btn"
-            analytics.textContent = "Analytics"
+            const overwrite_checkbox = document.createElement('input');
+            overwrite_checkbox.type = "checkbox";
+            overwrite_checkbox.className = "overwrite-checkbox";
+            overwrite_checkbox.disabled = true;
+
+            overwrite_checkbox.addEventListener('change', function(e) {
+                course.overwrite = e.target.checked;
+            });
+
+            overwrite_label.appendChild(overwrite_checkbox);
+            overwrite_label.appendChild(document.createTextNode("I want to overwrite existing ABET modules"));
+
+            class_actions_div.append(warning_text, overwrite_label);
             
-            class_actions_div.append(view_assignments, gradebook, analytics)
+            course._actionsWrap = class_actions_div;
+            course._overwriteCb = overwrite_checkbox;
+
             return class_actions_div
         }
 
@@ -392,6 +430,11 @@ $csrfToken = csrf_token('tool1_proxy');
                     grid_classes.replaceChildren()
                 }
 
+                // Temporary loading state
+                if (storeData.courses && storeData.courses.length > 0) {
+                    grid_classes.innerHTML = "<div class='loading-overlay'><i class='fas fa-spinner fa-spin'></i> Verifying classes, please wait...</div>";
+                }
+
                 // Reset select all
                 const selectAll = document.getElementById('selectAll');
                 if (selectAll) selectAll.checked = false;
@@ -403,6 +446,37 @@ $csrfToken = csrf_token('tool1_proxy');
                     const nextBtn = document.getElementById('next-btn');
                     if (nextBtn) nextBtn.disabled = (checkedCbs.length === 0);
                 }
+
+                // Verify courses sequentially BEFORE rendering grid
+                for (let i = 0; i < storeData.courses.length; i++) {
+                    try {
+                        const body = new FormData();
+                        body.append('action', 'verify-course');
+                        body.append('course_id', storeData.courses[i].id);
+                        body.append('check_duplicate', '1');
+                        body.append('csrf_token', csrfToken);
+                        
+                        // Pass the selected program's destination course ID for duplicate verification
+                        const programSelect = document.getElementById('programFilter');
+                        const destId = programSelect.options[programSelect.selectedIndex].getAttribute('data-dest-id');
+                        body.append('dest_course_id', destId);
+                        
+                        const res = await fetch('api-proxy.php', { method: 'POST', body });
+                        const data = await res.json();
+                        if (data.next_csrf) csrfToken = data.next_csrf;
+                        
+                        if (data.success && data.course.duplicate_status) {
+                            storeData.courses[i].duplicate_status = true;
+                        } else {
+                            storeData.courses[i].duplicate_status = false;
+                        }
+                    } catch (err) {
+                        storeData.courses[i].duplicate_status = false;
+                    }
+                }
+
+                // Clear loader
+                grid_classes.innerHTML = "";
 
                 for (let i = 0; i <  storeData.courses.length; i++)
                 {   
@@ -416,10 +490,15 @@ $csrfToken = csrf_token('tool1_proxy');
                     class_card_div.append(createClassBody(storeData.courses[i]))
                     class_card_div.append(createClassActions(storeData.courses[i]))
                     
+                    if (storeData.courses[i].duplicate_status) {
+                        storeData.courses[i]._actionsWrap.classList.add("visible");
+                        storeData.courses[i]._overwriteCb.disabled = false;
+                    }
+                    
                     // Allow clicking whole card to toggle checkbox
                     class_card_div.addEventListener('click', function(e) {
                         // Prevent triggering twice if they click directly on the checkbox
-                        if (e.target.classList.contains('card-checkbox') || e.target.classList.contains('action-btn')) return;
+                        if (e.target.classList.contains('card-checkbox') || e.target.classList.contains('action-btn') || e.target.classList.contains('overwrite-checkbox')) return;
                         const cb = this.querySelector('.card-checkbox');
                         if(cb) {
                             cb.checked = !cb.checked;
@@ -431,8 +510,13 @@ $csrfToken = csrf_token('tool1_proxy');
                     const cb = class_card_div.querySelector('.card-checkbox');
                     if (cb) {
                         cb.addEventListener('change', function() {
-                            if (this.checked) class_card_div.classList.add('selected-card');
-                            else class_card_div.classList.remove('selected-card');
+                            if (this.checked) {
+                                class_card_div.classList.add('selected-card');
+                            } else {
+                                class_card_div.classList.remove('selected-card');
+                                storeData.courses[i]._overwriteCb.checked = false;
+                                storeData.courses[i].overwrite = false;
+                            }
                             updateSelectAllState();
                         });
                     }
@@ -461,9 +545,23 @@ $csrfToken = csrf_token('tool1_proxy');
           }
         }
         const semesterFilter = document.getElementById('semesterFilter');
-        semesterFilter.addEventListener("change", (e) => addClassesToGrid(e.target.value))
-        addClassesToGrid(semesterFilter.options[0].value)
+        const goBtn = document.getElementById('go-btn');
+        const programFilter = document.getElementById('programFilter');
 
+        // Allow "More Semesters" to dynamically expand the dropdown list as soon as clicked
+        semesterFilter.addEventListener("change", (e) => {
+            if (e.target.value === "MoreSemesters") {
+                addClassesToGrid("MoreSemesters");
+            }
+        });
+
+        // Make fetching explicitly happen on button click
+        goBtn.addEventListener('click', () => {
+            const semesterVal = semesterFilter.value;
+            if (semesterVal && semesterVal !== "MoreSemesters") {
+                addClassesToGrid(semesterVal);
+            }
+        });
 
     </script>
 

@@ -316,6 +316,15 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
     // Init
     selectCourse(0);
     destCourseInputAbility();
+    const sessionDestId = sessionStorage.getItem('abet_dest_course_id');
+    if (sessionDestId) {
+      document.getElementById('destCourseInput').value = sessionDestId;
+      verifyDestCourse().then(() => {
+        if (!verifiedDestCourse) selectCourse(0); // fallback if verification fails
+      });
+    } else {
+      selectCourse(0);
+    }
   </script>
 
 </body>
