@@ -1,7 +1,7 @@
 -- Resets the database every time - DEVELOPMENT ONLY, will remove for production and use migrations instead
--- DROP DATABASE IF EXISTS osburn_abet_tools_dev;
--- CREATE DATABASE IF NOT EXISTS osburn_abet_tools_dev;
-USE osburn_abet_tools_dev; 
+-- DROP DATABASE IF EXISTS abet_tools;
+-- CREATE DATABASE IF NOT EXISTS abet_tools;
+USE abet_tools;
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -542,4 +542,14 @@ CREATE TABLE IF NOT EXISTS assessment_constituency (
     method TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
- 
+
+-- Settings table for storing encrypted application settings like OpenAI API key
+CREATE TABLE IF NOT EXISTS settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(255) NOT NULL UNIQUE,
+    setting_value TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default OpenAI key placeholder
+INSERT INTO settings (setting_key, setting_value) VALUES ('openai_api_key', '') ON DUPLICATE KEY UPDATE setting_key = setting_key;
