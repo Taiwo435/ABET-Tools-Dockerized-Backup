@@ -1,5 +1,6 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
 // Redirect non-admins away
@@ -14,8 +15,26 @@ $destCourses = $config['dest_courses'];
 
 $success = false;
 $error = '';
+$openaiSuccess = false;
+$openaiError = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// AES-256-CBC encryption using MYSQL_PASS as the secret key
+function encrypt_value(string $value): string {
+    $key = substr(hash('sha256', getenv('MYSQL_PASS')), 0, 32);
+    $iv  = openssl_random_pseudo_bytes(16);
+    $encrypted = openssl_encrypt($value, 'AES-256-CBC', $key, 0, $iv);
+    return base64_encode($iv . base64_decode($encrypted));
+}
+
+function decrypt_value(string $encrypted): string {
+    $key     = substr(hash('sha256', getenv('MYSQL_PASS')), 0, 32);
+    $decoded = base64_decode($encrypted);
+    $iv      = substr($decoded, 0, 16);
+    $data    = substr($decoded, 16);
+    return openssl_decrypt(base64_encode($data), 'AES-256-CBC', $key, 0, $iv) ?: '';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['save_openai'])) {
     header('Content-Type: application/json');
     $labels = $_POST['labels'] ?? [];
     $ids    = $_POST['ids'] ?? [];
@@ -79,6 +98,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Handle OpenAI key form
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
+    $newKey = trim($_POST['openai_api_key'] ?? '');
+
+    if (!$newKey) {
+        $openaiError = 'OpenAI API key cannot be empty.';
+    } else {
+        try {
+            $encrypted = encrypt_value($newKey);
+            $stmt = db()->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('openai_api_key', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+            $stmt->execute([$encrypted, $encrypted]);
+            $openaiSuccess = true;
+        } catch (Exception $e) {
+            $openaiError = 'Failed to save OpenAI key to database.';
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -95,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .main-container { max-width: 700px; margin: 40px auto; background: white; border-radius: 8px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     h1 { font-size: 22px; margin-bottom: 6px; }
     p.subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
-    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 40px; }
     .course-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
     .course-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
     .course-row label { font-size: 13px; color: #555; width: 60px; flex-shrink: 0; }
@@ -110,6 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .row-header span:first-child { width: 60px; flex: none; }
     #overlay {display: none; top: 0; left: 0; position: fixed; width: 100%; height: 100%; background: black; z-index: 9998;}
     #popup-form { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc;  padding: 20px; z-index: 9999; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto;}
+    .openai-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+    .openai-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+    .form-help { font-size: 12px; color: #888; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -121,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="main-container">
   <h1>Admin Panel</h1>
-  <p class="subtitle">Manage destination course IDs for faculty.</p>
+  <p class="subtitle">Manage destination course IDs and application settings.</p>
 
   <?php if ($success): ?>
     <div class="alert alert-success">Destination courses updated successfully.</div>
@@ -145,6 +185,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <button type="submit" class="btn btn-primary" id="save_changes">Save Changes</button>
     <div> <p id="success-msg" style="display:none; color:green; font-weight: bold; margin-top: 90px;"> </p> </div>
   </form>
+
+  <div class="section-title">OpenAI API Key</div>
+
+  <?php if ($openaiSuccess): ?>
+    <div class="alert alert-success">OpenAI API key updated successfully.</div>
+  <?php endif; ?>
+  <?php if ($openaiError): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($openaiError, ENT_QUOTES, 'UTF-8') ?></div>
+  <?php endif; ?>
+
+  <form method="POST">
+    <div class="openai-row">
+      <input type="text" name="openai_api_key" value="" placeholder="Paste your new OpenAI API key here" required>
+    </div>
+    <div class="form-help">Enter a new key above to replace the existing one. The key is encrypted before being stored.</div>
+    <button type="submit" name="save_openai" class="btn btn-primary">Save OpenAI Key</button>
+  </form>
+
 </div>
 
 <div id="overlay">

@@ -34,6 +34,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 import logging
+import pymysql
+import hashlib
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+import base64
 
 # Configure logging
 logging.basicConfig(
@@ -42,6 +47,40 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
+
+
+def get_openai_key_from_db() -> str | None:
+    """
+    Fetches and decrypts the OpenAI API key from the settings table.
+    Uses MYSQL_PASS as the encryption secret (same as PHP side).
+    Falls back to OPENAI_API_KEY env variable if database read fails.
+    """
+    try:
+        mysql_pass = os.getenv("MYSQL_PASS", "")
+        secret_key = hashlib.sha256(mysql_pass.encode("utf-8")).hexdigest()[:32].encode("utf-8")
+
+        conn = pymysql.connect(
+            host=os.getenv("MYSQL_HOSTNAME", "mysql"),
+            user=os.getenv("MYSQL_USER", "abet_user"),
+            password=mysql_pass,
+            database=os.getenv("MYSQL_DATABASE", "abet_tools"),
+            cursorclass=pymysql.cursors.DictCursor,
+        )
+        with conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT setting_value FROM settings WHERE setting_key = 'openai_api_key' LIMIT 1")
+                row = cursor.fetchone()
+                if row and row["setting_value"]:
+                    decoded  = base64.b64decode(row["setting_value"])
+                    iv       = decoded[:16]
+                    data     = decoded[16:]
+                    cipher   = AES.new(secret_key, AES.MODE_CBC, iv)
+                    decrypted = unpad(cipher.decrypt(data), AES.block_size).decode("utf-8")
+                    if decrypted:
+                        return decrypted
+    except Exception as e:
+        logger.warning("Could not fetch OpenAI key from DB: %s. Falling back to env.", e)
+    return os.getenv("OPENAI_API_KEY")
 
 
 # CONFIG
@@ -512,7 +551,7 @@ def format_section2_with_openai(
     if not contents:
         return []
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = get_openai_key_from_db()
     if api_key:
         api_key = api_key.strip().strip('"').strip("'")
     if not api_key:
@@ -668,13 +707,13 @@ def generate_feedback_with_openai(summary_text: str) -> str:
     :return: Generated feedback text, or "NA" if OpenAI is not available
     :rtype: str
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = get_openai_key_from_db()
     # sanitize common .env formatting issues (surrounding quotes, stray spaces)
     if api_key:
         api_key = api_key.strip().strip('"').strip("'")
 
     if not api_key:
-        print("OPENAI_API_KEY not set; skipping OpenAI feedback and returning 'NA'.")
+        print("OpenAI API key not set; skipping OpenAI feedback and returning 'NA'.")
         return "NA"
 
     try:
