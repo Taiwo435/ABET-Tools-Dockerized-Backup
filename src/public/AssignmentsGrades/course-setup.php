@@ -3,6 +3,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
 $role = $_SESSION['user_role'] ?? 'faculty';
+
 error_log("user role: " . $role);
 if (empty($_SESSION['class_data'])) {
     header('Location: select-courses.php');
@@ -97,19 +98,12 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
     let verifiedDestCourse = null; // { id, name, course_code }
     const role = <?php echo json_encode($role); ?>;
     console.log(role)
-    //Changed Destination-Course-Id input type Depending on faculty/admin role
+
+    //Hide Dest ID Input initially
     function destCourseInputAbility()
     {
       const destCourseInput = document.getElementById('destCourseInput');
-      if (role === 'faculty')
-      {
-        destCourseInput.style.display = 'none'; 
-        const selectCourseId = document.createElement('select'); 
-
-        const locationDestCourse = document.getElementById('locationDestCourse');
-        locationDestCourse.insertBefore(selectCourseId, locationDestCourse.children[0]);
-        
-      }
+      destCourseInput.readOnly = true;
     }
 
     // Build sidebar
@@ -284,6 +278,8 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
         body.append('csrf_token', csrfToken);
         body.append('course_id', courseId);
         const res = await fetch('api-proxy.php', { method: 'POST', body });
+
+
         const data = await res.json();
         if (data.next_csrf) csrfToken = data.next_csrf;
 
@@ -294,8 +290,19 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
           selectCourse(activeIdx); // refresh button state
         } else {
           verifiedDestCourse = null;
+          console.log(data.message)
           status.textContent = '' + data.message;
           status.style.color = '#c00';
+          
+          //If the destination course id is not verified, admin can re-edit it but faculty cannot
+          if (role === 'admin')
+          {
+            input.readOnly = false;
+          }
+          else
+          {
+            status.textContent = "Course not found; check with coordinator";
+          }
           selectCourse(activeIdx);
         }
       } catch (err) {
@@ -315,8 +322,9 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
     // Init
     selectCourse(0);
-    destCourseInputAbility();
+
     const sessionDestId = sessionStorage.getItem('abet_dest_course_id');
+    console.log(sessionDestId)
     if (sessionDestId) {
       document.getElementById('destCourseInput').value = sessionDestId;
       verifyDestCourse().then(() => {
@@ -325,6 +333,7 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
     } else {
       selectCourse(0);
     }
+    destCourseInputAbility();
   </script>
 
 </body>

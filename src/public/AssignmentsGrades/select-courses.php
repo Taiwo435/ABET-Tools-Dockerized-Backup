@@ -2,6 +2,9 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
+$configPath = getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
+$config = require $configPath;
+$destIdCourses = $config['dest_courses']
 ?>
 
 <!DOCTYPE html>
@@ -44,8 +47,8 @@ $csrfToken = csrf_token('tool1_proxy');
                Currently, the destination course IDs for CS and CSE are hardcoded placeholders.
                In the future, fetch these from the admin portal settings. -->
           <select id="programFilter" class="filter-select">
-            <option value="CSE" data-dest-id="240102" selected>Computer Systems Engineering (CSE)</option>
-            <option value="CS" data-dest-id="240102">Computer Science (CS)</option>
+            <option id="cse-option" value="CSE" data-dest-id="240102" selected>Computer Systems Engineering (CSE)</option>
+            <option id="cs-option" value="CS" data-dest-id="240102">Computer Science (CS)</option>
           </select>
         </div>
         <div class="filter-group">
@@ -98,7 +101,28 @@ $csrfToken = csrf_token('tool1_proxy');
     <script>
         let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>'
         const courses = {}
+        const dest_id_courses = <?php echo json_encode($destIdCourses); ?>;
+        console.log(dest_id_courses);
+        
+        //Read Course IDs from destination-courses .php file and set their attributes
+        function readCourseIds()
+        {
+            for (const dict of dest_id_courses)
+            {
+                if (dict['label'] === 'CS')
+                {
+                    const cs_option = document.getElementById('cs-option')
+                    cs_option.setAttribute('data-dest-id', dict['id']);
+                }
+                if (dict['label'] === 'CSE')
+                {
+                    const cse_option = document.getElementById('cse-option')
+                    cse_option.setAttribute('data-dest-id', dict['id']);
+                }
 
+            }
+        }
+        
         document.getElementById('next-btn').addEventListener('click', async function()
           {
             const classesGrid = document.getElementById('classesGrid')
@@ -364,7 +388,7 @@ $csrfToken = csrf_token('tool1_proxy');
         }
 
         addInitialSemesters()
-                async function addClassesToGrid(semester_input)
+        async function addClassesToGrid(semester_input)
         {
             if (semester_input== "MoreSemesters")
             {
@@ -554,7 +578,7 @@ $csrfToken = csrf_token('tool1_proxy');
                 addClassesToGrid("MoreSemesters");
             }
         });
-
+        readCourseIds()
         // Make fetching explicitly happen on button click
         goBtn.addEventListener('click', () => {
             const semesterVal = semesterFilter.value;

@@ -214,6 +214,8 @@
   background: #fafafa;
 }
 
+
+
 @media (max-width: 768px) {
   .setup-layout {
     grid-template-columns: 1fr;
