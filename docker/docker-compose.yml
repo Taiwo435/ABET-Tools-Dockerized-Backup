@@ -257,6 +257,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
 
   ###################################################
   # the default network that allows the containers to communicate with each other.
