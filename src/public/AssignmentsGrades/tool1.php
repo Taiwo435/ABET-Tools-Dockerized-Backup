@@ -2,10 +2,7 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
-<<<<<<< HEAD
-=======
 $role = $_SESSION['user_role'] ?? 'faculty';
->>>>>>> 3c0aea5303a457f634b348afddb00f761c4ed3e1
 $config = require getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
 $destCourses = $config['dest_courses'];
 ?>

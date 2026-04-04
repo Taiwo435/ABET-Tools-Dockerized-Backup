@@ -154,7 +154,7 @@ if ($action === 'fetch-classes-from-semester')
     }
 
     // Call Python extraction API instead of Canvas directly
-    $url = api_base('extraction') . '/canvas/courses?' . http_build_query(['enrollment_type' => 'student']);
+    $url = api_base('extraction') . '/canvas/courses?' . http_build_query(['enrollment_type' => 'teacher']);
     $result = curl_api($url, 'GET', $token);
 
     if ($result['error']) {

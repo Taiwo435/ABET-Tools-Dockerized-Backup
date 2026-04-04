@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (file_put_contents($configPath, $export) !== false) {
             $destCourses = $merged;
             $success = true;
-            $response = ['status' => true];
+            $response = ['status' => true, 'courses' => $merged];
             echo json_encode($response);
             exit;
         } else {
@@ -78,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     }
-    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -156,8 +155,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>'
-        const current_dest_courses = <?php echo json_encode($destCourses); ?>; 
-
+        let current_dest_courses = <?php echo json_encode($destCourses); ?>; 
+        console.log(current_dest_courses)
         //If admin decides to overwrite the current IDs, then add the new IDs and labels into a list
         function checkOverwrite()
         {
@@ -176,7 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               ids.push(submittedId);
             }
           });
-          console.log(labels, ids);
           return [labels, ids];
         }
 
@@ -230,9 +228,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           try{
             const storeRes = await fetch('admin.php', {method: 'POST', body: storeBody});
             const storeData = await storeRes.json();
-            const success_msg = document.getElementById('success-msg');
-            success_msg.textContent = "Changes added successfully";
-            success_msg.style.display = "inline";
+            if (storeData.status)
+            {
+              console.log(storeData);
+              current_dest_courses = storeData.courses;
+              const success_msg = document.getElementById('success-msg');
+              success_msg.textContent = "Changes added successfully";
+              success_msg.style.display = "inline";
+            }
+            
 
           } catch(err)
           {
@@ -245,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         //Update Destination Course Ids
-        const btn_save_changes = document.getElementById('save_changes');
+        const btn_save_changes = document.getElementById('course-form-container');
         btn_save_changes.addEventListener("submit", async (e) => {
           e.preventDefault();
           let majorToDestinationCourseId = {};
@@ -293,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             `<div class = "course-row">
             <label>${escapeHtml(course.label)}</label>
             <input type="text" name="labels[]" value="${escapeHtml(course.label)}" placeholder="e.g. CS" required>
-            <input type="text" name="ids[]" value="${escapeHtml(course.id)}" placeholder="e.g. 240102" pattern="\\d+" title="Numeric only" oninput="this.nextElementSibling.style.display = /\D/.test(this.value) ? 'inline' : 'none'">
+            <input type="text" name="ids[]" value="${escapeHtml(course.id)}" placeholder="e.g. 240102" pattern="\\d+" title="Numeric only" oninput="this.nextElementSibling.style.display = /\D/.test(this.value) ? 'inline' : 'none'" required>
             <span style="color: red; font-size: 0.85em; display: none;"> Numeric Only </span>
             </div>`
           ).join('')
