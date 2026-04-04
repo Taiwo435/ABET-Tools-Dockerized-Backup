@@ -32,6 +32,26 @@ def get_outcome_attainment_criteria(questionnaire):
 
     return cursor.fetchall()
 
+def get_outcome_met_percentages(questionnaire):
+    """
+    Fetch outcome met percentages info (outcome number, semesters assessed, percentage met, times consecutive not met, percentage met secondary).
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT 
+            outcome_number,
+                   semesters_assessed,
+                   percentage_met,
+                   times_consecutive_not_met,
+                   percentage_met_secondary
+        FROM outcome_met_percentages
+    """)
+    
+
+    return cursor.fetchall()
+
 if __name__ == "__main__":
     
     

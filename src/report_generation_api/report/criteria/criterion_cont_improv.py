@@ -32,8 +32,26 @@ def build(questionnaire):
                 "num_ass": row["num_assessments"],
                 "meeting": row["criteria_for_meeting_outcome"]
             })
+    #table 4-6
+    try:
+        profile_rows = criterion_cont_improv_data.get_outcome_met_percentages(questionnaire)
+    except Exception:
+        profile_rows = []
 
-    context = {"outcome_assessment": outcome_assessment, "outcome_attainment_criteria": outcome_attainment_criteria}
+    outcome_met_percentages = []
+    for row in profile_rows:
+        if isinstance(row, dict):
+
+
+            outcome_met_percentages.append({
+                "out_num": row["outcome_number"],
+                "semesters_assessed": row["semesters_assessed"],
+                "percentage_met": row["percentage_met"],
+                "times_consecutive_not_met": row["times_consecutive_not_met"],
+                "percentage_met_secondary": row["percentage_met_secondary"]
+            })
+
+    context = {"outcome_assessment": outcome_assessment, "outcome_attainment_criteria": outcome_attainment_criteria, "outcome_met_percentages": outcome_met_percentages}
     return context
 
 if __name__ == "__main__":
