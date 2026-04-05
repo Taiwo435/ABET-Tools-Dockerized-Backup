@@ -78,6 +78,22 @@ CREATE TABLE IF NOT EXISTS courses (
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- COURSE SECTIONS
+-- A course can have multiple sections, each with its own Canvas source/dest IDs.
+-- e.g. CSE 485 Capstone might have a Tuesday section and a Wednesday section, each linked to a different Canvas course.
+
+CREATE TABLE IF NOT EXISTS course_sections (
+    section_id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT NOT NULL,
+    section_label VARCHAR(100),                                                   
+    canvas_source_id VARCHAR(50) NOT NULL,                                         
+    canvas_dest_id VARCHAR(50) NOT NULL,                                          
+    course_data JSON,                                                              
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+
 -- General Criteria: Students Adissions
 -- Idea: store admission “rules text” once, then link it to one or many majors.
 
