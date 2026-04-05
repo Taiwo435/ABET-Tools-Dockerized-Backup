@@ -72,9 +72,9 @@ SQL);
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-	$this.addSql('DROP TABLE report_sections;');
-	$this.addSql('DROP TABLE course_syllabi;');
-	$this.addSql('DROP TABLE submission_compliance;');
+	$this->addSql('DROP TABLE report_sections;');
+	$this->addSql('DROP TABLE course_syllabi;');
+	$this->addSql('DROP TABLE submission_compliance;');
 
     }
 }
