@@ -73,6 +73,177 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
           <input type="file" id="rosterInput" accept=".csv,.xls" style="display:none">
         </div>
 
+        <div class="card">
+
+          <div class="card-title">Syllabus Information</div>
+          
+
+          <div class="card-body">
+            <form method="POST" action="">
+
+              <!-- BASIC INFO -->
+              <div class="form-group">
+                <label class="form-label">Course Number and Name <span class="required">*</span></label>
+                <input type="text" name="course_number_name" class="form-input" required>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Credits and Contact Hours</label>
+                  <input type="text" name="credits_contact_hours" class="form-input">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Course Coordinator</label>
+                  <input type="text" name="course_coordinator" class="form-input">
+                </div>
+              </div>
+
+              <!-- TEXTBOOKS -->
+              <div class="divider"><span class="divider-text">Textbooks</span></div>
+
+              <div id="textbook-container">
+                <div class="form-group textbook-row">
+                  <input type="text" name="textbooks[]" class="form-input" placeholder="Enter textbook">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+              <div>
+                <button class = "btn btn-outline" type="button" onclick="addTextbook()" class="btn btn-secondary">
+                  + Add Textbook
+                </button>
+              </div>
+              
+              <!-- COURSE INFO -->
+              <div class="divider"><span class="divider-text">Course Information</span></div>
+
+              <div class="form-group">
+                <label class="form-label">a. Catalog Description</label>
+                <textarea name="catalog_description" class="form-input"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">b. Prerequisites</label>
+                <textarea name="prerequisites" class="form-input"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">c. Elective</label>
+                <input type="text" name="elective" class="form-input">
+              </div>
+
+              <!-- COURSE GOALS -->
+              <div class="divider"><span class="divider-text">Course Goals</span></div>
+
+              <label class="form-label">a. Course Outcomes</label>
+              <div id="course-outcomes-container">
+                <div class="form-group">
+                  <input type="text" name="course_outcomes[]" class="form-input" placeholder="Enter course outcome">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+
+              <button class = "btn btn-outline" type="button" onclick="addCourseOutcome()" class="btn btn-secondary">+ Add Course Outcome</button>
+
+              <br><br>
+
+              <label class="form-label">
+                b. Explicitly indicate which of the student outcomes listed in Criterion 3 or any other outcomes are addressed by the course
+              </label>
+              <div id="student-outcomes-container">
+                <div class="form-group">
+                  <input type="text" name="student_outcomes_addressed[]" class="form-input" placeholder="Enter student outcome addressed">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+
+              <button class = "btn btn-outline" type="button" onclick="addStudentOutcome()" class="btn btn-secondary">+ Add Student Outcome</button>
+
+              <!-- TOPICS -->
+              <div class="divider"><span class="divider-text">Topics</span></div>
+
+              <div id="topics-container">
+                <div class="form-group topic-row">
+                  <input type="text" name="topics[]" class="form-input" placeholder="Enter topic">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+              <div>
+                <button class = "btn btn-outline" type="button" onclick="addTopic()" class="btn btn-secondary">
+                  + Add Topic
+                </button>
+              </div>
+              <br><br>
+              <button type="submit" class="btn btn-primary">Save</button>
+
+            </form>
+          </div>
+        </div>
+
+        <script>
+          function addTextbook() {
+              const container = document.getElementById("textbook-container");
+
+              const div = document.createElement("div");
+              div.className = "form-group textbook-row";
+
+              div.innerHTML = `
+                  <input type="text" name="textbooks[]" class="form-input" placeholder="Enter textbook">
+                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+              `;
+
+              container.appendChild(div);
+          }
+
+          function addTopic() {
+              const container = document.getElementById("topics-container");
+
+              const div = document.createElement("div");
+              div.className = "form-group topic-row";
+
+              div.innerHTML = `
+                  <input type="text" name="topics[]" class="form-input" placeholder="Enter topic">
+                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+              `;
+
+              container.appendChild(div);
+          }
+
+          function removeRow(button) {
+              const row = button.parentElement;
+              const container = row.parentElement;
+
+              // Prevent deleting last remaining row
+              if (container.children.length > 1) {
+                  row.remove();
+              } else {
+                  row.querySelector("input").value = "";
+              }
+          }
+
+          function addCourseOutcome() {
+              const container = document.getElementById("course-outcomes-container");
+              const div = document.createElement("div");
+              div.className = "form-group";
+              div.innerHTML = `
+                  <input type="text" name="course_outcomes[]" class="form-input" placeholder="Enter course outcome">
+                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+              `;
+              container.appendChild(div);
+          }
+          function addStudentOutcome() {
+              const container = document.getElementById("student-outcomes-container");
+              const div = document.createElement("div");
+              div.className = "form-group";
+              div.innerHTML = `
+                  <input type="text" name="student_outcomes_addressed[]" class="form-input" placeholder="Enter student outcome addressed">
+                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+              `;
+              container.appendChild(div);
+          }
+          
+        </script>
+
         <div class="alert alert-error" id="errorAlert" style="display:none">
           <div class="alert-content">
             <strong>Error:</strong> <span id="errorMessage"></span>
