@@ -17,7 +17,7 @@ final class Version20260405044821 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this.addSql(<<<'SQL'
+        $this->addSql(<<<'SQL'
 CREATE TABLE IF NOT EXISTS faculty_qualifications_by_program (
     qual_program_id INT AUTO_INCREMENT PRIMARY KEY,
     program_id INT NOT NULL,

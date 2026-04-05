@@ -1,5 +1,5 @@
 ######################################################
-# Docker Compose configuration for staging environment
+# Docker Compose configuration for production environment
 # This deploys the application similar to how it will be deployed in production.
 # It uses host networking to allow the containers to communicate with services running on the host machine (like a managed database service).
 # 

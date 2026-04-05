@@ -53,18 +53,7 @@ if (empty($_SESSION['user_id'])) {
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Connect your Canvas class. &#x279E;</label>
-        </div>
-        <?php endif; ?>
-
-        <?php if (hasPermission($permissions, PERM_GRADE_DATA_TOOL)): ?>
-        <div class="checklist-item" onclick="window.location.href='/AssignmentsGrades/roster-upload.php';">
-            <?php if (false): ?>
-                <label class="checklist-check">&#10004;</label>
-            <?php else: ?>
-                <label class="checklist-x">&#10006;</label>
-            <?php endif; ?>
-            <label class="checklist-label">Upload your roster, and run the extraction tool. &#x279E;</label>
+            <label class="checklist-label">Connect your Canvas class and run extraction. &#x279E;</label>
         </div>
         <?php endif; ?>
 
@@ -127,6 +116,21 @@ if (empty($_SESSION['user_id'])) {
                 <div class="card-body-inner">
                     <p>Generate a comprehensive ABET report that summarizes assessment results and supporting materials. Present information clearly to streamline internal review and accreditation preparation.</p>
                     <a href="/report-generator/index.php" class="action-link">Launch Tool 3 &rarr;</a>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (hasPermission($permissions, PERM_ADMIN_PANEL)): ?>
+        <div class="tool-card">
+            <div class="card-header" onclick="triggerToggle(this)">
+                <div class="card-title">Admin Panel</div>
+                <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+            </div>
+            <div class="card-body">
+                <div class="card-body-inner">
+                    <p>Manage destination course IDs, user permissions, and other admin settings.</p>
+                    <a href="/AssignmentsGrades/admin.php" class="action-link">Open Admin Panel &rarr;</a>
                 </div>
             </div>
         </div>
