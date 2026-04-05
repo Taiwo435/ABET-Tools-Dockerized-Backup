@@ -12,7 +12,7 @@ from urllib.parse import urljoin
 
 import requests
 
-from create_html import WriteAbetHtml
+from create_html_new import WriteAbetHtml
 
 logger = logging.getLogger(__name__)
 
