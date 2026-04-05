@@ -100,6 +100,15 @@ function require_login(string $redirectTo = '/login'): void {
   if (empty($_SESSION['user_id'])) {
     safe_redirect($redirectTo);
   }
+
+  // Verify the user still exists in the database on every request
+  require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+  $stmt = db()->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+  $stmt->execute(['id' => (int)$_SESSION['user_id']]);
+
+  if (!$stmt->fetch()) {
+    logout('/login?reason=deleted');
+  }
 }
 
 function require_role(string $role): void {
