@@ -12,24 +12,16 @@ final class Version20260405052855 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'database schema refactor by Sonakshi, changes course primary key to composite key.';
+        return 'database schema refactor to add index to courses.';
     }
 
-    public function up(Schema $schema): void
+        public function up(Schema $schema): void
     {
-        // Drop existing primary key
-        $this->addSql('ALTER TABLE courses DROP PRIMARY KEY');
-
-        // Add composite primary key
-        $this->addSql('ALTER TABLE courses ADD PRIMARY KEY (course_id, professor_id)');
+        $this->addSql('ALTER TABLE courses ADD UNIQUE INDEX uniq_course_professor (course_id, professor_id)');
     }
 
     public function down(Schema $schema): void
     {
-        // Drop composite primary key
-        $this->addSql('ALTER TABLE courses DROP PRIMARY KEY');
-
-        // Restore original primary key
-        $this->addSql('ALTER TABLE courses ADD PRIMARY KEY (course_id)');
+        $this->addSql('ALTER TABLE courses DROP INDEX uniq_course_professor');
     }
 }

@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS login_events (
 -- data from assignment_extraction.py, we don't need a form 
 -- course_data is a JSON field that stores all the extracted data for a course, including outcomes, assignments, etc. 
 CREATE TABLE IF NOT EXISTS courses (
-    course_id INT AUTO_INCREMENT,
+    course_id INT AUTO_INCREMENT PRIMARY KEY,
     course_code VARCHAR(50) NOT NULL,
     -- the course code found in ASU class search e.g. 40803. NOT the end number in the canvas URL.
     course_term VARCHAR(50),
@@ -69,9 +69,10 @@ CREATE TABLE IF NOT EXISTS courses (
     course_data JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (course_id, professor_id),
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 );
+-- unique index in case people want it for some reason, replaces composite primary key we had before (because course_id needs auto_increment)
+ALTER TABLE courses ADD UNIQUE INDEX uniq_course_professor (course_id, professor_id);
 
 -- COURSE SECTIONS
 -- A course can have multiple sections, each with its own Canvas source/dest IDs.

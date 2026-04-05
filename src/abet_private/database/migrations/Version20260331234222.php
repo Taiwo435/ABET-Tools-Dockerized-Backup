@@ -19,7 +19,7 @@ final class Version20260331234222 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // this up() migration is auto-generated, please modify it to your needs
+
 	$this->addSQL(<<<'SQL'
 -- Stores all free-text sections across the report
 -- section_key identifies which part e.g. 'background_contact', 'background_program_history', 'criterion1_advising'
