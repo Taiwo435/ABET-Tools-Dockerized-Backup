@@ -14,6 +14,7 @@ def build(questionnaire):
 
 
             student_admissions_list.append({
+                "major": row["majors"],
                 "freshman": row["freshman"],
                 "transfer_12": row["transfer_12_23"],
                 "transfer_24_p": row["transfer_24_primary"],
@@ -40,6 +41,7 @@ if __name__ == "__main__":
 
     for row in student_data:
         student_list.append({
+            "major": row["majors"],
             "freshman": row["freshman"],
             "transfer_12": row["transfer_12_23"],
             "transfer_24_p": row["transfer_24_primary"],
@@ -60,6 +62,7 @@ if __name__ == "__main__":
 
 
         student_admissions_list.append({
+            "major": row["majors"],
             "freshman": row["freshman"],
             "transfer_12": row["transfer_12_23"],
             "transfer_24_p": row["transfer_24_primary"],

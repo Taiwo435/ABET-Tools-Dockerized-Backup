@@ -7,12 +7,17 @@ def get_student_info(questionnaire):
 
     cursor.execute("""
         SELECT 
-            freshman,
-            transfer_12_23,
-            transfer_24_primary,
-            transfer_24_secondary
-        FROM student_admission_requirements;
-        """)
+            GROUP_CONCAT(DISTINCT p.program_name ORDER BY p.program_name SEPARATOR ', ') AS majors,
+            s.freshman,
+            s.transfer_12_23,
+            s.transfer_24_primary,
+            s.transfer_24_secondary
+            FROM student_admission_requirements s
+            LEFT JOIN admission_major_map ad ON s.admission_id = ad.admission_id
+            LEFT JOIN programs p ON ad.program_id = p.program_id
+            GROUP BY s.admission_id;
+                   """)
+    
 
     return cursor.fetchall()
 
@@ -28,12 +33,16 @@ if __name__ == "__main__":
 
     cursor.execute("""
         SELECT
-                   
-            freshman,
-            transfer_12_23,
-            transfer_24_primary,
-            transfer_24_secondary
-        FROM student_admission_requirements;
+            s.admission_id,
+            GROUP_CONCAT(DISTINCT p.program_name ORDER BY p.program_name SEPARATOR ', ') AS majors,
+            s.freshman,
+            s.transfer_12_23,
+            s.transfer_24_primary,
+            s.transfer_24_secondary
+            FROM student_admission_requirements s
+            LEFT JOIN admission_major_map ad ON s.admission_id = ad.admission_id
+            LEFT JOIN programs p ON ad.program_id = p.program_id
+            GROUP BY s.admission_id;
         
     """)
 
