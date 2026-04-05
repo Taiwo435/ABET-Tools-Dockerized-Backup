@@ -250,7 +250,18 @@ CREATE TABLE IF NOT EXISTS faculty_vitae (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
+-- Criterion 6: Faculty Qualifications by Program (unmarked table pg 79)
+CREATE TABLE IF NOT EXISTS faculty_qualifications_by_program (
+    qual_program_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    program_label VARCHAR(255) NOT NULL,
+    professors TEXT,
+    associate_professors TEXT,
+    assistant_professors TEXT,
+    lecturers_pop TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
 
 -- Criterion 2: Program Education Objectives. table 1-1
 -- the title changes based on which program is being worked on so program_id as foreign key
