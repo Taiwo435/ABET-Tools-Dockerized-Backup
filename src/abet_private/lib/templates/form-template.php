@@ -104,7 +104,7 @@
                 ?>
                 <?php $columnCount = count($field['columns']); ?>
                 
-                <div class="expandable-grid" data-max-rows="<?= $field['maxRows']?>">
+                <div class="expandable-grid" data-max-rows="<?= $field['maxRows']?>" data-allow-incomplete-rows="<?= $field['allowIncompleteRows'] ?>">
                     <div class="expandable-grid-container"
                         name="<?= $name ?>"
                         data-old-values='<?= htmlspecialchars(json_encode($raw ?? ""), ENT_QUOTES, "UTF-8") ?>'
@@ -115,10 +115,14 @@
                                 <label class="expandable-grid-label" 
                                     data-type="<?= htmlspecialchars($column['type'], ENT_QUOTES, 'UTF-8') ?>"
                                     data-name="<?= htmlspecialchars($column['name'], ENT_QUOTES, 'UTF-8') ?>"
-                                    <?php if (!empty($column['options'])){
-                                        echo "data-option-count=" . count($column['options']) . " ";
-                                        for ($i = 0; $i < count($column['options']); $i++) {
-                                            echo "data-option-" . $i . "='" . $column["options"][$i] . "' ";
+                                    <?php if (!empty($column['options'])) {
+                                        echo("data-option-count=" . count($column['options']) . " ");
+
+                                        $optionCount = 0;
+                                        foreach ($column['options'] as $key => $text) {
+                                            echo ("data-option-" . $optionCount . "-value='" . $key . "' ");
+                                            echo ("data-option-" . $optionCount . "-text='" . $text . "' ");
+                                            $optionCount++;
                                         }
                                     } ?>
                                     >
@@ -255,12 +259,19 @@ function prepareDataFromGridElements() {
                     return;
                 }
 
+                let elementValue = "";
+                if (element.classList.contains('expandable-grid-checkbox-container')) {
+                    elementValue = element.children[0].checked;
+                } else {
+                    elementValue = element.value;
+                }
+
                 if (element.value !== "") {
                     isEmptyRow = false;
                 }
 
                 columnName = grid.querySelector('.expandable-grid-label-row').children[elementIndex].getAttribute("data-name");
-                rowJSON[columnName] = element.value;
+                rowJSON[columnName] = elementValue;
                 
             });
             if (!isEmptyRow) {
@@ -317,14 +328,26 @@ function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
             inputField.appendChild(defaultOption);
             for (let j = 0; j < optionCount; j++) {
                 const newOption = document.createElement('option');
-                newOption.value = label.getAttribute('data-option-' + j);
-                newOption.textContent = label.getAttribute('data-option-' + j);
+                newOption.value = label.getAttribute('data-option-' + j + '-value');
+                newOption.textContent = label.getAttribute('data-option-' + j + '-text');
                 inputField.appendChild(newOption);
             }
             inputField.className = 'expandable-grid-select';
             if (oldRowDataJSON != null) {
                 inputField.value = oldRowDataJSON[columnName];
             }
+        } else if (columnType === 'checkbox') {
+            inputField = document.createElement('div');
+            inputField.className = 'expandable-grid-checkbox-container';
+            
+
+            checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'expandable-grid-checkbox';
+            if (oldRowDataJSON != null) {
+                checkbox.checked = oldRowDataJSON[columnName];
+            }
+            inputField.appendChild(checkbox);
         } else if (columnType === 'text') {
             inputField = document.createElement('input');
             inputField.className = 'expandable-grid-small-input';
@@ -393,6 +416,8 @@ function validateForm() {
                 rowElementsArray = Array.from(rowElements);
                 let isEmptyRow = true;
                 let isFullRow = true;
+
+                let hasCheckbox = false;
                 rowElementsArray.forEach((element, elementIndex) => {
                     /*if (element.getAttribute('data-numerical') == 'true' && !isPositiveWholeNumber(value)) {
                         errors.push(`${label.value} must be entered as a positive, whole number.`);
@@ -404,18 +429,29 @@ function validateForm() {
                         return;
                     }
 
-                    if (element.value.trim() !== '') {
+                    let elementValue = "";
+                    if (element.classList.contains('expandable-grid-checkbox-container')) {
+                        elementValue = element.children[0].checked;
+                        hasCheckbox = true;
+                    } else {
+                        elementValue = element.value;
+                    }
+
+                    if (String(elementValue).trim() !== '') {
                         isEmptyRow = false;
-                    } else if (element.value.trim() === '') {
+                    } else if (String(elementValue).trim() === '') {
                         isFullRow = false;
                     }
                 });
+
 
                 if (isEmptyRow) {
                     removeExpandableGridRow(row);
                     return;
                 }
-                if (!isFullRow) {
+
+                allowIncompleteRows = input.parentElement.getAttribute('data-allow-incomplete-rows') === "1";
+                if (!isFullRow && !hasCheckbox && !allowIncompleteRows) {
                     errors.push("Rows cannot be partially filled out. Either fill out all parts of the row or remove the row.");
                     showError(input, "Rows cannot be partially filled out. Either fill out all parts of the row or remove the row.");
                     return;

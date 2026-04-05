@@ -1,0 +1,18 @@
+{
+  "title": "Program Selection",
+  "name": "programSelect",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "select",
+      "name": "program",
+      "label": "Which program are you filling out this form for?",
+      "options": {
+        "computer_science-bse": "Computer Science B.S.E.",
+        "computer_systems_engineering-bse": "Computer Systems Engineering B.S.E."
+      },
+      "required": true
+    }
+  ]
+}

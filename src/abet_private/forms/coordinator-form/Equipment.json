@@ -1,31 +1,26 @@
 {
   "title": "Equipment",
-  "name": "appendix_c_equipment",
+  "name": "equipment",
   "action": "submit.php",
   "method": "POST",
   "fields": [
-    {
-      "name": "equipment_overview",
-      "label": "Equipment Overview",
-      "type": "text-field"
-    },
     {
       "type": "expandable-grid",
       "name": "uto_lab_computers",
       "label": "General University Lab Computers Provided by UTO (Central IT)",
       "columns": [
         {
-          "name": "equipment_item",
-          "label": "Equipment Item",
-          "type": "text-field"
+          "name": "pc_workstation",
+          "label": "PC Workstation",
+          "type": "text"
         },
         {
           "name": "quantity",
           "label": "Quantity",
-          "type": "text-field"
+          "type": "text"
         }
       ],
-      "maxRows": 20,
+      "maxRows": 50,
       "required": false
     },
     {
@@ -36,25 +31,25 @@
         {
           "name": "program",
           "label": "Program",
-          "type": "text-field"
+          "type": "text"
         },
         {
-          "name": "installed_on_windows",
+          "name": "installed_windows",
           "label": "Installed on Windows",
-          "type": "text-field"
+          "type": "checkbox"
         },
         {
-          "name": "version_installed_on_osx",
-          "label": "Version installed on OS X",
-          "type": "text-field"
+          "name": "installed_osx",
+          "label": "Installed on OS X",
+          "type": "checkbox"
         },
         {
-          "name": "version_installed_on_citrix",
-          "label": "Version installed on Citrix",
-          "type": "text-field"
+          "name": "installed_citrix",
+          "label": "Installed on Citrix",
+          "type": "checkbox"
         }
       ],
-      "maxRows": 50,
+      "maxRows": 100,
       "required": false
     },
     {
@@ -63,14 +58,14 @@
       "label": "SCIA Instructional Labs Equipment",
       "columns": [
         {
-          "name": "equipment_item",
-          "label": "Equipment Item",
-          "type": "text-field"
+          "name": "pc_workstation",
+          "label": "PC Workstation",
+          "type": "text"
         },
         {
           "name": "quantity",
           "label": "Quantity",
-          "type": "text-field"
+          "type": "text"
         }
       ],
       "maxRows": 20,
@@ -82,14 +77,14 @@
       "label": "Printers",
       "columns": [
         {
-          "name": "printer",
+          "name": "printer_description",
           "label": "Printer",
-          "type": "text-field"
+          "type": "text"
         },
         {
-          "name": "details",
-          "label": "Details",
-          "type": "text-field"
+          "name": "quantity",
+          "label": "Quantity",
+          "type": "text"
         }
       ],
       "maxRows": 20,
@@ -103,32 +98,32 @@
         {
           "name": "software_name",
           "label": "Software Name",
-          "type": "text-field"
+          "type": "text"
         },
         {
-          "name": "version",
+          "name": "version_num",
           "label": "Version",
-          "type": "text-field"
+          "type": "text"
         },
         {
-          "name": "windows",
-          "label": "Windows",
-          "type": "text-field"
+          "name": "windows_version",
+          "label": "On Windows",
+          "type": "checkbox"
         },
         {
           "name": "linux",
-          "label": "Linux",
-          "type": "text-field"
+          "label": "On Linux",
+          "type": "checkbox"
         },
         {
           "name": "macos",
-          "label": "macOS",
-          "type": "text-field"
+          "label": "On macOS",
+          "type": "checkbox"
         },
         {
           "name": "vdi_lab",
-          "label": "VDI Lab",
-          "type": "text-field"
+          "label": "On VDI Lab",
+          "type": "checkbox"
         }
       ],
       "maxRows": 50,
