@@ -47,22 +47,11 @@ def init_webdriver():
         print_exc()
         exit(1)
 
-
-def with_webdriver(func):
-    """
-    A decorator to shorten the lengths of tests by removing repeated webdriver setup
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        driver = init_webdriver()
-        try:
-            return func(driver, *args, **kwargs)
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            print_exc()
-        finally:
-            driver.quit()
-    return wrapper
+@pytest.fixture
+def driver():
+    driver = init_webdriver()
+    yield driver
+    driver.quit()
 
 def template(): 
     """
@@ -83,7 +72,7 @@ def template():
         driver.quit()
 
 
-def test_login_invalid_credentials(driver):
+def test_login_invalid_credentials():
     """
     tests that users cannot simply access the website without having a valid session
     """
@@ -113,9 +102,10 @@ def test_login_invalid_credentials(driver):
         driver.quit()
 
 @pytest.mark.order(1)
-def test_register_and_login_valid_credentials():
+def test_register_and_login_valid_credentials_logout():
     """
     tests the register and login funcitonality for a valid login
+    + added test to test logout as well
     """
     driver = init_webdriver()
     try:
@@ -168,6 +158,8 @@ def test_register_and_login_valid_credentials():
         driver.implicitly_wait(2)  # Wait for the next page to load
 
         assert driver.current_url == f"{WEBSITE_URL}/home", "User not redirected to home after valid login"
+
+        
     except Exception as e:
         print(f"An error occurred: {e}")
         print_exc()
@@ -176,8 +168,10 @@ def test_register_and_login_valid_credentials():
         driver.quit()
         
 
+def expect_route(driver, path):
+    assert driver.current_url == f"{WEBSITE_URL}{path}", f"User not at {path} after button pressed"
 
-@with_webdriver
+# @with_webdriver
 def test_navigation(driver): 
     """
     test using the new decorator i just made
@@ -200,20 +194,101 @@ def test_navigation(driver):
 
     assert driver.current_url == f"{WEBSITE_URL}/home", "User not redirected to home after valid login"
 
-    # open profile dropdown
-    profile_button = driver.find_element(By.CLASS_NAME, "auth-btn");
-    profile_button.click()
+    ###############################################
+    # ACCOUNT PAGES
+    # /account/me
+    ###############################################
+    def open_dropdown(driver): 
+        profile_button = driver.find_element(By.CLASS_NAME, "auth-btn");
+        profile_button.click()
+
+    open_dropdown(driver)
 
     # go to me
     my_profile_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/div/a");
     my_profile_link.click()
 
-    assert driver.current_url == f"{WEBSITE_URL}/account/me", "User not at /account/me after button pressed"
+    expect_route(driver, "/account/me/")
 
-    back_to_dashboard_link = driver.find_element(By.XPATH, "/html/body/div/div[1]/div[1]/a");
-    back_to_dashboard_link.click()
+    back_link = driver.find_element(By.XPATH, "/html/body/div/div[1]/div[1]/a");
+    back_link.click()
 
-    assert driver.current_url == f"{WEBSITE_URL}/home", "User not at /home after navigation back pressed"
+    expect_route(driver, "/home")
 
+    ###############################################
+    # /account/profile
+    ###############################################
 
-    # Add your test steps here
+    open_dropdown(driver)
+
+    # go to edit
+    edit_profile_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[1]");
+    edit_profile_link.click()
+
+    expect_route(driver, "/account/profile/")
+
+    # go to home
+    back_link = driver.find_element(By.XPATH, "/html/body/div/div/div[2]/a[1]");
+    back_link.click()
+
+    expect_route(driver, "/home")
+
+    ###############################################
+    # /account/settings
+    ###############################################
+
+    open_dropdown(driver)
+
+    account_settings_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[2]")
+    account_settings_link.click()
+
+    expect_route(driver, "/account/settings/")
+
+    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link.click()
+
+    expect_route(driver, "/home")
+
+    ###############################################
+    # /account/privacy
+    ###############################################
+
+    open_dropdown(driver)
+
+    privacy_faq_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[3]")
+    privacy_faq_link.click()
+
+    expect_route(driver, "/account/privacy/")
+
+    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link.click()
+
+    expect_route(driver, "/home")
+
+    ###############################################
+    # /account/help
+    ###############################################
+
+    open_dropdown(driver)
+
+    help_faq_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[4]")
+    help_faq_link.click()
+
+    expect_route(driver, "/account/help/")
+
+    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link.click()
+
+    expect_route(driver, "/home")
+
+    ###############################################
+    # Tools (no buttons because they are expected to change)
+    ###############################################
+    def navigate_and_expect(driver, path):
+        driver.get(f"{WEBSITE_URL}{path}")
+        expect_route(driver, path)
+
+    navigate_and_expect(driver, "/AssignmentsGrades/tool1.php")
+    navigate_and_expect(driver, "/faculty-form/")
+    navigate_and_expect(driver, "/coordinator-form/")
+    navigate_and_expect(driver, "/report-generator/index.php")
