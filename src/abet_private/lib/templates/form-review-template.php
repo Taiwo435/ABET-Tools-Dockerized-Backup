@@ -71,12 +71,13 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
         <?php foreach ($fields as $field): ?>
           <?php
             $type = $field["type"] ?? "";
-            if ($type === "section-break" || $type === "section-label") continue;
+
+            if ($type === "section-break") continue;
 
             $name = $field["name"] ?? "";
-            if ($name === "") continue;
+            if ($name === "" && $type !== 'section-label' && $type !== 'section-label-small') continue;
 
-            $label = $field["label"] ?? $name;
+            $label = $field["label"] ?? "";
             $required = (bool)($field["required"] ?? false);
             $description = $field["description"] ?? "";
             $rawVal = $saved[$name] ?? null;
@@ -101,7 +102,9 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
               </p>
             <?php endif; ?>
 
-            <?php if ($type === "expandable-grid"): ?>
+            <?php if ($type === 'section-label' || $type === 'section-label-small'): ?>
+              <!-- -->
+            <?php elseif ($type === "expandable-grid"): ?>
               <?php
                 $rows = decodeGridRows($rawVal);
                 $cols = $field["columns"] ?? [];

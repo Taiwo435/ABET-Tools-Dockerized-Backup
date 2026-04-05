@@ -2,6 +2,9 @@
     "title": "Coordinator Information",
     "pages": [
         {
+            "fileName": "programSelect"
+        },
+        {
             "fileName": "background"
         },
         {
@@ -17,19 +20,19 @@
             "fileName": "continuousImprovement"
         },
         {
-            "fileName": "Curriculum"
+            "fileName": "curriculum"
         },
         {
-            "fileName": "Faculty"
+            "fileName": "faculty"
         },
         {
-            "fileName": "Facilities"
+            "fileName": "facilities"
         },
         {
-            "fileName": "Staffing"
+            "fileName": "staffing"
         },
         {
-            "fileName": "Equipment"
+            "fileName": "equipment"
         },
         {
             "fileName": "institutionalSummary"
