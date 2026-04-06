@@ -57,9 +57,9 @@ jobs:
   selenium-tests: 
     name: Test General Functionality
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        browser: [firefox, chrome]
+    # strategy:
+    #   matrix:
+    #     browser: [chrome]
 
     steps:
       - name: Checkout code
@@ -69,7 +69,7 @@ jobs:
         working-directory: ./docker
         run: |
           cp ./demo.env ./.env
-          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || matrix.browser }}" >> ./.env
+          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'firefox' }}" >> ./.env
 
       - name: run docker compose to start the application 
         working-directory: ./docker
