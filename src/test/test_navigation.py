@@ -141,18 +141,18 @@ def test_register_and_login_valid_credentials_logout(driver):
     driver.implicitly_wait(2)  # Wait for the page to load
     print("Got the website")
 
+    expect_route(driver, "/register")
+
     try:
-        expect_route(driver, "/register")
+        email_input = WebDriverWait(driver, 1).until(
+            EC.presence_of_element_located((By.ID, "email"))
+        )
     except AssertionError:
         print("===================ERROR=================")
         print(driver.page_source)
         print("===================END PAGE SOURCE=================")
         raise AssertionError
 
-
-    email_input = WebDriverWait(driver, 1).until(
-        EC.presence_of_element_located((By.ID, "email"))
-    )
 
     # Fill out the registration form
     password_input = driver.find_element(By.ID, "password")
