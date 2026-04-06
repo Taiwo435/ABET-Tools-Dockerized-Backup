@@ -144,9 +144,9 @@ def test_register_and_login_valid_credentials_logout(driver):
     try:
         expect_route(driver, "/register")
     except AssertionError:
-        html_file = ARTIFACTS_DIR / f"register_dom.html"
-        with open(html_file, "w", encoding="utf-8") as f:
-            f.write(driver.page_source)
+        print("===================ERROR=================")
+        print(driver.page_source)
+        print("===================END PAGE SOURCE=================")
         raise AssertionError
 
 

@@ -83,16 +83,6 @@ jobs:
           cp ./demo.env ./.env
           echo -e "\nSELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-          cache: 'pip' # caching pip dependencies
-
-      - name: Install testing dependencies
-        run: |
-          pip install --root-user-action=ignore -r src/test/requirements.txt > /dev/null
-
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
@@ -103,15 +93,25 @@ jobs:
           php-version: '8.3'
           extensions: xml, mysql, cli
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Install testing dependencies
+        run: |
+          pip install --root-user-action=ignore -r src/test/requirements.txt > /dev/null
+
       - name: Install composer dependencies
         working-directory: ./src/abet_private
         run: |
           composer install --no-interaction --prefer-dist --optimize-autoloader 
 
-      - name: Wait for services to be ready 
-        run: |
-          # Wait for the containers to be ready
-          sleep 10
+      # - name: Wait for services to be ready 
+      #   run: |
+      #     # Wait for the containers to be ready
+      #     sleep 10
         
       - name: Run Selenium tests
         run: |
