@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+if ($_SERVER['APP_DEBUG']) {
+    umask(0000); // DON"T set file permissions :)
+}
+
 /**
  * report-generator/generate.php
  * Secure upload + isolated Python run + optional DOCX->PDF conversion
