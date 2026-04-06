@@ -17,6 +17,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import subprocess
+from pathlib import Path
 
 from dotenv import load_dotenv
 import pytest
@@ -25,6 +27,8 @@ EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")
 PASSWORD = os.getenv("TEST_PASSWORD", "superSecretPassword1!")
 # WEBSITE_URL = f"http://localhost:{os.getenv('APP_PORT', '8080')}"
 WEBSITE_URL = f"http://{os.getenv('WEBSERVER_HOSTNAME', 'php_apache')}"
+ARTIFACTS_DIR = Path("artifacts")
+ARTIFACTS_DIR.mkdir(exist_ok=True)
 
 load_dotenv("../../docker/.env")
 os.environ["PATH"] += os.pathsep + os.pathsep.join([
@@ -56,6 +60,33 @@ def driver():
     yield driver
     driver.quit()
 
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+
+    # Only act on test failure
+    if report.when == "call" and report.failed:
+        test_name = item.name
+
+        output_file = ARTIFACTS_DIR / f"{test_name}_curl.txt"
+
+        try:
+            result = subprocess.run(
+                ["curl", "-i", "-L", WEBSITE_URL],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+
+            with open(output_file, "w") as f:
+                f.write(result.stdout)
+                f.write("\n\n--- STDERR ---\n\n")
+                f.write(result.stderr)
+
+        except Exception as e:
+            with open(output_file, "w") as f:
+                f.write(f"Failed to run curl: {e}")
 # def template(): 
 #     """
 #     deprecated template for making new tests
@@ -84,7 +115,7 @@ def test_login_invalid_credentials(driver):
     assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page on initial load"
     print("Got the website")
 
-    email_input = WebDriverWait(driver, 10).until(
+    email_input = WebDriverWait(driver, 1).until(
         EC.presence_of_element_located((By.ID, "email"))
     )
 
@@ -109,10 +140,17 @@ def test_register_and_login_valid_credentials_logout(driver):
     driver.get(f"{WEBSITE_URL}/register")
     driver.implicitly_wait(2)  # Wait for the page to load
     print("Got the website")
-    expect_route(driver, "/register")
+
+    try:
+        expect_route(driver, "/register")
+    except AssertionError:
+        html_file = ARTIFACTS_DIR / f"register_dom.html"
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+        raise AssertionError
 
 
-    email_input = WebDriverWait(driver, 10).until(
+    email_input = WebDriverWait(driver, 1).until(
         EC.presence_of_element_located((By.ID, "email"))
     )
 
@@ -173,7 +211,7 @@ def test_navigation(driver):
 
     driver.get(f"{WEBSITE_URL}/login")
 
-    email_input = WebDriverWait(driver, 10).until(
+    email_input = WebDriverWait(driver, 1).until(
         EC.presence_of_element_located((By.ID, "email"))
     )
 
