@@ -97,6 +97,16 @@ jobs:
         working-directory: ./docker
         run: |
           docker compose --profile testing up --build -d
+      - name: Setup PHP with PECL extension
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: xml, mysql, cli
+
+      - name: Install composer dependencies
+        working-directory: ./src/abet_private
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader 
 
       - name: Wait for services to be ready 
         run: |

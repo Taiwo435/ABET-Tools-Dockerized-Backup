@@ -84,7 +84,10 @@ def test_login_invalid_credentials(driver):
     assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page on initial load"
     print("Got the website")
 
-    email_input = driver.find_element(By.ID, "email")
+    email_input = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "email"))
+    )
+
     password_input = driver.find_element(By.ID, "password")
     login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
 
@@ -108,8 +111,12 @@ def test_register_and_login_valid_credentials_logout(driver):
     print("Got the website")
     expect_route(driver, "/register")
 
+
+    email_input = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "email"))
+    )
+
     # Fill out the registration form
-    email_input = driver.find_element(By.ID, "email")
     password_input = driver.find_element(By.ID, "password")
     confirm_password_input = driver.find_element(By.ID, "confirm_password")
     register_button = driver.find_element(By.CLASS_NAME, "btn-submit")
@@ -166,7 +173,10 @@ def test_navigation(driver):
 
     driver.get(f"{WEBSITE_URL}/login")
 
-    email_input = driver.find_element(By.ID, "email")
+    email_input = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "email"))
+    )
+
     password_input = driver.find_element(By.ID, "password")
     login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
 
