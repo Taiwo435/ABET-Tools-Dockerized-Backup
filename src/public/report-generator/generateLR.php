@@ -2,6 +2,10 @@
 declare(strict_types=1);
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
+if ($_SERVER['APP_DEBUG']) {
+    umask(0000); // DON"T set file permissions :)
+}
+
 /**
  * report-generator/generate.php
  * Secure upload + isolated Python run + optional DOCX->PDF conversion
