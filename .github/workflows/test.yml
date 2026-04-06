@@ -23,6 +23,7 @@ on:
 
 # jobs to be executed on runner machines
 jobs:
+  
   # php-tests:
   #   name: PestPHP tests + Composer migrations
   #   runs-on: ubuntu-latest
@@ -56,6 +57,9 @@ jobs:
   selenium-tests: 
     name: Test General Functionality
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [firefox, chrome]
 
     steps:
       - name: Checkout code
@@ -65,7 +69,7 @@ jobs:
         working-directory: ./docker
         run: |
           cp ./demo.env ./.env
-          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser }}" >> ./.env
+          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || matrix.browser }}" >> ./.env
 
       - name: run docker compose to start the application 
         working-directory: ./docker
