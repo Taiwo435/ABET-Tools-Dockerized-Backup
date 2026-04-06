@@ -56,46 +56,57 @@ def parse_profile_html_page(html_doc: str) -> Optional[Dict[str, Any]]:
     type return: Optional[Dict[str, Any]]
     """
 
-    data = {
-        "terms": []
-    }
+    data = {"terms": []}
 
     if not html_doc:
         return None
-    
-    #Gets the section of the document which holds course information. 
+
     strainer = SoupStrainer(id="nav-group-teaching")
-    
     filtered_soup = BeautifulSoup(html_doc, "html.parser", parse_only=strainer)
 
-    # Remove all anchor tags as the information is not needed
+    if not filtered_soup:
+        return None
+
+    # Remove all anchor tags
     for anchor in filtered_soup.find_all("a", href=True):
         anchor.decompose()
 
+    # Remove empty td tags first
+    for td in filtered_soup.find_all("td"):
+        if not td.get_text(strip=True):
+            td.decompose()
+
+    # Rebuild list after cleanup
     necessaryClassContent = filtered_soup.find_all(["h5", "td"])
 
-    for td in filtered_soup.find_all("td"):
-        if td.get_text(strip=True) == "":
-            td.decompose()
-            
-    necessaryClassContent[0].decompose()  # Remove the first h5 tag which is just "Courses"
+    if not necessaryClassContent:
+        return None
 
+    # Remove leading "Courses" header only if it actually exists
+    if necessaryClassContent[0].name == "h5" and necessaryClassContent[0].get_text(strip=True) == "Courses":
+        necessaryClassContent[0].decompose()
+        necessaryClassContent = filtered_soup.find_all(["h5", "td"])
+
+    current_term = None
 
     for element in necessaryClassContent:
+        text = element.get_text(strip=True)
+        if not text:
+            continue
+
         if element.name == "h5":
-
-            data["terms"].append({
-                "term": element.get_text(strip=True),
+            current_term = {
+                "term": text,
                 "course_numbers": []
-            })
-        else:
-            
-            if element.get_text(strip=True) != "":
-                data["terms"][-1]["course_numbers"].append(element.get_text(strip=True))
+            }
+            data["terms"].append(current_term)
+        elif element.name == "td":
+            if current_term is not None:
+                current_term["course_numbers"].append(text)
 
-    json_data = json.dumps(data, indent=2)
+    if not data["terms"]:
+        return {"terms": []}
 
-    #print(json_data)
     return data
 
 def search_for_class_catalog_info_by_title(catalongNbr: str, subject: str) -> Optional[Dict[str, Any]]:
@@ -341,6 +352,9 @@ if __name__ == "__main__":
 
     print(json.dumps(json_response, indent=2))
 
-    json_response = get_professor_workload("dchgf")
+    #json_response = get_professor_workload("dchgf")
 
-    print(json.dumps(json_response, indent=2))
+    #print(json.dumps(json_response, indent=2))
+
+    #json_response = get_professor_workload("string")
+    #print(json.dumps(json_response, indent=2))

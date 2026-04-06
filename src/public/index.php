@@ -1,5 +1,10 @@
 <?php
 /**
+ * ############### README ################
+ * Looking for the old index.php? 
+ * 
+ * Go to home.php instead. Don't worry, the urls are still the same.
+ * 
  * Front controller with legacy bridge:
  *      @see https://symfony.com/doc/7.4/migration.html#front-controller-with-legacy-bridge
  * Front Controllers in general

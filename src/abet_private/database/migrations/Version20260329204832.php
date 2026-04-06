@@ -14,7 +14,7 @@ final class Version20260329204832 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return '';
+        return 'Adds job_history table for celery background workers (reportgen)';
     }
 
     public function up(Schema $schema): void

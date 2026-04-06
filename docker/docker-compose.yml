@@ -32,7 +32,6 @@ services:
       - app_network
     depends_on:
       - mysql
-      - extraction_api
 
   ###################################################
   # the MySQL container provides the database service for the application.
@@ -56,6 +55,11 @@ services:
       - ../src/abet_private:${ABET_PRIVATE_DIR}
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ###################################################
   # phpMyAdmin for a web-based interface for managing the MySQL database.
@@ -101,7 +105,11 @@ services:
     dns:
       - 8.8.8.8
       - 1.1.1.1
+    depends_on:
+      mysql:
+        condition: service_healthy
 
+ 
   ###################################################
   # Canvas Formatting FastAPI Backend
   # Generates course/ABET HTML pages and uploads to Canvas modules
@@ -215,7 +223,7 @@ services:
       redis:
         condition: service_healthy
       mysql:
-        condition: service_started
+        condition: service_healthy
     dns:
       - 1.1.1.1
       - 8.8.8.8
@@ -247,6 +255,8 @@ services:
       - 1.1.1.1
     depends_on:
       redis:
+        condition: service_healthy
+      mysql:
         condition: service_healthy
 
   ###################################################

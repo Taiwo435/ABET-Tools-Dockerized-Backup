@@ -1,6 +1,7 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 // Permission bit positions - must match Permissions enum in User.php
 const PERM_ADMIN_PANEL            = 1 << 0; // 1
@@ -34,15 +35,6 @@ if (empty($_SESSION['user_id'])) {
     <div class="checklist">
         <label class="checklist-title">Your To-Do List</label>
 
-        <div class="checklist-item" onclick="window.location.href='#';">
-            <?php if (false): ?>
-                <label class="checklist-check">&#10004;</label>
-            <?php else: ?>
-                <label class="checklist-x">&#10006;</label>
-            <?php endif; ?>
-            <label class="checklist-label">Upload your canvas token &#x279E;</label>
-        </div>
-
         <?php if (hasPermission($permissions, PERM_FACULTY_FORM_TOOL)): ?>
         <div class="checklist-item" onclick="window.location.href='/faculty-form';">
             <?php if (allPagesDone('faculty-form')): ?>
@@ -50,7 +42,7 @@ if (empty($_SESSION['user_id'])) {
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Complete the faculty information form &#x279E;</label>
+            <label class="checklist-label">Complete the faculty information form. &#x279E;</label>
         </div>
         <?php endif; ?>
 
@@ -61,18 +53,9 @@ if (empty($_SESSION['user_id'])) {
             <?php else: ?>
                 <label class="checklist-x">&#10006;</label>
             <?php endif; ?>
-            <label class="checklist-label">Link all of your canvas courses (<?= 0 ?> added so far) &#x279E;</label>
+            <label class="checklist-label">Connect your Canvas class and run extraction. &#x279E;</label>
         </div>
         <?php endif; ?>
-
-        <div class="checklist-item" onclick="window.location.href='#';">
-            <?php if (false): ?>
-                <label class="checklist-check">&#10004;</label>
-            <?php else: ?>
-                <label class="checklist-x">&#10006;</label>
-            <?php endif; ?>
-            <label class="checklist-label">Upload and manage your roster and assignments &#x279E;</label>
-        </div>
 
     </div>
 
@@ -116,7 +99,7 @@ if (empty($_SESSION['user_id'])) {
             </div>
             <div class="card-body">
                 <div class="card-body-inner">
-                    <p>Description text.</p>
+                    <p>Fill out information to be used in the Questionnaire form.</p>
                     <a href="/coordinator-form" class="action-link">Open Coordinator Form &rarr;</a>
                 </div>
             </div>
@@ -133,6 +116,21 @@ if (empty($_SESSION['user_id'])) {
                 <div class="card-body-inner">
                     <p>Generate a comprehensive ABET report that summarizes assessment results and supporting materials. Present information clearly to streamline internal review and accreditation preparation.</p>
                     <a href="/report-generator/index.php" class="action-link">Launch Tool 3 &rarr;</a>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (hasPermission($permissions, PERM_ADMIN_PANEL)): ?>
+        <div class="tool-card">
+            <div class="card-header" onclick="triggerToggle(this)">
+                <div class="card-title">Admin Panel</div>
+                <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+            </div>
+            <div class="card-body">
+                <div class="card-body-inner">
+                    <p>Manage destination course IDs, user permissions, and other admin settings.</p>
+                    <a href="/AssignmentsGrades/admin.php" class="action-link">Open Admin Panel &rarr;</a>
                 </div>
             </div>
         </div>

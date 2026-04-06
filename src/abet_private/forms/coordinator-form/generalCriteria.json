@@ -5,217 +5,55 @@
   "method": "POST",
   "fields": [
     {
-      "type": "expandable-grid",
-      "name": "freshman_criteria",
-      "label": "Freshman students who have completed 0-11 transferable college credits post high school",
-      "columns": [
-        {
-          "name": "majors",
-          "label": "Majors (multiple allowed in a single box)",
-          "type": "text-field"
-        },
-        {
-          "name": "admission_criteria",
-          "label": "Admission Criteria",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
+      "type": "section-label",
+      "label": "Freshman Criteria",
+      "description": "For students who have completed 0-11 transferable college credits post high school"
     },
     {
-      "type": "expandable-grid",
-      "name": "transfer_criteria_12_to_23",
-      "label": "Transfer students who have completed 12-23 transferable college credits post high school",
-      "columns": [
-        {
-          "name": "majors",
-          "label": "Majors (multiple allowed in a single box)",
-          "type": "text-field"
-        },
-        {
-          "name": "admission_criteria",
-          "label": "Admission Criteria",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
+      "type": "text-field",
+      "name": "freshman",
+      "label": ""
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "12-23 Credit Transfer Criteria",
+      "description": "For students who have completed 12-23 transferable college credits post high school"
     },
     {
-      "type": "expandable-grid",
-      "name": "transfer_criteria_24",
-      "label": "Transfer students with 24 or more transferable college credit hours post high school",
-      "description": "Must meet EITHER the primary criteria OR the secondary criteria (both not required)",
-      "columns": [
-        {
-          "name": "majors",
-          "label": "Majors (multiple allowed in a single box)",
-          "type": "text-field"
-        },
-        {
-          "name": "primary_criteria",
-          "label": "Primary Criteria",
-          "type": "text-field"
-        },
-        {
-          "name": "secondary_criteria",
-          "label": "Secondary Criteria",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
+      "type": "text-field",
+      "name": "transfer_12_23",
+      "label": ""
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "24+ Credit Transfer Criteria",
+      "description": "Students who have completed 24 or more transferable college credits post high school."
     },
     {
-      "name": "change_of_major_admissions",
-      "label": "Change of Major Admissions",
-      "type": "text-field"
+      "type": "section-label",
+      "label": "",
+      "description": "The 24+ Credit section has a primary and secondary criteria. To qualify, students can meet either the primary or secondary criteria. They do not need to meet both."
+    },
+
+    {
+      "type": "text-field",
+      "name": "transfer_24_primary",
+      "label": "Primary Criteria"
     },
     {
-      "name": "evaluating_student_performance",
-      "label": "Evaluating Student Performance",
-      "type": "text-field"
-    },
-    {
-      "name": "dars_critical_courses_off_track_eadvisor",
-      "label": "DARS, Critical Courses, Off-Track, and eAdvisor",
-      "type": "text-field"
-    },
-    {
-      "name": "course_prerequisites",
-      "label": "Course Prerequisites",
-      "type": "text-field"
-    },
-    {
-      "name": "academic_status_reports",
-      "label": "Academic Status Reports (ASRs)",
-      "type": "text-field"
-    },
-    {
-      "name": "academic_standing",
-      "label": "Academic Standing",
-      "type": "text-field"
-    },
-    {
-      "name": "deans_list",
-      "label": "Dean's List",
-      "type": "text-field"
-    },
-    {
-      "name": "university_academic_warning",
-      "label": "University Academic Warning",
-      "type": "text-field"
-    },
-    {
-      "name": "fulton_probation",
-      "label": "Ira A. Fulton Schools of Engineering Probation",
-      "type": "text-field"
-    },
-    {
-      "name": "conditions_for_fulton_probation",
-      "label": "Conditions for Ira A. Fulton Schools of Engineering Probation",
-      "type": "text-field"
-    },
-    {
-      "name": "fulton_continuing_probation",
-      "label": "Ira A. Fulton Schools of Engineering Continuing Probation",
-      "type": "text-field"
-    },
-    {
-      "name": "fulton_ineligibility",
-      "label": "Ira A. Fulton Schools of Engineering Ineligibility",
-      "type": "text-field"
-    },
-    {
-      "name": "fulton_disqualification",
-      "label": "Ira A. Fulton Schools of Engineering Disqualification",
-      "type": "text-field"
-    },
-    {
-      "name": "prerequisite_purging",
-      "label": "Prerequisite Purging",
-      "type": "text-field"
-    },
-    {
-      "name": "major_map_and_academic_advising_curriculum_flowchart",
-      "label": "Major Map & Academic Advising Curriculum Flowchart",
-      "type": "text-field"
-    },
-    {
-      "name": "transfer_student_admission_requirements",
-      "label": "Transfer Student Admission Requirements",
-      "type": "text-field"
-    },
-    {
-      "name": "how_credits_transfer_to_asu",
-      "label": "How Credits Transfer to ASU",
-      "type": "text-field"
-    },
-    {
-      "name": "currency_of_course_work",
-      "label": "Currency of Course Work",
-      "type": "text-field"
-    },
-    {
-      "name": "course_equivalency_guide_and_arizona_community_colleges",
-      "label": "Course Equivalency Guide and Arizona Community Colleges",
-      "type": "text-field"
-    },
-    {
-      "name": "faculty_advising",
-      "label": "Faculty Advising",
-      "type": "text-field"
-    },
-    {
-      "name": "advising_staff",
-      "label": "Advising Staff",
-      "type": "text-field"
-    },
-    {
-      "name": "advising_frequency",
-      "label": "Advising Frequency",
-      "type": "text-field"
-    },
-    {
-      "name": "first_year_student_orientation",
-      "label": "First Year Student Orientation",
-      "type": "text-field"
-    },
-    {
-      "name": "advising_formats",
-      "label": "Advising Formats",
-      "type": "text-field"
-    },
-    {
-      "name": "special_programs",
-      "label": "Special Programs",
-      "type": "text-field"
-    },
-    {
-      "name": "work_in_lieu_of_courses",
-      "label": "Work in Lieu of Courses",
-      "type": "text-field"
-    },
-    {
-      "name": "independent_study_research_and_internship_credit",
-      "label": "Independent Study, Research, and Internship Credit",
-      "type": "text-field"
-    },
-    {
-      "name": "graduation_requirements",
-      "label": "Graduation Requirements",
-      "type": "text-field"
-    },
-    {
-      "name": "flowchart_and_dars_audit",
-      "label": "Flowchart and DARS Audit",
-      "type": "text-field"
-    },
-    {
-      "name": "records_of_student_work_transcripts",
-      "label": "Records of Student Work/Transcripts",
-      "type": "text-field"
+      "type": "text-field",
+      "name": "transfer_24_secondary",
+      "label": "Secondary Criteria"
     }
   ]
 }

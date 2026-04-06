@@ -38,9 +38,11 @@ class ReportBuilder(BaseModel):
 # Endpoint to get professor workload information for all semesters taught by the professor with the given ASURITE ID.
 @app.post("/professor-workload")
 def professor_workload(request: WorkloadRequest):
-    result = getProfessorWorkload.get_professor_workload(request.asurite_id)
-
-    return {"data": result or {}}
+    try:
+        result = getProfessorWorkload.get_professor_workload(request.asurite_id)
+        return {"data": result or {}}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Endpoint to get merged CSE technical elective courses for a given year.
 @app.post("/cse-elective-courses")

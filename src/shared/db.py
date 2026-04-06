@@ -111,6 +111,7 @@ def get_job(job_id: str) -> dict | None:
 def list_jobs(
     status: str | None = None,
     service: str | None = None,
+    submitted_by: int | None = None,
     limit: int = 50,
 ) -> list[dict]:
     """List jobs, newest first. Optional filters."""
@@ -122,6 +123,9 @@ def list_jobs(
     if service:
         clauses.append("service = %s")
         vals.append(service)
+    if submitted_by is not None:
+        clauses.append("submitted_by = %s")
+        vals.append(submitted_by)
 
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     vals.append(limit)
