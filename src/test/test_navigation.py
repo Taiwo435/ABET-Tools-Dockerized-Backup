@@ -47,129 +47,112 @@ def init_webdriver():
         print_exc()
         exit(1)
 
+def expect_route(driver, path):
+    assert driver.current_url == f"{WEBSITE_URL}{path}", f"User not at {path} after button pressed"
+
 @pytest.fixture
 def driver():
     driver = init_webdriver()
     yield driver
     driver.quit()
 
-def template(): 
-    """
-    deprecated template for making new tests
-    """
-    driver = init_webdriver()
-    try:
-        driver.get(f"{WEBSITE_URL}")
-        driver.implicitly_wait(2)  # Wait for the page to load
-        print("Got the website")
+# def template(): 
+#     """
+#     deprecated template for making new tests
+#     """
+#     driver = init_webdriver()
+#     try:
+#         driver.get(f"{WEBSITE_URL}")
+#         driver.implicitly_wait(2)  # Wait for the page to load
+#         print("Got the website")
 
-        # Add your test steps here
+#         # Add your test steps here
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        print_exc()
-    finally:
-        driver.quit()
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+#         print_exc()
+#     finally:
+#         driver.quit()
 
 
-def test_login_invalid_credentials():
+def test_login_invalid_credentials(driver):
     """
     tests that users cannot simply access the website without having a valid session
     """
-    driver = init_webdriver()
-    try:
-        driver.get(f"{WEBSITE_URL}/login")
-        driver.implicitly_wait(2)  # Wait for the page to load
-        assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page on initial load"
-        print("Got the website")
+    driver.get(f"{WEBSITE_URL}/login")
+    driver.implicitly_wait(2)  # Wait for the page to load
+    assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page on initial load"
+    print("Got the website")
 
-        email_input = driver.find_element(By.ID, "email")
-        password_input = driver.find_element(By.ID, "password")
-        login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
+    email_input = driver.find_element(By.ID, "email")
+    password_input = driver.find_element(By.ID, "password")
+    login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
 
-        email_input.send_keys("invaliduser")
-        password_input.send_keys("invalidpass")
-        login_button.click()
-        
-        driver.implicitly_wait(2)  # Wait for the next page to load
+    email_input.send_keys("invaliduser")
+    password_input.send_keys("invalidpass")
+    login_button.click()
+    
+    driver.implicitly_wait(2)  # Wait for the next page to load
 
-        assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page after invalid credentials"
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        print_exc()
-        exit(1)
-    finally:
-        driver.quit()
+    assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page after invalid credentials"
 
 @pytest.mark.order(1)
-def test_register_and_login_valid_credentials_logout():
+def test_register_and_login_valid_credentials_logout(driver):
     """
     tests the register and login funcitonality for a valid login
     + added test to test logout as well
     """
-    driver = init_webdriver()
-    try:
-        driver.get(f"{WEBSITE_URL}/register")
-        driver.implicitly_wait(2)  # Wait for the page to load
-        print("Got the website")
 
-        # Fill out the registration form
-        email_input = driver.find_element(By.ID, "email")
-        password_input = driver.find_element(By.ID, "password")
-        confirm_password_input = driver.find_element(By.ID, "confirm_password")
-        register_button = driver.find_element(By.CLASS_NAME, "btn-submit")
+    driver.get(f"{WEBSITE_URL}/register")
+    driver.implicitly_wait(2)  # Wait for the page to load
+    print("Got the website")
+    expect_route(driver, "/register")
 
-        email_input.send_keys(EMAIL_ADDRESS)
-        password_input.send_keys(PASSWORD)
-        confirm_password_input.send_keys(PASSWORD)
-        register_button.click()
-        driver.implicitly_wait(2)  # Wait for the next page to load
+    # Fill out the registration form
+    email_input = driver.find_element(By.ID, "email")
+    password_input = driver.find_element(By.ID, "password")
+    confirm_password_input = driver.find_element(By.ID, "confirm_password")
+    register_button = driver.find_element(By.CLASS_NAME, "btn-submit")
 
-        # sleep(2) 
+    email_input.send_keys(EMAIL_ADDRESS)
+    password_input.send_keys(PASSWORD)
+    confirm_password_input.send_keys(PASSWORD)
+    register_button.click()
+    driver.implicitly_wait(2)  # Wait for the next page to load
 
-        # check if there's a success message
-        success_elements = driver.find_elements(By.CLASS_NAME, "success")
+    # sleep(2) 
 
-        webdriver_wait = WebDriverWait(driver, 5)
-        webdriver_wait.until(EC.any_of(
-            EC.presence_of_element_located((By.CLASS_NAME, "success")),
-            EC.presence_of_element_located((By.CLASS_NAME, "error"))
-        ))
+    # check if there's a success message
+    success_elements = driver.find_elements(By.CLASS_NAME, "success")
 
-        print(success_elements)
-        if len(success_elements) > 0:
-            innerHTML = success_elements[0].get_attribute('innerHTML')
-            assert innerHTML.strip() == "<strong>Success!</strong> Account created. You can now sign in.", "Success message not found after registration"
-        else:
-            # if not, check for error message about existing account
-            error_message_element = driver.find_element(By.CLASS_NAME, "error")
-            print(error_message_element.text)
-            assert error_message_element.text == "An account with that email already exists.", "Error message element not found after attempting to register with existing email"
+    webdriver_wait = WebDriverWait(driver, 5)
+    webdriver_wait.until(EC.any_of(
+        EC.presence_of_element_located((By.CLASS_NAME, "success")),
+        EC.presence_of_element_located((By.CLASS_NAME, "error"))
+    ))
 
-        driver.get(f"{WEBSITE_URL}/login")
+    print(success_elements)
+    if len(success_elements) > 0:
+        innerHTML = success_elements[0].get_attribute('innerHTML')
+        assert innerHTML.strip() == "<strong>Success!</strong> Account created. You can now sign in.", "Success message not found after registration"
+    else:
+        # if not, check for error message about existing account
+        error_message_element = driver.find_element(By.CLASS_NAME, "error")
+        print(error_message_element.text)
+        assert error_message_element.text == "An account with that email already exists.", "Error message element not found after attempting to register with existing email"
 
-        email_input = driver.find_element(By.ID, "email")
-        password_input = driver.find_element(By.ID, "password")
-        login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
+    driver.get(f"{WEBSITE_URL}/login")
 
-        email_input.send_keys(EMAIL_ADDRESS)
-        password_input.send_keys(PASSWORD)
-        login_button.click()
-        driver.implicitly_wait(2)  # Wait for the next page to load
+    email_input = driver.find_element(By.ID, "email")
+    password_input = driver.find_element(By.ID, "password")
+    login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
 
-        assert driver.current_url == f"{WEBSITE_URL}/home", "User not redirected to home after valid login"
+    email_input.send_keys(EMAIL_ADDRESS)
+    password_input.send_keys(PASSWORD)
+    login_button.click()
+    driver.implicitly_wait(2)  # Wait for the next page to load
 
-        
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        print_exc()
-        exit(1)
-    finally:
-        driver.quit()
-        
-
-def expect_route(driver, path):
-    assert driver.current_url == f"{WEBSITE_URL}{path}", f"User not at {path} after button pressed"
+    assert driver.current_url == f"{WEBSITE_URL}/home", "User not redirected to home after valid login"
 
 # @with_webdriver
 def test_navigation(driver): 
