@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests;
+namespace Tests\Feature;
 
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;

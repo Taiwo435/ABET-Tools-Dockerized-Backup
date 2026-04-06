@@ -232,7 +232,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[\Deprecated]
     public function eraseCredentials(): void
     {
-        // @deprecated, to be removed when upgrading to Symfony 8
+        $this->password = null;
+        $this->role = "";
+        $this->permissions = 0;
     }
 }
 
