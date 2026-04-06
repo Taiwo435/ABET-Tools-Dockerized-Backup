@@ -21,22 +21,22 @@ $path = (getenv('ABET_PRIVATE_DIR').'/../../docker/.env');
 
 global $kernel;
 
-// if ($_SERVER['APP_DEBUG']) {
-//     umask(0000);
+if ($_SERVER['APP_DEBUG']) {
+    umask(0000); // DON"T set file permissions :)
 
-//     Debug::enable();
-// }
+    Debug::enable();
+}
 
-// if ($trustedProxies = $_SERVER['TRUSTED_PROXIES'] ?? $_ENV['TRUSTED_PROXIES'] ?? false) {
-//     Request::setTrustedProxies(
-//       explode(',', $trustedProxies),
-//       Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO
-//     );
-// }
+if ($trustedProxies = $_SERVER['TRUSTED_PROXIES'] ?? $_ENV['TRUSTED_PROXIES'] ?? false) {
+    Request::setTrustedProxies(
+      explode(',', $trustedProxies),
+      Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO
+    );
+}
 
-// if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? $_ENV['TRUSTED_HOSTS'] ?? false) {
-//     Request::setTrustedHosts([$trustedHosts]);
-// }
+if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? $_ENV['TRUSTED_HOSTS'] ?? false) {
+    Request::setTrustedHosts([$trustedHosts]);
+}
 
 $kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
 $request = Request::createFromGlobals();
