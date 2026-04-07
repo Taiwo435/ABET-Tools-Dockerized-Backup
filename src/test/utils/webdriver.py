@@ -13,7 +13,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import pytest
 
 EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")
@@ -21,7 +21,7 @@ PASSWORD = os.getenv("TEST_PASSWORD", "superSecretPassword1!")
 # WEBSITE_URL = f"http://localhost:{os.getenv('APP_PORT', '8080')}"
 WEBSITE_URL = f"http://{os.getenv('WEBSERVER_HOSTNAME', 'php_apache')}"
 
-load_dotenv("../../../docker/.env")
+# load_dotenv("../../../docker/.env")
 
 os.environ["PATH"] += os.pathsep + os.pathsep.join([
     "/home/danny/ASU/ABET-Tools-Frontend/src/test/drivers",
