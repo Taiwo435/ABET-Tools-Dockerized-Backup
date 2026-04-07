@@ -101,17 +101,26 @@ jobs:
           # Wait for the containers to be ready
           sleep 10
 
-      - name: Debug screenshot
-        uses: flameddd/screenshots-ci-action@master
-        with:
-          url: http://localhost:8080/login
+      # - name: Debug screenshot
+      #   uses: flameddd/screenshots-ci-action@master
+      #   with:
+      #     url: 
+      - name: Fetch URL with wget
+        run: |
+          URL="http://localhost:8080/login"
+          OUTPUT="response.html"
 
-      - name: Upload screenshot
-        uses: actions/upload-artifact@v6 # Uplaod screenshots to Actions Artifacts via actions/upload-artifact@v2
+          wget \
+            --max-redirect=20 \
+            --output-document="$OUTPUT" \
+            "$URL"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
         with:
-          path: screenshots
-          name: Download-screenshots
-        
+          name: fetched-response
+          path: response.html
+
       - name: Run Selenium tests
         run: |
           # Run your Selenium tests here, for example:
