@@ -107,7 +107,7 @@ jobs:
           url: http://localhost:8080/login
 
       - name: Upload screenshot
-        uses: actions/upload-artifact@v2 # Uplaod screenshots to Actions Artifacts via actions/upload-artifact@v2
+        uses: actions/upload-artifact@v6 # Uplaod screenshots to Actions Artifacts via actions/upload-artifact@v2
         with:
           path: screenshots
           name: Download-screenshots
