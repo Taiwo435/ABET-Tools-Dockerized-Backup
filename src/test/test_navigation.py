@@ -27,29 +27,28 @@ EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")
 PASSWORD = os.getenv("TEST_PASSWORD", "superSecretPassword1!")
 # WEBSITE_URL = f"http://localhost:{os.getenv('APP_PORT', '8080')}"
 WEBSITE_URL = f"http://{os.getenv('WEBSERVER_HOSTNAME', 'php_apache')}"
-ARTIFACTS_DIR = Path("artifacts")
-ARTIFACTS_DIR.mkdir(exist_ok=True)
+from utils.webdriver import init_webdriver
 
 load_dotenv("../../docker/.env")
 os.environ["PATH"] += os.pathsep + os.pathsep.join([
     "/home/danny/ASU/ABET-Tools-Frontend/src/test/drivers",
 ])
 
-def init_webdriver():
-    """
-    Initializes the webdriver in a completely fresh state
-    ensures that there is no leftover session state
-    """
-    try:
-        driver = webdriver.Remote(
-            command_executor=f"http://localhost:{os.getenv('SELENIUM_PORT', '4444')}/wd/hub",
-            options=webdriver.FirefoxOptions(),
-        )
-        return driver
-    except Exception as e:
-        print(f"An error occurred while initializing WebDriver: {e}")
-        print_exc()
-        exit(1)
+# def init_webdriver():
+#     """
+#     Initializes the webdriver in a completely fresh state
+#     ensures that there is no leftover session state
+#     """
+#     try:
+#         driver = webdriver.Remote(
+#             command_executor=f"http://localhost:{os.getenv('SELENIUM_PORT', '4444')}/wd/hub",
+#             options=webdriver.FirefoxOptions(),
+#         )
+#         return driver
+#     except Exception as e:
+#         print(f"An error occurred while initializing WebDriver: {e}")
+#         print_exc()
+#         exit(1)
 
 def expect_route(driver, path):
     assert driver.current_url == f"{WEBSITE_URL}{path}", f"User not at {path} after button pressed"
