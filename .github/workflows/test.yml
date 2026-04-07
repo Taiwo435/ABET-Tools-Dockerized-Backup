@@ -72,7 +72,7 @@ jobs:
         working-directory: ./docker
         run: |
           cp ./demo.env ./.env
-          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'chrome' }}" >> ./.env
+          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'firefox' }}" >> ./.env
 
       - name: run docker compose to start the application 
         working-directory: ./docker
@@ -116,7 +116,7 @@ jobs:
             --output-document="$OUTPUT" \
             "$URL" | true
       
-      - name: Fetch URL with wget
+      - name: Fetch URL with curl
         run: curl -v http://localhost:8080/ || true
 
       - name: dump docker logs
