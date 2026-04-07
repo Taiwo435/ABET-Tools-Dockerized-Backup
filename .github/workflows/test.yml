@@ -105,6 +105,7 @@ jobs:
       #   uses: flameddd/screenshots-ci-action@master
       #   with:
       #     url: 
+
       - name: Fetch URL with wget
         run: |
           URL="http://localhost:8080/login"
@@ -113,7 +114,10 @@ jobs:
           wget \
             --max-redirect=20 \
             --output-document="$OUTPUT" \
-            "$URL"
+            "$URL" | true
+
+      - name: dump docker logs
+        run: docker logs php_apache
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
