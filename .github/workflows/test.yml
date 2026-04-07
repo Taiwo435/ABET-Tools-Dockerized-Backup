@@ -23,6 +23,9 @@ on:
 
 # jobs to be executed on runner machines
 jobs:
+
+  # we can split this out if we find a way to make test configs 
+  # to NOT need the mysql container to be setup...
   
   # php-tests:
   #   name: PestPHP tests + Composer migrations
@@ -69,17 +72,18 @@ jobs:
         working-directory: ./docker
         run: |
           cp ./demo.env ./.env
-          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'firefox' }}" >> ./.env
+          echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'chrome' }}" >> ./.env
 
       - name: run docker compose to start the application 
         working-directory: ./docker
         run: |
           docker compose --profile testing up --build -d
+
       - name: Setup PHP with PECL extension
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: xml, mysql, cli
+          extensions: xml, mysql, cli, redis
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -96,15 +100,10 @@ jobs:
         run: |
           composer install --no-interaction --prefer-dist --optimize-autoloader 
 
-      - name: Wait for services to be ready 
-        run: |
-          # Wait for the containers to be ready
-          sleep 10
-
-      # - name: Debug screenshot
-      #   uses: flameddd/screenshots-ci-action@master
-      #   with:
-      #     url: 
+      # - name: Wait for services to be ready 
+      #   run: |
+      #     # Wait for the containers to be ready
+      #     sleep 10
 
       - name: Fetch URL with wget
         run: |
