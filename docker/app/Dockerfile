@@ -56,7 +56,8 @@ COPY docker/app/config/000-default.conf /etc/apache2/sites-enabled/000-default.c
 
 # change php.ini based on environment variable
 # doesn't really matter...
-RUN if [ "$APP_ENV" = "dev" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+# RUN if [ "$APP_ENV" = "dev" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+RUN if "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 
 #RUN mkdir -p /var/www/
