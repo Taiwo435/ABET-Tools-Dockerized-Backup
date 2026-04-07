@@ -123,17 +123,6 @@ jobs:
       - name: dump docker logs
         run: docker logs php_apache
 
-      - name: Show Apache + PHP logs
-        run: |
-          echo "=== Apache error.log ==="
-          docker exec php_apache cat /var/log/apache2/error.log || true
-
-          echo "=== Apache access.log ==="
-          docker exec php_apache cat /var/log/apache2/access.log || true
-
-          echo "=== PHP logs (if separate) ==="
-          docker exec php_apache find /var/log -type f -name "*php*" -exec cat {} \; || true
-
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
