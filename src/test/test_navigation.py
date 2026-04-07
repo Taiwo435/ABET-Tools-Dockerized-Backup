@@ -59,33 +59,33 @@ def driver():
     yield driver
     driver.quit()
 
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    report = outcome.get_result()
+# @pytest.hookimpl(hookwrapper=True)
+# def pytest_runtest_makereport(item, call):
+#     outcome = yield
+#     report = outcome.get_result()
 
-    # Only act on test failure
-    if report.when == "call" and report.failed:
-        test_name = item.name
+#     # Only act on test failure
+#     if report.when == "call" and report.failed:
+#         test_name = item.name
 
-        output_file = ARTIFACTS_DIR / f"{test_name}_curl.txt"
+#         output_file = ARTIFACTS_DIR / f"{test_name}_curl.txt"
 
-        try:
-            result = subprocess.run(
-                ["curl", "-i", "-L", WEBSITE_URL],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
+#         try:
+#             result = subprocess.run(
+#                 ["curl", "-i", "-L", WEBSITE_URL],
+#                 capture_output=True,
+#                 text=True,
+#                 timeout=30,
+#             )
 
-            with open(output_file, "w") as f:
-                f.write(result.stdout)
-                f.write("\n\n--- STDERR ---\n\n")
-                f.write(result.stderr)
+#             with open(output_file, "w") as f:
+#                 f.write(result.stdout)
+#                 f.write("\n\n--- STDERR ---\n\n")
+#                 f.write(result.stderr)
 
-        except Exception as e:
-            with open(output_file, "w") as f:
-                f.write(f"Failed to run curl: {e}")
+#         except Exception as e:
+#             with open(output_file, "w") as f:
+#                 f.write(f"Failed to run curl: {e}")
 # def template(): 
 #     """
 #     deprecated template for making new tests

@@ -15,6 +15,12 @@ planned tests:
     - cgi-bin and more are inaccessible
     
 """
+from utils.webdriver import init_webdriver
+
+EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")
+PASSWORD = os.getenv("TEST_PASSWORD", "superSecretPassword1!")
+# WEBSITE_URL = f"http://localhost:{os.getenv('APP_PORT', '8080')}"
+WEBSITE_URL = f"http://{os.getenv('WEBSERVER_HOSTNAME', 'php_apache')}"
 
 # I could make this a decorator...
 def template(): 
