@@ -96,17 +96,18 @@ jobs:
         run: |
           composer install --no-interaction --prefer-dist --optimize-autoloader 
 
-       - name: Wait for services to be ready 
-         run: |
-           # Wait for the containers to be ready
-           sleep 10
+      - name: Wait for services to be ready 
+        run: |
+          # Wait for the containers to be ready
+          sleep 10
 
-       - name: Debug screenshot
-         uses: flameddd/screenshots-ci-action@master
-         with:
-           url: http://localhost:8080/login
+      - name: Debug screenshot
+        uses: flameddd/screenshots-ci-action@master
+        with:
+          url: http://localhost:8080/login
 
-      - uses: actions/upload-artifact@v2 # Uplaod screenshots to Actions Artifacts via actions/upload-artifact@v2
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v2 # Uplaod screenshots to Actions Artifacts via actions/upload-artifact@v2
         with:
           path: screenshots
           name: Download-screenshots

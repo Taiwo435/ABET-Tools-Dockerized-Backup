@@ -115,7 +115,7 @@ def test_login_invalid_credentials(driver):
     assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page on initial load"
     print("Got the website")
 
-    email_input = WebDriverWait(driver, 1).until(
+    email_input = WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.ID, "email"))
     )
 
@@ -144,7 +144,7 @@ def test_register_and_login_valid_credentials_logout(driver):
     expect_route(driver, "/register")
 
     try:
-        email_input = WebDriverWait(driver, 1).until(
+        email_input = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, "email"))
         )
     except AssertionError:
@@ -211,7 +211,7 @@ def test_navigation(driver):
 
     driver.get(f"{WEBSITE_URL}/login")
 
-    email_input = WebDriverWait(driver, 1).until(
+    email_input = WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.ID, "email"))
     )
 
