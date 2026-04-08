@@ -15,6 +15,16 @@ planned tests:
     - cgi-bin and more are inaccessible
     
 """
+import os
+from sys import exit
+from traceback import print_exc
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from time import sleep
+
 from utils.webdriver import init_webdriver
 
 EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")

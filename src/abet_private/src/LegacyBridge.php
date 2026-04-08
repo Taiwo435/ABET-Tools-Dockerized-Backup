@@ -29,6 +29,7 @@ class LegacyBridge
 
         //TODO: add pretty rewrites in .htaccess
         
+        var_dump(get_loaded_extensions());
         // ----------------------------
         // .htaccess pretty paths but here
         // ----------------------------

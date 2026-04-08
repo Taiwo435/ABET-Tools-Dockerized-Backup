@@ -173,7 +173,7 @@ services:
   # the selenium container for running end-to-end tests with a headless browser.
   ###################################################
   selenium:
-    image: selenium/standalone-${SELENIUM_BROWSER:-firefox}:latest
+    image: selenium/standalone-${SELENIUM_BROWSER:?error}:latest
     container_name: selenium
     hostname: ${SELENIUM_HOSTNAME:?error}
     profiles:

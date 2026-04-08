@@ -28,11 +28,12 @@ PASSWORD = os.getenv("TEST_PASSWORD", "superSecretPassword1!")
 # WEBSITE_URL = f"http://localhost:{os.getenv('APP_PORT', '8080')}"
 WEBSITE_URL = f"http://{os.getenv('WEBSERVER_HOSTNAME', 'php_apache')}"
 from utils.webdriver import init_webdriver
+from utils.webdriver import PROJECT_DIR
 
-load_dotenv("../../docker/.env")
-os.environ["PATH"] += os.pathsep + os.pathsep.join([
-    "/home/danny/ASU/ABET-Tools-Frontend/src/test/drivers",
-])
+load_dotenv(f"{PROJECT_DIR}/docker/.env")
+# os.environ["PATH"] += os.pathsep + os.pathsep.join([
+#     "/home/danny/ASU/ABET-Tools-Frontend/src/test/drivers",
+# ])
 
 # def init_webdriver():
 #     """
