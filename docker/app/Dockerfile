@@ -43,18 +43,21 @@ RUN pip3 install --no-cache-dir --break-system-packages \
 
 RUN docker-php-ext-install pdo pdo_mysql
 
-# the reverse proxy will handle the SSL, so we don't need to set up certificates here
+# The server will handle SSL, we don't need it here.
 RUN a2enmod rewrite
+RUN a2enmod setenvif
 RUN a2enmod headers
 RUN a2enmod proxy
 RUN a2enmod proxy_http
 
 COPY docker/app/config/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
-#RUN if [ "$BUILD_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
+#RUN if [ "$APP_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
 
 # change php.ini based on environment variable
-RUN if [ "$BUILD_ENV" = "development" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+# doesn't really matter...
+# RUN if [ "$APP_ENV" = "dev" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 
 #RUN mkdir -p /var/www/

@@ -19,15 +19,22 @@ services:
       - SESSION_COOKIE_SAMESITE=Lax
     ports:
       - "${WEBSERVER_PORT:-8080}:80"
-    command:
+    command: #https://docs.docker.com/reference/compose-file/services/#command what???
       - sh
       - -lc
-      - >- 
-        install -d -o www-data -g www-data -m 0770 "${ABET_PRIVATE_DIR}/report_jobs" && exec apache2-foreground
+      - |
+        install -d -o www-data -g www-data -m 0777 "${ABET_PRIVATE_DIR}/report_jobs"
+        install -d -o www-data -g www-data -m 0777 "${ABET_PRIVATE_DIR}/var" 
+        exec apache2-foreground
+    # post_start:
+    #   - command: mkdir -p "${ABET_PRIVATE_DIR}/var" && chmod 777 "${ABET_PRIVATE_DIR}/var" 
+    # pre_stop:
+    #   - command: rm -rf "${ABET_PRIVATE_DIR}/var"
+    #     privileged: true
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
-      #- ./app/apache2:/etc/apache2 # Only for development
+      - .:${ABET_PRIVATE_DIR:?error}/../../docker    # for the .env variable
     networks:
       - app_network
     depends_on:
@@ -44,9 +51,8 @@ services:
     container_name: mysql
     hostname: ${MYSQL_HOSTNAME:?error}
     ports: 
-      - 3306:3306
+      - ${MYSQL_PORT}:${MYSQL_PORT}
     environment:
-    # CHANGE THESE VALUES BEFORE DEPLOYING TO PRODUCTION
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
@@ -167,7 +173,7 @@ services:
   # the selenium container for running end-to-end tests with a headless browser.
   ###################################################
   selenium:
-    image: selenium/standalone-${SELENIUM_BROWSER:-firefox}:latest
+    image: selenium/standalone-${SELENIUM_BROWSER:?error}:latest
     container_name: selenium
     hostname: ${SELENIUM_HOSTNAME:?error}
     profiles:

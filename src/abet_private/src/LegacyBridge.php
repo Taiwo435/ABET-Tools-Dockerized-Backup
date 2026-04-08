@@ -3,6 +3,7 @@ namespace App;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Exception;
 
 class LegacyBridge
 {
@@ -28,6 +29,7 @@ class LegacyBridge
 
         //TODO: add pretty rewrites in .htaccess
         
+        var_dump(get_loaded_extensions());
         // ----------------------------
         // .htaccess pretty paths but here
         // ----------------------------
@@ -140,17 +142,17 @@ class LegacyBridge
         }
 
         // Need to only show in DEVELOPMENT
-        var_dump(phpinfo());
-        var_dump("
-        <br>
-        request path: {$requestPathInfo}
-        <br>
-        fullPath: {$legacyRoot}{$requestPathInfo}
-        <br>
-        resolved path: {$resolvedPath}
-        ");
-        var_dump($requestPathInfo);
-        var_dump($legacyRoot);
+        // var_dump(phpinfo());
+        // var_dump("
+        // <br>
+        // request path: {$requestPathInfo}
+        // <br>
+        // fullPath: {$legacyRoot}{$requestPathInfo}
+        // <br>
+        // resolved path: {$resolvedPath}
+        // ");
+        // var_dump($requestPathInfo);
+        // var_dump($legacyRoot);
 
         // ... etc.
 
@@ -185,7 +187,7 @@ class LegacyBridge
         // NOTE: security auditors can easily log attack attempts if $resolvedPath is valid but is outside of $legacyRoot
         if ($resolvedPath === false || strncmp($resolvedPath, $legacyRoot, strlen($legacyRoot)) !== 0) {
             #throw new \Exception('Invalid path');
-            throw new \Exception("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
+            throw new Exception\ResourceNotFoundException("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
         }
 
         $allowedExtensions = ['php', ''];

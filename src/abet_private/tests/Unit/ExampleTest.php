@@ -1,5 +1,12 @@
 <?php
+declare(strict_types=1);
 
-test('example', function () {
-    expect(true)->toBeTrue();
-});
+namespace Tests\Unit;
+use PHPUnit\Framework\TestCase;
+
+final class ExampleTest extends TestCase {
+    public function testExample(): void {
+        $this->assertSame(true, true);
+    }
+}
+

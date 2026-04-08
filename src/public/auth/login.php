@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="footer-links">
           <div>
             <span>Don't have an account?</span>
-            <a href="/auth/register.php">Create Account</a>
+            <a href="/register">Create Account</a>
           </div>
           <div style="margin-top: 15px;">
             <a href="/auth/forgot_password.php" style="margin-left: 0;">Forgot Password?</a>
