@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .row-header span { flex: 1; font-size: 12px; color: #888; font-weight: bold; text-transform: uppercase; }
     .row-header span:first-child { width: 60px; flex: none; }
     #overlay {display: none; top: 0; left: 0; position: fixed; width: 100%; height: 100%; background: black; z-index: 9998;}
-    #popup-form { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc;  padding: 20px; z-index: 9999; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto;}
+    #popup-form { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc;  padding: 20px; z-index: 9999; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); max-height: 100vh; overflow-y: auto;}
   </style>
 </head>
 <body>
@@ -143,21 +143,177 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
     <button type="submit" class="btn btn-primary" id="save_changes">Save Changes</button>
+    <br>
     <div> <p id="success-msg" style="display:none; color:green; font-weight: bold; margin-top: 90px;"> </p> </div>
   </form>
 </div>
 
 <div id="overlay">
     <div class="form-popup" id="popup-form">
+      <input type = "checkbox" id="request-verification" style="width: 16px; height: 16px; cursor: pointer;"> Would you like to check if the IDs you plan to overwrite exist?</input>
+      <br>
+      <label id="check-for-overwritten-dest-id" style="display: none;">Select at least 1 ID to overwrite</label>
+      <label style="display: none; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 6px;" id="label-enter-token" >Enter your Canvas Access Token</label>
+      <input type = "text" style="display: none; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 260px; outline: none;" id="input-canvas-token">
+      <button class="btn btn-primary" id="button-submit-token" style="display: none;"> Submit Token </button>
+      <label id="canvas_access_token_warning" style="display: none;"></label>
+      <label id="label-verified-courses" style="display: none;"> Courses Found: </label>
+      <label id="label-unverified-courses" style="display: none;"> Courses not Found: </label>
+      <br><br>
+      <label id="ask-user-confirmation" style = "display: none;">Continue with unverified classes? </label>
+      <button id="confirm-unverified-class" style = "display: none;">Yes</button>
+      <button id="do-not-confirm-unverified-class" style = "display: none;">No</button>
+      <br>
       <button class="btn btn-primary" id="finish-popup-form"> Finish </button>
   </div> 
+
+
 </div>
 
     <script>
         let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>'
         let current_dest_courses = <?php echo json_encode($destCourses); ?>; 
         console.log(current_dest_courses)
-        //If admin decides to overwrite the current IDs, then add the new IDs and labels into a list
+
+        //
+        document.getElementById("request-verification").addEventListener("change", async (e) =>
+        {
+          let label_enter_token = document.getElementById("label-enter-token");
+          let input_canvas_access_token = document.getElementById("input-canvas-token");
+          let submit_canvas_token_button = document.getElementById("button-submit-token");
+
+          if(e.target.checked){
+
+            //Fetch list of IDS to overwrite current IDS
+            const overwrittenIDs = checkOverwrite();
+            let warning = document.getElementById("check-for-overwritten-dest-id");
+
+            //If no IDS are found, tell the user they must check at least one box
+            if (overwrittenIDs[0].length === 0) {
+              let checkbox_question = document.getElementById("request-verification")
+              checkbox_question.checked = false; 
+              warning.style.display = "flex"; 
+              submit_canvas_token_button.style.display = "none";
+              return; 
+            }
+
+            //If the user decides to overwrite the ID, add the UI to request an access token
+            warning.style.display = "none";
+            label_enter_token.style.display = "flex";
+            input_canvas_access_token.style.display = "flex";
+            submit_canvas_token_button.style.display = "flex";
+          }
+          else
+          {
+            label_enter_token.style.display = "none";
+            input_canvas_access_token.style.display = "none";
+          }
+        });
+
+        //When Pressed, it will Verify access token + checking if classes exist
+        document.getElementById("button-submit-token").addEventListener("click", async (e) =>
+        {
+          //Fetch canvas token from input
+          let input_canvas_access_token = document.getElementById("input-canvas-token");
+          const canvas_token = input_canvas_access_token.value.trim();
+          
+          //If the token is an empty string, give the user a warning text
+          const warning = document.getElementById("canvas_access_token_warning");
+          if (canvas_token === "")
+          {
+            warning.textContent = "Please add your access token here";
+            warning.style.display = "flex";
+            return;
+          } 
+
+          try {
+            //Store Canvas Token Before Validating it
+            const storeCredentials = new FormData();
+            storeCredentials.append('action', 'store-credentials');
+            storeCredentials.append('canvas_token', canvas_token);
+            storeCredentials.append('csrf_token', csrfToken);
+
+            let storeRes = await fetch('api-proxy.php', {method: 'POST', body: storeCredentials});
+            let storeJson = await storeRes.json()
+            if (storeJson.next_csrf)  csrfToken = storeJson.next_csrf;
+            if (!storeJson.success)
+            {
+              warning.textContent = "Failed to store token";
+              warning.style.display = "flex";
+              return;
+            }
+
+            //Validate Token Here
+            const storeToken = new FormData();
+            storeToken.append('action', 'verify-token');
+            storeToken.append('csrf_token', csrfToken);
+            storeRes = await fetch('api-proxy.php', {method: 'POST', body: storeToken});
+            storeJson = await storeRes.json();
+
+            if (storeJson.next_csrf)  csrfToken = storeJson.next_csrf;
+            if (!storeJson.success)
+            {
+              warning.textContent = "Token not Verified";
+              warning.style.display = "flex";
+              return;
+            }
+            else{
+              warning.textContent = "Token Verified";
+              
+              //Fetch list of IDS to overwrite current IDS
+              const overwrittenIDs = checkOverwrite();
+              let string_verified_courses = "";
+              let string_unverified_courses = "";
+              for (let i = 0; i < overwrittenIDs[1].length; i++)
+              {
+                  const storeID = new FormData();
+                  storeID.append('action', 'verify-course');
+                  storeID.append('csrf_token', csrfToken);
+                  storeID.append('course_id', overwrittenIDs[1][i])
+                  storeRes = await fetch('api-proxy.php', {method: 'POST', body: storeID});
+                  storeJson = await storeRes.json()
+                  console.log(storeJson);
+                  if (storeJson.next_csrf) { csrfToken = storeJson.next_csrf;}
+                  if (storeJson.success)
+                  {
+                      string_verified_courses += "\n" + overwrittenIDs[0][i] + ": " + overwrittenIDs[1][i] ;
+                  }
+                  else { 
+                      string_unverified_courses += "\n" + overwrittenIDs[0][i] + ": " + overwrittenIDs[1][i];
+                  } 
+              }
+              let label_verified_courses = document.getElementById("label-verified-courses");
+              
+              if (string_verified_courses !== "")
+              {
+                label_verified_courses.style.display = "flex";
+                label_verified_courses.textContent += string_verified_courses;
+              }
+              
+              let label_unverified_courses = document.getElementById("label-unverified-courses");
+              if (string_unverified_courses !== "")
+              {
+                console.log(string_unverified_courses)
+                label_unverified_courses.style.display = "flex";
+                label_unverified_courses.textContent += string_unverified_courses;
+              }
+              
+
+              
+
+            }
+            
+
+          } catch (err)
+          {
+
+          } finally {
+
+          }
+
+        });
+
+        //If admin decides to overwrite the current IDs, then add the newly submitted ID (and respective label) to a list
         function checkOverwrite()
         {
           const labels = [];
@@ -175,6 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               ids.push(submittedId);
             }
           });
+          console.log(labels)
           return [labels, ids];
         }
 
@@ -193,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               form.style = "display: flex; align-items: center; gap: 24px; padding: 8px 0; border-bottom:1px solid #eee;"
               const row = document.createElement('div');
               row.innerHTML = `
-              <input type = "checkbox" style="width: 16px; height: 16px; cursor: pointer;"> OverWrite - </button>
+              <input type = "checkbox" style="width: 16px; height: 16px; cursor: pointer;"> OverWrite - 
               <span style="flex:1";>
                 <strong>${label}: </strong>
                 <span style=" font-size:1em; margin-left: 6px;">
@@ -207,11 +364,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           }
           document.getElementById('overlay').style.display = 'block';
           popup.style.display = 'block';
-          
         }
 
         //Once the popup form is submitted, overwrite IDs
         document.getElementById('finish-popup-form').addEventListener("click", async(e) => {
+          const label_unverified_courses = document.getElementById("label-unverified-courses")
+          console.log(label_unverified_courses.textContent.trim())
+          if (label_unverified_courses.textContent.trim() !== "Courses not Found:")
+          {
+            const label_unconfirmed_classes = document.getElementById("ask-user-confirmation");
+            label_unconfirmed_classes.style.display = "flex";
+      <button id="confirm-unverified-class" style = "display: none;">Yes</button>
+      <button id="do-not-confirm-unverified-class" style = "display: none;">No</button>
+
+            return;
+          }
+
           const [labels, ids] = checkOverwrite();  
           
           //Remove Popup & Delete elements inside
@@ -230,14 +398,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const storeData = await storeRes.json();
             if (storeData.status)
             {
-              console.log(storeData);
               current_dest_courses = storeData.courses;
               const success_msg = document.getElementById('success-msg');
               success_msg.textContent = "Changes added successfully";
               success_msg.style.display = "inline";
             }
-            
-
           } catch(err)
           {
 

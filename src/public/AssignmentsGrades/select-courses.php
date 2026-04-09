@@ -51,7 +51,7 @@ $destIdCourses = $config['dest_courses']
             <option id="cs-option" value="CS" data-dest-id="240102">Computer Science (CS)</option>
           </select>
         </div>
-        <div class="filter-group">
+        <!-- <div class="filter-group">
             <label for="departmentFilter" class ="filter-label"> Department </label>
             <select class="filter-select" id="departmentFilter">
                 <option value="Biological and Health Systems Engineering"> School of Biological and Health Systems Engineering </option>
@@ -63,7 +63,7 @@ $destIdCourses = $config['dest_courses']
                 <option value="Polytechnic School"> The Polytechnic School </option>
                 <option value="Integrated Engineering"> School of Integrated Engineering </option>
             </select>
-        </div>  
+        </div>   -->
         <div class="filter-group" style="margin-left: auto; align-self: flex-end;">
             <button id="go-btn" class="btn btn-primary" style="padding: 10px 20px;">Load Courses</button>
         </div>

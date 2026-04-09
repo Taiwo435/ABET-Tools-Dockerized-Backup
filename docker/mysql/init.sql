@@ -1,7 +1,7 @@
 -- Resets the database every time - DEVELOPMENT ONLY, will remove for production and use migrations instead
 -- DROP DATABASE IF EXISTS abet_tools;
 -- CREATE DATABASE IF NOT EXISTS abet_tools;
-USE abet_tools;
+USE osburn_abet_tools_dev;
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -539,7 +539,6 @@ CREATE TABLE IF NOT EXISTS assessment_constituency (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-<<<<<<< HEAD
 -- Stores all free-text sections across the report
 -- section_key identifies which part e.g. 'background_contact', 'background_program_history', 'criterion1_advising'
 CREATE TABLE IF NOT EXISTS report_sections (
@@ -619,7 +618,6 @@ CREATE TABLE IF NOT EXISTS job_history (
 );
 
 
-=======
 -- Settings table for storing encrypted application settings like OpenAI API key
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -630,4 +628,3 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Insert default OpenAI key placeholder
 INSERT INTO settings (setting_key, setting_value) VALUES ('openai_api_key', '') ON DUPLICATE KEY UPDATE setting_key = setting_key;
->>>>>>> 3c0aea5303a457f634b348afddb00f761c4ed3e1
