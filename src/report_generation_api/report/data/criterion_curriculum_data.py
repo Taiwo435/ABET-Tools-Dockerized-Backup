@@ -26,6 +26,26 @@ def get_data(questionnaire):
     )
 
     return cursor.fetchall()
+def get_pre_co_requisite_data(questionnaire):
+    """
+    Fetch rows from the `curriculum` table using the shared DB connection.
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            fi.program_id,
+            c.pre_co_requisite
+        FROM course_pre_co_requisite as c
+        INNER JOIN faculty_info as fi
+        ON c.program_id = fi.program_id;
+    """)
+    
+
+    return cursor.fetchall()
+
 
 
 if __name__ == "__main__":

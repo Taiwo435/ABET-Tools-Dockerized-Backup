@@ -179,6 +179,20 @@ def build(questionnaire):
             # cyber_focus_bullets.append(row["bullet"])
         if row["is_cyber_elective"]:
             cyber_elective_courses.append(row)
+        #faculty qualification table
+        try:
+            profile_info = criterion_curriculum_data.get_pre_co_requisite_data(questionnaire)
+        except Exception:
+            profile_info = []
+
+        requisite_list = []
+        for row in profile_info:
+
+            requisite_list.append({
+                "name": row["program_id"],
+                "pre_co_requisite": row["pre_co_requisite"]
+
+            })
 
     return {
         # Raw DB rows from the `curriculum` table (requested).
@@ -192,6 +206,7 @@ def build(questionnaire):
         "cyber_direct_required_courses": cyber_direct_required_courses,
         "cyber_focus_courses": cyber_focus_courses,
         "cyber_elective_courses": cyber_elective_courses,
+        "requisite_list": requisite_list,
 
         # Bullet lists (optinal)
         # "cyber_direct_required_bullets": cyber_direct_required_bullets,
