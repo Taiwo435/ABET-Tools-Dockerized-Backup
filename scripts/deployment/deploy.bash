@@ -69,8 +69,8 @@ if [[ "$run_action" == true ]]; then
         echo "[INFO] Composer install successful"
 
         # Run composer update
-        ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer update --no-dev --optimize-autoloader --no-interaction"
-        echo "[INFO] Composer update successful"
+        # ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer update --no-dev --optimize-autoloader --no-interaction"
+        # echo "[INFO] Composer update successful"
 
 
         ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer doctrine migrate --no-interaction"
