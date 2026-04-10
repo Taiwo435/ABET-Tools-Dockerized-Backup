@@ -11,3 +11,4 @@ pytest
 python-dotenv
 openai
 mysql-connector-python
+pycryptodome>=3.23.0

@@ -52,7 +52,7 @@ $destIdCourses = $config['dest_courses']
           </select>
         </div>
         <div class="filter-group">
-            <label for="departmentFilter" class ="filter-label"> Department </label>
+            <!-- <label for="departmentFilter" class ="filter-label"> Department </label>
             <select class="filter-select" id="departmentFilter">
                 <option value="Biological and Health Systems Engineering"> School of Biological and Health Systems Engineering </option>
                 <option value="(SCAI)"> School of Computing and Augmented Intelligence (SCAI) </option>
@@ -62,7 +62,7 @@ $destIdCourses = $config['dest_courses']
                 <option value="(MSN)"> School of Manufacturing Systems and Networks (MSN) </option>
                 <option value="Polytechnic School"> The Polytechnic School </option>
                 <option value="Integrated Engineering"> School of Integrated Engineering </option>
-            </select>
+            </select> -->
         </div>  
         <div class="filter-group" style="margin-left: auto; align-self: flex-end;">
             <button id="go-btn" class="btn btn-primary" style="padding: 10px 20px;">Load Courses</button>

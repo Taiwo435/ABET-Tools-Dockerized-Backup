@@ -133,10 +133,6 @@ if ($action === 'store-credentials') {
         json_response(['success' => false, 'message' => 'Canvas token is required.'], 400);
     }
 
-    if ($errors) {
-        json_response(['success' => false, 'message' => 'Validation failed.', 'errors' => array_values($errors)], 422);
-    }
- 
     $_SESSION['canvas_token']     = $token;
     $_SESSION['token_stored_at']  = time();
 
@@ -182,7 +178,7 @@ if ($action === 'store-class-data-from-grid')
 
 if ($action === 'verify-token'){
 
-    if ($_SESSION['canvas_token'] === '')
+    if (empty($_SESSION['canvas_token']))
     {
         json_response(['success' => false, 'message' => 'No token found']);
     }
