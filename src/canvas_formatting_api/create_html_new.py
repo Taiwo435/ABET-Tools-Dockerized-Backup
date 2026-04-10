@@ -99,7 +99,6 @@ class WriteAbetHtml:
     def set_up_abet(self, file_folders, files, ABET_data, course_names):
         content = """
         <h3>Assessment Instruments and Student Samples</h3>
-        <p>CSE-ABET Assessment Plan and Coverage.pdf</p>
 
         <table style="width: 100%;" border="1">
             <colgroup>
