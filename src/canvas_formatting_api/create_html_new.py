@@ -3,6 +3,8 @@
 import io
 from urllib.parse import unquote
 
+import requests
+
 
 class WriteAbetHtml:
     """Builds HTML content for course pages and ABET reports. Uses in-memory buffers."""
@@ -37,31 +39,73 @@ class WriteAbetHtml:
     def add_abet_table_row(self, i, abet_outcome):
         student_outcome_cell = f"""
         <tr>
-            <td>CSE({i + 1})<br>{abet_outcome}</td>
-            <td>
-                        <p>CSE Placeholder Assessment Report and Instrument:</p>
-                        <ul>
-                            <li>CSE Placeholder Assessment Report.pdf</li>
-                            <li>CSE Placeholder Homework.pdf</li>
-                        </ul>
-                        <p>CSE Placeholder Assessment Report and Instrument:</p>
-                        <ul>
-                            <li>CSE Placeholder Assessment Report.pdf</li>
-                            <li>CSE Placeholder Project.pdf</li>
-                        </ul>
-                    </td>
-            <td>CSE Placeholder:</td>
-        </tr>
-        """
+            <td>CSE({i})<br>{abet_outcome}</td>
+            <td>"""
         self.write_to_page_abet(student_outcome_cell)
 
-    def set_up_abet_page(self):
+    def set_up_assess_cell(self, course_name, assessment_report, assessment_instr):
+        assessment_name = assessment_report.get("display_name")
+        assessment_id = assessment_report.get("id")
+        assessment_instr_name = assessment_instr.get("display_name")
+        assessment_instr_id = assessment_instr.get("id")
+        assessment_link = "Invalid"
+        assessment_instr_link = "Invalid"
+
+        if assessment_id is not None:
+            assessment_link = f"{self.canvas_base_url}courses/{self.course_id}/files/{assessment_id}"
+        if assessment_instr_id is not None:
+            assessment_instr_link = f"{self.canvas_base_url}courses/{self.course_id}/files/{assessment_instr_id}"
+
+        content = f"""
+                <p><b>{course_name} Assessment Report and Instrument:</b></p>
+                        <ul>
+                            <li><a href="{assessment_link}">{assessment_name}</a></li>
+                            <li><a href="{assessment_instr_link}">{assessment_instr_name}</a></li>
+                        </ul>
+        """
+        return content
+
+    def set_up_sample_cell(self, name, low_samples, avg_samples, high_samples):
+        student_sample_cell = f"""
+                <b>{name}:</b><ul>"""
+
+        for high_sample in high_samples:
+            if high_sample is not None:
+                high_name = high_sample.get("display_name")
+                high_id = high_sample.get("id")
+                if high_id is not None:
+                    high_link = f"{self.canvas_base_url}courses/{self.course_id}/files/{high_id}"
+                    student_sample_cell += f"""<li><a href="{high_link}">{high_name}</a></li>"""
+
+        for avg_sample in avg_samples:
+            if avg_sample is not None:
+                avg_name = avg_sample.get("display_name")
+                avg_id = avg_sample.get("id")
+                if avg_id is not None:
+                    avg_link = f"{self.canvas_base_url}courses/{self.course_id}/files/{avg_id}"
+                    student_sample_cell += f"""<li><a href="{avg_link}">{avg_name}</a></li>"""
+
+        for low_sample in low_samples:
+            if low_sample is not None:
+                low_name = low_sample.get("display_name")
+                low_id = low_sample.get("id")
+                if low_id is not None:
+                    low_link = f"{self.canvas_base_url}courses/{self.course_id}/files/{low_id}"
+                    student_sample_cell += f"""<li><a href="{low_link}">{low_name}</a></li>"""
+
+        student_sample_cell += """</ul>"""
+        return student_sample_cell
+
+    def set_up_abet(self, file_folders, files, ABET_data, course_names):
         content = """
-        <h1 class="page-title">CSE-ABET Assessment Instruments and Samples</h1>
         <h3>Assessment Instruments and Student Samples</h3>
-        <p>CSE-ABET Assessment Plan and Coverage.pdf</p>
 
         <table style="width: 100%;" border="1">
+            <colgroup>
+                <col style="width: 20%;">
+                <col style="width: 35%;">
+                <col>
+            </colgroup>
             <thead>
                 <tr>
                     <th>Student Outcome</th>
@@ -80,10 +124,43 @@ class WriteAbetHtml:
             "an ability to recognize ethical and professional responsibilities in engineering situations and make informed judgments, which must consider the impact of engineering solutions in global, economic, environmental, and societal contexts.",
             "an ability to function effectively on a team whose members together provide leadership, create a collaborative and inclusive environment, establish goals, plan tasks, and meet objectives.",
             "an ability to develop and conduct appropriate experimentation, analyze and interpret data, and use engineering judgment to draw conclusions.",
-            "an ability to acquire and apply new knowledge as needed, using appropriate learning strategies."
+            "an ability to acquire and apply new knowledge as needed, using appropriate learning strategies.",
         ]
-        for i in range(7):
-            self.add_abet_table_row(i, abet_outcomes[i])
+
+        assess_report = assess_instr = None
+        assess_cell = ""
+        samples_cell = ""
+        low_samples, avg_samples, high_samples = [], [], []
+
+        for i in range(1, 8):
+            if ABET_data[str(i)]:
+                self.add_abet_table_row(i, abet_outcomes[i - 1])
+                for name in course_names:
+                    if ABET_data[str(i)][name] is not None:
+                        for file in ABET_data[str(i)][name]:
+                            file_name = file.get("display_name")
+                            if "ABET" in file_name:
+                                assess_report = file
+                            if "description" in file_name:
+                                assess_instr = file
+                            if "_low" in file_name:
+                                low_samples.append(file)
+                            if "_avg" in file_name:
+                                avg_samples.append(file)
+                            if "_high" in file_name:
+                                high_samples.append(file)
+
+                        if assess_instr is not None and assess_report is not None:
+                            assess_cell += self.set_up_assess_cell(name, assess_report, assess_instr)
+                            samples_cell += self.set_up_sample_cell(name, low_samples, avg_samples, high_samples)
+                            assess_report = assess_instr = None
+                            low_samples, avg_samples, high_samples = [], [], []
+
+                self.write_to_page_abet(assess_cell)
+                self.write_to_page_abet("</td><td>")
+                self.write_to_page_abet(samples_cell)
+                self.write_to_page_abet("</td></tr>")
+                assess_cell = samples_cell = ""
 
         self.write_to_page_abet("</tbody></table>")
 
@@ -282,7 +359,23 @@ class WriteAbetHtml:
                         continue
 
                     folder_name = assignment_names[folder_id]
-                    row_name = folder_name
+
+                    metadata = {}
+                    for meta_file in group_files:
+                        meta_name = (meta_file.get("filename") or "").lower()
+                        meta_folder_id = meta_file.get("folder_id")
+                        if meta_folder_id == folder_id and meta_name.endswith(".json"):
+                            meta_link = f"{self.canvas_base_url}courses/{self.course_id}/files/{meta_file.get('id')}/download"
+                            try:
+                                response = requests.get(meta_link)
+                                response.raise_for_status()
+                                metadata = response.json()
+                            except Exception:
+                                metadata = {}
+                            break
+
+                    abet_value = str(metadata.get("abet", "")).strip()
+                    row_name = abet_value if abet_value else folder_name
 
                     if row_name not in rows:
                         rows[row_name] = {
