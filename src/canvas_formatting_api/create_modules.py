@@ -151,6 +151,62 @@ def find_file_folder(
     return results
 
 
+def find_abet_file_folder(
+    course_id: str,
+    headers: dict,
+    api_base_url: str,
+) -> List[dict]:
+    """Find all ABET folders (under 'Project Evaluations') in a course."""
+    logger.info("Finding all ABET folders in course %s...", course_id)
+    endpoint = f"courses/{course_id}/folders"
+    file_folders = get_paginated_list(
+        endpoint, headers, api_base_url, params={"include[]": "folders"}
+    )
+    return [f for f in file_folders if "Project Evaluations" in f.get("full_name", "")]
+
+
+def get_abet_files(
+    folder_id: int,
+    headers: dict,
+    api_base_url: str,
+) -> List[dict]:
+    """Get all files in a specific ABET folder."""
+    logger.info("Fetching files for folder %s...", folder_id)
+    endpoint = f"folders/{folder_id}/files"
+    return get_paginated_list(endpoint, headers, api_base_url)
+
+
+def _build_abet_data(
+    source_course_id: str,
+    headers: dict,
+    api_base_url: str,
+) -> Tuple[List[dict], dict, List[str]]:
+    """Find ABET folders and build the ABET data structure.
+
+    Returns (file_folders_abet, ABET_data, course_names).
+    ABET_data is keyed as {outcome_number: {course_name: [files]}}.
+    """
+    file_folders_abet = find_abet_file_folder(source_course_id, headers, api_base_url)
+    ABET_data = defaultdict(lambda: defaultdict(list))
+    course_names = []
+
+    for folder in file_folders_abet:
+        name = folder.get("full_name", "")
+        if "Abet" in name:
+            abet_num = name[-1:]
+            course_name_abbrev = name.partition("course files/")[2]
+            course_name_split = course_name_abbrev.split()[:2]
+            course_name_abet = " ".join(course_name_split)
+            course_names.append(course_name_abet)
+
+            abet_files = get_abet_files(folder.get("id"), headers, api_base_url)
+            for file in abet_files:
+                ABET_data[abet_num][course_name_abet].append(file)
+
+    course_names = list(set(course_names))
+    return file_folders_abet, ABET_data, course_names
+
+
 def get_files(
     course_id: str,
     semester: str,
@@ -463,7 +519,10 @@ def run_formatting_pipeline(
         )
 
     # 6) Build and upload ABET page
-    html_writer.set_up_abet_page()
+    file_folders_abet, ABET_data, abet_course_names = _build_abet_data(
+        source_course_id, headers, api_base_url
+    )
+    html_writer.set_up_abet(file_folders_abet, files, ABET_data, abet_course_names)
     abet_html = html_writer.get_abet_html()
     abet_page = add_page_to_canvas(
         abet_html,
@@ -476,9 +535,10 @@ def run_formatting_pipeline(
     # 7) Create module
     module = upload_module_to_canvas(dest_id, module_name, headers, api_base_url)
 
-    # 8) Upload course page and add to module
+    # 8) Upload course page and ABET page, add both to module
     page = add_page_to_canvas(course_html, course_name, dest_id, headers, api_base_url)
     add_single_module_item(dest_id, module["id"], page, headers, api_base_url)
+    add_single_module_item(dest_id, module["id"], abet_page, headers, api_base_url)
 
     # 9) Publish the module
     publish_module(dest_id, module["id"], headers, api_base_url)
@@ -555,7 +615,11 @@ def generate_course_html(
         course_id=source_course_id,
     )
     html_writer.set_up_course_page(file_folders, files, semester, year)
-    html_writer.set_up_abet_page()
+
+    file_folders_abet, ABET_data, abet_course_names = _build_abet_data(
+        source_course_id, headers, api_base_url
+    )
+    html_writer.set_up_abet(file_folders_abet, files, ABET_data, abet_course_names)
 
     return {
         "course_html": html_writer.get_course_html(),
