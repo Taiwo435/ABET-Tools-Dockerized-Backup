@@ -104,7 +104,8 @@
                 ?>
                 <?php $columnCount = count($field['columns']); ?>
                 
-                <div class="expandable-grid" data-max-rows="<?= $field['maxRows']?>" data-allow-incomplete-rows="<?= $field['allowIncompleteRows'] ?>">
+                <div class="expandable-grid" data-max-rows="<?= $field['maxRows']?>" 
+                    data-allow-incomplete-rows="<?= $field['allowIncompleteRows'] ?>">
                     <div class="expandable-grid-container"
                         name="<?= $name ?>"
                         data-old-values='<?= htmlspecialchars(json_encode($raw ?? ""), ENT_QUOTES, "UTF-8") ?>'
@@ -115,6 +116,7 @@
                                 <label class="expandable-grid-label" 
                                     data-type="<?= htmlspecialchars($column['type'], ENT_QUOTES, 'UTF-8') ?>"
                                     data-name="<?= htmlspecialchars($column['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                    data-numerical="<?= $column['numerical'] ?>"
                                     <?php if (!empty($column['options'])) {
                                         echo("data-option-count=" . count($column['options']) . " ");
 
@@ -188,6 +190,7 @@ function submitForm (currentPageNumber, nextPageNumber) {
 
     const form = document.querySelector('form');
 
+    // Adds hidden input fields, so needed data can easily be passed over to the submit handler.
     const currentPageNumberInput = document.createElement('input');
     currentPageNumberInput.type = "hidden";
     currentPageNumberInput.name = "current_page_number";
@@ -241,6 +244,13 @@ function loadDataToGridElements() {
         });
     });
 }
+
+/*
+    When HTML forms submit, they look for specific input elements, and send over only those values.
+    The expandable-grids are incompatible with that system, so this function compiles all the values
+    from the expandable-grids, and adds the information onto hidden input elements
+    that will be sent over when the form submits.
+*/
 function prepareDataFromGridElements() {
     expandableGrids = document.querySelectorAll('.expandable-grid-container');
     expandableGrids.forEach((grid, gridIndex) => {
@@ -316,6 +326,9 @@ function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
         const label = labelRow.children[i]
         const columnType = label.getAttribute('data-type');
         const columnName = label.getAttribute('data-name');
+        const columnNumerical = label.getAttribute('data-numerical');
+        const columnLabelTitle = label.textContent.trim();
+
         let inputField;
         
         if (columnType === 'select') {
@@ -361,6 +374,9 @@ function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
                 inputField.textContent = oldRowDataJSON[columnName];
             }
         }
+
+        inputField.dataset.numerical = columnNumerical;
+        inputField.dataset.labelTitle = columnLabelTitle;
         rowDiv.appendChild(inputField);
     }
     
@@ -419,22 +435,24 @@ function validateForm() {
 
                 let hasCheckbox = false;
                 rowElementsArray.forEach((element, elementIndex) => {
-                    /*if (element.getAttribute('data-numerical') == 'true' && !isPositiveWholeNumber(value)) {
-                        errors.push(`${label.value} must be entered as a positive, whole number.`);
-                        showError(input, `${label.value} must be entered as a positive, whole number.`);
-                        return;
-                    }*/
-
-                    if (element.classList.contains('expandable-grid-remove-button')) {
-                        return;
-                    }
-
                     let elementValue = "";
                     if (element.classList.contains('expandable-grid-checkbox-container')) {
                         elementValue = element.children[0].checked;
                         hasCheckbox = true;
                     } else {
                         elementValue = element.value;
+                    }
+
+                    isNumerical = element.getAttribute('data-numerical') === "1";
+                    if (isNumerical && !isPositiveWholeNumber(elementValue)) {
+                        const labelName = element.getAttribute('data-label-title');
+                        errors.push(`"${labelName}" must be entered as a positive, whole number.`);
+                        showError(input, `"${labelName}" must be entered as a positive, whole number.`);
+                        return;
+                    }
+
+                    if (element.classList.contains('expandable-grid-remove-button')) {
+                        return;
                     }
 
                     if (String(elementValue).trim() !== '') {
@@ -490,6 +508,12 @@ function validateForm() {
         if (field.minLength && value.length < field.minLength) {
             errors.push(`${field.label} must be at least ${field.minLength} characters.`);
             showError(input, `${field.label} must be at least ${field.minLength} characters.`);
+        }
+
+        // Max length validation
+        if (field.maxLength && value.length > field.maxLength) {
+            errors.push(`${field.label} must be no more than ${field.maxLength} characters.`);
+            showError(input, `${field.label} must be no more than ${field.maxLength} characters.`);
         }
 
         // Email validation

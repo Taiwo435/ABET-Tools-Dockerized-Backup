@@ -19,6 +19,7 @@ mysql_data
 report_jobs
 Test-PDFs
 
+
 # Mac trash
 _$RECYCLE.BIN/
 .DS_Store
