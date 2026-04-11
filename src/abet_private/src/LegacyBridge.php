@@ -3,6 +3,7 @@ namespace App;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Exception;
 
 class LegacyBridge
@@ -187,7 +188,7 @@ class LegacyBridge
         // NOTE: security auditors can easily log attack attempts if $resolvedPath is valid but is outside of $legacyRoot
         if ($resolvedPath === false || strncmp($resolvedPath, $legacyRoot, strlen($legacyRoot)) !== 0) {
             #throw new \Exception('Invalid path');
-            throw new Exception\ResourceNotFoundException("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
+            throw new NotFoundHttpException("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
         }
 
         $allowedExtensions = ['php', ''];

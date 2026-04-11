@@ -20,6 +20,7 @@
         "symfony/stimulus-bundle": "^2.34",
         "symfony/translation": "^7.4.8",
         "symfony/twig-bundle": "^7.4.8",
+        "symfony/twig-pack": "^1.0",
         "symfony/ux-turbo": "^2.34",
         "symfony/validator": "^7.4.8",
         "symfony/yaml": "^7.4.8",

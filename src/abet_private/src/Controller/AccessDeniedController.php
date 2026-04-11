@@ -11,11 +11,12 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class AccessDeniedController extends AbstractController
 {
+    private $error_directory = "bundles/TwigBundle/Exception";
 
     #[Route('/403', name: 'app_access_denied')]
     public function access_denied(): Response
     {
-        return $this->render('access_denied/index.html.twig', [
+        return $this->render($this->error_directory.'/error.html.twig', [
             'controller_name' => 'AccessDeniedController',
             'error_name' => '403 Access Denied',
         ]);
@@ -24,7 +25,7 @@ final class AccessDeniedController extends AbstractController
     #[Route('/404', name: 'app_not_found')]
     public function not_found(): Response
     {
-        return $this->render('access_denied/index.html.twig', [
+        return $this->render($this->error_directory.'/error.html.twig', [
             'controller_name' => 'AccessDeniedController',
             'error_name' => '404 Not Found',
         ]);
