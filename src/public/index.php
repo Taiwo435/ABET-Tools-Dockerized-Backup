@@ -19,6 +19,8 @@ use App\LegacyBridge;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\ErrorHandler\Debug;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 require_once getenv("ABET_PRIVATE_DIR").'/vendor/autoload.php';
 $path = (getenv('ABET_PRIVATE_DIR').'/../../docker/.env');
@@ -52,7 +54,12 @@ if (false === $response->isNotFound()) {
     $response->send();
 } else {
     // var_dump(phpinfo());
-    LegacyBridge::handleRequest($request, $response, __DIR__);
+    try {
+        LegacyBridge::handleRequest($request, $response, __DIR__);
+    }
+    catch (NotFoundHttpException $e) {
+        $response->send();
+    }
 }
 
 $kernel->terminate($request, $response);

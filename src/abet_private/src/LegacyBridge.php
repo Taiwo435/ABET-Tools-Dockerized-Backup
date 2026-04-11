@@ -3,7 +3,9 @@ namespace App;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+// all different codes found https://github.com/symfony/symfony/blob/7.4/src/Symfony/Component/HttpKernel/Exception/AccessDeniedHttpException.php
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Exception;
 
 class LegacyBridge
@@ -157,7 +159,7 @@ class LegacyBridge
 
         // ... etc.
 
-        throw new \Exception("Unhandled legacy mapping for $requestPathInfo");
+        throw new NotFoundHttpException("Unhandled legacy mapping for $requestPathInfo");
     }
 
         /**
@@ -178,7 +180,7 @@ class LegacyBridge
 
         // obvious attacks begone
         if (str_contains($requestPathInfo, "\0") || str_contains($requestPathInfo, '..')) {
-            throw new \Exception('Invalid path');
+            throw new NotFoundHttpException('Invalid path');
         }
 
         // absolute canonical path
@@ -195,7 +197,7 @@ class LegacyBridge
 
         $ext = pathinfo($resolvedPath, PATHINFO_EXTENSION);
         if (!in_array($ext, $allowedExtensions, true)) {
-            throw new \Exception('Forbidden file type');
+            throw new NotFoundHttpException('Forbidden file type');
         }
     }
 
