@@ -10,6 +10,31 @@ if (empty($_SESSION['class_data'])) {
     exit;
 }
 
+
+//-----------------------------------------------------
+/*
+This part of the php is for the form handling of the syllabus information.
+*/
+
+$host = getenv('MYSQL_HOSTNAME');
+$dbname = getenv('MYSQL_DATABASE');
+$username = getenv('MYSQL_USER');
+$password = getenv('MYSQL_PASS');
+
+try {
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+        $username,
+        $password,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]
+    );
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
 $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 ?>
 <!DOCTYPE html>
@@ -20,6 +45,10 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
   <title>Course Setup | ABET Tools</title>
   <link rel="stylesheet" href="/assets/css/tool1.css">
   <link rel="stylesheet" href="/assets/css/course-setup.css">
+  <script src="/assets/scripts/course_step.js"></script>
+  <script>
+    console.log("class_data:", <?= $courses_json ?>);
+  </script>
 </head>
 <body>
 
@@ -83,20 +112,53 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
               <!-- BASIC INFO -->
               <div class="form-group">
-                <label class="form-label">Course Number and Name <span class="required">*</span></label>
-                <input type="text" name="course_number_name" class="form-input" required>
+                <label class="form-label">Course Subject<span class="required">* (e.g., CSE)</span></label>
+                <input type="text" name="course_subject" class="form-input" required>
+                <label class="form-label">Course Number<span class="required">*</span></label>
+                <input type="text" name="course_number" class="form-input" required>
+                <label class="form-label">Course Name<span class="required">*</span></label>
+                <input type="text" name="course_name" class="form-input" required>
               </div>
 
               <div class="form-grid">
                 <div class="form-group">
-                  <label class="form-label">Credits and Contact Hours</label>
-                  <input type="text" name="credits_contact_hours" class="form-input">
+                  <label class="form-label">Credits Hours<span class="required">*</span></label>
+                  <input type="text" name="credits_hours" class="form-input" required>
+                  <label class="form-label">Contact Hours</label>
+                  <input type="text" name="contact_hours" class="form-input">
+                  <label class="form-label">Categorization of credits<span class="required">*</span></label>
+                    <select name="category" class="form-select" required>
+                      <option value="">Select category</option>
+                      <option value="math">Math</option>
+                      <option value="science">Science</option>
+                      <option value="engineering">Engineering</option>
+                      <option value="other">Other</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Course Coordinator</label>
-                  <input type="text" name="course_coordinator" class="form-input">
+                  <label class="form-label">Course Coordinators<span class="required">*</span></label>
+
+                  <div id="coordinator-container">
+                    <div class="form-group">
+                      <input
+                        type="text"
+                        name="course_coordinators[]"
+                        class="form-input"
+                        placeholder="Enter instructor name"
+                        required
+                      >
+                      <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <button class = "btn btn-outline" type="button" onclick="addCoordinator()" class="btn btn-secondary">
+                    + Add Instructor
+                  </button>
                 </div>
+
               </div>
 
               <!-- TEXTBOOKS -->
@@ -129,7 +191,12 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
               <div class="form-group">
                 <label class="form-label">c. Elective</label>
-                <input type="text" name="elective" class="form-input">
+                <select name="course_type" class="form-select" required>
+                  <option value="">Select type</option>
+                  <option value="R">Required (R)</option>
+                  <option value="E">Elective (E)</option>
+                  <option value="SE">Senior Elective (SE)</option>
+                </select>
               </div>
 
               <!-- COURSE GOALS -->
@@ -179,70 +246,6 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
             </form>
           </div>
         </div>
-
-        <script>
-          function addTextbook() {
-              const container = document.getElementById("textbook-container");
-
-              const div = document.createElement("div");
-              div.className = "form-group textbook-row";
-
-              div.innerHTML = `
-                  <input type="text" name="textbooks[]" class="form-input" placeholder="Enter textbook">
-                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
-              `;
-
-              container.appendChild(div);
-          }
-
-          function addTopic() {
-              const container = document.getElementById("topics-container");
-
-              const div = document.createElement("div");
-              div.className = "form-group topic-row";
-
-              div.innerHTML = `
-                  <input type="text" name="topics[]" class="form-input" placeholder="Enter topic">
-                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
-              `;
-
-              container.appendChild(div);
-          }
-
-          function removeRow(button) {
-              const row = button.parentElement;
-              const container = row.parentElement;
-
-              // Prevent deleting last remaining row
-              if (container.children.length > 1) {
-                  row.remove();
-              } else {
-                  row.querySelector("input").value = "";
-              }
-          }
-
-          function addCourseOutcome() {
-              const container = document.getElementById("course-outcomes-container");
-              const div = document.createElement("div");
-              div.className = "form-group";
-              div.innerHTML = `
-                  <input type="text" name="course_outcomes[]" class="form-input" placeholder="Enter course outcome">
-                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
-              `;
-              container.appendChild(div);
-          }
-          function addStudentOutcome() {
-              const container = document.getElementById("student-outcomes-container");
-              const div = document.createElement("div");
-              div.className = "form-group";
-              div.innerHTML = `
-                  <input type="text" name="student_outcomes_addressed[]" class="form-input" placeholder="Enter student outcome addressed">
-                  <button type="button" class = "btn btn-remove" style = "margin-top: 3%" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
-              `;
-              container.appendChild(div);
-          }
-          
-        </script>
 
         <div class="alert alert-error" id="errorAlert" style="display:none">
           <div class="alert-content">
