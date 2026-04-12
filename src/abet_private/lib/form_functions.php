@@ -103,7 +103,7 @@ function loadFormPage($formName, $pageName) {
     $path = getenv('ABET_PRIVATE_DIR') . "/" . "forms" . "/" . $formName . "/" . $pageName . ".json";
 
     if (!file_exists($path)) {
-        throw new Exception("Form not found.");
+        throw new Exception("Form not found. Looking for [".$formName."/".$pageName."]");
     }
 
     return json_decode(file_get_contents($path), true);
