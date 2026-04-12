@@ -107,14 +107,17 @@ def seed_programs():
             info = get_program_info(url)
             print(f"Found: {info['program_name']} - {info['program_code']} - {info['program_year']}")
 
-            # Insert only if program does not already exist
-            cursor.execute("""
-                INSERT IGNORE INTO programs (program_name, program_code, program_year)
-                VALUES (%s, %s, %s)
-            """, (info['program_name'], info['program_code'], info['program_year']))
+            for i in range(4):
+                # Insert only if program does not already exist
+                cursor.execute("""
+                    INSERT IGNORE INTO programs (program_name, program_code, program_year)
+                    VALUES (%s, %s, %s)
+                """, (info['program_name'], info['program_code'], info['program_year']))
 
-            db.commit()
-            print(f"Inserted: {info['program_name']} - {info['program_code']} - {info['program_year']}")
+                db.commit()
+                print(f"Inserted: {info['program_name']} - {info['program_code']} - {info['program_year']}")  
+
+                info['program_year'] = str(int(info['program_year']) - 1)  # Increment year for next entry  
 
         except Exception as e:
             print(f"Error processing {url}: {e}")
