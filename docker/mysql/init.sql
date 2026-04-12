@@ -321,8 +321,9 @@ CREATE TABLE IF NOT EXISTS outcome_met_percentages (
 
 CREATE TABLE IF NOT EXISTS continuous_improvement (
     improvement_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
+    program_id INT NULL,
     type ENUM('hardware', 'semester_improvement', 'peo_update', 'new_course', 'concentration_update', 'concentration_flowchart', 'adhoc') NOT NULL,
+    status ENUM('ongoing', 'completed') NULL,
     semester_year VARCHAR(50),              -- only relevant for semester_improvement type
     source TEXT,
     problem_analysis TEXT,
