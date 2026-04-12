@@ -80,8 +80,9 @@ CREATE TABLE IF NOT EXISTS courses (
 CREATE TABLE IF NOT EXISTS programs (
     program_id INT AUTO_INCREMENT PRIMARY KEY,
     program_name VARCHAR(255) NOT NULL,
-    -- e.g. "Computer Science"
-    program_code VARCHAR(50) NOT NULL -- e.g. BS, BSE
+    program_code VARCHAR(50) NOT NULL,
+    program_year VARCHAR(20) NOT NULL,
+    UNIQUE KEY unique_program (program_name, program_code, program_year)
 );
 -- Table 2: student_admission_requirements
 -- One row = one “admissions criteria row” from the screenshot (the 4 text cells).
