@@ -41,7 +41,7 @@ The following table summarizes all findings reported by ZAP during the scan.
 | Session Management Response Identified | Informational | 2 | Not Addressed |
 | Storable and Cacheable Content | Informational | 2 | Partially Fixed |
 | User Agent Fuzzer | Informational | Systemic | Not Addressed |
-| User Controllable HTML Element Attribute (Potential XSS) | Informational | 4 | Not Addressed |
+| User Controllable HTML Element Attribute (Potential XSS) | Informational | 4 | Addressed |
 
 ## Remediation Summary
 
@@ -99,5 +99,7 @@ The following sections describe the key issues addressed and the fixes implement
 ### User Agent Fuzzer
 - Not addressed (Informational)
 ### User Controllable HTML Element Attribute (Potential XSS)
-- Not addressed (Informational)
+- Reviewed input fields flagged by ZAP in login and registraction
+- Confirmed user-controlled values in HTML are encoded with htmlspecialchars()
+- No unsafe raw attribute output identified in the flagged locations
 
