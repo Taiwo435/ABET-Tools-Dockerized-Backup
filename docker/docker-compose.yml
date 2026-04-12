@@ -164,7 +164,8 @@ services:
     networks:
       - app_network
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     dns:
       - 8.8.8.8
       - 1.1.1.1

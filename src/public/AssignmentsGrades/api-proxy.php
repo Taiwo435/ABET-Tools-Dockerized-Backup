@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/db.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
 
@@ -423,6 +424,29 @@ if ($action === 'start-extraction-v2') {
     $overwrite = post_str('overwrite') === '1';
     $userId    = (int)($_SESSION['user_id'] ?? 0);
 
+    //----------------Infomation from the syllabus form----------------//
+    $courseSubject       = post_str('course_subject');
+    $courseNumber        = post_str('course_number');
+    $syllabusCourseName  = post_str('syllabus_course_name');
+    $creditsHours        = post_str('credits_hours');
+    $contactHours        = post_str('contact_hours');
+    $category            = post_str('category');
+    $catalogDescription  = post_str('catalog_description');
+    $prerequisites       = post_str('prerequisites');
+    $courseType          = post_str('course_type');
+    //***This will need to be updated dynamically eventully.***
+    $program_name = "Computer Systems Engineering";
+    $program_year = post_str('program_year');
+    //----------------------------------------------------------------//
+
+    $courseCoordinators = array_values(array_filter(array_map('trim', $_POST['course_coordinators'] ?? [])));
+    $textbooks = array_values(array_filter(array_map('trim', $_POST['textbooks'] ?? [])));
+    $courseOutcomes = array_values(array_filter(array_map('trim', $_POST['course_outcomes'] ?? [])));
+    $studentOutcomesAddressed = array_values(array_filter(array_map('trim', $_POST['student_outcomes_addressed'] ?? [])));
+    $topics = array_values(array_filter(array_map('trim', $_POST['topics'] ?? [])));
+    
+    //----------------Infomation from the syllabus form end------------//
+
     if ($token === '') {
         json_response(['success' => false, 'message' => 'No token in session.'], 401);
     }
@@ -484,12 +508,81 @@ if ($action === 'start-extraction-v2') {
         json_response(['success' => false, 'message' => $msg], $extractCode ?: 502);
     }
 
+
+    $stmt = $pdo->prepare("SELECT program_id FROM programs WHERE program_name = ? AND program_year = ?");
+    $stmt->execute([$program_name, $program_year]);
+    $program = $stmt->fetch();
+    $program = $program ? $program['program_id'] : null;
+
+    if($program === null) {
+        json_response(['success' => false, 'message' => 'Program not found for course name: ' . $program_name. ' and year: ' . $program_year], 404);
+    }
+
+    $stmt = $pdo->prepare("
+        INSERT INTO course_syllabi (
+            program_id,
+            course_subject,
+            course_number,
+            course_name,
+            credits,
+            contact_hours,
+            credit_categorization,
+            instructor_name,
+            textbook,
+            catalog_description,
+            prerequisites,
+            course_type,
+            specific_goals,
+            student_outcomes,
+            topics_covered
+        ) VALUES (
+            :program_id,
+            :course_subject,
+            :course_number,
+            :course_name,
+            :credits,
+            :contact_hours,
+            :credit_categorization,
+            :instructor_name,
+            :textbook,
+            :catalog_description,
+            :prerequisites,
+            :course_type,
+            :specific_goals,
+            :student_outcomes,
+            :topics_covered
+        )
+    ");
+
+    $stmt->execute([
+        ':program_id' => $program,
+        ':course_subject' => $courseSubject,
+        ':course_number' => $courseNumber,
+        ':course_name' => $syllabusCourseName,
+        ':credits' => $creditsHours,
+        ':contact_hours' => $contactHours,
+        ':credit_categorization' => $category,
+        ':instructor_name' => json_encode($courseCoordinators),
+        ':textbook' => json_encode($textbooks),
+        ':catalog_description' => $catalogDescription,
+        ':prerequisites' => $prerequisites,
+        ':course_type' => $courseType,
+        ':specific_goals' => json_encode($courseOutcomes),
+        ':student_outcomes' => json_encode($studentOutcomesAddressed),
+        ':topics_covered' => json_encode($topics),
+    ]);
+
+    
+
+
     $extractData = json_decode((string) $extractBody, true) ?: [];
     json_response([
         'success' => true,
         'message' => 'Extraction started.',
         'job_id'  => $extractData['job_id'] ?? null
     ]);
+    
+
 }
 
 if ($action === 'check-job-history') {
