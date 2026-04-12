@@ -321,7 +321,7 @@ def build(questionnaire):
         for row in profile_info:
 
             requisite_list.append({
-                "name": row["program_id"],
+                "name": row["program_name"],
                 "pre_co_requisite": row["pre_co_requisite"]
 
             })
