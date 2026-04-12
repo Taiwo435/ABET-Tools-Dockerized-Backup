@@ -493,15 +493,12 @@ if ($action === 'start-extraction-v2') {
 }
 
 if ($action === 'check-job-history') {
-    $token  = $_SESSION['canvas_token'] ?? '';
+    // Checking job history doesnt need canvas token, uses userID from db
     $userId = (int)($_SESSION['user_id'] ?? 0);
 
-    if ($token === '') {
-        json_response(['success' => false, 'message' => 'No token in session.'], 401);
-    }
-
     $url = api_base('extraction') . '/jobs?limit=50';
-    $headers = ['canvas-access-token: ' . $token];
+
+    $headers = [];
     if ($userId > 0) {
         $headers[] = 'submitted-by-user-id: ' . $userId;
     }
