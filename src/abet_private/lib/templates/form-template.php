@@ -20,7 +20,7 @@
     data-form-group="<?= htmlspecialchars($formName) ?>">
 
     <?php foreach ($form['fields'] as $field): 
-        $name = $field['name'];
+        $name = array_key_exists('name', $field) ? $field['name'] : '';
         $type = $field['type'];
         $raw = $old[$name] ?? '';
         $value = is_string($raw) ? htmlspecialchars($raw, ENT_QUOTES, 'UTF-8') : '';
@@ -44,7 +44,7 @@
 
                     <div><?= htmlspecialchars($field['label']) ?></div>
                     &nbsp;
-                    <div class="form-required-star"><?php if ($field['required']) { echo ("      *"); } ?></div>
+                    <div class="form-required-star"><?php if (array_key_exists('required', $field)) { echo ("      *"); } ?></div>
                 </label>
             <?php endif ?>
 
@@ -105,7 +105,7 @@
                 <?php $columnCount = count($field['columns']); ?>
                 
                 <div class="expandable-grid" data-max-rows="<?= $field['maxRows']?>" 
-                    data-allow-incomplete-rows="<?= $field['allowIncompleteRows'] ?>">
+                    data-allow-incomplete-rows="<?= array_key_exists('allowIncompleteRows', $field) ? $field['allowIncompleteRows'] : false ?>">
                     <div class="expandable-grid-container"
                         name="<?= $name ?>"
                         data-old-values='<?= htmlspecialchars(json_encode($raw ?? ""), ENT_QUOTES, "UTF-8") ?>'
@@ -116,7 +116,7 @@
                                 <label class="expandable-grid-label" 
                                     data-type="<?= htmlspecialchars($column['type'], ENT_QUOTES, 'UTF-8') ?>"
                                     data-name="<?= htmlspecialchars($column['name'], ENT_QUOTES, 'UTF-8') ?>"
-                                    data-numerical="<?= $column['numerical'] ?>"
+                                    data-numerical="<?= array_key_exists('numerical', $column) ? $column['numerical'] : false ?>"
                                     <?php if (!empty($column['options'])) {
                                         echo("data-option-count=" . count($column['options']) . " ");
 
