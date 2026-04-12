@@ -17,10 +17,10 @@ if (filter_var($pageNumber, FILTER_VALIDATE_INT) === false) {
 $pageNumber = (int) $pageNumber;
 
 // If the form is past the last page, it will redirect to the review page
-if ($pageNumber > getPageCount($formName)) {
-    header('Location: /coordinator-form/review');
-    die();
-}
+// if ($pageNumber > getPageCount($formName)) {
+//     header('Location: /coordinator-form/review');
+//     die();
+// }
 
 // Check if the page number is within the page count range
 if ($pageNumber < 1) {
