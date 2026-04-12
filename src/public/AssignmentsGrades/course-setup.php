@@ -36,6 +36,11 @@ try {
 }
 
 $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+
+$program_year = $_SESSION['class_data'][0]['term']["name"];
+$program_year = substr($program_year, 0, 4);
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -108,7 +113,7 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
           
 
           <div class="card-body">
-            <form method="POST" action="">
+            <form id="syllabusForm" method="POST" action="">
 
               <!-- BASIC INFO -->
               <div class="form-group">
@@ -117,7 +122,7 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
                 <label class="form-label">Course Number<span class="required">*</span></label>
                 <input type="text" name="course_number" class="form-input" required>
                 <label class="form-label">Course Name<span class="required">*</span></label>
-                <input type="text" name="course_name" class="form-input" required>
+                <input type="text" name="syllabus_course_name" class="form-input" required>
               </div>
 
               <div class="form-grid">
@@ -254,8 +259,8 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-outline" id="saveNextBtn" onclick="saveAndNext()">Save & Next Course →</button>
-          <button class="btn btn-primary" id="startBtn" style="display:none" onclick="startAllExtractions()">
+          <button type="button" class="btn btn-outline" id="saveNextBtn" onclick="saveAndNext()">Save & Next Course →</button>
+          <button type="button" class="btn btn-primary" id="startBtn" style="display:none" onclick="startAllExtractions()">
             🚀 Start All Extractions
           </button>
         </div>
@@ -381,6 +386,8 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
     async function startAllExtractions() {
       const btn = document.getElementById('startBtn');
+      //Gets the syllabus form data. 
+      const form = document.getElementById('syllabusForm');
       btn.disabled = true;
       btn.textContent = 'Starting…';
       hideError();
@@ -389,7 +396,9 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
       for (const course of courses) {
         try {
-          const body = new FormData();
+          const body = new FormData(form);
+          console.log("Form data entries:", body.entries());
+          body.append('program_year', '<?= $program_year ?>');
           body.append('action', 'start-extraction-v2');
           body.append('csrf_token', csrfToken);
           body.append('source_course_id', String(course.id));
