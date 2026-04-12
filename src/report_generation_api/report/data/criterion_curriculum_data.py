@@ -47,6 +47,45 @@ def get_pre_co_requisite_data(questionnaire):
     return cursor.fetchall()
 
 
+def get_peo_alignment(questionnaire):
+    """
+    Fetch Table 5-2 data: course alignment with program educational objectives.
+    """
+
+    cursor = questionnaire.db.cursor()
+    cursor.execute(
+        """
+        SELECT
+            `program_id`,
+            `objective_number`,
+            `year_level`,
+            `courses`,
+            `updated_at`
+        FROM `curriculum_peo_alignment`
+        ORDER BY `objective_number`, `year_level`, `alignment_id`;
+        """
+    )
+    return cursor.fetchall()
+
+def get_outcome_alignment(questionnaire):
+    """
+    Fetch Table 5-3 data: course alignment with ABET required student outcomes.
+    """
+
+    cursor = questionnaire.db.cursor()
+    cursor.execute(
+        """
+        SELECT
+            `program_id`,
+            `student_outcome`,
+            `year_level`,
+            `courses`,
+            `updated_at`
+        FROM `curriculum_outcome_alignment`
+        ORDER BY `student_outcome`, `year_level`, `alignment_id`;
+        """
+    )
+    return cursor.fetchall()
 
 if __name__ == "__main__":
     print("Testing criterion_curriculum_data.py")
