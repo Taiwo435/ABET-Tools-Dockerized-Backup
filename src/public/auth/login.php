@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <?php if ($error): ?>
-        <div class="error-box">
+        <div class="msg error" id="error-box">
           <strong>Error:</strong> <?php echo e($error); ?>
         </div>
       <?php endif; ?>

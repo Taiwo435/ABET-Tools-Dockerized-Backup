@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php else: ?>
 
         <?php if ($errors): ?>
-          <div class="msg error">
+          <div class="msg error" id="error-box">
             <?php foreach ($errors as $e): ?>
               <?php echo htmlspecialchars($e, ENT_QUOTES, 'UTF-8'); ?><br>
             <?php endforeach; ?>
