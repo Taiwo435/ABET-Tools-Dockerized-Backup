@@ -64,7 +64,7 @@ if (empty($_SESSION['user_id'])) {
         <?php if (hasPermission($permissions, PERM_GRADE_DATA_TOOL)): ?>
         <div class="tool-card">
             <div class="card-header" onclick="triggerToggle(this)">
-                <div class="card-title">Assigment & Grade Data</div>
+                <div class="card-title">Assignment & Grade Data</div>
                 <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
             </div>
             <div class="card-body">
