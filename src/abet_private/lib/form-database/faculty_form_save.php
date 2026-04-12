@@ -19,9 +19,9 @@ function handleSaveError($message, $loggedMessage) {
     
     $url = '/faculty-form/edit/?page=' . $_POST['current_page_number'];
     header('Location: ' . $url);
-
-    $loggedMessageFull = "FACULTY FORM SAVE ERROR FOR USER WITH ID " . $_SESSION['user_id'] . ": " . $loggedMessage;
-    error_log($loggedMessageFull);
+    
+    $loggedMessageFull = "FACULTY FORM SAVE ERROR FOR USER WITH ID " . $_SESSION['user_id'] . ": " . $loggedMessage . " | ERROR LOGGED AT: " . date("Y-m-d H:i:s T") . "\n";
+    error_log($loggedMessageFull, 3, getenv('ABET_PRIVATE_DIR') . "/logs/faculty_form_error.log");
     die();
 }
 
