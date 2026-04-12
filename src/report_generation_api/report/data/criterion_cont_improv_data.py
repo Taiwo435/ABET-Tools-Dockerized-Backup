@@ -54,15 +54,6 @@ def get_outcome_met_percentages(questionnaire):
 def get_improvement_actions_hardware(questionnaire):
     """
     Fetch improvement actions info from continuous_improvement.
-
-    The `type` ENUM column constrains values to:
-      'hardware', 'semester_improvement', 'peo_update', 'new_course',
-      'concentration_update', 'concentration_flowchart', 'adhoc'
-    You can filter by type using the optional `improvement_type` argument,
-    e.g. get_improvement_actions(q, improvement_type='semester_improvement')
-
-    Note: `semester_year` is only populated for 'semester_improvement' rows.
-          `result` is only populated for 'peo_update' rows.
     """
 
     cursor = questionnaire.db.cursor()
