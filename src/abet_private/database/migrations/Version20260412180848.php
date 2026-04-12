@@ -50,6 +50,29 @@ final class Version20260412180848 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
-        $this->throwIrreversibleMigrationException("Down is not supported.");
+        // programs table rollback
+        $this->skipIf(!Services::doesColumnExist("programs", "program_year"), 'Skipping this migration.');
+        $this->addSql('ALTER TABLE programs DROP INDEX unique_program;');
+        $this->addSql('ALTER TABLE programs DROP COLUMN program_year;');
+
+        // course_syllabi rollback
+        $this->skipIf(!Services::doesColumnExist("course_syllabi", "course_subject"), 'Skipping this migration.');
+        $this->addSql('ALTER TABLE course_syllabi DROP COLUMN course_subject;');
+
+        // same thing but in reverse
+        $this->addSql('ALTER TABLE course_syllabi SET instructor_name = NULL;');
+        $this->addSql('ALTER TABLE course_syllabi MODIFY instructor_name VARCHAR(255);');
+
+        $this->addSql('ALTER TABLE course_syllabi SET textbook = NULL;');
+        $this->addSql('ALTER TABLE course_syllabi MODIFY textbook TEXT;');
+
+        $this->addSql('ALTER TABLE course_syllabi SET specific_goals = NULL;');
+        $this->addSql('ALTER TABLE course_syllabi MODIFY specific_goals TEXT;');
+
+        $this->addSql('ALTER TABLE course_syllabi SET student_outcomes = NULL;');
+        $this->addSql('ALTER TABLE course_syllabi MODIFY student_outcomes TEXT;');
+
+        $this->addSql('ALTER TABLE course_syllabi SET topics_covered = NULL;');
+        $this->addSql('ALTER TABLE course_syllabi MODIFY topics_covered TEXT;');
     }
 }
