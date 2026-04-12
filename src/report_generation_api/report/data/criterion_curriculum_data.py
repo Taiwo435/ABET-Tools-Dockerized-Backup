@@ -36,11 +36,14 @@ def get_pre_co_requisite_data(questionnaire):
     cursor.execute(
         """
         SELECT
-            fi.program_id,
+            p.program_id,
+            p.program_name,
+            p.program_code,
             c.pre_co_requisite
         FROM course_pre_co_requisite as c
-        INNER JOIN faculty_info as fi
-        ON c.program_id = fi.program_id;
+        INNER JOIN programs as p
+        ON c.program_id = p.program_id
+        ORDER BY p.program_name;
     """)
     
 
