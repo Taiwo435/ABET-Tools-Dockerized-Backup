@@ -1,9 +1,17 @@
 <?php
-// Database connection settings
-$host = 'MYSQL_HOSTNAME';
-$dbname = 'MYSQL_DATABASE';
-$username = 'MYSQL_USER';
-$password = 'MYSQL_PASS';
+$host = getenv('MYSQL_HOSTNAME');
+$dbname = getenv('MYSQL_DATABASE');
+$username = getenv('MYSQL_USER');
+$password = getenv('MYSQL_PASS');
+
+if (!$host || !$dbname || !$username || !$password) {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Missing database environment variables.'
+    ]);
+    exit;
+}
 
 try {
     $pdo = new PDO(
@@ -16,7 +24,12 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    // In production, don't expose full error
-    die("Database connection failed.");
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection failed.',
+        'error' => $e->getMessage()
+    ]);
+    exit;
 }
 ?>
