@@ -188,7 +188,7 @@ function submitForm (currentPageNumber, nextPageNumber) {
 
     prepareDataFromGridElements();
 
-    const form = document.querySelector('form');
+    const form = document.querySelector('form[data-form-group]');
 
     // Adds hidden input fields, so needed data can easily be passed over to the submit handler.
     const currentPageNumberInput = document.createElement('input');
@@ -294,7 +294,7 @@ function prepareDataFromGridElements() {
         expandableGridInput.name = grid.getAttribute("name");
         expandableGridInput.value = JSON.stringify(rows);
 
-        const form = document.querySelector('form');
+        const form = document.querySelector('form[data-form-group]');
         form.appendChild(expandableGridInput);
     });
 }
@@ -400,14 +400,14 @@ function removeExpandableGridRow (expandableGridRow) {
 }
 
 function returnToPageSelect() {
-    const form = document.querySelector('form');
+    const form = document.querySelector('form[data-form-group]');
     const formName = form.getAttribute('data-form-group');
     window.location.assign('/' + formName);
 }
 
 
 function validateForm() {
-    const form = document.querySelector("form");
+    const form = document.querySelector('form[data-form-group]');
     const formConfig = <?= json_encode($form, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
     let errors = [];
 
