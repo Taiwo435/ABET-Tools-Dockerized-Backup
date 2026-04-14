@@ -62,6 +62,8 @@ WORKDIR /var/www
 
 VOLUME ["/home/docker"]
 VOLUME ["/home/abet_private"]
+# RUN ["install", "-d", "-o", "www-data", "-g", "www-data", "-m", "0766", "${ABET_PRIVATE_DIR}/report_jobs"] 
+# RUN ["install", "-d", "-o", "www-data", "-g", "www-data", "-m", "0766", "${ABET_PRIVATE_DIR}/var"] 
 
 COPY --from=vendor /app/vendor /var/www/vendor
 COPY docker/app/entrypoint.sh /home/entrypoint.sh
