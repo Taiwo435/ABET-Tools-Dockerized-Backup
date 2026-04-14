@@ -8,8 +8,12 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '.github/workflows/**'
       - 'scripts/**'
+      - '.vscode/**'
+      - '.devcontainer/**'
+      - '.gitignore'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/zap_security.yml'
   workflow_dispatch:
     inputs:
       browser:
