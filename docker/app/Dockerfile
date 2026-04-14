@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ../../src/abet_private .
 
-RUN composer install --no-dev --prefer-dist --no-interaction
+RUN composer install --prefer-dist --no-interaction
 
 ################################3
 # ORIGNAL BUILD STEP
