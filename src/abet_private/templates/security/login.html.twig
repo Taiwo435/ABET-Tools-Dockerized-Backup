@@ -37,7 +37,7 @@
         </div>
       <?php endif; ?> #}
 
-      <form method="POST" action="/login" autocomplete="on">
+      <form method="POST" autocomplete="on">
         {# <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>"> #}
         {% if error %}
             <div class="error-box">
@@ -49,6 +49,10 @@
         {% if app.user %}
             <div class="mb-3">
                 You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+            </div>
+        {% else %}
+            <div class="mb-3">
+                You are not logged in.
             </div>
         {% endif %}
 

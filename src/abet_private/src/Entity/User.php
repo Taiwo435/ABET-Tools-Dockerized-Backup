@@ -191,6 +191,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
+    /**
+     * Returns whether the user has a certian permission
+     * Will always be true if the user is an admin
+     * @param Permissions $permission   The permission you want to read
+     * @throws InvalidArgumentException         If the input is not a valid permission (or is not handled...)
+     * @return bool                             The value of the user's access.
+     */
+    public function hasPermission(Permissions $permission) : bool {
+        if ($this->role === 'admin') {
+            return true;
+        }
+        return ($this->permissions & $permission->value) != 0;
+    }
+
+    /**
+     * Sets a certain permission to the indicated Value
+     * @param Permissions $permission   The permission you want to change
+     * @param bool $active                      The new state of the permission
+     * @return void
+     */
+    public function setPermission(Permissions $permission, bool $active) : void {
+        if ($active) {
+            $this->permissions |= $permission->value;
+        }
+        else {
+            $this->permissions &= ~$permission->value;
+        }
+    }
+
     // /**
     //  * Possible roles are in the Permissions enum
     //  * @see Permissions
