@@ -94,4 +94,5 @@ class Services {
 
 
 
+if (getenv("APP_ENV") != 'test')
 $entityManager = Services::getEntityManager();

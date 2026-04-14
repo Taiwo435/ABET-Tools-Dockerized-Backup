@@ -20,9 +20,9 @@ use Doctrine\ORM\EntityManagerInterface;
 function getUserByEmail(EntityManager $em, string $email)
 {
     // Use the repository method findOneBy to get a user by their email
-    // $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
     $repo = $em->getRepository(User::class);
-    return new User();
+    $user = $repo->findOneBy(["email"=> $email]);
+    return $user;
 }
 
 final class UserORMTest extends KernelTestCase {
@@ -31,6 +31,8 @@ final class UserORMTest extends KernelTestCase {
     protected function setUp(): void
     {
         self::bootKernel();
+
+        // print_r($_ENV);
 
         $this->entityManager = static::getContainer()
             ->get(EntityManagerInterface::class);
@@ -60,7 +62,7 @@ final class UserORMTest extends KernelTestCase {
         $user = getUserByEmail($this->entityManager, $email);
         $this->assertNotEquals(null, $user);
 
-        // $this->assertSame($email, $user->getEmail());
+        $this->assertSame($email, $user->getEmail());
     }
 
     public function testUserPermissions() {

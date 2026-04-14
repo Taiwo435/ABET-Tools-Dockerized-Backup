@@ -48,7 +48,8 @@
     "scripts": {
         "doctrine": "./vendor/bin/doctrine-migrations",
         "pest": "./vendor/bin/pest",
-        "test": "APP_ENV=test ./bin/phpunit",
+        "test": "docker exec -it --env-file ../../docker/.env --env APP_ENV=test php_apache sh -c 'cd $ABET_PRIVATE_DIR && ./bin/phpunit'",
+        "local_test": "APP_ENV=test ./bin/phpunit",
         "console": "./bin/console"
     },
     "autoload": {
