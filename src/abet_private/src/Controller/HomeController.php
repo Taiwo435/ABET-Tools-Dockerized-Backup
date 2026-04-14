@@ -5,6 +5,9 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\User;
 
 final class HomeController extends AbstractController
 {
@@ -19,5 +22,15 @@ final class HomeController extends AbstractController
         // return $this->render('homepage/index.html.twig', [
         //     'controller_name' => 'HomepageController',
         // ]);
+    }
+
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[Route('/header', name: 'app_header')]
+    public function header(#[CurrentUser] User $user) {
+        $parts = explode('@', (string)$user->getEmail());
+        $asurite = $parts[0] ?? 'user';
+        return $this->render('shared/header.html.twig', 
+            ['user'=> $user,
+            'asurite'=> $asurite]);
     }
 }
