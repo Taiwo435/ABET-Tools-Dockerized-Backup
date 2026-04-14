@@ -96,11 +96,6 @@ jobs:
         run: |
           pip install --root-user-action=ignore -r src/test/requirements.txt > /dev/null
 
-      - name: Install composer dependencies
-        working-directory: ./src/abet_private
-        run: |
-          composer install --no-interaction --prefer-dist --optimize-autoloader 
-
       # - name: Wait for services to be ready 
       #   run: |
       #     # Wait for the containers to be ready
