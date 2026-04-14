@@ -75,12 +75,13 @@ final class UserORMTest extends KernelTestCase {
 
         $perm = $user->hasPermission(Permissions::ROLE_ADMIN);
         $this->assertTrue($perm, "User expected to have AdminPanel role");
+        $this->assertEquals(["ROLE_ADMIN", "ROLE_USER"], $user->getRoles());
 
         $user->setPermission(Permissions::ROLE_ADMIN, false);
 
         $perm = $user->hasPermission(Permissions::ROLE_ADMIN);
         $this->assertFalse($perm, "User expected to not have AdminPanel role any longer");
-        // print($user->getRoles());
+        $this->assertEquals(["ROLE_USER"], $user->getRoles());
     }
 
     public function testPermissionUniqueness() {
