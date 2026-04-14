@@ -48,7 +48,7 @@
     "scripts": {
         "doctrine": "./vendor/bin/doctrine-migrations",
         "pest": "./vendor/bin/pest",
-        "test": "./bin/phpunit",
+        "test": "APP_ENV=test ./bin/phpunit",
         "console": "./bin/console"
     },
     "autoload": {
