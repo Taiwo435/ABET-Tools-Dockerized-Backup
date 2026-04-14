@@ -2,7 +2,8 @@ FROM composer:2 as vendor
 
 WORKDIR /app
 
-COPY ../../src/abet_private .
+COPY ../../src/abet_private/composer.json .
+COPY ../../src/abet_private/composer.lock .
 
 RUN composer install --prefer-dist --no-interaction
 
@@ -16,7 +17,6 @@ ENV ABET_PRIVATE_DIR=$ABET_PRIVATE_DIR
 
 WORKDIR $ABET_PRIVATE_DIR
 
-COPY --from=vendor /app/vendor $ABET_PRIVATE_DIR/vendor
 
 WORKDIR /var/www/html
 
@@ -31,7 +31,6 @@ RUN apt-get install -y \
     python3 \
     python3-pip \
     libreoffice-writer
-
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* 
 
@@ -59,6 +58,13 @@ COPY docker/app/config/000-default.conf /etc/apache2/sites-enabled/000-default.c
 # RUN if [ "$APP_ENV" = "dev" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-
-#RUN mkdir -p /var/www/
 WORKDIR /var/www
+
+VOLUME ["/home/docker"]
+VOLUME ["/home/abet_private"]
+
+COPY --from=vendor /app/vendor /var/www/vendor
+COPY docker/app/entrypoint.sh /home/entrypoint.sh
+
+# don't trust the docker/ volume
+ENTRYPOINT [ "/home/entrypoint.sh" ]
