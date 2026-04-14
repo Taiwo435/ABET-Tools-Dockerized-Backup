@@ -47,12 +47,8 @@
         {% endif %}
 
         {% if app.user %}
-            <div class="mb-3">
+            <div class="msg success">
                 You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
-            </div>
-        {% else %}
-            <div class="mb-3">
-                You are not logged in.
             </div>
         {% endif %}
 
