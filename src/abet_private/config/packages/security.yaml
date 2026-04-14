@@ -21,8 +21,9 @@ security:
             lazy: true
             provider: app_user_provider
             form_login:
-                login_path: app_login
+                login_path: app_login # redirect to this path if user not logged in
                 check_path: app_login
+                default_target_path: app_homepage # once user logs in, go here
                 enable_csrf: true
             logout:
                 path: app_logout
