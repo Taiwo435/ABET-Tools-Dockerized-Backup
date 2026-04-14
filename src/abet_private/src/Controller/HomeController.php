@@ -11,8 +11,13 @@ final class HomeController extends AbstractController
     #[Route('/test.php', name: 'app_homepage')]
     public function index(): Response
     {
-        return $this->render('homepage/index.html.twig', [
-            'controller_name' => 'HomepageController',
-        ]);
+        ob_clean();
+        include getenv("ABET_PUBLIC_DIR") . '/auth/register.php';
+        $content = ob_get_clean();
+
+        return new Response($content);
+        // return $this->render('homepage/index.html.twig', [
+        //     'controller_name' => 'HomepageController',
+        // ]);
     }
 }
