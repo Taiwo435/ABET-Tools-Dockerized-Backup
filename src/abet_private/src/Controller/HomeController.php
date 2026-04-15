@@ -11,7 +11,8 @@ use App\Entity\User;
 
 final class HomeController extends AbstractController
 {
-    #[Route('/test.php', name: 'app_homepage')]
+    // route where i can test some bs
+    #[Route('/test.php', name: 'app_test')]
     public function index(): Response
     {
         ob_clean();
@@ -22,6 +23,17 @@ final class HomeController extends AbstractController
         // return $this->render('homepage/index.html.twig', [
         //     'controller_name' => 'HomepageController',
         // ]);
+    }
+    
+    // home2
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[Route('/home2', name: 'app_homepage')]
+    public function home(#[CurrentUser] User $user) {
+        $parts = explode('@', (string)$user->getEmail());
+        $asurite = $parts[0] ?? 'user';
+        return $this->render('homepage/base.html.twig', 
+            ['user'=> $user,
+            'asurite'=> $asurite]);
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
