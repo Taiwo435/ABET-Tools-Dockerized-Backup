@@ -40,7 +40,7 @@
       <form method="POST" autocomplete="on">
         {# <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>"> #}
         {% if error %}
-            <div class="error-box">
+            <div class="msg error">
               <strong>Error:</strong>
               {{ error.messageKey|trans(error.messageData, 'security') }}
             </div>
@@ -48,7 +48,7 @@
 
         {% if app.user %}
             <div class="msg success">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
             </div>
         {% endif %}
 
