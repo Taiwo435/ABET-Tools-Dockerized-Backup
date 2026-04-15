@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
+use App\Entity\Permissions;
 
 final class HomeController extends AbstractController
 {

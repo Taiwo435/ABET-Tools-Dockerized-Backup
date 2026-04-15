@@ -42,7 +42,7 @@
 
         <div class="tools-grid">
 
-            {# <?php if (hasPermission($permissions, PERM_GRADE_DATA_TOOL)): ?> #}
+            {% if user.hasPermission(enum('App\\Entity\\Permissions').ROLE_ASSIGNMENTS_GRADES)%}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">Assigment & Grade Data</div>
@@ -55,6 +55,8 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
+
             {# <?php endif; ?> #}
 
             {# <?php if (hasPermission($permissions, PERM_FACULTY_FORM_TOOL)): ?> #}
