@@ -49,14 +49,16 @@ function start_session_basic(): void {
 
   $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 
+  // Fixes ZAP Issue: Cookie without SameSite Attribute
   $params = session_get_cookie_params();
-  session_set_cookie_params(
-    0,
-    $params['path'] ?? '/',
-    $params['domain'] ?? '',
-    $isHttps,
-    true
-  );
+  session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => $params['path'] ?? '/',
+    'domain' => $params['domain'] ?? '',
+    'secure' => $isHttps,
+    'httponly' => true,
+    'samesite' => 'Lax'
+  ]);
 
   session_start();
 }
@@ -132,11 +134,14 @@ function logout(string $redirectTo = '/login'): void {
     setcookie(
       session_name(),
       '',
-      time() - 42000,
-      $params['path'] ?? '/',
-      $params['domain'] ?? '',
-      (bool)($params['secure'] ?? false),
-      (bool)($params['httponly'] ?? true)
+      [
+        'expires' => time() - 42000,
+        'path' => $params['path'] ?? '/',
+        'domain' => $params['domain'] ?? '',
+        'secure' => (bool)($params['secure'] ?? false),
+        'httponly' => (bool)($params['httponly'] ?? true),
+        'samesite' => 'Lax'
+      ]
     );
   }
 

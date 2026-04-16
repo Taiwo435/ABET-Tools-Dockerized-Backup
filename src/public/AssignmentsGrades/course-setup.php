@@ -10,7 +10,37 @@ if (empty($_SESSION['class_data'])) {
     exit;
 }
 
+
+//-----------------------------------------------------
+/*
+This part of the php is for the form handling of the syllabus information.
+*/
+
+$host = getenv('MYSQL_HOSTNAME');
+$dbname = getenv('MYSQL_DATABASE');
+$username = getenv('MYSQL_USER');
+$password = getenv('MYSQL_PASS');
+
+try {
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+        $username,
+        $password,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]
+    );
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
 $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+
+$program_year = $_SESSION['class_data'][0]['term']["name"];
+$program_year = substr($program_year, 0, 4);
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,12 +50,17 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
   <title>Course Setup | ABET Tools</title>
   <link rel="stylesheet" href="/assets/css/tool1.css">
   <link rel="stylesheet" href="/assets/css/course-setup.css">
+  <script src="/assets/scripts/course_step.js"></script>
+  <script>
+    console.log("class_data:", <?= $courses_json ?>);
+  </script>
 </head>
 <body>
 
   <header class="site-header">
     <div class="site-title">ABET Tools - Course Setup</div>
     <a href="select-courses.php" class="nav-link">← Back to Course Selection</a>
+    <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
   </header>
 
   <div class="main-container">
@@ -73,6 +108,151 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
           <input type="file" id="rosterInput" accept=".csv,.xls" style="display:none">
         </div>
 
+        <div class="card">
+
+          <div class="card-title">Syllabus Information</div>
+          
+
+          <div class="card-body">
+            <form id="syllabusForm" method="POST" action="">
+
+              <!-- BASIC INFO -->
+              <div class="form-group">
+                <label class="form-label">Course Subject<span class="required">* (e.g., CSE)</span></label>
+                <input type="text" name="course_subject" class="form-input" required>
+                <label class="form-label">Course Number<span class="required">*</span></label>
+                <input type="text" name="course_number" class="form-input" required>
+                <label class="form-label">Course Name<span class="required">*</span></label>
+                <input type="text" name="syllabus_course_name" class="form-input" required>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Credits Hours<span class="required">*</span></label>
+                  <input type="text" name="credits_hours" class="form-input" required>
+                  <label class="form-label">Contact Hours</label>
+                  <input type="text" name="contact_hours" class="form-input">
+                  <label class="form-label">Categorization of credits<span class="required">*</span></label>
+                    <select name="category" class="form-select" required>
+                      <option value="">Select category</option>
+                      <option value="math">Math</option>
+                      <option value="science">Science</option>
+                      <option value="engineering">Engineering</option>
+                      <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Course Coordinators<span class="required">*</span></label>
+
+                  <div id="coordinator-container">
+                    <div class="form-group">
+                      <input
+                        type="text"
+                        name="course_coordinators[]"
+                        class="form-input"
+                        placeholder="Enter instructor name"
+                        required
+                      >
+                      <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <button class = "btn btn-outline" type="button" onclick="addCoordinator()" class="btn btn-secondary">
+                    + Add Instructor
+                  </button>
+                </div>
+
+              </div>
+
+              <!-- TEXTBOOKS -->
+              <div class="divider"><span class="divider-text">Textbooks</span></div>
+
+              <div id="textbook-container">
+                <div class="form-group textbook-row">
+                  <input type="text" name="textbooks[]" class="form-input" placeholder="Enter textbook">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+              <div>
+                <button class = "btn btn-outline" type="button" onclick="addTextbook()" class="btn btn-secondary">
+                  + Add Textbook
+                </button>
+              </div>
+              
+              <!-- COURSE INFO -->
+              <div class="divider"><span class="divider-text">Course Information</span></div>
+
+              <div class="form-group">
+                <label class="form-label">a. Catalog Description</label>
+                <textarea name="catalog_description" class="form-input"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">b. Prerequisites</label>
+                <textarea name="prerequisites" class="form-input"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">c. Elective</label>
+                <select name="course_type" class="form-select" required>
+                  <option value="">Select type</option>
+                  <option value="R">Required (R)</option>
+                  <option value="E">Elective (E)</option>
+                  <option value="SE">Senior Elective (SE)</option>
+                </select>
+              </div>
+
+              <!-- COURSE GOALS -->
+              <div class="divider"><span class="divider-text">Course Goals</span></div>
+
+              <label class="form-label">a. Course Outcomes</label>
+              <div id="course-outcomes-container">
+                <div class="form-group">
+                  <input type="text" name="course_outcomes[]" class="form-input" placeholder="Enter course outcome">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+
+              <button class = "btn btn-outline" type="button" onclick="addCourseOutcome()" class="btn btn-secondary">+ Add Course Outcome</button>
+
+              <br><br>
+
+              <label class="form-label">
+                b. Explicitly indicate which of the student outcomes listed in Criterion 3 or any other outcomes are addressed by the course
+              </label>
+              <div id="student-outcomes-container">
+                <div class="form-group">
+                  <input type="text" name="student_outcomes_addressed[]" class="form-input" placeholder="Enter student outcome addressed">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+
+              <button class = "btn btn-outline" type="button" onclick="addStudentOutcome()" class="btn btn-secondary">+ Add Student Outcome</button>
+
+              <!-- TOPICS -->
+              <div class="divider"><span class="divider-text">Topics</span></div>
+
+              <div id="topics-container">
+                <div class="form-group topic-row">
+                  <input type="text" name="topics[]" class="form-input" placeholder="Enter topic">
+                  <button class = "btn btn-remove" style = "margin-top: 3%" type="button" onclick="removeRow(this)" class="btn btn-secondary">Remove</button>
+                </div>
+              </div>
+              <div>
+                <button class = "btn btn-outline" type="button" onclick="addTopic()" class="btn btn-secondary">
+                  + Add Topic
+                </button>
+              </div>
+              <br><br>
+              <button type="submit" class="btn btn-primary">Save</button>
+
+            </form>
+          </div>
+        </div>
+
         <div class="alert alert-error" id="errorAlert" style="display:none">
           <div class="alert-content">
             <strong>Error:</strong> <span id="errorMessage"></span>
@@ -80,8 +260,8 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-outline" id="saveNextBtn" onclick="saveAndNext()">Save & Next Course →</button>
-          <button class="btn btn-primary" id="startBtn" style="display:none" onclick="startAllExtractions()">
+          <button type="button" class="btn btn-outline" id="saveNextBtn" onclick="saveAndNext()">Save & Next Course →</button>
+          <button type="button" class="btn btn-primary" id="startBtn" style="display:none" onclick="startAllExtractions()">
             🚀 Start All Extractions
           </button>
         </div>
@@ -207,6 +387,8 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
     async function startAllExtractions() {
       const btn = document.getElementById('startBtn');
+      //Gets the syllabus form data. 
+      const form = document.getElementById('syllabusForm');
       btn.disabled = true;
       btn.textContent = 'Starting…';
       hideError();
@@ -215,7 +397,9 @@ $courses_json = json_encode($_SESSION['class_data'], JSON_HEX_TAG | JSON_HEX_APO
 
       for (const course of courses) {
         try {
-          const body = new FormData();
+          const body = new FormData(form);
+          console.log("Form data entries:", body.entries());
+          body.append('program_year', '<?= $program_year ?>');
           body.append('action', 'start-extraction-v2');
           body.append('csrf_token', csrfToken);
           body.append('source_course_id', String(course.id));

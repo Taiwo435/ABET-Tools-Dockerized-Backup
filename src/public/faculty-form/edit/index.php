@@ -38,7 +38,7 @@ $old; // The JSON data that will be autofilled onto the elements
 $backendErrorMessage = ''; // The error message that will be displayed to the user, if there is one
 // If there was an error saving, it will reload what was on the page before the save attempt
 // Otherwise, it will attempt to load data from the SQL db
-if ($_SESSION['faculty_form_error_flag'] === true) {
+if (array_key_exists('faculty_form_error_flag', $_SESSION) && $_SESSION['faculty_form_error_flag'] === true) {
     $_SESSION['faculty_form_error_flag'] = false;
     $old = $_SESSION['faculty_form_old'];
     $backendErrorMessage = $_SESSION['faculty_form_error_message'];

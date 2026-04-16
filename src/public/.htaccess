@@ -4,6 +4,20 @@ Options -MultiViews
 RewriteEngine On
 
 # -------------------------------------------------
+# Block spoofed headers that may be used to bypass 403 (ZAP: Bypassing 403)
+# -------------------------------------------------
+RewriteCond %{HTTP:X-Original-URL} . [OR]
+RewriteCond %{HTTP:X-Rewrite-URL} .
+RewriteRule ^ - [F]
+
+# -------------------------------------------------
+# Disable TRACE/TRACK methods to prevent proxy disclosure (ZAP: Proxy Disclosure)
+# (leaving OPTIONS for CORS)
+# -------------------------------------------------
+RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
+RewriteRule .* - [F]
+
+# -------------------------------------------------
 # Local env vars
 # Will be overwritten by other Env vars on production
 # -------------------------------------------------

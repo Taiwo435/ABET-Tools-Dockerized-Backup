@@ -4,8 +4,9 @@ function handleSaveError($message) {
     $_SESSION['coordinator_form_error_flag'] = true;
     $_SESSION['coordinator_form_old'] = $_POST;
     $_SESSION['coordinator_form_error_message'] = $message;
-    
-    $url = '/coordinator-form/edit/?page=' . $_POST['current_page_number'];
+
+    $pageNumber = $_POST['current_page_number'] ?? 1;
+    $url = '/coordinator-form/edit/?page=' . $pageNumber;
     header('Location: ' . $url);
     die();
 }

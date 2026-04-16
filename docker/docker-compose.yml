@@ -19,18 +19,6 @@ services:
       - SESSION_COOKIE_SAMESITE=Lax
     ports:
       - "${WEBSERVER_PORT:-8080}:80"
-    command: #https://docs.docker.com/reference/compose-file/services/#command what???
-      - sh
-      - -lc
-      - |
-        install -d -o www-data -g www-data -m 0777 "${ABET_PRIVATE_DIR}/report_jobs"
-        install -d -o www-data -g www-data -m 0777 "${ABET_PRIVATE_DIR}/var" 
-        exec apache2-foreground
-    # post_start:
-    #   - command: mkdir -p "${ABET_PRIVATE_DIR}/var" && chmod 777 "${ABET_PRIVATE_DIR}/var" 
-    # pre_stop:
-    #   - command: rm -rf "${ABET_PRIVATE_DIR}/var"
-    #     privileged: true
     volumes:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
@@ -164,7 +152,8 @@ services:
     networks:
       - app_network
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     dns:
       - 8.8.8.8
       - 1.1.1.1

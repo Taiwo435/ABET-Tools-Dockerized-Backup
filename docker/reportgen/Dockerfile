@@ -23,5 +23,11 @@ COPY src/report_generation_api/requirements.txt ./
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy startup script
+COPY docker/reportgen/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Start the API
 CMD uvicorn report_generation_api:app --host 0.0.0.0 --port $REPORTGEN_PORT

@@ -8,8 +8,12 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '.github/workflows/**'
       - 'scripts/**'
+      - '.vscode/**'
+      - '.devcontainer/**'
+      - '.gitignore'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/zap_security.yml'
   workflow_dispatch:
     inputs:
       browser:
@@ -96,38 +100,35 @@ jobs:
         run: |
           pip install --root-user-action=ignore -r src/test/requirements.txt > /dev/null
 
-      - name: Install composer dependencies
-        working-directory: ./src/abet_private
-        run: |
-          composer install --no-interaction --prefer-dist --optimize-autoloader 
+      # ci debug
 
       # - name: Wait for services to be ready 
       #   run: |
       #     # Wait for the containers to be ready
       #     sleep 10
 
-      # - name: Fetch URL with wget
-      #   run: |
-      #     URL="http://localhost:8080/login"
-      #     OUTPUT="response.html"
+      - name: Fetch URL with wget
+        run: |
+          URL="http://localhost:8080/login"
+          OUTPUT="response.html"
 
-      #     wget \
-      #       -S \
-      #       --max-redirect=20 \
-      #       --output-document="$OUTPUT" \
-      #       "$URL" | true
+          wget \
+            -S \
+            --max-redirect=20 \
+            --output-document="$OUTPUT" \
+            "$URL" | true
       
-      # - name: Fetch URL with curl
-      #   run: curl -v http://localhost:8080/ || true
+      - name: Fetch URL with curl
+        run: curl -v http://localhost:8080/ || true
 
-      # - name: dump docker logs
-      #   run: docker logs php_apache
+      - name: dump docker logs
+        run: docker logs php_apache
 
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v6
-      #   with:
-      #     name: fetched-response
-      #     path: response.html
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: fetched-response
+          path: response.html
 
       - name: Run Selenium tests
         run: |

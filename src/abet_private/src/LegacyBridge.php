@@ -126,13 +126,22 @@ class LegacyBridge
         if ($requestPathInfo == '/faculty-form/') {
             return "{$legacyRoot}/faculty-form/index.php";
         }
-
+        if ($requestPathInfo == '/faculty-form/review/') {
+            return "{$legacyRoot}/faculty-form/review/index.php";
+        }
+        if ($requestPathInfo == '/faculty-form/edit/') {
+            return "{$legacyRoot}/faculty-form/edit/index.php";
+        }
         // TOOL 3: Faculty form
         if ($requestPathInfo == '/coordinator-form/') {
             return "{$legacyRoot}/coordinator-form/index.php";
         }
-
-
+        if ($requestPathInfo == '/coordinator-form/edit/') {
+            return "{$legacyRoot}/coordinator-form/edit/index.php";
+        }
+        if ($requestPathInfo == '/coordinator-form/review/') {
+            return "{$legacyRoot}/coordinator-form/review/index.php";
+        }
         
 
         
