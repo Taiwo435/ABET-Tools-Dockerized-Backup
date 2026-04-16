@@ -1246,6 +1246,21 @@ def list_canvas_courses(
     return filtered
 
 
+@app.get("/verify-token")
+def verify_canvas_token(canvas_access_token: Annotated[str, Header()]):
+    """Verify a Canvas access token is valid by hitting /users/self."""
+    fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
+    resp = fetcher.session.get(
+        f"{fetcher.canvas_domain}/api/v1/users/self",
+        timeout=10,
+    )
+    if resp.status_code == 401:
+        raise HTTPException(status_code=401, detail="Token is invalid or expired.")
+    if not resp.ok:
+        raise HTTPException(status_code=resp.status_code, detail=f"Unexpected Canvas response: {resp.status_code}")
+    return {"valid": True}
+
+
 @app.get("/jobs")
 def get_jobs(
     submitted_by_user_id: Annotated[

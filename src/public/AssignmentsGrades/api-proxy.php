@@ -184,35 +184,21 @@ if ($action === 'verify-token'){
         json_response(['success' => false, 'message' => 'No token found']);
     }
 
-    $canvas_endpoint = "https://canvas.asu.edu/api/v1/users/self";
-    $ch = curl_init($canvas_endpoint);
+    $url    = api_base('extraction') . '/verify-token';
+    $result = curl_api($url, 'GET', $_SESSION['canvas_token']);
 
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => ["Authorization: Bearer " . $_SESSION['canvas_token']],
-        CURLOPT_TIMEOUT => 10
-    ]);
-    $body = curl_exec($ch);
-    $httpcode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
-
-    if ($error)
-    {
-        json_response(['success' => false, 'message' => 'cURL error: ' . $error]);
+    if ($result['error']) {
+        json_response(['success' => false, 'message' => 'cURL error: ' . $result['error']]);
     }
-
-    if ($httpcode === 401)
-    {
+    if ($result['status'] === 401) {
         json_response(['success' => false, 'message' => 'Token is invalid or expired']);
     }
-    
-    if ($httpcode !== 200)
-    {
-        json_response(['success' => false, 'message' => 'Unexpected reponse HTTP {$httpcode}']);
+    if ($result['status'] !== 200) {
+        $detail = $result['body']['detail'] ?? "Unexpected response HTTP {$result['status']}";
+        json_response(['success' => false, 'message' => $detail]);
     }
 
-     json_response(['success' => true]);
+    json_response(['success' => true]);
 
 }
 
