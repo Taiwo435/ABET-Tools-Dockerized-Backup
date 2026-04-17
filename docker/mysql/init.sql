@@ -1,14 +1,8 @@
 -- Resets the database every time - DEVELOPMENT ONLY, will remove for production and use migrations instead
-<<<<<<< HEAD
 -- DROP DATABASE IF EXISTS abet_tools;
 -- CREATE DATABASE IF NOT EXISTS abet_tools;
 USE osburn_abet_tools_dev;
 
-=======
--- DROP DATABASE IF EXISTS osburn_abet_tools_dev;
--- CREATE DATABASE IF NOT EXISTS osburn_abet_tools_dev;
-USE osburn_abet_tools_dev; 
->>>>>>> 8cc4fa3fc723f0219ed00c8e237717b0b27e005d
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
