@@ -1,7 +1,12 @@
 <?php
+
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
+
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
+
 // Redirect non-admins away
 if (($_SESSION['user_role'] ?? '') !== 'admin') {
     header('Location: /home');
@@ -14,8 +19,36 @@ $destCourses = $config['dest_courses'];
 
 $success = false;
 $error = '';
+$openaiSuccess = false;
+$openaiError = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// AES-256-CBC encryption using MYSQL_PASS as the secret key
+function encrypt_value(string $value): string {
+    $key = substr(hash('sha256', getenv('MYSQL_PASS')), 0, 32);
+    $iv  = openssl_random_pseudo_bytes(16);
+    $encrypted = openssl_encrypt($value, 'AES-256-CBC', $key, 0, $iv);
+    return base64_encode($iv . base64_decode($encrypted));
+}
+
+function decrypt_value(string $encrypted): string {
+    $key     = substr(hash('sha256', getenv('MYSQL_PASS')), 0, 32);
+    $decoded = base64_decode($encrypted);
+    $iv      = substr($decoded, 0, 16);
+    $data    = substr($decoded, 16);
+    return openssl_decrypt(base64_encode($data), 'AES-256-CBC', $key, 0, $iv) ?: '';
+}
+
+// CSRF validation (uses shared csrf.php library)
+if ($_SERVER['REQUEST_METHOD'] === 'POST')
+{
+    $csrf = post_str('csrf_token');
+    if (!csrf_validate($csrf, 'tool1_proxy')) {
+        json_response(['success' => false, 'message' => 'Invalid or missing CSRF token.'], 403);
+    }
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['save_openai'])) {
     header('Content-Type: application/json');
     $labels = $_POST['labels'] ?? [];
     $ids    = $_POST['ids'] ?? [];
@@ -64,18 +97,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $export .= "        ['label' => '{$label}', 'id' => '{$id}'], \n";
           }
         $export .= "    ]\n];\n";
-
-        if (file_put_contents($configPath, $export) !== false) {
+        sleep(5);
+        if (file_put_contents($configPath, $export, LOCK_EX) !== false) {
             $destCourses = $merged;
             $success = true;
-            $response = ['status' => true, 'courses' => $merged];
+            $csrfToken = csrf_token('tool1_proxy');
+            $response = ['status' => true, 'courses' => $merged, 'csrf_token' => csrf_token('tool1_proxy')];
             echo json_encode($response);
             exit;
         } else {
             $error = 'Failed to save config. Check file permissions.';
-            $response = ['status' => false, 'error' => $error];
+            $response = ['status' => false, 'error' => $error, 'csrf_token' => csrf_token('tool1_proxy')];
             echo json_encode($response);
             exit;
+        }
+    }
+}
+
+// Handle OpenAI key form
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
+
+    $newKey = trim($_POST['openai_api_key'] ?? '');
+    $csrfToken = csrf_token('tool1_proxy');           //Make new token again
+    if (!$newKey) {
+        $openaiError = 'OpenAI API key cannot be empty.';
+    } else {
+        
+        //Check if API Key exists
+        $openai_url = "https://api.openai.com/v1/models"; 
+        $ch = curl_init($openai_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+          "Authorization: Bearer " . $newKey,
+          "Content-Type: application/json"
+        ]);
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if($http_code === 401)
+        {
+          $openaiError = "API Key is not valid";
+        } elseif($http_code === 429) {
+          $openaiError = "Rate Limit exceeded";
+        } 
+        
+        //If key exists, encrypt + update DB
+        elseif($http_code === 200) {
+            try {
+              $encrypted = encrypt_value($newKey);
+              $stmt = db()->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('openai_api_key', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+              $stmt->execute([$encrypted, $encrypted]);
+              $openaiSuccess = true;
+            } catch (Exception $e) {
+                $openaiError = 'Failed to save OpenAI key to database.';
+            }
+        }
+        else {
+          $openaiError = "Unexpected Response. HTTP Code: " . $http_code;
         }
     }
 }
@@ -95,13 +174,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .main-container { max-width: 700px; margin: 40px auto; background: white; border-radius: 8px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     h1 { font-size: 22px; margin-bottom: 6px; }
     p.subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
-    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 40px; }
+    .validation-title { font-size: 15px; margin-bottom: 16px; padding-bottom: 8px;}
     .course-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
     .course-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
     .course-row label { font-size: 13px; color: #555; width: 60px; flex-shrink: 0; }
     .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
     .btn-primary { background: #8B0000; color: white; }
     .btn-primary:hover { background: #a00000; }
+    .btn-secondary {  background: #fdf7f7;  color: var(--asu-maroon);  border: 2px solid black;}
     .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
     .alert-success { background: #e6f4ea; color: #2e7d32; border: 1px solid #a5d6a7; }
     .alert-error { background: #fdecea; color: #c62828; border: 1px solid #ef9a9a; }
@@ -110,6 +191,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .row-header span:first-child { width: 60px; flex: none; }
     #overlay {display: none; top: 0; left: 0; position: fixed; width: 100%; height: 100%; background: black; z-index: 9998;}
     #popup-form { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc;  padding: 20px; z-index: 9999; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); max-height: 100vh; overflow-y: auto;}
+    .openai-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+    .openai-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+    .form-help { font-size: 12px; color: #888; margin-bottom: 12px; }
+    .loading-overlay {  grid-column: 1 / -1;  text-align: center;  padding: 10px;  font-size: 1.1rem;  color: #666;}
+
   </style>
 </head>
 <body>
@@ -121,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="main-container">
   <h1>Admin Panel</h1>
-  <p class="subtitle">Manage destination course IDs for faculty.</p>
+  <p class="subtitle">Manage destination course IDs and application settings.</p>
 
   <?php if ($success): ?>
     <div class="alert alert-success">Destination courses updated successfully.</div>
@@ -140,42 +226,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <span>Course ID</span>
     </div>
     <div id="course-rows">
-  </div>
-
-    <button type="submit" class="btn btn-primary" id="save_changes">Save Changes</button>
-    <br>
-    <div> <p id="success-msg" style="display:none; color:green; font-weight: bold; margin-top: 90px;"> </p> </div>
-  </form>
-</div>
-
-<div id="overlay">
-    <div class="form-popup" id="popup-form">
-      <input type = "checkbox" id="request-verification" style="width: 16px; height: 16px; cursor: pointer;"> Would you like to check if the IDs you plan to overwrite exist?</input>
-      <br>
-      <label id="check-for-overwritten-dest-id" style="display: none;">Select at least 1 ID to overwrite</label>
-      <label style="display: none; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 6px;" id="label-enter-token" >Enter your Canvas Access Token</label>
-      <input type = "text" style="display: none; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 260px; outline: none;" id="input-canvas-token">
-      <button class="btn btn-primary" id="button-submit-token" style="display: none;"> Submit Token </button>
+    </div>
+      <label class = "validation-title"><input type = "checkbox" id="request-verification"> Would you like to verify the above course IDs?</label><br>
+      <label style="display: none; font-size: 14px; font-weight: 600; color: #333; margin-top: 12px; margin-bottom: 6px;" id="label-enter-token" >Enter your Canvas Access Token</label><br>
+      <input type = "password" style="display: none; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 260px; outline: none;" id="input-canvas-token"><br>
+      <button class="btn btn-secondary " id="button-submit-token" style="display: none; margin-bottom: 30px;" type="button"> Submit Token </button>
       <label id="canvas_access_token_warning" style="display: none;"></label>
-      <label id="label-verified-courses" style="display: none;"> Courses Found: </label>
-      <label id="label-unverified-courses" style="display: none;"> Courses not Found: </label>
-      <br><br>
-      <label id="ask-user-confirmation" style = "display: none;">Continue with unverified classes? </label>
-      <button id="confirm-unverified-class" style = "display: none;">Yes</button>
-      <button id="do-not-confirm-unverified-class" style = "display: none;">No</button>
-      <br>
-      <button class="btn btn-primary" id="finish-popup-form"> Finish </button>
-  </div> 
+      <div class="loading-overlay" style = "display: none;"><i class='fas fa-spinner fa-spin'></i> Verifying classes, please wait...</div>
+      <label id="label-verified-courses" style="display: none;" class="alert alert-success"> Courses Found: </label>
+      <label id="label-unverified-courses" style="display: none;" class="alert alert-error"> Courses not Found: </label>
+      <button class="btn btn-primary" id="finish-popup-form" style="display: none;"> Finish </button>
+    <button type="submit" class="btn btn-primary" id="save_changes">Save Changes</button>
+    <br><br>
+    <div class="alert alert-success" style = "display: none;" id="alert-success-destination-id">Course IDs updated successfully. </div>
+    <div class="alert alert-error" style="display: none;" id = "alert-error-destination-id">Failed to update Course IDs. Try Again. </div>
+  </form>
 
+  <div class="section-title">OpenAI API Key</div>
+
+  <?php if ($openaiSuccess): ?>
+    <div class="alert alert-success">OpenAI API key updated successfully.</div>
+  <?php endif; ?>
+  <?php if ($openaiError): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($openaiError, ENT_QUOTES, 'UTF-8') ?></div>
+  <?php endif; ?>
+
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8"), ENT_QUOTES, 'UTF-8' ?>">
+    <div class="openai-row">
+      <input type="password" name="openai_api_key" value="" placeholder="Paste your new OpenAI API key here" required>
+    </div>
+    <div class="form-help">Enter a new key above to replace the existing one. The key is encrypted before being stored.</div>
+    <button type="submit" name="save_openai" class="btn btn-primary">Save OpenAI Key</button>
+  </form>
 
 </div>
 
     <script>
         let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>'
         let current_dest_courses = <?php echo json_encode($destCourses); ?>; 
-        console.log(current_dest_courses)
 
-        //
+        /*
+          Description: Checkbox for ID - request-verification
+
+          If the checkbox is marked, open a form asking the user for a canvas token
+          If the checkbox is unchecked, close the form that asks to submit a canvas token
+        */
         document.getElementById("request-verification").addEventListener("change", async (e) =>
         {
           let label_enter_token = document.getElementById("label-enter-token");
@@ -183,51 +279,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           let submit_canvas_token_button = document.getElementById("button-submit-token");
 
           if(e.target.checked){
-
-            //Fetch list of IDS to overwrite current IDS
-            const overwrittenIDs = checkOverwrite();
-            let warning = document.getElementById("check-for-overwritten-dest-id");
-
-            //If no IDS are found, tell the user they must check at least one box
-            if (overwrittenIDs[0].length === 0) {
-              let checkbox_question = document.getElementById("request-verification")
-              checkbox_question.checked = false; 
-              warning.style.display = "flex"; 
-              submit_canvas_token_button.style.display = "none";
-              return; 
-            }
-
-            //If the user decides to overwrite the ID, add the UI to request an access token
-            warning.style.display = "none";
+            
             label_enter_token.style.display = "flex";
             input_canvas_access_token.style.display = "flex";
             submit_canvas_token_button.style.display = "flex";
           }
           else
           {
+            const success_msg = document.getElementById('alert-success-destination-id');
+            const errors_msg = document.getElementById('alert-error-destination-id');
+            success_msg.style.display = 
             label_enter_token.style.display = "none";
             input_canvas_access_token.style.display = "none";
+            submit_canvas_token_button.style.display = "none";
           }
         });
 
-        //When Pressed, it will Verify access token + checking if classes exist
+        /*
+            Handles user's Canvas token submission when button is called
+        */
         document.getElementById("button-submit-token").addEventListener("click", async (e) =>
         {
           //Fetch canvas token from input
+          e.preventDefault();
           let input_canvas_access_token = document.getElementById("input-canvas-token");
-          const canvas_token = input_canvas_access_token.value.trim();
+          let label_verified_courses = document.getElementById("label-verified-courses");
+          let label_unverified_courses = document.getElementById("label-unverified-courses");
+          const canvas_token = input_canvas_access_token.value.trim(); // Fetch Canvas Token
           
-          //If the token is an empty string, give the user a warning text
-          const warning = document.getElementById("canvas_access_token_warning");
+          //If token DNE, return an error
           if (canvas_token === "")
           {
-            warning.textContent = "Please add your access token here";
-            warning.style.display = "flex";
+            label_unverified_courses.innerHTML = "Please add your access token here";
+            label_unverified_courses.style.display = "flex";
             return;
           } 
 
           try {
-            //Store Canvas Token Before Validating it
+            //Store Canvas Token in Session before Validating it
             const storeCredentials = new FormData();
             storeCredentials.append('action', 'store-credentials');
             storeCredentials.append('canvas_token', canvas_token);
@@ -238,8 +327,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (storeJson.next_csrf)  csrfToken = storeJson.next_csrf;
             if (!storeJson.success)
             {
-              warning.textContent = "Failed to store token";
-              warning.style.display = "flex";
+              if (storeRes.status === 403)
+              {
+                label_unverified_courses.innerHTML = storeJson.message;
+                label_unverified_courses.style.display = "flex";
+              } else {
+                label_unverified_courses.innerHTML = "Failed to store token; Try Again";
+                label_unverified_courses.style.display = "flex";
+              }
               return;
             }
 
@@ -253,64 +348,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (storeJson.next_csrf)  csrfToken = storeJson.next_csrf;
             if (!storeJson.success)
             {
-              warning.textContent = "Token not Verified";
-              warning.style.display = "flex";
+              label_unverified_courses.innerHTML = "Token not Verified";
+              label_unverified_courses.style.display = "flex";
               return;
             }
             else{
-              warning.textContent = "Token Verified";
+              const loadingOverlay = document.querySelector(".loading-overlay");
+              label_unverified_courses.innerHTML = "Courses not Found: ";
+              label_verified_courses.innerHTML = "Courses Found: ";
               
               //Fetch list of IDS to overwrite current IDS
               const overwrittenIDs = checkOverwrite();
               let string_verified_courses = "";
               let string_unverified_courses = "";
+              loadingOverlay.style.display = "flex";
+
+              //Verify each course ID that the user plans to overwrite
               for (let i = 0; i < overwrittenIDs[1].length; i++)
               {
+                  //Call POST request
                   const storeID = new FormData();
                   storeID.append('action', 'verify-course');
                   storeID.append('csrf_token', csrfToken);
                   storeID.append('course_id', overwrittenIDs[1][i])
                   storeRes = await fetch('api-proxy.php', {method: 'POST', body: storeID});
                   storeJson = await storeRes.json()
-                  console.log(storeJson);
                   if (storeJson.next_csrf) { csrfToken = storeJson.next_csrf;}
-                  if (storeJson.success)
-                  {
-                      string_verified_courses += "\n" + overwrittenIDs[0][i] + ": " + overwrittenIDs[1][i] ;
+                  if (storeJson.success) {
+                      string_verified_courses += "<br>" + overwrittenIDs[0][i] + ": " + overwrittenIDs[1][i] ;
                   }
                   else { 
-                      string_unverified_courses += "\n" + overwrittenIDs[0][i] + ": " + overwrittenIDs[1][i];
+                      string_unverified_courses += "<br>" + overwrittenIDs[0][i] + ": " + overwrittenIDs[1][i];
                   } 
-              }
-              let label_verified_courses = document.getElementById("label-verified-courses");
-              
+              } 
+
+              //Remove Loading Screen
+              loadingOverlay.style.display = "none";
+
+              //Add Message Button showing Successfully verified IDs and non-successful course IDs
               if (string_verified_courses !== "")
               {
                 label_verified_courses.style.display = "flex";
-                label_verified_courses.textContent += string_verified_courses;
+                label_verified_courses.innerHTML += string_verified_courses + "<br>";
               }
-              
-              let label_unverified_courses = document.getElementById("label-unverified-courses");
               if (string_unverified_courses !== "")
               {
-                console.log(string_unverified_courses)
                 label_unverified_courses.style.display = "flex";
-                label_unverified_courses.textContent += string_unverified_courses;
+                label_unverified_courses.innerHTML += string_unverified_courses + "<br>";
               }
-              
-
-              
-
             }
-            
-
           } catch (err)
           {
-
-          } finally {
-
-          }
-
+              label_unverified_courses.innerHTML = "Failed to store token; Try Again";
+              label_unverified_courses.style.display = "flex";
+          } 
         });
 
         //If admin decides to overwrite the current IDs, then add the newly submitted ID (and respective label) to a list
@@ -318,130 +409,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         {
           const labels = [];
           const ids = [];
-          const rows = document.querySelectorAll('.form-course-row');
+          const rows = document.querySelectorAll('.course-row');
 
           rows.forEach(row => {
-            const checkbox = row.querySelector('input[type="checkbox"]');
-            if(checkbox.checked)
-            {
-              const span = row.querySelector('span').textContent;
-              const label = span.split(':')[0].trim();
-              const submittedId = span.split('Submitted ID:')[1].split('|')[0].trim();
-              labels.push(label);
-              ids.push(submittedId);
-            }
+            const span = row.querySelector('span').textContent;
+            const label = row.querySelector('input[name="labels[]"]')?.value.trim();
+            const submittedId = row.querySelector('input[name="ids[]"]')?.value.trim();
+            labels.push(label);
+            ids.push(submittedId);
           });
-          console.log(labels)
           return [labels, ids];
         }
 
-        //Create a pop-up window to ensure the user wants to overwrite current id
-        function popUpWindow(majorToDestinationCourseId)
-        {
-          const popup = document.getElementById('popup-form');
-          for (const course of current_dest_courses)
-          {
-            const label = course['label'];
-            const destinationCourseId = majorToDestinationCourseId[label].trim();
-            if (destinationCourseId !== course['id'])
-            {
-              const form = document.createElement('div');
-              form.className = 'form-course-row';
-              form.style = "display: flex; align-items: center; gap: 24px; padding: 8px 0; border-bottom:1px solid #eee;"
-              const row = document.createElement('div');
-              row.innerHTML = `
-              <input type = "checkbox" style="width: 16px; height: 16px; cursor: pointer;"> OverWrite - 
-              <span style="flex:1";>
-                <strong>${label}: </strong>
-                <span style=" font-size:1em; margin-left: 6px;">
-                  Submitted ID: ${destinationCourseId} | <span style="color: #c0392b;"> Current ID: ${course.id} </span>
-                </span>
-              </span>
-              `;
-              form.appendChild(row);
-              popup.insertBefore(form, popup.firstChild);
-            }
-          }
-          document.getElementById('overlay').style.display = 'block';
-          popup.style.display = 'block';
-        }
-
-        //Once the popup form is submitted, overwrite IDs
-        document.getElementById('finish-popup-form').addEventListener("click", async(e) => {
-          const label_unverified_courses = document.getElementById("label-unverified-courses")
-          console.log(label_unverified_courses.textContent.trim())
-          if (label_unverified_courses.textContent.trim() !== "Courses not Found:")
-          {
-            const label_unconfirmed_classes = document.getElementById("ask-user-confirmation");
-            label_unconfirmed_classes.style.display = "flex";
-      <button id="confirm-unverified-class" style = "display: none;">Yes</button>
-      <button id="do-not-confirm-unverified-class" style = "display: none;">No</button>
-
-            return;
-          }
-
-          const [labels, ids] = checkOverwrite();  
-          
-          //Remove Popup & Delete elements inside
-          document.getElementById('overlay').style.display = 'none';
-          const popup = document.getElementById('popup-form');
-          popup.style.display = 'none';
-          popup.querySelectorAll('.form-course-row').forEach(i => i.remove());
-
-          const storeBody = new FormData();
-          labels.forEach(label => storeBody.append('labels[]', label));
-          ids.forEach(id => storeBody.append('ids[]', id));
-          storeBody.append('csrf_token', csrfToken);
-
-          try{
-            const storeRes = await fetch('admin.php', {method: 'POST', body: storeBody});
-            const storeData = await storeRes.json();
-            if (storeData.status)
-            {
-              current_dest_courses = storeData.courses;
-              const success_msg = document.getElementById('success-msg');
-              success_msg.textContent = "Changes added successfully";
-              success_msg.style.display = "inline";
-            }
-          } catch(err)
-          {
-
-          } finally {
-
-          }
-
-        });
-
-
-        //Update Destination Course Ids
+        /*
+          Once the user has pressed the button "Save Changes"; Update the course IDs into destination-courses.php.
+        */
         const btn_save_changes = document.getElementById('course-form-container');
         btn_save_changes.addEventListener("submit", async (e) => {
           e.preventDefault();
+
           let majorToDestinationCourseId = {};
           let list_of_submitted_ids = [];
-
           const labels = document.querySelectorAll('[name="labels[]"]');
           const ids = document.querySelectorAll('[name="ids[]"]');
 
+          //Fetch the current Label and ID from the UI. Assign values into a Object and a List. 
           for(let i = 0; i < labels.length; i++)
           {
-            //Create a dictionary to match the major to its respective course id
             majorToDestinationCourseId[labels[i].value] = ids[i].value;  
             list_of_submitted_ids.push({'label': labels[i].value, 'id': ids[i].value});
           }
 
-          //Check if the submitted IDs already exist in destination-courses.php; if it does, do nothing
+          //If Submitted IDs are the same as the currently stored IDs, simply update the UI with a successful message
           if (JSON.stringify(current_dest_courses) === JSON.stringify(list_of_submitted_ids))
           { 
             //IDs already exist, do nothing
-            const success_msg = document.getElementById('success-msg');
-            success_msg.textContent = "Changes added successfully";
+            const success_msg = document.getElementById('alert-success-destination-id');
             success_msg.style.display = "inline";
           }
           else
           {
-            //Create pop-window asking if they want to replace current course-id
-            popUpWindow(majorToDestinationCourseId)
+            //Fetch list of Labels & IDs from text input
+            const [labels, ids] = checkOverwrite();
+            const storeBody = new FormData();
+            labels.forEach(label => storeBody.append('labels[]', label));
+            ids.forEach(id => storeBody.append('ids[]', id));
+            storeBody.append('csrf_token', csrfToken);
+
+            const success_msg = document.getElementById('alert-success-destination-id');
+            const errors_msg = document.getElementById('alert-error-destination-id');
+            try{
+
+              //Update ID into destination-courses.php; if successful, show success response otherwise show error response
+              const storeRes = await fetch('admin.php', {method: 'POST', body: storeBody});
+              const storeData = await storeRes.json();
+              if (storeData.status)
+              {
+                current_dest_courses = storeData.courses;
+                errors_msg.style.display = "none";
+                success_msg.style.display = "inline";
+              }
+              else {
+                success_msg.style.display = "none";
+                errors_msg.style.display = "inline";
+              }
+            } catch(err) {
+                success_msg.style.display = "none";
+                errors_msg.style.display = "inline";
+            } 
           }
         });
 
@@ -467,8 +502,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>`
           ).join('')
         }
-        fetchInitialCourseIds()
-
+        fetchInitialCourseIds();
       </script>
       
 
