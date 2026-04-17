@@ -1,10 +1,32 @@
 from typing import Any, Dict, List, Optional
 
 import getElectiveCourses
+from report.data import criterion_curriculum_data
 
 
 def _required_for_display(required_for: str) -> str:
     return "CbS" if required_for == "Cbs" else ""
+
+
+def _course_type_display(course_type: Any) -> str:
+    value = str(course_type or "").strip()
+    lowered = value.lower()
+    if lowered in {"r", "required"}:
+        return "R"
+    if lowered in {"e", "elective"}:
+        return "E"
+    if lowered in {"se", "selected elective", "selected_elective", "selected-elective"}:
+        return "SE"
+    return value
+
+
+def _hours_display(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (int, float)) and value == 0:
+        return ""
+    text = str(value).strip()
+    return "" if text in {"0", "0.0", "0.00"} else text
 
 
 def _coerce_tags(value: Any) -> List[str]:
@@ -24,6 +46,75 @@ def _coerce_tags(value: Any) -> List[str]:
 
 
 def build(questionnaire):
+    curriculum_error: Optional[str] = None
+    try:
+        curriculum_db_rows = criterion_curriculum_data.get_data(questionnaire)
+    except Exception as e:
+        curriculum_db_rows = []
+        curriculum_error = str(e)
+
+    curriculum_rows: List[Dict[str, Any]] = []
+    for row in curriculum_db_rows:
+        if not isinstance(row, dict):
+            continue
+        curriculum_rows.append(
+            {
+                "program_id": row.get("program_id"),
+                "concentration": row.get("concentration"),
+                "semester_year": row.get("semester_year"),
+                "course": row.get("course"),
+                "course_type": row.get("course_type"),
+                "credit_hours_math_science": row.get("credit_hours_math_science"),
+                "credit_hours_engineering": row.get("credit_hours_engineering"),
+                "credit_hours_other": row.get("credit_hours_other"),
+                "last_two_terms": row.get("last_two_terms"),
+                "max_section_enrollment": row.get("max_section_enrollment"),
+            }
+        )
+
+    curriculum_semesters_map: Dict[str, List[Dict[str, Any]]] = {}
+    for row in curriculum_rows:
+        semester = str(row.get("semester_year") or "").strip() or "Unspecified"
+        item = {
+            "program_id": row.get("program_id"),
+            "concentration": row.get("concentration"),
+            "semester_year": row.get("semester_year"),
+            "course": row.get("course"),
+            "course_type": row.get("course_type"),
+            "course_type_display": _course_type_display(row.get("course_type")),
+            "credit_hours_math_science": row.get("credit_hours_math_science"),
+            "credit_hours_math_science_display": _hours_display(row.get("credit_hours_math_science")),
+            "credit_hours_engineering": row.get("credit_hours_engineering"),
+            "credit_hours_engineering_display": _hours_display(row.get("credit_hours_engineering")),
+            "credit_hours_other": row.get("credit_hours_other"),
+            "credit_hours_other_display": _hours_display(row.get("credit_hours_other")),
+            "last_two_terms": row.get("last_two_terms"),
+            "max_section_enrollment": row.get("max_section_enrollment"),
+        }
+        curriculum_semesters_map.setdefault(semester, []).append(item)
+
+    curriculum_semesters = [
+        {"semester": semester, "courses": courses}
+        for semester, courses in curriculum_semesters_map.items()
+    ]
+
+    curriculum_table_rows: List[Dict[str, Any]] = []
+    for semester_group in curriculum_semesters:
+        curriculum_table_rows.append(
+            {
+                "is_semester_header": True,
+                "semester": semester_group["semester"],
+            }
+        )
+        for course_row in semester_group["courses"]:
+            curriculum_table_rows.append(
+                {
+                    "is_semester_header": False,
+                    "semester": semester_group["semester"],
+                    **course_row,
+                }
+            )
+
     year_raw = getattr(questionnaire, "year", 0) or 0
     try:
         year = int(year_raw)
@@ -90,6 +181,12 @@ def build(questionnaire):
             cyber_elective_courses.append(row)
 
     return {
+        # Raw DB rows from the `curriculum` table (requested).
+        "curriculum_rows": curriculum_rows,
+        "curriculum_semesters": curriculum_semesters,
+        "curriculum_table_rows": curriculum_table_rows,
+        "curriculum_error": curriculum_error,
+
         "cse_elective_courses": rows,
         "cse_technical_electives": cse_technical_electives,
         "cyber_direct_required_courses": cyber_direct_required_courses,
