@@ -41,7 +41,7 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
-        - { path: '^/test.php', roles: ROLE_USER }
+        - { path: '^/tool/assignmentsgrades*', roles: ROLE_ASSIGNMENTS_GRADES }
 
 when@test:
     security:
