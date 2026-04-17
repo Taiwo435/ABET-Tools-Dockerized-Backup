@@ -1,3 +1,12 @@
+{# 
+
+README
+
+editing this will NOT reflect (yet) on any page. 
+Edit the base.html.twig to achieve results
+
+placeholder #}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,11 +38,13 @@
 <body>
 
 <header>
-    <div class="logo-wrapper">
-        <img src="https://cms.asuonline.asu.edu/sites/g/files/litvpz1971/files/asu-vertical-logo.png" alt="Arizona State University logo" class="asu-logo">
-        <span class="logo-area">Arizona State University</span>
-        <span class="logo-sub">Enterprise Technology</span>
-    </div>
+    <a href="{{ path('app_homepage') }}">
+        <div class="logo-wrapper">
+            <img src="https://cms.asuonline.asu.edu/sites/g/files/litvpz1971/files/asu-vertical-logo.png" alt="Arizona State University logo" class="asu-logo">
+            <span class="logo-area">Arizona State University</span>
+            <span class="logo-sub">Enterprise Technology!!</span>
+        </div>
+    </a>
     <div class="header-right-alligned">
     <a class="home-link" href="/home"><img class="home-icon" src="/assets/img/home-icon.svg" alt="home page"></a>
     <div class="auth-nav">
