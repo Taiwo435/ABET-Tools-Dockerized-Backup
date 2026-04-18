@@ -1,22 +1,18 @@
 {
   "title": "Assessment and Continuous Assessment Plan",
-  "name": "assessment_plan",
+  "name": "assessmentPlan",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
-      "type": "section-label",
-      "label": "Role and Responsibilities"
-    },
-    {
       "type": "expandable-grid",
       "name": "roles_and_responsibilities",
-      "label": "Role and Responsibilities",
+      "label": "Roles and Responsibilities",
       "columns": [
         {
           "name": "role",
           "label": "Role",
-          "type": "text-field"
+          "type": "text"
         },
         {
           "name": "responsibilities",
@@ -26,14 +22,6 @@
       ],
       "maxRows": 20,
       "required": false
-    },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Constituency Input"
     },
     {
       "type": "expandable-grid",
@@ -52,6 +40,64 @@
         }
       ],
       "maxRows": 20,
+      "required": false
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Assessment Details"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "assessment_details",
+      "columns": [
+        {
+          "type": "text",
+          "name": "course_number",
+          "label": "Course Number"
+        },
+        {
+          "type": "text",
+          "name": "so_1_details",
+          "label": "Student Outcome 1"
+        },
+        {
+          "type": "text",
+          "name": "so_2_details",
+          "label": "Student Outcome 2"
+        },
+        {
+          "type": "text",
+          "name": "so_3_details",
+          "label": "Student Outcome 3"
+        },
+        {
+          "type": "text",
+          "name": "so_4_details",
+          "label": "Student Outcome 4"
+        },
+        {
+          "type": "text",
+          "name": "so_5_details",
+          "label": "Student Outcome 5"
+        },
+        {
+          "type": "text",
+          "name": "so_6_details",
+          "label": "Student Outcome 6"
+        },
+        {
+          "type": "text",
+          "name": "so_7_details",
+          "label": "Student Outcome 7"
+        }
+      ],
+      "maxRows": 30,
+      "allowIncompleteRows": true,
       "required": false
     }
   ]

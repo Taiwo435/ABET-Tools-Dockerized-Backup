@@ -1,11 +1,12 @@
 <?php
-
+// Need to implement DB tables still
 function handleSaveError($message) {
     $_SESSION['coordinator_form_error_flag'] = true;
     $_SESSION['coordinator_form_old'] = $_POST;
     $_SESSION['coordinator_form_error_message'] = $message;
-    
-    $url = '/coordinator-form/edit/?page=' . $_POST['current_page_number'];
+
+    $pageNumber = $_POST['current_page_number'] ?? 1;
+    $url = '/coordinator-form/edit/?page=' . $pageNumber;
     header('Location: ' . $url);
     die();
 }
@@ -18,18 +19,19 @@ unset($jsonData['next_page_number']);
 $pageName = $_POST['page_name'] ?? 'form_not_found';
 
 switch ($pageName) {
+case 'programSelect':
 case 'background':
 case 'educationalObjectives':
 case 'generalCriteria':
 case 'studentOutcomes':
-case 'student_outcomes':
-case 'assessment_plan':
-case 'continuous_improvement':
-case 'cse_elective_courses':
-case 'appendix_c_equipment':
-case 'computer_resources':
-case 'faculty_qualifications':
-case 'program_enrollment_and_degree_data':
+case 'assessmentPlan':
+case 'continuousImprovement':
+case 'curriculum':
+case 'equipment':
+case 'facilities':
+case 'faculty':
+case 'institutionalSummary':
+case 'staffing':
     break;
 
 default:

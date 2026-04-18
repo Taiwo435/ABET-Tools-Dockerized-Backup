@@ -19,9 +19,9 @@ function handleSaveError($message, $loggedMessage) {
     
     $url = '/faculty-form/edit/?page=' . $_POST['current_page_number'];
     header('Location: ' . $url);
-
-    $loggedMessageFull = "FACULTY FORM SAVE ERROR FOR USER WITH ID " . $_SESSION['user_id'] . ": " . $loggedMessage;
-    error_log($loggedMessageFull);
+    
+    $loggedMessageFull = "FACULTY FORM SAVE ERROR FOR USER WITH ID " . $_SESSION['user_id'] . ": " . $loggedMessage . " | ERROR LOGGED AT: " . date("Y-m-d H:i:s T") . "\n";
+    error_log($loggedMessageFull, 3, getenv('ABET_PRIVATE_DIR') . "/logs/faculty_form_error.log");
     die();
 }
 
@@ -69,8 +69,7 @@ function getProfessorWorkloadJson($asurite) {
 $pdo = db();
 
 // A generic message to show to the user in case of unforseen errors.
-$genericErrorMessage = "Something went wrong while saving the form.";
-
+$genericErrorMessage = "Something went wrong while saving the form. Please contact sdosburn@asu.edu if the problem persists.";
 
 $jsonData = $_POST;
 $jsonString = json_encode($jsonData, JSON_PRETTY_PRINT);

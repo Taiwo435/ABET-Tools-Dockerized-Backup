@@ -1,6 +1,6 @@
 {
   "title": "Institutional Summary",
-  "name": "program_enrollment_and_degree_data",
+  "name": "institutionalSummary",
   "action": "submit.php",
   "method": "POST",
   "fields": [
@@ -8,7 +8,6 @@
       "type": "expandable-grid",
       "name": "program_enrollment_degree_data",
       "label": "Program Enrollment and Degree Data",
-      "description": "Enter one row for each academic year and enrollment status combination (FT or PT).",
       "columns": [
         {
           "name": "academic_year",
@@ -17,39 +16,39 @@
         },
         {
           "name": "enrollment_status",
-          "label": "Enrollment Status (FT/PT)",
+          "label": "Enrollment Status",
           "type": "select",
           "options": {
-            "FT": "FT",
-            "PT": "PT"
+            "enrollment_ft": "Full Time Students (FT)",
+            "enrollment_pt": "Part Time Students (PT)"
           }
         },
         {
-          "name": "first_year",
+          "name": "enrollment_1st",
           "label": "1st",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "second_year",
+          "name": "enrollment_2nd",
           "label": "2nd",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "third_year",
+          "name": "enrollment_3rd",
           "label": "3rd",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "fourth_year",
+          "name": "enrollment_4th",
           "label": "4th",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "fifth_year",
+          "name": "enrollment_5th",
           "label": "5th",
           "type": "text",
           "numerical": true
@@ -67,25 +66,25 @@
           "numerical": true
         },
         {
-          "name": "associates",
+          "name": "degrees_associates",
           "label": "Associates",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "bachelors",
+          "name": "degrees_bachelors",
           "label": "Bachelors",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "masters",
+          "name": "degrees_masters",
           "label": "Masters",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "doctorates",
+          "name": "degrees_doctorates",
           "label": "Doctorates",
           "type": "text",
           "numerical": true
@@ -94,43 +93,30 @@
       "maxRows": 20,
       "required": false
     },
-    
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Personnel"
-    },
     {
       "type": "expandable-grid",
       "name": "personnel",
       "label": "Personnel",
       "columns": [
         {
+          "type": "text",
           "name": "category",
-          "label": "Personnel Category",
-          "type": "text"
+          "label": "Personnel Category"
         },
         {
-          "name": "subcategory",
-          "label": "Subcategory",
-          "type": "text"
+          "type": "text",
+          "name": "headcount_ft",
+          "label": "Full-Time Head Count"
         },
         {
-          "name": "head_count",
-          "label": "Head Count",
-          "type": "text-field"
+          "type": "text",
+          "name": "headcount_pt",
+          "label": "Part-Time Head Count"
         },
         {
+          "type": "text",
           "name": "fte",
-          "label": "FTE",
-          "type": "text-field"
-        },
-        {
-          "name": "ft_pt",
-          "label": "FT/PT",
-          "type": "text-field"
+          "label": "Full-Time Equivalent"
         }
       ],
       "maxRows": 30,

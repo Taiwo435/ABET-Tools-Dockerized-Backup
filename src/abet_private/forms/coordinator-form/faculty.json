@@ -1,0 +1,76 @@
+{
+  "title": "Faculty",
+  "name": "faculty",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Counts of Faculty in the Program"
+    },
+
+    {
+      "type": "text",
+      "name": "num_professors",
+      "label": "# of Professors",
+      "numerical": true
+    },
+    {
+      "type": "text",
+      "name": "num_associate_professors",
+      "label": "# of Associate Professors",
+      "numerical": true
+    },
+    {
+      "type": "text",
+      "name": "num_assistant_professors",
+      "label": "# of Assistant Professors",
+      "numerical": true
+    },
+    {
+      "type": "text",
+      "name": "num_lecturerers_pop",
+      "label": "# of Lecturerers and Professors of Practice (PoP)",
+      "numerical": true
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "List of Faculty in the Program"
+    },
+
+    {
+      "type": "expandable-grid",
+      "name": "faculty_list",
+      "columns": [
+        {
+          "name": "faculty_name",
+          "label": "Faculty Member",
+          "type": "text"
+        },
+        {
+          "name": "faculty_rank",
+          "label": "Rank",
+          "type": "select",
+          "options": {
+                "P": "P- Professor",
+                "ASC": "ASC- Associate Professor",
+                "AST": "AST- Assistant Professor",
+                "I": "I- Instructor",
+                "A": "A- Adjunct",
+                "O": "O- Other"
+          }
+        },
+        {
+          "name": "areas_of_interest",
+          "label": "Areas of Interest",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

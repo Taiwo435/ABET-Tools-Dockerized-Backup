@@ -1,6 +1,6 @@
 {
   "title": "Continuous Improvement",
-  "name": "continuous_improvement",
+  "name": "continuousImprovement",
   "action": "submit.php",
   "method": "POST",
   "fields": [
@@ -9,41 +9,235 @@
       "label": "Improvement of Hardware Sequence Consideration"
     },
     {
-      "type": "expandable-grid",
-      "name": "hardware_sequence_consideration",
-      "label": "Improvement of Hardware Sequence Consideration",
-      "columns": [
-        {
-          "name": "sources",
-          "label": "Sources",
-          "type": "text-field"
-        },
-        {
-          "name": "problem_analysis",
-          "label": "Problem Analysis",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
+      "type": "text-field",
+      "name": "hardware_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "hardware_problem_analysis",
+      "label": "Problem Analysis"
     },
 
     {
       "type": "section-break"
     },
+
     {
       "type": "section-label",
-      "label": "Improvement Based on Semester and Year Assessment Outcome"
+      "label": "Improvement based on Fall 2024 assessment outcome"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_problem_analysis",
+      "label": "Problem Analysis"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_actions_plans",
+      "label": "Actions/Plans"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_status_actions",
+      "label": "Status of Actions"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Improvement based on Spring 2025 assessment outcome"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2025_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2025_problem_analysis",
+      "label": "Problem Analysis"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2025_actions_plans",
+      "label": "Actions/Plans"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2025_status_actions",
+      "label": "Status of Actions"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Improvement based on Fall 2025 assessment outcome"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2025_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2025_problem_analysis",
+      "label": "Problem Analysis"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2025_actions_plans",
+      "label": "Actions/Plans"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2025_status_actions",
+      "label": "Status of Actions"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Improvement based on Spring 2026 assessment outcome"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2026_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2026_problem_analysis",
+      "label": "Problem Analysis"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2026_actions_plans",
+      "label": "Actions/Plans"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_spring_2026_status_actions",
+      "label": "Status of Actions"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Program Educational Objectives Update"
+    },
+    {
+      "type": "text-field",
+      "name": "peo_update_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "peo_update_problem_analysis",
+      "label": "Problem Analysis"
+    },
+    {
+      "type": "text-field",
+      "name": "peo_update_actions_plans",
+      "label": "Actions/Plans"
+    },
+    {
+      "type": "text-field",
+      "name": "peo_update_result",
+      "label": "Status of Actions"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "New Course Development"
+    },
+    {
+      "type": "text-field",
+      "name": "new_course_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "new_course_problem_analysis",
+      "label": "Problem Analysis"
+    },
+    {
+      "type": "text-field",
+      "name": "new_course_actions_plans",
+      "label": "Actions/Plans"
+    },
+    {
+      "type": "text-field",
+      "name": "new_course_status_actions",
+      "label": "Status of Actions"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Improvement based on Fall 2024 assessment outcome"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_source",
+      "label": "Sources"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_problem_analysis",
+      "label": "Problem Analysis"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_actions_plans",
+      "label": "Actions/Plans"
+    },
+    {
+      "type": "text-field",
+      "name": "semester_fall_2024_status_actions",
+      "label": "Status of Actions"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Degree Program Concentration Updates",
+      "description": "Use one row per degree concentration."
     },
     {
       "type": "expandable-grid",
-      "name": "semester_year_assessment_improvements",
-      "label": "Improvement based on (Semester and Year) assessment outcome",
-      "description": "Add one row per semester and year entry.",
+      "name": "concentration_update",
       "columns": [
         {
-          "name": "semester_year",
-          "label": "Semester and Year",
+          "name": "concentration_name",
+          "label": "Concentration Name",
           "type": "text"
         },
         {
@@ -58,32 +252,37 @@
         },
         {
           "name": "actions_plans",
-          "label": "Actions / Plans",
+          "label": "Actions/Plans",
           "type": "text-field"
         },
         {
-          "name": "status_of_actions",
+          "name": "status_actions",
           "label": "Status of Actions",
           "type": "text-field"
         }
       ],
-      "maxRows": 20,
+      "maxRows": 10,
       "required": false
     },
 
     {
       "type": "section-break"
     },
+
     {
       "type": "section-label",
-      "label": "Program Educational Objectives Update"
+      "label": "Degree Program Concentration Flowchart Updates",
+      "description": "Use one row per degree concentration."
     },
     {
       "type": "expandable-grid",
-      "name": "program_educational_objectives_update",
-      "label": "(Program) Program educational objectives update",
-      "description": "Program name may be rendered dynamically based on the active program.",
+      "name": "concentration_flowchart",
       "columns": [
+        {
+          "name": "concentration_name",
+          "label": "Concentration Name",
+          "type": "text"
+        },
         {
           "name": "source",
           "label": "Source",
@@ -95,13 +294,13 @@
           "type": "text-field"
         },
         {
-          "name": "actions",
-          "label": "Actions",
+          "name": "actions_plans",
+          "label": "Actions/Plans",
           "type": "text-field"
         },
         {
-          "name": "result",
-          "label": "Result",
+          "name": "status_actions",
+          "label": "Status of Actions",
           "type": "text-field"
         }
       ],
@@ -112,66 +311,24 @@
     {
       "type": "section-break"
     },
-    {
-      "type": "section-label",
-      "label": "New Course Development"
-    },
-    {
-      "type": "expandable-grid",
-      "name": "new_course_development",
-      "label": "New Course Development",
-      "columns": [
-        {
-          "name": "sources",
-          "label": "Sources",
-          "type": "text-field"
-        },
-        {
-          "name": "problem_analysis",
-          "label": "Problem Analysis",
-          "type": "text-field"
-        },
-        {
-          "name": "actions_plans",
-          "label": "Actions / Plans",
-          "type": "text-field"
-        },
-        {
-          "name": "status",
-          "label": "Status",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
-    },
 
     {
-      "type": "section-break"
-    },
-    {
       "type": "section-label",
-      "label": "Concentration Update"
-    },
-    {
-      "type": "select",
-      "name": "has_concentration_updates",
-      "label": "Have updates happened to a related degree concentration?",
-      "required": true,
-      "options": {
-        "yes": "Yes",
-        "no": "No"
-      }
+      "label": "Other Improvements",
+      "description": "Use these rows for any other improvements/changes that do not fit in the above categories."
     },
     {
       "type": "expandable-grid",
-      "name": "concentration_update",
-      "label": "(Degree Program) concentration update",
-      "description": "Complete this table only if concentration updates have occurred.",
+      "name": "adhoc",
       "columns": [
         {
-          "name": "sources",
-          "label": "Sources",
+          "name": "improvement_description",
+          "label": "Brief Description of Improvement",
+          "type": "text"
+        },
+        {
+          "name": "source",
+          "label": "Source",
           "type": "text-field"
         },
         {
@@ -181,113 +338,18 @@
         },
         {
           "name": "actions_plans",
-          "label": "Actions / Plans",
+          "label": "Actions/Plans",
           "type": "text-field"
         },
         {
-          "name": "status",
-          "label": "Status",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
-    },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Concentration Flowchart Update"
-    },
-    {
-      "type": "select",
-      "name": "has_concentration_flowchart_updates",
-      "label": "Have updates happened to a related degree concentration flowchart?",
-      "required": true,
-      "options": {
-        "yes": "Yes",
-        "no": "No"
-      }
-    },
-    {
-      "type": "expandable-grid",
-      "name": "concentration_flowchart_update",
-      "label": "(Degree Program) concentration flowchart update",
-      "description": "Complete this table only if concentration flowchart updates have occurred.",
-      "columns": [
-        {
-          "name": "sources",
-          "label": "Sources",
-          "type": "text-field"
-        },
-        {
-          "name": "problem_analysis",
-          "label": "Problem Analysis",
-          "type": "text-field"
-        },
-        {
-          "name": "actions_plans",
-          "label": "Actions / Plans",
-          "type": "text-field"
-        },
-        {
-          "name": "status",
-          "label": "Status",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
-    },
-
-    {
-      "type": "section-break"
-    },
-    {
-      "type": "section-label",
-      "label": "Ad Hoc Changes"
-    },
-    {
-      "type": "select",
-      "name": "has_adhoc_changes",
-      "label": "Have changes happened to a degree program that are not covered above?",
-      "required": true,
-      "options": {
-        "yes": "Yes",
-        "no": "No"
-      }
-    },
-    {
-      "type": "expandable-grid",
-      "name": "adhoc_changes",
-      "label": "ADHOC Table for anything else not covered above",
-      "description": "Complete this table only if additional changes have occurred.",
-      "columns": [
-        {
-          "name": "sources",
-          "label": "Sources",
-          "type": "text-field"
-        },
-        {
-          "name": "problem_analysis",
-          "label": "Problem Analysis",
-          "type": "text-field"
-        },
-        {
-          "name": "actions_plans",
-          "label": "Actions / Plans",
-          "type": "text-field"
-        },
-        {
-          "name": "status",
-          "label": "Status",
+          "name": "status_actions",
+          "label": "Status of Actions",
           "type": "text-field"
         }
       ],
       "maxRows": 10,
       "required": false
     }
+    
   ]
 }

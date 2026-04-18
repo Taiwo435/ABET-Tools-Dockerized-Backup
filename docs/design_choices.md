@@ -30,3 +30,32 @@ Our current database design currently has a SINGLE sql file that has database ch
 Therefore, we are using **migrations** which allow people to add their own changes to the database. It's a little more than just writing plain SQL, but hopefully it will let me automate deployment finally.
 
 [Tutorial I used](https://www.youtube.com/watch?v=peXlH04Hecc)
+
+## Symfony
+
+Symfony has built-in security, ORM, and everything.
+I'm using Symfony 7.4 which is compatible with our current PHP version.
+It is also a LTS version, meaning it will be supported much longer than the most recent version (8.0).
+
+### Why Symfony??
+
+I chose Symfony over Laravel because symfony is VERY modular.
+It allows us to migrate slowly into the symfony framework, which I really appreciate.
+As an added bonus, their organization was very similar to ours, which I also love.
+
+Their documentation is so good, they even give you guidelines on how to migrate to symfony
+
+[Migrating To Symfony](https://symfony.com/doc/current/migration.html)
+
+### My steps so far
+
+Steps for docs:
+
+1) Install [Symfony CLI](https://symfony.com/download)
+2) add symfony cli to ~/.bashrc
+   1) `export PATH="$HOME/.symfony5/bin:$PATH"`
+   2) `source ~/.bashrc`
+3) `symfony new symfony-test --version="7.4.*" --webapp`
+4) `symfony check:security`
+
+[Symfony 7.4 docs](https://symfony.com/doc/7.4)

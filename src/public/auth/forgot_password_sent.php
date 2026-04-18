@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -49,7 +50,7 @@ unset($_SESSION['forgot_password_notice'], $_SESSION['forgot_password_dev_reset_
     <?php endif; ?>
 
     <div class="links">
-      <a href="login.php">Back to Login</a>
+      <a href="/auth/login.php">Back to Login</a>
     </div>
   </div>
 </body>

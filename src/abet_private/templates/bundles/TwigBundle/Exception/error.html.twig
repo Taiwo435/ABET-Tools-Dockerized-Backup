@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ status_code }} {{ status_text }} | ABET Tools</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #F4F4F4;
+      color: #222;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .error-header {
+      background: #8C1D40;
+      color: white;
+      padding: 1rem 2rem;
+      border-bottom: 4px solid #FFC627;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .error-header-title {
+      font-weight: 700;
+      font-size: 1.25rem;
+      text-decoration: none;
+      color: white;
+    }
+
+    .error-header-nav {
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .error-header-nav:hover {
+      color: white;
+    }
+
+    .error-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .error-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      border: 1px solid #E0E0E0;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .error-card-top {
+      background: linear-gradient(135deg, #8C1D40 0%, #5C132A 100%);
+      color: white;
+      padding: 2.5rem 2rem 2rem;
+    }
+
+    .error-code {
+      font-size: 5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .error-status {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0.5rem 0 0;
+      opacity: 0.85;
+    }
+
+    .error-card-body {
+      padding: 2rem;
+    }
+
+    .error-message {
+      font-size: 1rem;
+      color: #555;
+      line-height: 1.6;
+      margin: 0 0 1.5rem;
+    }
+
+    .error-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-back {
+      background: #8C1D40;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-back:hover {
+      background: #5C132A;
+    }
+
+    .btn-home {
+      background: white;
+      color: #8C1D40;
+      border: 2px solid #8C1D40;
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-home:hover {
+      background: #f5f0f2;
+    }
+
+    .error-footer {
+      background: #1A1A1A;
+      color: #888;
+      text-align: center;
+      padding: 1.5rem 2rem;
+      font-size: 0.85rem;
+      border-top: 4px solid #FFC627;
+    }
+
+    @media (max-width: 768px) {
+      .error-code {
+        font-size: 3.5rem;
+      }
+
+      .error-status {
+        font-size: 1.1rem;
+      }
+
+      .error-card-top {
+        padding: 2rem 1.5rem 1.5rem;
+      }
+
+      .error-card-body {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="error-header">
+    <a href="/home" class="error-header-title">ABET Tools</a>
+    <a href="/home" class="error-header-nav">Back to Dashboard</a>
+  </header>
+
+  <main class="error-content">
+    <div class="error-card">
+      <div class="error-card-top">
+        <p class="error-code">{{ status_code }}</p>
+        <p class="error-status">{{ status_text }}</p>
+      </div>
+      <div class="error-card-body">
+        <p class="error-message">
+          {% if status_code == 403 %}
+            You don't have permission to access this page. If you believe this is a mistake, please contact your administrator.
+          {% elseif status_code == 404 %}
+            The page you're looking for doesn't exist or has been moved. Check the URL and try again.
+          {% elseif status_code == 500 %}
+            Something went wrong on our end. Please try again later or contact your administrator if the problem persists.
+          {% else %}
+            An unexpected error occurred. Please try again or contact your administrator.
+          {% endif %}
+        </p>
+        <div class="error-actions">
+          <button class="btn-back" onclick="if (document.referrer && new URL(document.referrer).origin === location.origin) { history.back(); } else { location.href = '/home'; }">Go Back</button>
+          <a href="/home" class="btn-home">Return to Home</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="error-footer">
+    <p>&copy; {{ "now"|date("Y") }} Arizona State University. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

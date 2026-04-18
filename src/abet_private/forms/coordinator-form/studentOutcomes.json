@@ -1,103 +1,298 @@
 {
   "title": "Student Outcomes",
-  "name": "student_outcomes",
+  "name": "studentOutcomes",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
       "type": "section-label",
-      "label": "Courses and Method of Assessment for Each Outcome"
+      "label": "Courses and the Method of Assessment for each Outcome",
+      "description": "The left-most column represents what course the row represents. The remaining rows correspond to ABET student outcomes 1-7. For each course, indicate the method of assessment for each outcome. If an outcome is not assessed in a course, leave the cell blank."
     },
     {
       "type": "expandable-grid",
-      "name": "courses_and_methods_of_assessment",
-      "label": "Courses and method of assessment for each outcome",
+      "name": "method_of_assessment",
       "columns": [
         {
-          "name": "abet_outcome",
-          "label": "ABET",
+          "name": "course_name",
+          "label": "Course Number",
           "type": "text"
         },
         {
-          "name": "class_name",
-          "label": "Class Name",
+          "name": "outcome_1",
+          "label": "SO #1",
           "type": "text"
         },
         {
-          "name": "assessment_method",
-          "label": "Method of Assessment",
-          "type": "text-field"
+          "name": "outcome_2",
+          "label": "SO #2",
+          "type": "text"
+        },
+        {
+          "name": "outcome_3",
+          "label": "SO #3",
+          "type": "text"
+        },
+        {
+          "name": "outcome_4",
+          "label": "SO #4",
+          "type": "text"
+        },
+        {
+          "name": "outcome_5",
+          "label": "SO #5",
+          "type": "text"
+        },
+        {
+          "name": "outcome_6",
+          "label": "SO #6",
+          "type": "text"
+        },
+        {
+          "name": "outcome_7",
+          "label": "SO #7",
+          "type": "text"
         }
       ],
-      "maxRows": 50,
-      "required": false
+      "maxRows": 20,
+      "allowIncompleteRows": true
     },
+
     {
       "type": "section-break"
     },
+
     {
       "type": "section-label",
-      "label": "Summary of Assessment Results"
+      "label": "The Required Level of Attainment Defined for each assessment",
+      "description": "For every method of assesment you entered in the previous table, indicate the required level of attainment for that method. Enter this in the form '#/#', where the first number indicates the required percentage for a student to show competence, and the second number indicates the percentage of the samples for the outcome to be met."
     },
+
     {
       "type": "expandable-grid",
-      "name": "assessment_results_summary",
-      "label": "Summary of assessment results",
+      "name": "level_of_attainment",
       "columns": [
         {
-          "name": "outcome",
-          "label": "Outcome",
+          "name": "course_name",
+          "label": "Course Number",
           "type": "text"
         },
         {
-          "name": "summary",
-          "label": "Summary of Assessment Results",
-          "type": "text-field"
+          "name": "outcome_1",
+          "label": "SO #1",
+          "type": "text"
+        },
+        {
+          "name": "outcome_2",
+          "label": "SO #2",
+          "type": "text"
+        },
+        {
+          "name": "outcome_3",
+          "label": "SO #3",
+          "type": "text"
+        },
+        {
+          "name": "outcome_4",
+          "label": "SO #4",
+          "type": "text"
+        },
+        {
+          "name": "outcome_5",
+          "label": "SO #5",
+          "type": "text"
+        },
+        {
+          "name": "outcome_6",
+          "label": "SO #6",
+          "type": "text"
+        },
+        {
+          "name": "outcome_7",
+          "label": "SO #7",
+          "type": "text"
         }
       ],
-      "maxRows": 10,
-      "required": false
+      "maxRows": 20,
+      "allowIncompleteRows": true
     },
+
+
     {
       "type": "section-break"
     },
+
     {
       "type": "section-label",
-      "label": "Percentages of Met and Times of 2 Consecutive Semester with Not Met"
+      "label": "Determining Criteria with Multiple Assesements",
+      "description": "For the following fields, describe how you determine whether a student outcome is met if there are multiple methods of assessment for that outcome. For example, if you have 3 methods of assessment for a given student outcome, do you require that all 3 methods meet the required level of attainment for the outcome to be considered met? Or do you require that at least 2 out of the 3 methods meet the required level of attainment? Or do you have some other method for determining this?"
+    },
+
+    {
+      "type": "text-field",
+      "name": "2_assessment_criteria",
+      "label": "With 2 assesments:"
     },
     {
+      "type": "text-field",
+      "name": "3_assessment_criteria",
+      "label": "With 3 assesments:"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Summary of Assessment Results",
+      "description": "For the previous 6 semesters, add a row. Enter the semester and year (e.g. 'F25') in the first column. For the remaining columns, select either 'not met' or 'met' to indicate if the student outcome was met across the program."
+    },
+
+    {
       "type": "expandable-grid",
-      "name": "percentages_met_table",
-      "label": "Table 4-6: Percentages of Met and times of 2 consecutive semester with Not Met",
+      "name": "assessment_results",
+      "columns": [
+        {
+          "name": "semester",
+          "label": "Semester",
+          "type": "text"
+        },
+        {
+          "name": "outcome_1",
+          "label": "SO #1",
+          "type": "select",
+          "options": {
+            "Met": "Met",
+            "Not Met": "Not Met"
+          }
+        },
+        {
+          "name": "outcome_2",
+          "label": "SO #2",
+          "type": "select",
+          "options": {
+            "Met": "Met",
+            "Not Met": "Not Met"
+          }
+        },
+        {
+          "name": "outcome_3",
+          "label": "SO #3",
+          "type": "select",
+          "options": {
+            "Met": "Met",
+            "Not Met": "Not Met"
+          }
+        },
+        {
+          "name": "outcome_4",
+          "label": "SO #4",
+          "type": "select",
+          "options": {
+            "Met": "Met",
+            "Not Met": "Not Met"
+          }
+        },
+        {
+          "name": "outcome_5",
+          "label": "SO #5",
+          "type": "select",
+          "options": {
+            "Met": "Met",
+            "Not Met": "Not Met"
+          }
+        },
+        {
+          "name": "outcome_6",
+          "label": "SO #6",
+          "type": "select",
+          "options": {
+            "Met": "Met",
+            "Not Met": "Not Met"
+          }
+        },
+        {
+          "name": "outcome_7",
+          "label": "SO #7",
+          "type": "select",
+          "options": {
+            "Met": "Met",
+            "Not Met": "Not Met"
+          }
+        }
+      ],
+      "maxRows": 20
+    },
+
+    {
+      "type": "section-break"
+    
+    },
+
+    {
+      "type": "section-label",
+      "label": "Met and Not Met Occurrences",
+      "description": "Create 1 row for each student outcome."
+    },
+    {
+      "type": "section-label",
+      "description": "\"# Semesters Assessed\" corresponds to the # of previous semesters you entered in the last table."
+    },
+    {
+      "type": "section-label",
+      "description": "\"% Met: All Semesters\" corresponds to the % of the time the outcome was met out of all semesters assesed."
+    },
+    {
+      "type": "section-label",
+      "description": "\"# 2 Consecutive Not Met\" corresponds to the # of occurences when the outcome was not met for 2 consecutive semesters."
+    },
+    {
+      "type": "section-label",
+      "description": "\"% Met: Past 2 Semesters\" corresponds to the % of the time the outcome was met out of only the past 2 semesters."
+    },
+
+    {
+      "type": "expandable-grid",
+      "name": "met_and_not_met",
       "columns": [
         {
           "name": "outcome",
-          "label": "Outcome",
-          "type": "text"
+          "label": "Student Outcome",
+          "type": "select",
+          "options": {
+            "1": "SO #1",
+            "2": "SO #2",
+            "3": "SO #3",
+            "4": "SO #4",
+            "5": "SO #5",
+            "6": "SO #6",
+            "7": "SO #7"
+          }
         },
         {
           "name": "semesters_assessed",
-          "label": "Semesters Assessed",
+          "label": "# Semesters Assessed",
           "type": "text"
         },
         {
           "name": "percentage_met",
-          "label": "Percentage Met",
+          "label": "% Met: All Semesters",
           "type": "text"
         },
         {
-          "name": "times_two_consecutive_semesters_not_met",
-          "label": "Times of 2 Consecutive Sem. Not Met",
+          "name": "times_consecutive_not_met",
+          "label": "# 2 Consecutive Not Met",
           "type": "text"
         },
         {
-          "name": "percentage_met_past_year",
-          "label": "Percentage Met in Past Year",
+          "name": "percentage_met_secondary",
+          "label": "% Met: Past 2 Semesters",
           "type": "text"
         }
       ],
-      "maxRows": 10,
-      "required": false
+      "maxRows": 20
     }
+
   ]
 }

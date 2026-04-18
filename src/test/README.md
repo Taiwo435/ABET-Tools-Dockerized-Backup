@@ -11,7 +11,7 @@ Spin up the selenium grid testing ground:
 ```bash
 cd docker                               # make sure you are in docker/
 docker compose down                     # 
-docker compose --profile debug up       # spins up the server containers + testing containers
+docker compose --profile testing up       # spins up the server containers + testing containers (just selenium)
 ```
 
 Now, you can run the testing scripts!

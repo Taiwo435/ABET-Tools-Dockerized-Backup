@@ -2,6 +2,9 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
+$role = $_SESSION['user_role'] ?? 'faculty';
+$config = require getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
+$destCourses = $config['dest_courses'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,13 +13,16 @@ $csrfToken = csrf_token('tool1_proxy');
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Connect to Class | ABET Tools</title>
   <link rel="stylesheet" href="/assets/css/tool1.css">
-  <style></style>
+
 </head>
 <body>
 
   <header class="site-header">
     <div class="site-title">ABET Tools - Connect to Class</div>
-    <a href="/../index.php" class="nav-link">← Back to Dashboard</a>
+    <div class="header-actions">
+      <a href="jobs.php" class="nav-link">View Jobs</a>
+      <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
+    </div>
   </header>
 
   <div class="main-container">
@@ -28,87 +34,29 @@ $csrfToken = csrf_token('tool1_proxy');
       </div>
     </div>
 
-      
+      <div>
+            <form id="canvasConnectionForm">
+              <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label">
+                    Canvas Access Token <span class="required">*</span>
+                  </label>
+                  <input type="password" class="form-input" id="classToken" placeholder="Paste your Canvas access token" required>
+                  <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
+                </div>
+              <button type="submit" class="btn btn-primary" id="connectBtn">
+                <span class="btn-icon">🔗</span> Validate Token
+              </button>
+              </div>
+            </form>
 
-        <form id="canvasConnectionForm">
-          <div class="form-grid">
-            <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">
-                Canvas Access Token <span class="required">*</span>
-              </label>
-              <input type="password" class="form-input" id="classToken" placeholder="Paste your Canvas access token" required>
-              <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                Source Course ID <span class="required">*</span>
-              </label>
-              <input type="text" class="form-input" id="sourceCourseId" placeholder="e.g., 240102" required
-                     pattern="\d+" title="Numeric Course ID only">
-              <div class="form-help">The canvas course to extract data from.</div>
-              <div class="form-help">Look at url for the id, eg.: https://canvas.asu.edu/courses/<span style="font-weight: bold;">240102</span></div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                Destination Course ID <span class="required">*</span>
-              </label>
-              <input type="text" class="form-input" id="destCourseId" placeholder="e.g., 240102" required
-                     pattern="\d+" title="Numeric Course ID only">
-              <div class="form-help">The canvas course to push data into</div>
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="connectBtn">
-            <span class="btn-icon">🔗</span> Verify & Connect
-          </button>
-        <!-- </form>
-                <div class="divider">
-          <span class="divider-text">OR</span>
         </div>
-
-        Existing Classes
-        <div class="form-group">
-          <label class="form-label">Select from Previously Connected Classes</label>
-          <select class="form-select" id="existingClass" onchange="selectExistingClass()">
-            <option value="">-- Choose a class --</option>
-            <option value="cse445-fall24">CSE 445 - Software Security (Fall 2024)</option>
-            <option value="cse310-fall24">CSE 310 - Data Structures (Fall 2024)</option>
-          </select>
-          <div class="form-help">Previously connected classes in this semester</div>
-        </div>
-
-      </div>
-    </div>
-
-    Connection Status (hidden initially)
-    <div class="alert alert-success" id="successAlert" style="display: none;">
-
-        </form> -->
 
     <div class="alert alert-success" id="successAlert">
       <div class="alert-content">
         <strong>Successfully connected!</strong>
-        <div style="margin-top: 5px;">
-          <strong>Course:</strong> <span id="connectedCourse"></span><br>
-          <strong>Term:</strong> <span id="connectedTerm"></span>
-        </div>
         <div style="margin-top: 15px;">
-          <a href="roster-upload.php" class="btn btn-primary">Continue to Roster Upload →</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="alert alert-duplicate" id="duplicateAlert">
-      <div class="alert-content">
-        <strong>This course has already been uploaded to the destination.</strong>
-        <strong>Cancel the upload or continue to overwrite the previous upload.</strong>
-        <div style="margin-top: 5px;">
-          <strong>Course:</strong> <span id="duplicateCourse"></span><br>
-          <strong>Term:</strong> <span id="duplicateTerm"></span>
-        </div>
-        <div style="margin-top: 15px;">
-          <a href="tool1.php" class="btn btn-primary">Cancel the Upload</a>
-          <a href="roster-upload.php?overwrite=1" class="btn btn-primary">Overwrite &amp; Continue to Roster Upload →</a>
+          <a href="select-courses.php" class="btn btn-primary">Continue to Select Courses →</a>
         </div>
       </div>
     </div>
@@ -120,13 +68,15 @@ $csrfToken = csrf_token('tool1_proxy');
       </div>
     </div>
 
+    <div class = "info-banner" style ="width: fit-content; height: 15px;">
+       <span>Your token is used only to fetch your courses from Canvas. It is not stored permanently.</span>
+    </div>
   </div>
 
   <script>
     const form = document.getElementById('canvasConnectionForm');
     const connectBtn = document.getElementById('connectBtn');
     const successAlert = document.getElementById('successAlert');
-    const duplicateAlert = document.getElementById('duplicateAlert');
     const errorAlert = document.getElementById('errorAlert');
 
     function showError(msg) {
@@ -137,102 +87,22 @@ $csrfToken = csrf_token('tool1_proxy');
       errorAlert.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function showSuccess(course) {
+    function showSuccess() {
       errorAlert.style.display = 'none';
-      duplicateAlert.style.display = 'none';
-      document.getElementById('connectedCourse').textContent =
-        course.name + ' (' + course.course_code + ')';
-      document.getElementById('connectedTerm').textContent =
-        course.term || 'N/A';
       successAlert.style.display = 'block';
       successAlert.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function showDuplicateCase(course) {
-      errorAlert.style.display = 'none';
-      successAlert.style.display = 'none';
-      document.getElementById('duplicateCourse').textContent =
-        course.name + ' (' + course.course_code + ')';
-      document.getElementById('duplicateTerm').textContent =
-        course.term || 'N/A';
-      duplicateAlert.style.display = 'block';
-      duplicateAlert.scrollIntoView({ behavior: 'smooth' });
-    }
+    let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>';
 
     form.addEventListener('submit', async (e) => {
+
       e.preventDefault();
-
       const token    = document.getElementById('classToken').value.trim();
-      const sourceId = document.getElementById('sourceCourseId').value.trim();
-      const destId   = document.getElementById('destCourseId').value.trim();
-
-      if (!token || !sourceId || !destId) {
+      if (!token) {
         showError('All fields are required.');
         return;
       }
-
-    //   // Simulate connection
-    //   setTimeout(() => {
-    //     const classInfo = {
-    //       name: 'CSE 445 - Software Security',
-    //       semester: 'Fall 2024',
-    //       studentCount: '48',
-    //       token: token,
-    //       classId: classId
-    //     };
-        
-    //     // Save to localStorage
-    //     localStorage.setItem('selectedClass', JSON.stringify(classInfo));
-        
-    //     document.getElementById('connectedClass').textContent = classInfo.name + ' (' + classInfo.semester + ')';
-    //     document.getElementById('studentCount').textContent = classInfo.studentCount;
-    //     document.getElementById('successAlert').style.display = 'flex';
-        
-    //     // Scroll to success message
-    //     document.getElementById('successAlert').scrollIntoView({ behavior: 'smooth' });
-    //   }, 1000);
-    // });
-
-    // function selectExistingClass() {
-    //   const select = document.getElementById('existingClass');
-    //   const value = select.value;
-      
-    //   if (value) {
-    //     const text = select.options[select.selectedIndex].text;
-        
-    //     // Parse class info from dropdown text
-    //     const match = text.match(/^(.+?)\s*\((.+?)\)$/);
-    //     let className = text;
-    //     let semester = 'Fall 2024';
-        
-    //     if (match) {
-    //       className = match[1].trim();
-    //       semester = match[2].trim();
-    //     }
-        
-    //     // Simulate loading existing class
-    //     setTimeout(() => {
-    //       const classInfo = {
-    //         name: className,
-    //         semester: semester,
-    //         studentCount: '48',
-    //         token: 'existing_token',
-    //         classId: value
-    //       };
-          
-    //       // Save to localStorage
-    //       localStorage.setItem('selectedClass', JSON.stringify(classInfo));
-          
-    //       document.getElementById('connectedClass').textContent = text;
-    //       document.getElementById('studentCount').textContent = classInfo.studentCount;
-    //       document.getElementById('successAlert').style.display = 'flex';
-          
-    //       // Scroll to success message
-    //       document.getElementById('successAlert').scrollIntoView({ behavior: 'smooth' });
-    //     }, 500);
-    //   }
-    // }
-      let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>';
 
       connectBtn.disabled = true;
       connectBtn.textContent = 'Verifying…';
@@ -243,8 +113,6 @@ $csrfToken = csrf_token('tool1_proxy');
         const storeBody = new FormData();
         storeBody.append('action', 'store-credentials');
         storeBody.append('canvas_token', token);
-        storeBody.append('source_course_id', sourceId);
-        storeBody.append('dest_course_id', destId);
         storeBody.append('csrf_token', csrfToken);
 
         const storeRes = await fetch('api-proxy.php', { method: 'POST', body: storeBody });
@@ -255,24 +123,17 @@ $csrfToken = csrf_token('tool1_proxy');
           return;
         }
 
-        const verifyBody = new FormData();
-        verifyBody.append('action', 'verify-course');
-        verifyBody.append('csrf_token', csrfToken);
-
-        const verifyRes = await fetch('api-proxy.php', { method: 'POST', body: verifyBody });
-        const verifyData = await verifyRes.json();
-        if (verifyData.next_csrf) csrfToken = verifyData.next_csrf;
-        if (!verifyData.success) {
-          showError(verifyData.message || 'Course verification failed.');
+        const verifyToken = new FormData();
+        verifyToken.append('action', 'verify-token');
+        verifyToken.append('csrf_token', csrfToken);
+        const res = await fetch('api-proxy.php', { method: 'POST', body: verifyToken});
+        const data = await res.json();
+        if (data.next_csrf) csrfToken = data.next_csrf;
+        if (!data.success) {
+          showError(data.message || 'Failed to connect to endpoint given token');
           return;
         }
-
-        const course = verifyData.course;
-        if (course.duplicate_status) {
-          showDuplicateCase(course);
-        } else {
-          showSuccess(course);
-        }
+        showSuccess();
 
       } catch (err) {
         showError('Network error: ' + err.message);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 
 start_session();
 
@@ -133,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <?php if ($error): ?>
-        <div class="error-box">
+        <div class="msg error" id="error-box">
           <strong>Error:</strong> <?php echo e($error); ?>
         </div>
       <?php endif; ?>
@@ -156,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="footer-links">
           <div>
             <span>Don't have an account?</span>
-            <a href="/auth/register.php">Create Account</a>
+            <a href="/register">Create Account</a>
           </div>
           <div style="margin-top: 15px;">
             <a href="/auth/forgot_password.php" style="margin-left: 0;">Forgot Password?</a>
