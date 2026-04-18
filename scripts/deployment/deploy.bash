@@ -50,6 +50,12 @@ if [[ "$run_action" == true ]]; then
         rsync -avz --delete "$REMOTE/docker/.env" "$REPO_ROOT/docker/prod.env" 
         echo "[INFO] Sensitive .env file copied from server."
 
+        if [ -n "$APP_VERSION" ]; then
+            echo "APP_VERSION=$APP_VERSION" >> "$REPO_ROOT/docker/prod.env" 
+            echo >> "$REPO_ROOT/docker/prod.env" 
+            echo "[INFO] APP_VERSION updated"
+        fi
+
         # build .htaccess with .env secrets
         bash "$REPO_ROOT/scripts/deployment/build_files.bash"
         echo "[INFO] .htaccess file built with environment variables."
