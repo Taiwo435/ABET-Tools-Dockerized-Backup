@@ -11,7 +11,7 @@
         "doctrine/orm": "^3.6.3",
         "symfony/cache": "^7.4.8",
         "symfony/dotenv": "^7.4.8",
-        "symfony/form": "^7.4.8",
+        "symfony/form": "*",
         "symfony/framework-bundle": "^7.4.8",
         "symfony/http-kernel": "^7.4.8",
         "symfony/monolog-bundle": "^4.0.2",
