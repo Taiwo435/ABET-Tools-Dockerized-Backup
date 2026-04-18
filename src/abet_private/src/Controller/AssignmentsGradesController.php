@@ -11,6 +11,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
 use App\Entity\Task\AccessTokenForm;
 use App\Form\AccessTokenType;
+use App\Service\API;
+use App\Service\ApiProxy;
 
 final class AssignmentsGradesController extends AbstractController
 {
@@ -18,7 +20,11 @@ final class AssignmentsGradesController extends AbstractController
     
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/tool/assignmentsgrades', name: 'app_assignments_grades')]
-    public function tool_one(#[CurrentUser] User $user, Request $request) {
+    public function tool_one(
+        #[CurrentUser] User $user, 
+        Request $request,
+        ApiProxy $proxy,
+        ) {
 
         //asurite
         $parts = explode('@', (string)$user->getEmail());
@@ -36,9 +42,12 @@ final class AssignmentsGradesController extends AbstractController
             // but, the original `$task` variable has also been updated
             $task = $form->getData();
 
-            // ... perform some action, such as saving the task to the database
+            $response = $proxy->verifyToken($task->getToken());
 
-            return $this->redirectToRoute('app_assignments_grades_jobs');
+            var_dump($response->getStatusCode());
+
+            // return;
+            //return $this->redirectToRoute('app_assignments_grades_jobs');
         }
 
         return $this->render('tools/assignments_grades/index.html.twig', [
