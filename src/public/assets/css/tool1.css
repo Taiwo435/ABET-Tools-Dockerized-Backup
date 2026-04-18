@@ -107,6 +107,10 @@ body {
   margin-bottom: 20px;
 }
 
+.required {
+  color: #d32f2f;
+}
+
 .form-label {
   display: block;
   font-size: 0.85rem;
@@ -114,10 +118,6 @@ body {
   text-transform: uppercase;
   color: var(--text-light);
   margin-bottom: 8px;
-}
-
-.required {
-  color: #d32f2f;
 }
 
 .form-input,
@@ -142,6 +142,19 @@ body {
   font-size: 0.8rem;
   color: var(--text-light);
   margin-top: 5px;
+}
+
+/* BELOW ARE FORM SYTLES USED BY SYMFONY ONLY */
+.required::after {
+  margin-left: 10px;
+  content: '*';
+  color: #d32f2f;
+}
+
+#access_token {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .btn {
