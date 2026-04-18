@@ -529,10 +529,6 @@ CREATE TABLE IF NOT EXISTS assessment_constituency (
     method TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-<<<<<<< HEAD
-
-=======
->>>>>>> 8cc4fa3fc723f0219ed00c8e237717b0b27e005d
 -- Stores all free-text sections across the report
 -- section_key identifies which part e.g. 'background_contact', 'background_program_history', 'criterion1_advising'
 CREATE TABLE IF NOT EXISTS report_sections (
