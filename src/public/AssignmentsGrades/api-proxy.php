@@ -55,7 +55,7 @@ function curl_api(string $url, string $method, string $token, array $curlExtra =
         CURLOPT_CUSTOMREQUEST  => $method,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER     => $headers,
-        CURLOPT_TIMEOUT => 600,
+        CURLOPT_TIMEOUT => 10000,
     ] + $curlExtra);
 
     $body     = curl_exec($ch);

@@ -34,23 +34,22 @@ $destCourses = $config['dest_courses'];
       </div>
     </div>
 
-      <div>
-            <form id="canvasConnectionForm">
-              <div class="form-grid">
-                <div class="form-group" style="grid-column: 1 / -1;">
-                  <label class="form-label">
-                    Canvas Access Token <span class="required">*</span>
-                  </label>
-                  <input type="password" class="form-input" id="classToken" placeholder="Paste your Canvas access token" required>
-                  <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
-                </div>
-              <button type="submit" class="btn btn-primary" id="connectBtn">
-                <span class="btn-icon">🔗</span> Validate Token
-              </button>
-              </div>
-            </form>
-
+    <div>
+      <form id="canvasConnectionForm">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label">
+              Canvas Access Token <span class="required">*</span>
+            </label>
+            <input type="password" class="form-input" id="classToken" placeholder="Paste your Canvas access token" required>
+            <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="connectBtn">
+            <span class="btn-icon">🔗</span> Validate Token
+          </button>
         </div>
+      </form>
+    </div>
 
     <div class="alert alert-success" id="successAlert">
       <div class="alert-content">
