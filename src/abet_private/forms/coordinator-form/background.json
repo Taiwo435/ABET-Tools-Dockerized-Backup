@@ -12,6 +12,60 @@
       "name": "contact_information",
       "description": "List name, mailing address, telephone number, and e-mail address for the primary pre-visit contact person for the program.",
       "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Program History"
+    },
+    {
+      "name" : "program_history",
+      "description": "See section Background Information: Section B",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Options"
+    },
+    {
+      "name" : "options",
+      "description": "See section Background Information: Section C",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Program Delivery Modes"
+    },
+    {
+      "name" : "program_delivery_modes",
+      "description": "See section Background Information: Section D",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Program Locations"
+    },
+    {
+      "name" : "program_locations",
+      "description": "See section Background Information: Section E",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Public Disclosure"
+    },
+    {
+      "name" : "public_disclosure",
+      "description": "See section Background Information: Section F",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Deficiencies, Weaknesses or Concerns from Previous Evaluation(s) and the Actions Taken to Address Them"
+    },
+    {
+      "name" : "deficiencies",
+      "description": "See section Background Information: Section G",
+      "type": "text-field"
     }
   ]
 }
