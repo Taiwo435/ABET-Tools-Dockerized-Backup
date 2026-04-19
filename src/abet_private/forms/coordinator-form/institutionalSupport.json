@@ -1,0 +1,132 @@
+{
+  "title": "Criterion 8. Institutional Support",
+  "name": "institutionalSupport",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "A. Leadership"
+    },
+    {
+      "name": "leadership",
+      "label": "See text in Criterion 8. Institutional Support: Section A \"Leadership\"",
+      "description": "Copy text from \"A. Leadership\" to \"..More specifically, this includes:\".",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "program_chair_table",
+      "label": "Program Chair Responsibilities (see bulleted list on pg. 119)",
+      "columns": [
+        {
+          "name": "program_chair_responsibility",
+          "label": "Responsibility",
+          "type": "text"
+        }
+      ],
+      "maxRows": 30,
+      "required": false
+    },
+    {
+      "name": "leadership_after_responsibilities",
+      "label": "See text in Criterion 8. Institutional Support: Section A \"Leadership\"",
+      "description": "Copy text from the end of responsibilities list to \"B. Program Budget and Financial Support\".",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "B. Program Budget and Financial Support"
+    },
+    {
+      "name": "program_budget_financial_support_budget_process",
+      "label": "See text in Criterion 8. Institutional Support: Section B subsection \"1. Describe the process used to establish the program\u2019s budget and provide evidence of continuity of institutional support for the program. Include the sources of financial support including both permanent (recurring) and temporary (one-time) funds.\"",
+      "description": "Copy text from \"1. Describe the process used to establish the program\u2019s budget...\" to \"Describe how teaching is supported by the institution in terms of graders, teaching assistants, teaching workshops, etc.\"",
+      "type": "text-field"
+    },
+    {
+      "name": "program_budget_financial_support_teaching_support",
+      "label": "See text in Criterion 8. Institutional Support: Section B subsection \"Describe how teaching is supported by the institution in terms of graders, teaching assistants, teaching workshops, etc.\"",
+      "description": "Copy text from \"Describe how teaching is supported by the institution in terms of graders, teaching assistants, teaching workshops, etc.\" to \"To the extent not described above, describe how resources are provided to acquire, maintain, and upgrade the infrastructures, facilities, and equipment used in the program.\"",
+      "type": "text-field"
+    },
+    {
+      "name": "program_budget_financial_support_infrastructure_resources",
+      "label": "See text in Criterion 8. Institutional Support: Section B subsection \"To the extent not described above, describe how resources are provided to acquire, maintain, and upgrade the infrastructures, facilities, and equipment used in the program.\"",
+      "description": "Copy text from \"To the extent not described above...\" to \"Assess the adequacy of the resources described in this section with respect to the students in the program being able to attain the student outcomes.\"",
+      "type": "text-field"
+    },
+    {
+      "name": "program_budget_financial_support_assessment_of_resources",
+      "label": "See text in Criterion 8. Institutional Support: Section B subsection \"Assess the adequacy of the resources described in this section with respect to the students in the program being able to attain the student outcomes.\"",
+      "description": "Copy text from \"Assess the adequacy of the resources described in this section...\" to Section C \"Staffing\".",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "C. Staffing"
+    },
+    {
+      "name": "staffing",
+      "label": "See text in Criterion 8. Institutional Support: Section C \"Staffing\"",
+      "description": "Copy text from \"C. Staffing\" to SCAI Staff table.",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "scai_staff",
+      "label": "SCAI Staff",
+      "columns": [
+        {
+          "name": "function",
+          "label": "Function",
+          "type": "text-field"
+        },
+        {
+          "name": "manager",
+          "label": "Manager",
+          "type": "text-field"
+        },
+        {
+          "name": "staff_size",
+          "label": "Staff Size",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "name": "staffing_after_table",
+      "label": "See text in Criterion 8. Institutional Support: Section C \"Staffing\"",
+      "description": "Copy text from after SCAI Staff table to \"D. Faculty Hiring and Retention\".",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "D. Faculty Hiring and Retention"
+    },
+    {
+      "name": "faculty_hiring_process",
+      "label": "See text in Criterion 8. Institutional Support: Section D subsection \"1. Describe the process for hiring of new faculty.\"",
+      "description": "Copy text from \"1. Describe the process for hiring of new faculty.\" to \"2. Describe strategies used to retain current qualified faculty.\"",
+      "type": "text-field"
+    },
+    {
+      "name": "faculty_retention_strategies",
+      "label": "See text in Criterion 8. Institutional Support: Section D subsection \"2. Describe strategies used to retain current qualified faculty.\"",
+      "description": "Copy text from \"2. Describe strategies used to retain current qualified faculty.\" to Section E \"Support of Faculty Professional Development\".",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "E. Support of Faculty Professional Development"
+    },
+    {
+      "name": "support_of_faculty_professional_development",
+      "label": "See text in Criterion 8. Institutional Support: Section E \"Support of Faculty Professional Development\"",
+      "description": "Copy text from \"E. Support of Faculty Professional Development\" to the end of Criterion 8.",
+      "type": "text-field"
+    }
+  ]
+}

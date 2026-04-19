@@ -1,22 +1,174 @@
 {
-  "title": "Facilities",
+  "title": "Criterion 7. Facilities",
   "name": "facilities",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
+      "type": "section-label",
+      "label": "A. Offices, Classrooms and Laboratories"
+    },
+    {
+      "name": "offices_classrooms_laboratories_intro",
+      "label": "See text in Criterion 7. Facilities: Section A.",
+      "description": "Copy text from the start of Section A to the sub-header \"Offices\"",
+      "type": "text-field"
+    },
+    {
+      "name": "offices",
+      "label": "See text in Criterion 7. Facilities: Section A.",
+      "description": "Copy text from the sub-header \"Offices\" to the sub-header \"Classrooms\"",
+      "type": "text-field"
+    },
+    {
+      "name": "classrooms",
+      "label": "See text in Criterion 7. Facilities: Section A.",
+      "description": "Copy text from the sub-header \"Classrooms\" to \"1. Laboratory facilities\"",
+      "type": "text-field"
+    },
+    {
+      "name": "laboratory_facilities",
+      "label": "See text in Criterion 7. Facilities: Section A subsection \"1. Laboratory facilities\"",
+      "description": "Copy text from \"1. Laboratory facilities\" to \"B. Computing Resources\"",
+      "type": "text-field"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "B. Computing Resources"
+    },
+    {
+      "name": "computing_resources_intro",
+      "label": "See text in Criterion 7. Facilities: Section B.",
+      "description": "Copy text from the start of Section B to the computing classroom facilities table.",
+      "type": "text-field"
+    },
+    {
       "type": "expandable-grid",
       "name": "computer_resources_table",
       "label": "Computing Classroom Facilities",
       "columns": [
-        { "name": "building_code", "label": "Bldg. Code", "type": "text" },
-        { "name": "room_number", "label": "Room Number", "type": "text" },
-        { "name": "capacity", "label": "Capacity", "type": "text" },
-        { "name": "use", "label": "Use", "type": "text" },
-        { "name": "zoom_level", "label": "Zoom Level", "type": "text" }
+        {
+          "name": "building_code",
+          "label": "Bldg. Code",
+          "type": "text"
+        },
+        {
+          "name": "room_number",
+          "label": "Room Number",
+          "type": "text"
+        },
+        {
+          "name": "capacity",
+          "label": "Capacity",
+          "type": "text"
+        },
+        {
+          "name": "use",
+          "label": "Use",
+          "type": "text"
+        },
+        {
+          "name": "zoom_level",
+          "label": "Zoom Level",
+          "type": "text"
+        }
       ],
       "maxRows": 20,
       "required": false
+    },
+    {
+      "name": "computing_resources_after_table",
+      "label": "See text in Criterion 7. Facilities: Section B after the computing classroom facilities table.",
+      "description": "Copy text after the computing classroom facilities table to Section C. Guidance",
+      "type": "text-field"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "C. Guidance"
+    },
+    {
+      "name": "guidance_ets",
+      "label": "See text in Criterion 7. Facilities: Section C.",
+      "description": "Copy text from \"Engineering Technical Services (ETS)\" to \"SCIA Technical Staff\"",
+      "type": "text-field"
+    },
+    {
+      "name": "guidance_ets",
+      "label": "See text in Criterion 7. Facilities: Section C.",
+      "description": "Copy text from \"SCIA Technical Staff\" to \"The technical staff:\"",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "technical_staff_table",
+      "label": "Technical Staff (see bulleted list on pg. 114)",
+      "columns": [
+        {
+          "name": "technical_staff_name",
+          "label": "Name",
+          "type": "text"
+        },
+        {
+          "name": "technical_staff_position",
+          "label": "Position/Role",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "D. Maintenance and Upgrading of Facilities"
+    },
+    {
+      "name": "maintenance_upgrading_facilities",
+      "label": "See text in Criterion 7. Facilities: Section D.",
+      "description": "Copy text from \"D. Maintenance and Upgrading of Facilities\" to \"E. Library Services\"",
+      "type": "text-field"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "E. Library Services"
+    },
+    {
+      "name": "library_services",
+      "label": "See text in Criterion 7. Facilities: Section E.",
+      "description": "Copy text from \"E. Library Services\" to \"F. Overall Comments on Facilities\"",
+      "type": "text-field"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "F. Overall Comments on Facilities"
+    },
+    {
+      "name": "overall_comments_on_facilities",
+      "label": "See text in Criterion 7. Facilities: Section F.",
+      "description": "Copy text from \"F. Overall Comments on Facilities\"",
+      "type": "text-field"
     }
   ]
 }
