@@ -182,9 +182,17 @@ RewriteRule ^ %{ENV:BASE}/index.php [L]
 </IfModule>
 
 <IfModule mod_headers.c>
+    # default: no caching (secure)
     Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
     Header set Pragma "no-cache"
     Header set Expires "0"
+
+    # allow caching for static assets
+    <FilesMatch "\.(css|js|png|jpg|jpeg|svg)$">
+        Header set Cache-Control "public, max-age=86400"
+        Header unset Pragma
+        Header unset Expires
+    </FilesMatch>
 </IfModule>
 
 # php -- BEGIN cPanel-generated handler, do not edit
