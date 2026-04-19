@@ -5,98 +5,275 @@
   "method": "POST",
   "fields": [
     {
+      "type": "section-label",
+      "label": "Appendix D - Institutional Summary"
+    },
+    {
+      "name": "appendix_d_intro",
+      "label": "Appendix D Introductory Text",
+      "description": "Copy the introductory sentence under Appendix D: 'Programs are requested to provide the following information.'",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "1. The Institution"
+    },
+    {
+      "name": "institution_name_and_address_prompt",
+      "label": "Name and address of the institution",
+      "description": "Copy the subsection label/question text exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "institution_name_and_address_response",
+      "label": "Institution Name and Address Response",
+      "description": "Copy the response text for the institution name and address.",
+      "type": "text-field"
+    },
+    {
+      "name": "chief_executive_officer_prompt",
+      "label": "Name and title of the chief executive officer of the institution",
+      "description": "Copy the subsection label/question text exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "chief_executive_officer_response",
+      "label": "Chief Executive Officer Response",
+      "description": "Copy the response text for the chief executive officer.",
+      "type": "text-field"
+    },
+    {
+      "name": "self_study_submitter_prompt",
+      "label": "Name and title of the person submitting the Self-Study Report",
+      "description": "Copy the subsection label/question text exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "self_study_submitter_response",
+      "label": "Self-Study Report Submitter Response",
+      "description": "Copy the response text for the person submitting the Self-Study Report.",
+      "type": "text-field"
+    },
+    {
+      "name": "institution_accreditation_prompt",
+      "label": "Institutional Accreditation Prompt",
+      "description": "Copy the subsection asking for accrediting organizations and dates of initial and most recent evaluations.",
+      "type": "text-field"
+    },
+    {
+      "name": "institution_accreditation_response",
+      "label": "Institutional Accreditation Response",
+      "description": "Copy the accreditation response text.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "2. Type of Control"
+    },
+    {
+      "name": "type_of_control_prompt",
+      "label": "Type of Control Prompt",
+      "description": "Copy the subsection label/question text exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "type_of_control_response",
+      "label": "Type of Control Response",
+      "description": "Copy the response text for the type of control.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "3. Educational Unit"
+    },
+    {
+      "name": "educational_unit_prompt",
+      "label": "Educational Unit Prompt",
+      "description": "Copy the subsection label/question text exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "educational_unit_response",
+      "label": "Educational Unit Response",
+      "description": "Copy the response text describing the educational unit and chain of responsibility.",
+      "type": "text-field"
+    },
+    {
+      "name": "educational_unit_leadership_representation",
+      "label": "Educational Unit Leadership Representation",
+      "description": "Copy the sentence introducing the leadership representation, if you want it separate from the main educational unit response.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "4. Academic Support Units"
+    },
+    {
+      "name": "academic_support_units_prompt",
+      "label": "Academic Support Units Prompt",
+      "description": "Copy the subsection label/question text exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "academic_support_units_response",
+      "label": "Academic Support Units Response",
+      "description": "Copy the list of academic support units and responsible individuals.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "5. Non-academic Support Units"
+    },
+    {
+      "name": "non_academic_support_units_prompt",
+      "label": "Non-academic Support Units Prompt",
+      "description": "Copy the subsection label/question text exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "non_academic_support_units_response",
+      "label": "Non-academic Support Units Response",
+      "description": "Copy the list of non-academic support units and responsible individuals.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "6. Credit Unit"
+    },
+    {
+      "name": "credit_unit_prompt",
+      "label": "Credit Unit Prompt",
+      "description": "Copy the introductory credit-unit statement/question exactly as shown.",
+      "type": "text-field"
+    },
+    {
+      "name": "credit_unit_response",
+      "label": "Credit Unit Response",
+      "description": "Copy the credit-unit explanation text.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "7. Tables"
+    },
+    {
+      "name": "tables_intro",
+      "label": "Tables Introductory Text",
+      "description": "Copy the sentence introducing the Appendix D tables.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Table D-1. Program Enrollment and Degree Data"
+    },
+    {
+      "name": "table_d1_program_name",
+      "label": "Table D-1 Program Name",
+      "description": "Copy the program name line immediately above the table.",
+      "type": "text"
+    },
+    {
       "type": "expandable-grid",
       "name": "program_enrollment_degree_data",
-      "label": "Program Enrollment and Degree Data",
+      "label": "Table D-1. Program Enrollment and Degree Data",
+      "description": "Enter one row per FT/PT row from the table exactly as shown.",
       "columns": [
         {
-          "name": "academic_year",
-          "label": "Academic Year",
+          "name": "academic_year_label",
+          "label": "Academic Year Label",
           "type": "text"
         },
         {
           "name": "enrollment_status",
-          "label": "Enrollment Status",
-          "type": "select",
-          "options": {
-            "enrollment_ft": "Full Time Students (FT)",
-            "enrollment_pt": "Part Time Students (PT)"
-          }
+          "label": "FT / PT",
+          "type": "text"
         },
         {
           "name": "enrollment_1st",
           "label": "1st",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "enrollment_2nd",
           "label": "2nd",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "enrollment_3rd",
           "label": "3rd",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "enrollment_4th",
           "label": "4th",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "enrollment_5th",
           "label": "5th",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "total_undergrad",
           "label": "Total Undergrad",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "total_grad",
           "label": "Total Grad",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "degrees_associates",
           "label": "Associates",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "degrees_bachelors",
           "label": "Bachelors",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "degrees_masters",
           "label": "Masters",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         },
         {
           "name": "degrees_doctorates",
           "label": "Doctorates",
-          "type": "text",
-          "numerical": true
+          "type": "text"
         }
       ],
-      "maxRows": 20,
+      "maxRows": 12,
       "required": false
+    },
+    {
+      "name": "table_d1_notes",
+      "label": "Table D-1 Notes / Instructions",
+      "description": "Copy the note text below Table D-1, including the official fall term enrollment explanation and FT/PT definitions.",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Table D-2. Personnel"
+    },
+    {
+      "name": "table_d2_program_name",
+      "label": "Table D-2 Program Name",
+      "description": "Copy the program name line immediately above the table.",
+      "type": "text"
+    },
+    {
+      "name": "table_d2_year",
+      "label": "Table D-2 Year",
+      "description": "Copy the year line immediately above the table.",
+      "type": "text"
     },
     {
       "type": "expandable-grid",
       "name": "personnel",
-      "label": "Personnel",
+      "label": "Table D-2. Personnel",
+      "description": "Enter one row per personnel category exactly as shown.",
       "columns": [
         {
           "type": "text",
@@ -106,21 +283,27 @@
         {
           "type": "text",
           "name": "headcount_ft",
-          "label": "Full-Time Head Count"
+          "label": "FT"
         },
         {
           "type": "text",
           "name": "headcount_pt",
-          "label": "Part-Time Head Count"
+          "label": "PT"
         },
         {
           "type": "text",
           "name": "fte",
-          "label": "Full-Time Equivalent"
+          "label": "FTE"
         }
       ],
-      "maxRows": 30,
+      "maxRows": 20,
       "required": false
+    },
+    {
+      "name": "table_d2_notes",
+      "label": "Table D-2 Notes / Instructions",
+      "description": "Copy the instructions and footnote-style notes below Table D-2.",
+      "type": "text-field"
     }
   ]
 }

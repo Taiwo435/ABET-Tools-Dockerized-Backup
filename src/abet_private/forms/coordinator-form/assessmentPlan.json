@@ -5,9 +5,36 @@
   "method": "POST",
   "fields": [
     {
+      "type": "section-label",
+      "label": "Introduction"
+    },
+    {
+      "name": "introduction",
+      "label": "Introduction",
+      "type": "text-field",
+      "description": "Copy the introductory paragraph beginning with \"The Computer Systems Engineering (CSE) program...\""
+    },
+    {
+      "name": "introduction_scope_list",
+      "label": "This document covers the following",
+      "type": "text-field",
+      "description": "Copy the list under \"This document covers the following\" exactly as written."
+    },
+    {
+      "type": "section-label",
+      "label": "Roles and Responsibilities"
+    },
+    {
+      "name": "roles_and_responsibilities_intro",
+      "label": "Roles and Responsibilities Introduction",
+      "type": "text-field",
+      "description": "Copy the introductory text for this section before the table."
+    },
+    {
       "type": "expandable-grid",
-      "name": "roles_and_responsibilities",
-      "label": "Roles and Responsibilities",
+      "name": "roles_and_responsibilities_table",
+      "label": "Roles and Responsibilities Table",
+      "description": "Appendix E roles/responsibilities table.",
       "columns": [
         {
           "name": "role",
@@ -20,18 +47,29 @@
           "type": "text-field"
         }
       ],
-      "maxRows": 20,
+      "maxRows": 10,
       "required": false
     },
     {
+      "type": "section-label",
+      "label": "Constituency Input"
+    },
+    {
+      "name": "constituency_input_intro",
+      "label": "Constituency Input Introduction",
+      "type": "text-field",
+      "description": "Copy the introductory text for this section before the table."
+    },
+    {
       "type": "expandable-grid",
-      "name": "constituency_input",
-      "label": "Constituency Input",
+      "name": "constituency_input_table",
+      "label": "Constituency Input Table",
+      "description": "Appendix E constituency input table.",
       "columns": [
         {
           "name": "constituency",
           "label": "Constituency",
-          "type": "text-field"
+          "type": "text"
         },
         {
           "name": "method",
@@ -39,66 +77,514 @@
           "type": "text-field"
         }
       ],
-      "maxRows": 20,
+      "maxRows": 10,
       "required": false
     },
-
-    {
-      "type": "section-break"
-    },
-
     {
       "type": "section-label",
       "label": "Assessment Details"
     },
     {
+      "name": "assessment_details_intro",
+      "label": "Assessment Details Introduction",
+      "type": "text-field",
+      "description": "Copy the introductory paragraph(s) immediately under \"Assessment Details\" before the semester tables."
+    },
+    {
+      "type": "section-label",
+      "label": "Fall 2021 Data Summer"
+    },
+    {
+      "name": "fall_2021_summary",
+      "label": "Fall 2021 Summary",
+      "type": "text-field",
+      "description": "Copy the narrative text associated with the Fall 2021 table."
+    },
+    {
       "type": "expandable-grid",
-      "name": "assessment_details",
+      "name": "fall_2021_data_summer_table",
+      "label": "Fall 2021 Data Summer Table",
       "columns": [
         {
-          "type": "text",
-          "name": "course_number",
-          "label": "Course Number"
+          "name": "abet_outcome",
+          "label": "ABET",
+          "type": "text"
         },
         {
-          "type": "text",
-          "name": "so_1_details",
-          "label": "Student Outcome 1"
+          "name": "cse_301",
+          "label": "CSE 301",
+          "type": "text-field"
         },
         {
-          "type": "text",
-          "name": "so_2_details",
-          "label": "Student Outcome 2"
+          "name": "cse_320",
+          "label": "CSE 320",
+          "type": "text-field"
         },
         {
-          "type": "text",
-          "name": "so_3_details",
-          "label": "Student Outcome 3"
+          "name": "cse_325",
+          "label": "CSE 325",
+          "type": "text-field"
         },
         {
-          "type": "text",
-          "name": "so_4_details",
-          "label": "Student Outcome 4"
+          "name": "cse_360",
+          "label": "CSE 360",
+          "type": "text-field"
         },
         {
-          "type": "text",
-          "name": "so_5_details",
-          "label": "Student Outcome 5"
+          "name": "cse_365",
+          "label": "CSE 365",
+          "type": "text-field"
         },
         {
-          "type": "text",
-          "name": "so_6_details",
-          "label": "Student Outcome 6"
+          "name": "cse_423",
+          "label": "CSE 423",
+          "type": "text-field"
         },
         {
-          "type": "text",
-          "name": "so_7_details",
-          "label": "Student Outcome 7"
+          "name": "cse_424",
+          "label": "CSE 424",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_434",
+          "label": "CSE 434",
+          "type": "text-field"
+        },
+        {
+          "name": "iee_380",
+          "label": "IEE 380",
+          "type": "text-field"
         }
       ],
-      "maxRows": 30,
+      "maxRows": 10,
       "allowIncompleteRows": true,
       "required": false
+    },
+    {
+      "name": "fall_2021_notes",
+      "label": "Fall 2021 Notes",
+      "type": "text-field",
+      "description": "Copy any notes for Fall 2021. Leave blank if none."
+    },
+    {
+      "type": "section-label",
+      "label": "Spring 2022 Data Summer"
+    },
+    {
+      "name": "spring_2022_summary",
+      "label": "Spring 2022 Summary",
+      "type": "text-field",
+      "description": "Copy the narrative text associated with the Spring 2022 table."
+    },
+    {
+      "type": "expandable-grid",
+      "name": "spring_2022_data_summer_table",
+      "label": "Spring 2022 Data Summer Table",
+      "columns": [
+        {
+          "name": "abet_outcome",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "cse_301",
+          "label": "CSE 301",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_320",
+          "label": "CSE 320",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_325",
+          "label": "CSE 325",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_360",
+          "label": "CSE 360",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_365",
+          "label": "CSE 365",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_423",
+          "label": "CSE 423",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_424",
+          "label": "CSE 424",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_434",
+          "label": "CSE 434",
+          "type": "text-field"
+        },
+        {
+          "name": "iee_380",
+          "label": "IEE 380",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "allowIncompleteRows": true,
+      "required": false
+    },
+    {
+      "name": "spring_2022_notes",
+      "label": "Spring 2022 Notes",
+      "type": "text-field",
+      "description": "Copy the Notes section for Spring 2022 exactly as written."
+    },
+    {
+      "type": "section-label",
+      "label": "Fall 2022 Data Summer"
+    },
+    {
+      "name": "fall_2022_summary",
+      "label": "Fall 2022 Summary",
+      "type": "text-field",
+      "description": "Copy the narrative text associated with the Fall 2022 table."
+    },
+    {
+      "type": "expandable-grid",
+      "name": "fall_2022_data_summer_table",
+      "label": "Fall 2022 Data Summer Table",
+      "columns": [
+        {
+          "name": "abet_outcome",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "cse_301",
+          "label": "CSE 301",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_320",
+          "label": "CSE 320",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_325",
+          "label": "CSE 325",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_360",
+          "label": "CSE 360",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_365",
+          "label": "CSE 365",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_423",
+          "label": "CSE 423",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_424",
+          "label": "CSE 424",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_434",
+          "label": "CSE 434",
+          "type": "text-field"
+        },
+        {
+          "name": "iee_380",
+          "label": "IEE 380",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "allowIncompleteRows": true,
+      "required": false
+    },
+    {
+      "name": "fall_2022_notes",
+      "label": "Fall 2022 Notes",
+      "type": "text-field",
+      "description": "Copy the Notes section for Fall 2022 exactly as written."
+    },
+    {
+      "type": "section-label",
+      "label": "Spring 2023 Data Summer"
+    },
+    {
+      "name": "spring_2023_summary",
+      "label": "Spring 2023 Summary",
+      "type": "text-field",
+      "description": "Copy the narrative text associated with the Spring 2023 table."
+    },
+    {
+      "type": "expandable-grid",
+      "name": "spring_2023_data_summer_table",
+      "label": "Spring 2023 Data Summer Table",
+      "columns": [
+        {
+          "name": "abet_outcome",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "cse_301",
+          "label": "CSE 301",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_320",
+          "label": "CSE 320",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_325",
+          "label": "CSE 325",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_360",
+          "label": "CSE 360",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_365",
+          "label": "CSE 365",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_423",
+          "label": "CSE 423",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_424",
+          "label": "CSE 424",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_434",
+          "label": "CSE 434",
+          "type": "text-field"
+        },
+        {
+          "name": "iee_380",
+          "label": "IEE 380",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "allowIncompleteRows": true,
+      "required": false
+    },
+    {
+      "name": "spring_2023_notes",
+      "label": "Spring 2023 Notes",
+      "type": "text-field",
+      "description": "Copy the Notes section for Spring 2023 exactly as written."
+    },
+    {
+      "type": "section-label",
+      "label": "Fall 2023 Data Summer"
+    },
+    {
+      "name": "fall_2023_summary",
+      "label": "Fall 2023 Summary",
+      "type": "text-field",
+      "description": "Copy the narrative text associated with the Fall 2023 table."
+    },
+    {
+      "type": "expandable-grid",
+      "name": "fall_2023_data_summer_table",
+      "label": "Fall 2023 Data Summer Table",
+      "columns": [
+        {
+          "name": "abet_outcome",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "cse_301",
+          "label": "CSE 301",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_320",
+          "label": "CSE 320",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_325",
+          "label": "CSE 325",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_360",
+          "label": "CSE 360",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_365",
+          "label": "CSE 365",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_423",
+          "label": "CSE 423",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_424",
+          "label": "CSE 424",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_434",
+          "label": "CSE 434",
+          "type": "text-field"
+        },
+        {
+          "name": "iee_380",
+          "label": "IEE 380",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "allowIncompleteRows": true,
+      "required": false
+    },
+    {
+      "name": "fall_2023_notes",
+      "label": "Fall 2023 Notes",
+      "type": "text-field",
+      "description": "Copy the Notes section for Fall 2023 exactly as written."
+    },
+    {
+      "type": "section-label",
+      "label": "Spring 2024 Data Summer"
+    },
+    {
+      "name": "spring_2024_summary",
+      "label": "Spring 2024 Summary",
+      "type": "text-field",
+      "description": "Copy the narrative text associated with the Spring 2024 table."
+    },
+    {
+      "type": "expandable-grid",
+      "name": "spring_2024_data_summer_table",
+      "label": "Spring 2024 Data Summer Table",
+      "columns": [
+        {
+          "name": "abet_outcome",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "cse_301",
+          "label": "CSE 301",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_320",
+          "label": "CSE 320",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_325",
+          "label": "CSE 325",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_360",
+          "label": "CSE 360",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_365",
+          "label": "CSE 365",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_423",
+          "label": "CSE 423",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_424",
+          "label": "CSE 424",
+          "type": "text-field"
+        },
+        {
+          "name": "cse_434",
+          "label": "CSE 434",
+          "type": "text-field"
+        },
+        {
+          "name": "iee_380",
+          "label": "IEE 380",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 10,
+      "allowIncompleteRows": true,
+      "required": false
+    },
+    {
+      "name": "spring_2024_notes",
+      "label": "Spring 2024 Notes",
+      "type": "text-field",
+      "description": "Copy the Notes section for Spring 2024 exactly as written."
+    },
+    {
+      "type": "section-label",
+      "label": "Elaboration of CSE Hardware Sequence Improvement Process"
+    },
+    {
+      "name": "hardware_sequence_intro",
+      "label": "Hardware Sequence Improvement Process Introduction",
+      "type": "text-field",
+      "description": "Copy the opening paragraph(s) of this section through the description of the issue."
+    },
+    {
+      "name": "hardware_sequence_problem_statement",
+      "label": "Hardware Sequence Problem Statement",
+      "type": "text-field",
+      "description": "Copy the paragraph beginning with the discussion of CSE320/CSE325 meeting or not meeting Student Outcome 1."
+    },
+    {
+      "name": "hardware_sequence_short_term_solutions",
+      "label": "Short-Term Solutions",
+      "type": "text-field",
+      "description": "Copy the paragraph(s) beginning with \"Temporal solutions have been implemented...\" through the immediate improvement actions."
+    },
+    {
+      "name": "hardware_sequence_upc_efforts",
+      "label": "CSE UPC Efforts",
+      "type": "text-field",
+      "description": "Copy the paragraph beginning with \"CSE UPC has made major effort...\""
+    },
+    {
+      "name": "proposed_change_1",
+      "label": "Proposed Change 1",
+      "type": "text-field",
+      "description": "Copy the full text under \"Proposed Change 1: Improve Alignment with other programs\" including the listed action items."
+    },
+    {
+      "name": "proposed_change_1_status",
+      "label": "Proposed Change 1 Status",
+      "type": "text-field",
+      "description": "Copy the final paragraph describing the Spring 2024 discussion, April 19 faculty discussion, and Fall 2024 follow-up."
     }
   ]
 }
