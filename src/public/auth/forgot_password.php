@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="error"><?= htmlspecialchars($err, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endforeach; ?>
 
-    <form method="post" action="">
+    <form method="post" action="/auth/forgot_password.php">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(fp_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
 
       <label for="email">Email</label>
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="links">
-      <a href="login.php">Back to Login</a>
+      <a href="/auth/login.php">Back to Login</a>
     </div>
   </div>
 </body>

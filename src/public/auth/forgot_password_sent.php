@@ -50,7 +50,7 @@ unset($_SESSION['forgot_password_notice'], $_SESSION['forgot_password_dev_reset_
     <?php endif; ?>
 
     <div class="links">
-      <a href="login.php">Back to Login</a>
+      <a href="/auth/login.php">Back to Login</a>
     </div>
   </div>
 </body>
