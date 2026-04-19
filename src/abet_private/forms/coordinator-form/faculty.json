@@ -6,9 +6,18 @@
   "fields": [
     {
       "type": "section-label",
+      "label": "A. Faculty Qualifications"
+    },
+    {
+      "name": "faculty_qualifications_intro",
+      "label": "See text in Criterion 6. Faculty: Section A.",
+      "description": "Copy text from \"A. Faculty Qualifications\" to \"..The followings are the numbers of CSE faculty by ranking.\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
       "label": "Counts of Faculty in the Program"
     },
-
     {
       "type": "text",
       "name": "num_professors",
@@ -29,23 +38,20 @@
     },
     {
       "type": "text",
-      "name": "num_lecturerers_pop",
-      "label": "# of Lecturerers and Professors of Practice (PoP)",
+      "name": "num_lecturers_pop",
+      "label": "# of Lecturers and Professors of Practice (PoP)",
       "numerical": true
     },
-
     {
-      "type": "section-break"
+      "name": "faculty_qualifications_intro_after_numbers",
+      "label": "See text in Criterion 6. Faculty: Section A.",
+      "description": "Copy text from after CSE faculty ranking to \"The following table briefly describes..\"",
+      "type": "text-field"
     },
-
-    {
-      "type": "section-label",
-      "label": "List of Faculty in the Program"
-    },
-
     {
       "type": "expandable-grid",
       "name": "faculty_list",
+      "label": "Areas of Interest table",
       "columns": [
         {
           "name": "faculty_name",
@@ -57,12 +63,12 @@
           "label": "Rank",
           "type": "select",
           "options": {
-                "P": "P- Professor",
-                "ASC": "ASC- Associate Professor",
-                "AST": "AST- Assistant Professor",
-                "I": "I- Instructor",
-                "A": "A- Adjunct",
-                "O": "O- Other"
+            "P": "P- Professor",
+            "ASC": "ASC- Associate Professor",
+            "AST": "AST- Assistant Professor",
+            "I": "I- Instructor",
+            "A": "A- Adjunct",
+            "O": "O- Other"
           }
         },
         {
@@ -70,7 +76,194 @@
           "label": "Areas of Interest",
           "type": "text"
         }
-      ]
+      ],
+      "maxRows": 50,
+      "required": false
+    },
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "B. Faculty Workload"
+    },
+    {
+      "name": "faculty_workload_intro",
+      "label": "See text in Criterion 6. Faculty: Section B.",
+      "description": "Copy text from \"B. Faculty Workload\" to \"Table 6-2. Faculty Workload Summary\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "C. Faculty Size"
+    },
+    {
+      "name": "faculty_size",
+      "label": "See text in Criterion 6. Faculty: Section C.",
+      "description": "Copy text from \"C. Faculty Size\" to \"D. Professional Development\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "D. Professional Development"
+    },
+    {
+      "name": "professional_development",
+      "label": "See text in Criterion 6. Faculty: Section D.",
+      "description": "Copy text from \"D. Professional Development\" to \"E. Authority and Responsibility of Faculty\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-break"
+    },
+    {
+      "type": "section-label",
+      "label": "E. Authority and Responsibility of Faculty"
+    },
+    {
+      "name": "authority_responsibility_of_faculty",
+      "label": "See text in Criterion 6. Faculty: Section E.",
+      "description": "Copy text from \"E. Authority and Responsibility of Faculty\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "Table 6-1"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "table_6_1_faculty_qualifications",
+      "label": "Table 6-1. Faculty Qualifications",
+      "description": "Summary table for faculty qualifications.",
+      "columns": [
+        {
+          "name": "faculty_name",
+          "label": "Faculty Name",
+          "type": "text"
+        },
+        {
+          "name": "rank",
+          "label": "Rank",
+          "type": "text"
+        },
+        {
+          "name": "highest_degree_level",
+          "label": "Highest Degree Level",
+          "type": "text"
+        },
+        {
+          "name": "degree_discipline",
+          "label": "Degree Discipline",
+          "type": "text"
+        },
+        {
+          "name": "institution",
+          "label": "Institution",
+          "type": "text"
+        },
+        {
+          "name": "year",
+          "label": "Year",
+          "type": "text"
+        },
+        {
+          "name": "professional_registration_certifications",
+          "label": "Professional Registration / Certifications",
+          "type": "text"
+        },
+        {
+          "name": "current_professional_memberships",
+          "label": "Current Professional Memberships",
+          "type": "text-field"
+        },
+        {
+          "name": "honors_awards",
+          "label": "Honors and Awards",
+          "type": "text-field"
+        },
+        {
+          "name": "service_activities",
+          "label": "Service Activities",
+          "type": "text-field"
+        },
+        {
+          "name": "publications_presentations",
+          "label": "Most Important Publications and Presentations from the Past Five Years",
+          "type": "text-field"
+        },
+        {
+          "name": "recent_professional_development",
+          "label": "Most Recent Professional Development Activities",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 50,
+      "required": false
+    },
+    {
+      "type": "section-label",
+      "label": "Table 6-2"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "table_6_2_faculty_workload_summary",
+      "label": "Table 6-2. Faculty Workload Summary",
+      "description": "Summary table for faculty teaching workload.",
+      "columns": [
+        {
+          "name": "faculty_name",
+          "label": "Faculty Name",
+          "type": "text"
+        },
+        {
+          "name": "rank",
+          "label": "Rank",
+          "type": "text"
+        },
+        {
+          "name": "ft_pt",
+          "label": "FT/PT",
+          "type": "text"
+        },
+        {
+          "name": "program_assignment",
+          "label": "Program Assignment",
+          "type": "text"
+        },
+        {
+          "name": "courses_taught_undergrad",
+          "label": "Courses Taught (Undergraduate)",
+          "type": "text-field"
+        },
+        {
+          "name": "courses_taught_grad",
+          "label": "Courses Taught (Graduate)",
+          "type": "text-field"
+        },
+        {
+          "name": "other_institutional_duties",
+          "label": "Other Institutional Duties",
+          "type": "text-field"
+        },
+        {
+          "name": "research_or_scholarship",
+          "label": "Research / Scholarship",
+          "type": "text-field"
+        },
+        {
+          "name": "service",
+          "label": "Service",
+          "type": "text-field"
+        }
+      ],
+      "maxRows": 50,
+      "required": false
     }
   ]
 }

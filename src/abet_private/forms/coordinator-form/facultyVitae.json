@@ -1,0 +1,57 @@
+{
+  "title": "Faculty Vitae",
+  "name": "facultyVitae",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Faculty Vitae"
+    },
+    {
+      "name": "faculty_name",
+      "label": "Faculty Name",
+      "type": "text"
+    },
+    {
+      "name": "academic_rank",
+      "label": "Academic Rank",
+      "type": "text"
+    },
+    {
+      "name": "degrees",
+      "label": "Degrees with Fields, Institution, and Year",
+      "type": "text-field"
+    },
+    {
+      "name": "teaching_experience",
+      "label": "Teaching Experience",
+      "type": "text-field"
+    },
+    {
+      "name": "other_related_experience",
+      "label": "Other Related Experience",
+      "type": "text-field"
+    },
+    {
+      "name": "professional_memberships",
+      "label": "Professional Memberships",
+      "type": "text-field"
+    },
+    {
+      "name": "professional_development",
+      "label": "Professional Development Activities",
+      "type": "text-field"
+    },
+    {
+      "name": "publications",
+      "label": "Selected Publications",
+      "type": "text-field"
+    },
+    {
+      "name": "honors_awards",
+      "label": "Honors and Awards",
+      "type": "text-field"
+    }
+  ]
+}

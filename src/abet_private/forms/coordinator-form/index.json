@@ -29,7 +29,13 @@
             "fileName": "facilities"
         },
         {
-            "fileName": "staffing"
+            "fileName": "institutionalSupport"
+        },
+        {
+            "fileName": "courseSyllabi"
+        },
+        {
+            "fileName": "facultyVitae"
         },
         {
             "fileName": "equipment"

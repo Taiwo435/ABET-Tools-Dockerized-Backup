@@ -1,0 +1,130 @@
+{
+  "title": "Course Syllabi",
+  "name": "courseSyllabi",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "1. Course Number and Name"
+    },
+    {
+      "name": "course_number_name",
+      "label": "Course Number and Name",
+      "type": "text-field",
+      "description": "Example: CHM 114 General Chemistry for Engineers"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "2. Credits"
+    },
+    {
+      "name": "credits",
+      "label": "Credits",
+      "type": "text",
+      "description": "Example: 4 credit hours"
+    },
+    {
+      "name": "credit_categorization",
+      "label": "Categorization of Credits in Table 5-1",
+      "type": "text",
+      "description": "Example: Math and Basic Science, Engineering Topic, or Other"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "3. Instructor's or Course Coordinator's Name"
+    },
+    {
+      "name": "instructor_course_coordinator",
+      "label": "Instructor's or Course Coordinator's Name",
+      "type": "text",
+      "description": "Example: Pam Marks"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "4. Textbook, Title, Author, and Year"
+    },
+    {
+      "name": "textbook_information",
+      "label": "Textbook, Title, Author, and Year",
+      "type": "text-field",
+      "description": "Include textbook title, author(s), edition, year, and any package information"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "5. Specific Course Information"
+    },
+    {
+      "name": "course_description",
+      "label": "a. Brief Description of the Content of the Course (Catalog Description)",
+      "type": "text-field"
+    },
+    {
+      "name": "prerequisites_corequisites",
+      "label": "b. Prerequisites or Co-requisites",
+      "type": "text-field"
+    },
+    {
+      "name": "required_elective_selected_elective",
+      "label": "c. Indicate Whether a Required, Elective, or Selected Elective Course in the Program",
+      "type": "text",
+      "description": "Example: Required, Elective, or Selected Elective"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "6. Specific Goals for the Course"
+    },
+    {
+      "name": "specific_goals_for_course",
+      "label": "Specific Goals for the Course",
+      "type": "text-field",
+      "description": "Specific outcomes of instruction"
+    },
+    {
+      "name": "student_outcome_coverage",
+      "label": "Computer Systems Engineering Student Outcome Coverage",
+      "type": "text-field",
+      "description": "List applicable CSE student outcomes covered by the course"
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "7. Brief List of Topics to be Covered"
+    },
+    {
+      "name": "topics_to_be_covered",
+      "label": "Brief List of Topics to be Covered",
+      "type": "text-field",
+      "description": "Example: Bonding theories, equilibrium, thermodynamics, and electrochemistry"
+    }
+  ]
+}

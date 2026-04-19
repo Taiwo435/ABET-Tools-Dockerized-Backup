@@ -5,13 +5,28 @@
   "method": "POST",
   "fields": [
     {
+      "type": "section-label",
+      "label": "Appendix C - Equipment"
+    },
+    {
+      "name": "appendix_c_intro",
+      "label": "Appendix C Introductory Text",
+      "description": "Copy the introductory sentence under Appendix C: 'Please list the major pieces of equipment used by the program in support of instruction.'",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "General University Lab Computers provided by UTO (Central IT)"
+    },
+    {
       "type": "expandable-grid",
       "name": "uto_lab_computers",
-      "label": "General University Lab Computers Provided by UTO (Central IT)",
+      "label": "General University Lab Computers provided by UTO (Central IT)",
+      "description": "Use one row per line/item in the Appendix C table, including site/location rows, subtotal rows, and final total row where needed.",
       "columns": [
         {
           "name": "pc_workstation",
-          "label": "PC Workstation",
+          "label": "PC Workstations",
           "type": "text"
         },
         {
@@ -20,13 +35,18 @@
           "type": "text"
         }
       ],
-      "maxRows": 50,
+      "maxRows": 75,
       "required": false
+    },
+    {
+      "type": "section-label",
+      "label": "Software available in the UTO Labs & Classrooms"
     },
     {
       "type": "expandable-grid",
       "name": "uto_lab_software",
-      "label": "Software Available in the UTO Labs and Classrooms",
+      "label": "Software available in the UTO Labs & Classrooms",
+      "description": "Capture each software row from the Appendix C table exactly as listed.",
       "columns": [
         {
           "name": "program",
@@ -40,46 +60,56 @@
         },
         {
           "name": "installed_osx",
-          "label": "Installed on OS X",
-          "type": "checkbox"
+          "label": "Version installed on OS X",
+          "type": "text"
         },
         {
           "name": "installed_citrix",
-          "label": "Installed on Citrix",
-          "type": "checkbox"
+          "label": "Version installed on Citrix",
+          "type": "text"
+        }
+      ],
+      "maxRows": 150,
+      "required": false
+    },
+    {
+      "type": "section-label",
+      "label": "SCIA Instructional labs Equipment"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "scia_instructional_lab_equipment",
+      "label": "SCIA Instructional labs Equipment",
+      "description": "Use one row per line/item in the Appendix C table, including room headings, equipment rows, subtotal rows, and final total row where needed.",
+      "columns": [
+        {
+          "name": "pc_workstation",
+          "label": "PC Workstations",
+          "type": "text"
+        },
+        {
+          "name": "quantity",
+          "label": "Quantity",
+          "type": "text"
         }
       ],
       "maxRows": 100,
       "required": false
     },
     {
-      "type": "expandable-grid",
-      "name": "scia_instructional_lab_equipment",
-      "label": "SCIA Instructional Labs Equipment",
-      "columns": [
-        {
-          "name": "pc_workstation",
-          "label": "PC Workstation",
-          "type": "text"
-        },
-        {
-          "name": "quantity",
-          "label": "Quantity",
-          "type": "text"
-        }
-      ],
-      "maxRows": 20,
-      "required": false
+      "type": "section-label",
+      "label": "Printers"
     },
     {
       "type": "expandable-grid",
       "name": "printers",
       "label": "Printers",
+      "description": "Capture the printer location/description row(s) and quantity exactly as shown in Appendix C.",
       "columns": [
         {
           "name": "printer_description",
-          "label": "Printer",
-          "type": "text"
+          "label": "Printer / Location / Description",
+          "type": "text-field"
         },
         {
           "name": "quantity",
@@ -91,13 +121,18 @@
       "required": false
     },
     {
+      "type": "section-label",
+      "label": "Software available in School of Computing & Informatics Instructional Labs and Virtual labs"
+    },
+    {
       "type": "expandable-grid",
       "name": "scia_brickyard_software_list",
-      "label": "Software Available in School of Computing and Informatics Instructional Labs and Virtual Labs",
+      "label": "Software available in School of Computing & Informatics Instructional Labs and Virtual labs",
+      "description": "Capture each software row from the Appendix C table exactly as listed.",
       "columns": [
         {
           "name": "software_name",
-          "label": "Software Name",
+          "label": "SCIA Brickyard Software list",
           "type": "text"
         },
         {
@@ -107,26 +142,26 @@
         },
         {
           "name": "windows_version",
-          "label": "On Windows",
+          "label": "Windows",
           "type": "checkbox"
         },
         {
           "name": "linux",
-          "label": "On Linux",
+          "label": "Linux",
           "type": "checkbox"
         },
         {
           "name": "macos",
-          "label": "On macOS",
+          "label": "macOS",
           "type": "checkbox"
         },
         {
           "name": "vdi_lab",
-          "label": "On VDI Lab",
+          "label": "VDI LAB",
           "type": "checkbox"
         }
       ],
-      "maxRows": 50,
+      "maxRows": 75,
       "required": false
     }
   ]
