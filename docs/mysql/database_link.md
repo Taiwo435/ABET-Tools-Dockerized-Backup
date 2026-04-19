@@ -1,4 +1,4 @@
-# Linking to the Database
+# Connecting to the Database
 
 This is a tutorial on how to link your code to the database.
 This is important to both the backend team (linking the frontend forms to the database)
