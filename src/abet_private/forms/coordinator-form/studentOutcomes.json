@@ -1,298 +1,157 @@
 {
-  "title": "Student Outcomes",
+  "title": "CRITERION 3. STUDENT OUTCOMES",
   "name": "studentOutcomes",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
       "type": "section-label",
-      "label": "Courses and the Method of Assessment for each Outcome",
-      "description": "The left-most column represents what course the row represents. The remaining rows correspond to ABET student outcomes 1-7. For each course, indicate the method of assessment for each outcome. If an outcome is not assessed in a course, leave the cell blank."
+      "label": "A. Student Outcomes"
+    },
+    {
+      "name" : "student_outcomes_text",
+      "description": "Copy all text under the \"Student Outcomes\" until you reach the \"Computer Systems Engineering Student outcomes\" box",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "Computer Systems Engineering Student Outcomes"
+    },
+    {
+      "name" : "student_outcomes_one",
+      "description": "Copy what the student will have first from the box",
+      "type": "text"
+    },
+    {
+      "name" : "student_outcomes_two",
+      "description": "Copy what the student will have second from the box",
+      "type": "text"
+    },
+    {
+      "name" : "student_outcomes_three",
+      "description": "Copy what the student will have third from the box",
+      "type": "text"
+    },
+    {
+      "name" : "student_outcomes_four",
+      "description": "Copy what the student will have fourth from the box",
+      "type": "text"
+    },
+    {
+      "name" : "student_outcomes_five",
+      "description": "Copy what the student will have fifth from the box",
+      "type": "text"
+    },
+    {
+      "name" : "student_outcomes_six",
+      "description": "Copy what the student will have sixth from the box",
+      "type": "text"
+    },
+    {
+      "name" : "student_outcomes_seven",
+      "description": "Copy what the student will have seventh from the box",
+      "type": "text"
+    },
+    {
+      "type": "section-label",
+      "label": "B. Relationship of Student Outcomes to Program Educational Objectives"
+    },
+    {
+      "name" : "student_outcome_to_program_education_objects_one",
+      "description": "Copy objective 1",
+      "type": "text-field"
     },
     {
       "type": "expandable-grid",
-      "name": "method_of_assessment",
+      "name": "topics_answered_by_objective_one",
+      "description": "Input topics which are answered by objective one.",
       "columns": [
         {
-          "name": "course_name",
-          "label": "Course Number",
+          "name": "topic_number",
+          "label": "Topic Number",
           "type": "text"
         },
         {
-          "name": "outcome_1",
-          "label": "SO #1",
-          "type": "text"
-        },
-        {
-          "name": "outcome_2",
-          "label": "SO #2",
-          "type": "text"
-        },
-        {
-          "name": "outcome_3",
-          "label": "SO #3",
-          "type": "text"
-        },
-        {
-          "name": "outcome_4",
-          "label": "SO #4",
-          "type": "text"
-        },
-        {
-          "name": "outcome_5",
-          "label": "SO #5",
-          "type": "text"
-        },
-        {
-          "name": "outcome_6",
-          "label": "SO #6",
-          "type": "text"
-        },
-        {
-          "name": "outcome_7",
-          "label": "SO #7",
+          "name": "topic",
+          "label": "Topic",
           "type": "text"
         }
       ],
-      "maxRows": 20,
-      "allowIncompleteRows": true
+      "maxRows": 7,
+      "required": false
     },
-
     {
-      "type": "section-break"
+      "name" : "student_outcome_to_program_education_objects_two",
+      "description": "Copy objective 2",
+      "type": "text-field"
     },
-
-    {
-      "type": "section-label",
-      "label": "The Required Level of Attainment Defined for each assessment",
-      "description": "For every method of assesment you entered in the previous table, indicate the required level of attainment for that method. Enter this in the form '#/#', where the first number indicates the required percentage for a student to show competence, and the second number indicates the percentage of the samples for the outcome to be met."
-    },
-
     {
       "type": "expandable-grid",
-      "name": "level_of_attainment",
+      "name": "topics_answered_by_objective_two",
+      "description": "Input topics which are answered by objective two.",
       "columns": [
         {
-          "name": "course_name",
-          "label": "Course Number",
+          "name": "topic_number",
+          "label": "Topic Number",
           "type": "text"
         },
         {
-          "name": "outcome_1",
-          "label": "SO #1",
-          "type": "text"
-        },
-        {
-          "name": "outcome_2",
-          "label": "SO #2",
-          "type": "text"
-        },
-        {
-          "name": "outcome_3",
-          "label": "SO #3",
-          "type": "text"
-        },
-        {
-          "name": "outcome_4",
-          "label": "SO #4",
-          "type": "text"
-        },
-        {
-          "name": "outcome_5",
-          "label": "SO #5",
-          "type": "text"
-        },
-        {
-          "name": "outcome_6",
-          "label": "SO #6",
-          "type": "text"
-        },
-        {
-          "name": "outcome_7",
-          "label": "SO #7",
+          "name": "topic",
+          "label": "Topic",
           "type": "text"
         }
       ],
-      "maxRows": 20,
-      "allowIncompleteRows": true
-    },
-
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Determining Criteria with Multiple Assesements",
-      "description": "For the following fields, describe how you determine whether a student outcome is met if there are multiple methods of assessment for that outcome. For example, if you have 3 methods of assessment for a given student outcome, do you require that all 3 methods meet the required level of attainment for the outcome to be considered met? Or do you require that at least 2 out of the 3 methods meet the required level of attainment? Or do you have some other method for determining this?"
-    },
-
-    {
-      "type": "text-field",
-      "name": "2_assessment_criteria",
-      "label": "With 2 assesments:"
+      "maxRows": 7,
+      "required": false
     },
     {
-      "type": "text-field",
-      "name": "3_assessment_criteria",
-      "label": "With 3 assesments:"
+      "name" : "student_outcome_to_program_education_objects_three",
+      "description": "Copy objective 3",
+      "type": "text-field"
     },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Summary of Assessment Results",
-      "description": "For the previous 6 semesters, add a row. Enter the semester and year (e.g. 'F25') in the first column. For the remaining columns, select either 'not met' or 'met' to indicate if the student outcome was met across the program."
-    },
-
     {
       "type": "expandable-grid",
-      "name": "assessment_results",
+      "name": "topics_answered_by_objective_three",
+      "description": "Input topics which are answered by objective three.",
       "columns": [
         {
-          "name": "semester",
-          "label": "Semester",
+          "name": "topic_number",
+          "label": "Topic Number",
           "type": "text"
         },
         {
-          "name": "outcome_1",
-          "label": "SO #1",
-          "type": "select",
-          "options": {
-            "Met": "Met",
-            "Not Met": "Not Met"
-          }
-        },
-        {
-          "name": "outcome_2",
-          "label": "SO #2",
-          "type": "select",
-          "options": {
-            "Met": "Met",
-            "Not Met": "Not Met"
-          }
-        },
-        {
-          "name": "outcome_3",
-          "label": "SO #3",
-          "type": "select",
-          "options": {
-            "Met": "Met",
-            "Not Met": "Not Met"
-          }
-        },
-        {
-          "name": "outcome_4",
-          "label": "SO #4",
-          "type": "select",
-          "options": {
-            "Met": "Met",
-            "Not Met": "Not Met"
-          }
-        },
-        {
-          "name": "outcome_5",
-          "label": "SO #5",
-          "type": "select",
-          "options": {
-            "Met": "Met",
-            "Not Met": "Not Met"
-          }
-        },
-        {
-          "name": "outcome_6",
-          "label": "SO #6",
-          "type": "select",
-          "options": {
-            "Met": "Met",
-            "Not Met": "Not Met"
-          }
-        },
-        {
-          "name": "outcome_7",
-          "label": "SO #7",
-          "type": "select",
-          "options": {
-            "Met": "Met",
-            "Not Met": "Not Met"
-          }
+          "name": "topic",
+          "label": "Topic",
+          "type": "text"
         }
       ],
-      "maxRows": 20
-    },
-
-    {
-      "type": "section-break"
-    
-    },
-
-    {
-      "type": "section-label",
-      "label": "Met and Not Met Occurrences",
-      "description": "Create 1 row for each student outcome."
+      "maxRows": 7,
+      "required": false
     },
     {
-      "type": "section-label",
-      "description": "\"# Semesters Assessed\" corresponds to the # of previous semesters you entered in the last table."
+      "name" : "student_outcome_to_program_education_objects_four",
+      "description": "Copy objective 4",
+      "type": "text-field"
     },
-    {
-      "type": "section-label",
-      "description": "\"% Met: All Semesters\" corresponds to the % of the time the outcome was met out of all semesters assesed."
-    },
-    {
-      "type": "section-label",
-      "description": "\"# 2 Consecutive Not Met\" corresponds to the # of occurences when the outcome was not met for 2 consecutive semesters."
-    },
-    {
-      "type": "section-label",
-      "description": "\"% Met: Past 2 Semesters\" corresponds to the % of the time the outcome was met out of only the past 2 semesters."
-    },
-
     {
       "type": "expandable-grid",
-      "name": "met_and_not_met",
+      "name": "topics_answered_by_objective_four",
+      "description": "Input topics which are answered by objective four.",
       "columns": [
         {
-          "name": "outcome",
-          "label": "Student Outcome",
-          "type": "select",
-          "options": {
-            "1": "SO #1",
-            "2": "SO #2",
-            "3": "SO #3",
-            "4": "SO #4",
-            "5": "SO #5",
-            "6": "SO #6",
-            "7": "SO #7"
-          }
-        },
-        {
-          "name": "semesters_assessed",
-          "label": "# Semesters Assessed",
+          "name": "topic_number",
+          "label": "Topic Number",
           "type": "text"
         },
         {
-          "name": "percentage_met",
-          "label": "% Met: All Semesters",
-          "type": "text"
-        },
-        {
-          "name": "times_consecutive_not_met",
-          "label": "# 2 Consecutive Not Met",
-          "type": "text"
-        },
-        {
-          "name": "percentage_met_secondary",
-          "label": "% Met: Past 2 Semesters",
+          "name": "topic",
+          "label": "Topic",
           "type": "text"
         }
       ],
-      "maxRows": 20
+      "maxRows": 7,
+      "required": false
     }
-
+    
   ]
 }

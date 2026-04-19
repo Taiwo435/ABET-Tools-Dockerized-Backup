@@ -1,59 +1,319 @@
 {
-  "title": "General Criteria",
+  "title": "General Criteria/Criterion 1. Students",
   "name": "generalCriteria",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
       "type": "section-label",
-      "label": "Freshman Criteria",
-      "description": "For students who have completed 0-11 transferable college credits post high school"
+      "label": "A. Student Admissions"
     },
     {
+      "name" : "student_addmissions_text_above_table",
+      "description": "See text in Criterion 1. Students: Section A. This is for the text above the table.",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "student_addmissions_table",
+      "label": "Table in top part of Criterion1. Students: Section A.",
+      "description": "This table holds admission requirments for avaliable majors.",
+      "columns": [
+        {
+          "name": "major",
+          "label": "Major",
+          "type": "text"
+        },
+        {
+          "name": "freshman_admission_criteria",
+          "label": "Freshman Students who have completed 0-11 transferable college credits post high school",
+          "type": "text"
+        },
+        {
+          "name": "transfer_admission_criteria_12_13",
+          "label": "Transfer students who have completed 12-23 transferable college credits post high school",
+          "type": "text"
+        },
+        {
+          "name": "transfer_admission_criteria_primary_24",
+          "label": "Transfer Students with 24 or more transferable college credit hours post high school must meet EITHER the Primary Criteria",
+          "type": "text"
+        },
+        {
+          "name": "transfer_admission_criteria_secondary_24",
+          "label": "Transfer Students with 24 or more transferable college credit hours post high school must meet EITHER the Secondary Criteria (not both)",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "name": "change_of_major_admissions",
+      "label": "Change of Major Admissions",
       "type": "text-field",
-      "name": "freshman",
-      "label": ""
+      "description": "Subsection under the student addmissions table"
     },
-
-    {
-      "type": "section-break"
-    },
-
     {
       "type": "section-label",
-      "label": "12-23 Credit Transfer Criteria",
-      "description": "For students who have completed 12-23 transferable college credits post high school"
+      "label": "B. Evaluating Student Performance"
     },
     {
-      "type": "text-field",
-      "name": "transfer_12_23",
-      "label": ""
+      "name": "evaluating_student_performace_text",
+      "label": "See text in Criterion 1. Students: Section B.",
+      "description": "Copy text from beginning of section to subheading \"Course Prerequistes\".",
+      "type": "text-field"
     },
-
     {
-      "type": "section-break"
+      "name": "course_prerequisites",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Course Prerequisites\"",
+      "description": "Copy text from \"Course Prerequisites\"",
+      "type": "text-field"
     },
-
+    {
+      "name": "academic_status_reports",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Academic Status Reports (ASRs)\"",
+      "description": "Copy text from \"Academic Status Reports (ASRs)\"",
+      "type": "text-field"
+    },
+    {
+      "name": "academic_standing",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Academic Standing\"",
+      "description": "Copy text from \"Academic Standing\" to \"Dean's List\"",
+      "type": "text-field"
+    },
+    {
+      "name": "dean_list",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Dean's List\"",
+      "description": "Copy text from \"Dean's List\" to \"University Academic Warning\"",
+      "type": "text-field"
+    },
+    {
+      "name": "university_academic_warning",
+      "label": "See text in Criterion 1. Students: Section B subsection \"University Academic Warning\"",
+      "description": "Copy text from \"University Academic Warning\" to \"Ira A. Fulton Schools of Engineering Probation\"",
+      "type": "text-field"
+    },
+    {
+      "name": "ira_fulton_probation",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Ira A. Fulton Schools of Engineering Probation\"",
+      "description": "Copy text from \"Ira A. Fulton Schools of Engineering Probation\" to \"Conditions for Ira A. Fulton Schools of Engineering Probation\"",
+      "type": "text-field"
+    },
+    {
+      "name": "ira_fulton_conditions",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Conditions for Ira A. Fulton Schools of Engineering Probation\"",
+      "description": "Copy text from \"Conditions for Ira A. Fulton Schools of Engineering Probation\" to \"Ira A. Fulton Schools of Engineering Continuing Probation\"",
+      "type": "text-field"
+    },
+    {
+      "name": "ira_fulton_continuing_probation",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Ira A. Fulton Schools of Engineering Continuing Probation\"",
+      "description": "Copy text from \"Ira A. Fulton Schools of Engineering Continuing Probation\" to \"Ira A. Fulton Schools of Engineering Ineligibility\"",
+      "type": "text-field"
+    },
+    {
+      "name": "ira_fulton_engineering_ineligiblity",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Ira A. Fulton Schools of Engineering Ineligibility\"",
+      "description": "Copy text from \"Ira A. Fulton Schools of Engineering Ineligibility\" to \"Ira A. Fulton Schools of Engineering Disqualification\"",
+      "type": "text-field"
+    },
+    {
+      "name": "ira_fulton_engineering_disqualification",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Ira A. Fulton Schools of Engineering Ineligibility\"",
+      "description": "Copy text from \"Ira A. Fulton Schools of Engineering Disqualification\" to \"Prerequisite Purging\"",
+      "type": "text-field"
+    },
+    {
+      "name": "prerequisite_purging",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Prerequisite Purging\"",
+      "description": "Copy text from \"Prerequisite Purging\" to \"Major Map & Academic Advising Curriculum Flowchart\"",
+      "type": "text-field"
+    },
+    {
+      "name": "major_map_academic_advising_curr_flow",
+      "label": "See text in Criterion 1. Students: Section B subsection \"Major Map & Academic Advising Curriculum Flowchart\"",
+      "description": "Copy text from \"Major Map & Academic Advising Curriculum Flowchart\"",
+      "type": "text-field"
+    },
     {
       "type": "section-label",
-      "label": "24+ Credit Transfer Criteria",
-      "description": "Students who have completed 24 or more transferable college credits post high school."
+      "label": "C. Transfer Students and Transfer Courses"
+    },
+    {
+      "name": "transfer_student_admissions_requirements",
+      "label": "See text in Criterion 1. Students: Section C subsection \"Transfer Student Admission Requirements\"",
+      "description": "Copy text from \"Transfer Student Admission Requirements\" to \"Course Equivalency Guide and Arizona Community Colleges\"",
+      "type": "text-field"
+    },
+    {
+      "name": "course_equivalency_guide_arizona_cc",
+      "label": "See text in Criterion 1. Students: Section C subsection \"Course Equivalency Guide and Arizona Community Colleges\"",
+      "description": "Copy text from \"Course Equivalency Guide and Arizona Community Colleges\"",
+      "type": "text-field"
     },
     {
       "type": "section-label",
-      "label": "",
-      "description": "The 24+ Credit section has a primary and secondary criteria. To qualify, students can meet either the primary or secondary criteria. They do not need to meet both."
-    },
-
-    {
-      "type": "text-field",
-      "name": "transfer_24_primary",
-      "label": "Primary Criteria"
+      "label": "D. Advising and Career Guidance"
     },
     {
-      "type": "text-field",
-      "name": "transfer_24_secondary",
-      "label": "Secondary Criteria"
+      "name": "faculty_advising",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Faculty\"",
+      "description": "Copy text from \"Faculty\" to \"Advising Staff\"",
+      "type": "text-field"
+    },
+    {
+      "name": "advising_staff",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Advising Staff\"",
+      "description": "Copy text from \"Advising Staff\"to \"Advising Frequency\"",
+      "type": "text-field"
+    },
+    {
+      "name": "advising_frequency",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Advising Frequency\"",
+      "description": "Copy text from \"Advising Frequency\"to \"First Year Student (aka First-time freshmen) Orientation\"",
+      "type": "text-field"
+    },
+    {
+      "name": "first_year_student_orientation",
+      "label": "See text in Criterion 1. Students: Section D subsection \"First Year Student (aka First-time freshmen) Orientation \"",
+      "description": "Copy text from \"First Year Student (aka First-time freshmen) Orientation \"to \"Advising Formats\"",
+      "type": "text-field"
+    },
+    {
+      "name": "advising_format",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Advising Formats\"",
+      "description": "Copy text from \"Advising Formats\"to \"Special Programs\"",
+      "type": "text-field"
+    },
+    {
+      "name": "special_programs",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Special Programs\"",
+      "description": "Copy text from \"Special Programs\"to \"Barret, The Honors College\"",
+      "type": "text-field"
+    },
+    {
+      "name": "barrett_honors_college",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Barrett, The Honors College\"",
+      "description": "Copy text from \"Barrett, The Honors College\"to \"E2 Camp\"",
+      "type": "text-field"
+    },
+    {
+      "name": "e2_camp",
+      "label": "See text in Criterion 1. Students: Section D subsection \"E2 Camp\"",
+      "description": "Copy text from \"E2 Camp\"to \"Grand Challenge Scholars Program\"",
+      "type": "text-field"
+    },
+    {
+      "name": "grand_challenge_scholars_program",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Grand Challenge Scholars Program\"",
+      "description": "Copy text from \"Grand Challenge Scholars Program\"to \"EPICS\"",
+      "type": "text-field"
+    },
+    {
+      "name": "EPICS",
+      "label": "See text in Criterion 1. Students: Section D subsection \"EPICS\"",
+      "description": "Copy text from \"EPICS\"to \"FURI\"",
+      "type": "text-field"
+    },
+    {
+      "name": "FURI",
+      "label": "See text in Criterion 1. Students: Section D subsection \"FURI\"",
+      "description": "Copy text from \"FURI\"to \"Student Council\"",
+      "type": "text-field"
+    },
+    {
+      "name": "student_council",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Student Council\"",
+      "description": "Copy text from \"Student Council\"to \"Academic Bowl\"",
+      "type": "text-field"
+    },
+    {
+      "name": "academic_bowl",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Academic Bowl\"",
+      "description": "Copy text from \"Academic Bowl\"to \"Fulton Ambassadors\"",
+      "type": "text-field"
+    },
+    {
+      "name": "fulton_ambassador",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Fulton Ambassador\"",
+      "description": "Copy text from \"Fulton Ambassador\"to \"Order of the Enginner\"",
+      "type": "text-field"
+    },
+    {
+      "name": "order_of_the_engineer",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Order of the Engineer\"",
+      "description": "Copy text from \"Order of the Engineer\"to \"Entrepreneurship + Innovation @ Fulton\"",
+      "type": "text-field"
+    },
+    {
+      "name": "entrepreneurship_Innovation_Fulton",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Entrepreneurship + Innovation @ Fulton\"",
+      "description": "Copy text from \"Entrepreneurship + Innovation @ Fulton\"to \"Engineering Student Organizations\"",
+      "type": "text-field"
+    },
+    {
+      "name": "engineering_student_organizations",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Engineering Student Organizations\"",
+      "description": "Copy text from \"Engineering Student Organizations\"to \"Undergraduate Teaching Assistants\"",
+      "type": "text-field"
+    },
+    {
+      "name": "ugta",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Undergraduate Teaching Assistants (UGTA)\"",
+      "description": "Copy text from \"Undergraduate Teaching Assistants (UGTA)\"to \"Engineering Career Center\"",
+      "type": "text-field"
+    },
+    {
+      "name": "engineering_career_center",
+      "label": "See text in Criterion 1. Students: Section D subsection \"Engineering Career Center\"",
+      "description": "Copy text from \"Engineering Career Center\"to \"SCIA Student Mentors\"",
+      "type": "text-field"
+    },
+    {
+      "name": "scia_student_mentors",
+      "label": "See text in Criterion 1. Students: Section D subsection \"SCIA Student Mentors\"",
+      "description": "Copy text from \"SCIA Student Mentors\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "E. Work in Lieu of Courses"
+    },
+    {
+      "name": "work_in_lieu_of_courses",
+      "description": "Copy text from the start of the section to \"Independent Study, Research, and Internship Credit\"",
+      "type": "text-field"
+    },  
+    {
+      "name": "independent_study_research_internship_credit",
+      "label": "See text in Criterion 1. Students: Section E subsection \"Independent Study, Research, and Internship Credit\"",
+      "description": "Copy text from \"Independent Study, Research, and Internship Credit\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "F. Graduation Requirements"
+    },
+    {
+      "name": "degree_name_credit_hours",
+      "description": "Copy text from \"Degree Name and Credit hours: 120\" to \"Flowchart and DARS Audit\"",
+      "type": "text-field"
+    },  
+    {
+      "name": "flowchart_dars_audit",
+      "label": "See text in Criterion 1. Students: Section E subsection \"Flowchart and DARS Audit\"",
+      "description": "Copy text from \"Flowchart and DARS Audit\"",
+      "type": "text-field"
+    },
+{
+      "type": "section-label",
+      "label": "G. Records of Student Work/Transcripts"
+    },
+    {
+      "name": "records_of_student_work_transcripts",
+      "description": "Copy text from \"Records of Student Work/Transcripts\"",
+      "type": "text-field"
     }
   ]
 }

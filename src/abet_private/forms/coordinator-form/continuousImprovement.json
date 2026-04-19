@@ -1,355 +1,549 @@
 {
-  "title": "Continuous Improvement",
+  "title": "CRITERION 4. CONTINUOUS IMPROVEMENT",
   "name": "continuousImprovement",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
-      "type": "section-label",
-      "label": "Improvement of Hardware Sequence Consideration"
-    },
-    {
       "type": "text-field",
-      "name": "hardware_source",
-      "label": "Sources"
+      "name": "criterion4_continuou_improvement_text",
+      "description": "Copy text from the beginning of the section to the \"Student Outcomes\" header."
     },
-    {
-      "type": "text-field",
-      "name": "hardware_problem_analysis",
-      "label": "Problem Analysis"
-    },
-
-    {
-      "type": "section-break"
-    },
-
     {
       "type": "section-label",
-      "label": "Improvement based on Fall 2024 assessment outcome"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_source",
-      "label": "Sources"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_problem_analysis",
-      "label": "Problem Analysis"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_actions_plans",
-      "label": "Actions/Plans"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_status_actions",
-      "label": "Status of Actions"
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Improvement based on Spring 2025 assessment outcome"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2025_source",
-      "label": "Sources"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2025_problem_analysis",
-      "label": "Problem Analysis"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2025_actions_plans",
-      "label": "Actions/Plans"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2025_status_actions",
-      "label": "Status of Actions"
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Improvement based on Fall 2025 assessment outcome"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2025_source",
-      "label": "Sources"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2025_problem_analysis",
-      "label": "Problem Analysis"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2025_actions_plans",
-      "label": "Actions/Plans"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2025_status_actions",
-      "label": "Status of Actions"
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Improvement based on Spring 2026 assessment outcome"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2026_source",
-      "label": "Sources"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2026_problem_analysis",
-      "label": "Problem Analysis"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2026_actions_plans",
-      "label": "Actions/Plans"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_spring_2026_status_actions",
-      "label": "Status of Actions"
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Program Educational Objectives Update"
-    },
-    {
-      "type": "text-field",
-      "name": "peo_update_source",
-      "label": "Sources"
-    },
-    {
-      "type": "text-field",
-      "name": "peo_update_problem_analysis",
-      "label": "Problem Analysis"
-    },
-    {
-      "type": "text-field",
-      "name": "peo_update_actions_plans",
-      "label": "Actions/Plans"
-    },
-    {
-      "type": "text-field",
-      "name": "peo_update_result",
-      "label": "Status of Actions"
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "New Course Development"
-    },
-    {
-      "type": "text-field",
-      "name": "new_course_source",
-      "label": "Sources"
-    },
-    {
-      "type": "text-field",
-      "name": "new_course_problem_analysis",
-      "label": "Problem Analysis"
-    },
-    {
-      "type": "text-field",
-      "name": "new_course_actions_plans",
-      "label": "Actions/Plans"
-    },
-    {
-      "type": "text-field",
-      "name": "new_course_status_actions",
-      "label": "Status of Actions"
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Improvement based on Fall 2024 assessment outcome"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_source",
-      "label": "Sources"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_problem_analysis",
-      "label": "Problem Analysis"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_actions_plans",
-      "label": "Actions/Plans"
-    },
-    {
-      "type": "text-field",
-      "name": "semester_fall_2024_status_actions",
-      "label": "Status of Actions"
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Degree Program Concentration Updates",
-      "description": "Use one row per degree concentration."
+      "label": "A. Student Outcomes"
     },
     {
       "type": "expandable-grid",
-      "name": "concentration_update",
+      "name": "topics",
+      "description": "Copy requirements from \"It is recommended that this section include the following (a table may be used to present this information):\"",
       "columns": [
         {
-          "name": "concentration_name",
-          "label": "Concentration Name",
+          "name": "information",
+          "label": "information",
+          "type": "text"
+        }
+      ],
+      "maxRows": 7,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "Table 4-1",
+      "description": "Table 4-1. Courses and the method of assessment for each outcome",
+      "columns": [
+        {
+          "name": "abet_number",
+          "label": "ABET",
           "type": "text"
         },
         {
-          "name": "source",
-          "label": "Source",
-          "type": "text-field"
+          "name": "class_one",
+          "label": "CSE 301",
+          "type": "text"
+        },
+        {
+          "name": "class_two",
+          "label": "CSE 320",
+          "type": "text"
+        },
+        {
+          "name": "class_three",
+          "label": "CSE 325",
+          "type": "text"
+        },
+        {
+          "name": "class_four",
+          "label": "CSE 360",
+          "type": "text"
+        },
+        {
+          "name": "class_five",
+          "label": "CSE 365",
+          "type": "text"
+        },
+        {
+          "name": "class_six",
+          "label": "CSE 423",
+          "type": "text"
+        },
+        {
+          "name": "class_seven",
+          "label": "CSE 424",
+          "type": "text"
+        },
+        {
+          "name": "class_eight",
+          "label": "CSE 434",
+          "type": "text"
+        },
+        {
+          "name": "class_nine",
+          "label": "IEE 380",
+          "type": "text"
+        }
+      ],
+      "maxRows": 7,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "Table 4-2",
+      "description": "Table 4-2. The required level of attainment defined for each assessment",
+      "columns": [
+        {
+          "name": "abet_number",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "class_one",
+          "label": "CSE 301",
+          "type": "text"
+        },
+        {
+          "name": "class_two",
+          "label": "CSE 320",
+          "type": "text"
+        },
+        {
+          "name": "class_three",
+          "label": "CSE 325",
+          "type": "text"
+        },
+        {
+          "name": "class_four",
+          "label": "CSE 360",
+          "type": "text"
+        },
+        {
+          "name": "class_five",
+          "label": "CSE 365",
+          "type": "text"
+        },
+        {
+          "name": "class_six",
+          "label": "CSE 423",
+          "type": "text"
+        },
+        {
+          "name": "class_seven",
+          "label": "CSE 424",
+          "type": "text"
+        },
+        {
+          "name": "class_eight",
+          "label": "CSE 434",
+          "type": "text"
+        },
+        {
+          "name": "class_nine",
+          "label": "IEE 380",
+          "type": "text"
+        }
+      ],
+      "maxRows": 7,
+      "required": false
+    },
+    {
+      "type": "label",
+      "label": "7. The frequency with which these assessment processes are carried out"
+    },
+    {
+      "name" : "frequency ",
+      "description": "Copy text below header.",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "8. The expected level of attainment for each of the student outcomes"
+    },
+    {
+      "name" : "level_of_attainment",
+      "description": "Copy text below header to when table information is mentioned.",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "9. Summaries of the results of the evaluation process and an analysis illustrating the extent to which each of the student outcomes is being attained."
+    },
+    {
+      "name" : "summaries ",
+      "description": "Copy text below header to when table 4-3 is mentioned.",
+      "type": "text-field"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "Table 4-3",
+      "description": "Table 4-3. Summary of assessment results",
+      "columns": [
+        {
+          "name": "abet_number",
+          "label": "ABET",
+          "type": "text"
+        },
+        {
+          "name": "semester_one",
+          "label": "F21",
+          "type": "text"
+        },
+        {
+          "name": "semester_two",
+          "label": "S22",
+          "type": "text"
+        },
+        {
+          "name": "semester_three",
+          "label": "F22",
+          "type": "text"
+        },
+        {
+          "name": "semester_four",
+          "label": "S23",
+          "type": "text"
+        },
+        {
+          "name": "semester_five",
+          "label": "F23",
+          "type": "text"
+        },
+        {
+          "name": "semester_six",
+          "label": "S24",
+          "type": "text"
+        },
+        {
+          "name": "semester_seven",
+          "label": "F24",
+          "type": "text"
+        },
+        {
+          "name": "semester_eight",
+          "label": "S25",
+          "type": "text"
+        }
+      ],
+      "maxRows": 7,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "outcome_not_met",
+      "description": "If outcomes where not met in table 4-3, explain why. See information below Table 4-3.",
+      "columns": [
+        {
+          "name": "out_not_met",
+          "label": "Outcome number not met",
+          "type": "text"
+        },
+        {
+          "name": "out_not_met_semesters",
+          "label": "Outcome number not met",
+          "type": "text"
+        },
+        {
+          "name": "out_not_met_desc",
+          "label": "Note of why it wasn't met",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "label",
+      "label": "Text above Table 4-6, this is not the text which are the notes."
+    },
+    {
+      "name" : "text_above_table_4-6",
+      "description": "Copy text above Table 4-6.",
+      "type": "text-field"
+    },
+    { 
+      "type": "expandable-grid",
+      "name": "table_4-6",
+      "description": "Table 4-6. Percentages of Met and times of 2 consecutive semester with Not Met",
+      "columns": [
+        {
+          "name": "outcome",
+          "label": "Outcome",
+          "type": "text"
+        },
+        {
+          "name": "semesters_assessed",
+          "label": "Semesters_Assessed",
+          "type": "text"
+        },
+        {
+          "name": "precentage_met",
+          "label": "Percentage Met",
+          "type": "text"
+        },
+        {
+          "name": "time_of_2_consecutive_sem_not_met",
+          "label": "Times of 2 Consecutive Sem. Not Met",
+          "type": "text"
+        },
+        {
+          "name": "precentage_met_in_past_year",
+          "label": "Precentage Met In Past Year",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "label",
+      "label": "10. How the results are documented and maintained"
+    },
+    {
+      "name" : "document_maintained",
+      "description": "Copy all text to \"Continuous Improvement\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "B. Continuous Improvement"
+    },
+    {
+      "type": "text-field",
+      "name": "continuous_improvement_text",
+      "description": "Copy all text to \"Continuous Improvement Prcoess Overview\""
+    },
+    {
+      "type": "label",
+      "label": "Continuous Improvement Process Overview"
+    },
+    {
+      "type": "text-field",
+      "name": "continuous_improvement_process_overview",
+      "description": "Copy all text from \"Continuous Improvement Prcoess Overview\" to \"Data Collection \""
+    },
+    {
+      "type": "label",
+      "label": "1. Data Collection"
+    },
+    { 
+      "type": "expandable-grid",
+      "name": "data_collection",
+      "description": "Input the sources of input list",
+      "columns": [
+        {
+          "name": "input_source",
+          "label": "Input SOurce",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "label",
+      "label": "2. Problem Identification"
+    },
+    {
+      "type": "text-field",
+      "name": "problem_identification",
+      "description": "Copy all text to from \"Problem Identification\" to \"Implementation\""
+    },
+    {
+      "type": "label",
+      "label": "3. Implementation"
+    },
+    {
+      "type": "text-field",
+      "name": "implementation",
+      "description": "Copy all text to from \"Implementation\" to \"Evaluation\""
+    },
+    {
+      "type": "label",
+      "label": "4. Evaluation"
+    },
+    {
+      "type": "text-field",
+      "name": "evalutation",
+      "description": "Copy all text to from \"Evaluation\" to \"Closing the loop\""
+    },
+    {
+      "type": "label",
+      "label": "5. Closing the loop"
+    },
+    {
+      "type": "text-field",
+      "name": "Closing the loop",
+      "description": "Copy all text to from \"Closing the loop\" to \"Improvements Actions Based on Outcomes Assessment\""
+    },
+    {
+      "type": "label",
+      "label": "Improvements Actions Based on Outcome Assessment"
+    },
+    { 
+      "type": "expandable-grid",
+      "name": "hardware_sequence_consideration",
+      "description": "1. Improvement of hardware sequence consideration ",
+      "columns": [
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text"
         },
         {
           "name": "problem_analysis",
           "label": "Problem Analysis",
-          "type": "text-field"
-        },
-        {
-          "name": "actions_plans",
-          "label": "Actions/Plans",
-          "type": "text-field"
-        },
-        {
-          "name": "status_actions",
-          "label": "Status of Actions",
-          "type": "text-field"
+          "type": "text"
         }
       ],
-      "maxRows": 10,
+      "maxRows": 20,
       "required": false
     },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Degree Program Concentration Flowchart Updates",
-      "description": "Use one row per degree concentration."
-    },
-    {
+    { 
       "type": "expandable-grid",
-      "name": "concentration_flowchart",
+      "name": "assessment_outcome",
+      "description": "Improvement based on years that assessment outcome was not met",
       "columns": [
         {
-          "name": "concentration_name",
-          "label": "Concentration Name",
-          "type": "text"
+          "name": "semester",
+          "label": "Semester",
+          "type": "test"
         },
         {
-          "name": "source",
-          "label": "Source",
-          "type": "text-field"
+          "name": "sources",
+          "label": "Sources",
+          "type": "text"
         },
         {
           "name": "problem_analysis",
           "label": "Problem Analysis",
-          "type": "text-field"
-        },
-        {
-          "name": "actions_plans",
-          "label": "Actions/Plans",
-          "type": "text-field"
-        },
-        {
-          "name": "status_actions",
-          "label": "Status of Actions",
-          "type": "text-field"
-        }
-      ],
-      "maxRows": 10,
-      "required": false
-    },
-
-    {
-      "type": "section-break"
-    },
-
-    {
-      "type": "section-label",
-      "label": "Other Improvements",
-      "description": "Use these rows for any other improvements/changes that do not fit in the above categories."
-    },
-    {
-      "type": "expandable-grid",
-      "name": "adhoc",
-      "columns": [
-        {
-          "name": "improvement_description",
-          "label": "Brief Description of Improvement",
           "type": "text"
         },
         {
-          "name": "source",
-          "label": "Source",
-          "type": "text-field"
+          "name": "actions",
+          "label": "Actions",
+          "type": "text"
+        },    
+        {
+          "name": "status_of_actions",
+          "label": "Status of Actions",
+          "type": "text"
+        }        
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "label",
+      "label": "Improvements Driven by Constituencies"
+    },
+    { 
+      "type": "expandable-grid",
+      "name": "education_objectives_update",
+      "description": "1. CSE program educational objectives update",
+      "columns": [
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text"
         },
         {
           "name": "problem_analysis",
           "label": "Problem Analysis",
-          "type": "text-field"
+          "type": "text"
         },
         {
-          "name": "actions_plans",
-          "label": "Actions/Plans",
-          "type": "text-field"
-        },
+          "name": "actions",
+          "label": "Actions",
+          "type": "text"
+        },    
         {
-          "name": "status_actions",
-          "label": "Status of Actions",
-          "type": "text-field"
-        }
+          "name": "result",
+          "label": "Result",
+          "type": "text"
+        }        
       ],
-      "maxRows": 10,
+      "maxRows": 20,
       "required": false
+    },  
+    { 
+      "type": "expandable-grid",
+      "name": "education_objectives_update",
+      "description": "Tables between the one above and \"Improvements Underway will good  here",
+      "columns": [
+        {
+          "name": "table_name",
+          "label": "Table Name",
+          "type": "text"
+        },
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text"
+        },
+        {
+          "name": "actions",
+          "label": "Actions",
+          "type": "text"
+        },    
+        {
+          "name": "status",
+          "label": "status",
+          "type": "text"
+        }        
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "label",
+      "label": "Improvements Underway"
+    },   
+    { 
+      "type": "expandable-grid",
+      "name": "education_objectives_update",
+      "description": "Tables between \"Improvements Underway\" to \"Additional Information\"",
+      "columns": [
+        {
+          "name": "table_name",
+          "label": "Table Name",
+          "type": "text"
+        },
+        {
+          "name": "sources",
+          "label": "Sources",
+          "type": "text"
+        },
+        {
+          "name": "problem_analysis",
+          "label": "Problem Analysis",
+          "type": "text"
+        },
+        {
+          "name": "action_plans",
+          "label": "Action/Plans",
+          "type": "text"
+        },    
+        {
+          "name": "status_of_actions",
+          "label": "Status of Actions",
+          "type": "text"
+        }        
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "section-label",
+      "label": "C. Additional Information"
+    }, 
+    {
+      "type": "text-field",
+      "name": "additional_information",
+      "description": "Copy all text below \"C. Additional Infomration\""
     }
-    
   ]
 }
