@@ -4,6 +4,13 @@
   "action": "submit.php",
   "method": "POST",
   "fields": [
+
+    {
+    "name": "department",
+    "label": "Department (ProgramName-ProgramCode)",
+    "type": "text-field"
+    },
+
     {
       "type": "section-label",
       "label": "Contact Information"
