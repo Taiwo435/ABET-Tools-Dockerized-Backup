@@ -21,12 +21,14 @@ security:
             lazy: true
             provider: app_user_provider
             form_login:
-                login_path: app_login
+                login_path: app_login # redirect to this path if user not logged in
                 check_path: app_login
+                default_target_path: app_homepage # once user logs in, go here
                 enable_csrf: true
             logout:
                 path: app_logout
                 # where to redirect after logout
+                target: app_login
                 # target: app_any_route
 
             # Activate different ways to authenticate:
@@ -39,7 +41,7 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
-        - { path: '^/test.php', roles: ROLE_USER }
+        - { path: '^/tool/assignmentsgrades*', roles: ROLE_ASSIGNMENTS_GRADES }
 
 when@test:
     security:

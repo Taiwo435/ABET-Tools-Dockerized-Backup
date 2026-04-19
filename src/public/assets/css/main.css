@@ -39,6 +39,10 @@ header {
     z-index: 100;
 }
 
+header a {
+    text-decoration: none;
+}
+
 .header-right-alligned {
     display: flex;
     flex-direction: row;

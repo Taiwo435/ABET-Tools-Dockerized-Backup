@@ -11,8 +11,9 @@
         "doctrine/orm": "^3.6.3",
         "symfony/cache": "^7.4.8",
         "symfony/dotenv": "^7.4.8",
-        "symfony/form": "^7.4.8",
+        "symfony/form": "*",
         "symfony/framework-bundle": "^7.4.8",
+        "symfony/http-client": "^7.4",
         "symfony/http-kernel": "^7.4.8",
         "symfony/monolog-bundle": "^4.0.2",
         "symfony/runtime": "^7.4.8",
@@ -48,7 +49,8 @@
     "scripts": {
         "doctrine": "./vendor/bin/doctrine-migrations",
         "pest": "./vendor/bin/pest",
-        "test": "./bin/phpunit",
+        "test": "docker exec -i --env-file ../../docker/.env --env APP_ENV=test php_apache sh -c 'cd $ABET_PRIVATE_DIR && ./bin/phpunit'",
+        "local_test": "APP_ENV=test ./bin/phpunit",
         "console": "./bin/console"
     },
     "autoload": {

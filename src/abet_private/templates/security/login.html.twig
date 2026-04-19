@@ -37,18 +37,18 @@
         </div>
       <?php endif; ?> #}
 
-      <form method="POST" action="/login" autocomplete="on">
+      <form method="POST" autocomplete="on">
         {# <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>"> #}
         {% if error %}
-            <div class="error-box">
+            <div class="msg error">
               <strong>Error:</strong>
               {{ error.messageKey|trans(error.messageData, 'security') }}
             </div>
         {% endif %}
 
         {% if app.user %}
-            <div class="mb-3">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+            <div class="msg success">
+                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
             </div>
         {% endif %}
 

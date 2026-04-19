@@ -12,16 +12,18 @@ use Symfony\Component\HttpFoundation\Request;
 
 // $response = new RedirectResponse('http://example.com/');
 
+/**
+ * Controller that handles the routes for security-related paths 
+ * 
+ * /login does not take care of login, it is handed off to FormLoginAuthenticator
+ * @see https://symfony.com/doc/7.4/security.html#form-login
+ * this describes everything about the form login
+ */
 class SecurityController extends AbstractController
 {
-    #[Route(path: '/symfony/login', name: 'app_login')]
+    #[Route(path: '/login2', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        $request = Request::createFromGlobals();
-        // if ($request->isMethod('POST')) {
-        //     $response = new RedirectResponse('./home');
-        //     $response->send();
-        // }
 
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
@@ -35,7 +37,7 @@ class SecurityController extends AbstractController
         ]);
     }
 
-    //#[Route(path: '/logout', name: 'app_logout')]
+    #[Route(path: '/logout2', name: 'app_logout')]
     public function logout(): void
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');

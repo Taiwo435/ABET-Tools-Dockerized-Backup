@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Column;
 use InvalidArgumentException;
+use App\Entity\Permissions;
 
 #[Entity]
 #[Table(name: "users")]
@@ -135,7 +136,7 @@ class User
     /**
      * Returns whether the user has a certian permission
      * Will always be true if the user is an admin
-     * @param \Entity\Permissions $permission   The permission you want to read
+     * @param Permissions $permission   The permission you want to read
      * @throws InvalidArgumentException         If the input is not a valid permission (or is not handled...)
      * @return bool                             The value of the user's access.
      */
@@ -148,7 +149,7 @@ class User
 
     /**
      * Sets a certain permission to the indicated Value
-     * @param \Entity\Permissions $permission   The permission you want to change
+     * @param Permissions $permission   The permission you want to change
      * @param bool $active                      The new state of the permission
      * @return void
      */
@@ -182,11 +183,11 @@ class User
  * 
  * Uses a bitmask implementation, max of 32 permissions unless we change column length (very possible)
  */
-enum Permissions : int {
-    case AdminPanel = 1 << 0;
-    case GradeDataTool = 1 << 1;
-    case CanvasFormattingTool = 1 << 2;
-    case ReportGenTool = 1 << 3;
-    case FacultyFormTool = 1 << 4;
-    case CoordinatorFormTool = 1 << 5;
-}
+// enum Permissions : int {
+//     case AdminPanel = 1 << 0;
+//     case GradeDataTool = 1 << 1;
+//     case CanvasFormattingTool = 1 << 2;
+//     case ReportGenTool = 1 << 3;
+//     case FacultyFormTool = 1 << 4;
+//     case CoordinatorFormTool = 1 << 5;
+// }

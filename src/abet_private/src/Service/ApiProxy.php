@@ -1,0 +1,75 @@
+<?php 
+namespace App\Service;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\BrowserKit\Response;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\ResponseInterface;
+
+// Acts as a service for stuff
+
+/**
+ * inspired by `public/AssignmentsGrades/api-proxy.php`
+ * Acts as an HTTP proxy to our backend APIs
+ */
+class ApiProxy
+{
+
+    /**
+     * Uses the extraction_API endpoint to verify if a Canvas Access token is valid.
+     * @param string $token     the API token to validate
+     * @return ResponseInterface         The response from the API. 200 iff. valid.
+     */
+    public function verifyToken(string $token)  {
+        $client = HttpClient::create();
+        $url    = $this->api_base(API::Extraction) . '/verify-token';
+
+        $response = $client->request(
+            'GET',
+            $url,
+            [
+                'headers' => [
+                    'canvas-access-token:' => $token
+                ],
+            ]
+        );
+
+        return $response;
+    }
+
+    public function getHappyMessage(): string
+    {
+        $messages = [
+            'You did it! You updated the system! Amazing!',
+            'That was one of the coolest updates I\'ve seen all day!',
+            'Great work! Keep going!',
+        ];
+
+        $index = array_rand($messages);
+
+        return $messages[$index];
+    }
+
+    /**
+     * gets the base of a certain API
+     * Made by Tan28-art
+     * edited by Danny Hoang
+     * @param API $service      the API you want to contact
+     * @return string           the base URL of the associated API 
+     */
+    private function api_base(API $service): string {
+        $hosts = [
+            API::Extraction->value => ['EXTRACTION_HOSTNAME', 'EXTRACTION_PORT', 'extraction_api', '8000'],
+            API::Formatting->value  => ['CANVAS_FORMATTING_HOSTNAME', 'CANVAS_FORMATTING_PORT', 'canvas_formatting', '8001'],
+        ];
+        [$hostEnv, $portEnv, $defaultHost, $defaultPort] = $hosts[$service->value];
+        $host = getenv($hostEnv) ?: $defaultHost;
+        $port = getenv($portEnv) ?: $defaultPort;
+        return "http://{$host}:{$port}";
+    }
+
+}
+
+enum API : int{
+    case Extraction = 1;
+    case Formatting = 2;
+}
