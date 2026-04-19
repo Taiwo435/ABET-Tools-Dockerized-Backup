@@ -22,9 +22,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-require_once getenv("ABET_PRIVATE_DIR").'/vendor/autoload.php';
-$path = (getenv('ABET_PRIVATE_DIR').'/../../docker/.env');
-(new Dotenv())->bootEnv($path);
+require_once rtrim(getenv('ABET_PRIVATE_DIR') ?: '/home/abet_private', '/') . '/vendor/autoload.php';
+
+$path = '/home/docker/.env';
+if (file_exists($path)) {
+    (new Dotenv())->bootEnv($path);
+}
+
+$_SERVER['APP_ENV'] = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? 'dev';
+$_SERVER['APP_DEBUG'] = $_SERVER['APP_DEBUG'] ?? $_ENV['APP_DEBUG'] ?? '1';
 
 global $kernel;
 
