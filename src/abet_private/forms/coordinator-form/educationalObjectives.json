@@ -1,16 +1,100 @@
 {
-  "title": "Program Educational Objectives",
+  "title": "Criterion 2. Program Educational Objectives",
   "name": "educationalObjectives",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
       "type": "section-label",
-      "label": "Process for Review of Program Educational Objectives"
+      "label": "A. Mission Statement"
+    },
+    {
+      "name" : "mission_statement",
+      "description": "Copy all text under the \"Mission Statement\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "B. Program Educational Objectives"
+    },
+    {
+      "name" : "program_education_objectives",
+      "description": "Copy all text under the \"Program Educational Objectivies\" until you reach the blue box",
+      "type": "text-field"
+    },
+        {
+      "name" : "blue-box",
+      "description": "Copy all text in the blue box",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "C. Consistency of the Program Educational Objectives with the Mission of the Institution"
+    },
+    {
+      "name" : "consistency_program_education_object_mission_institution",
+      "description": "Copy all text under the \"Program Educational Objectivies\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "D. Program Constituencies"
+    },
+    {
+      "name" : "program_constituencies_text_above_subheaders",
+      "description": "Copy all text under the \"Program Constituencies\" to \"Industry\"",
+      "type": "text-field"
+    },  
+    {
+      "type": "label",
+      "label": "Industry"
+    },
+    {
+      "name" : "industry",
+      "description": "Copy all text under the \"Industry\" to \"Alumni\"",
+      "type": "text-field"
+    },  
+        {
+      "type": "label",
+      "label": "Alumni"
+    },
+    {
+      "name" : "alumni",
+      "description": "Copy all text under the \"Alumni\" to \"Students\"",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "Students"
+    },
+    {
+      "name" : "students",
+      "description": "Copy all text under the \"Students\" to \"Faculty\"",
+      "type": "text-field"
+    },    
+    {
+      "type": "label",
+      "label": "Faculty"
+    },
+    {
+      "name" : "faculty",
+      "description": "Copy all text under \"Faculty\"",
+      "type": "text-field"
+    },
+    {
+      "type": "section-label",
+      "label": "E. Process for Review of the Program Educational Objectives"
+    },
+    {
+      "name" : "process_reivew_program_education_objectives_text",
+      "description": "Copy all text under \"Process for Review of the Program Educational Objectives\" to the table",
+      "type": "text-field"
     },
     {
       "type": "expandable-grid",
-      "name": "peo_review_process",
+      "name": "table 1-1",
+      "label": "Table 1-1 in Criterion 2 section E",
+      "description": "Process for review of educational objectives for the Computer Systems Engineering program.",
       "columns": [
         {
           "name": "input_method",
@@ -24,12 +108,66 @@
         },
         {
           "name": "constituencies",
-          "label": "Constituencies Involved",
+          "label": "Constituencies",
           "type": "text"
         }
       ],
-      "maxRows": 10,
+      "maxRows": 20,
       "required": false
+    },
+    {
+      "type": "label",
+      "label": "Engagement with Constituencies"
+    },
+    {
+      "name" : "engagement_constituencies",
+      "description": "Copy all text under \"Engagement with Constituencies\" to \"Industry Engagement\"",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "Industry Engagement"
+    },
+    {
+      "name" : "industry_engagement",
+      "description": "Copy all text under \"Industry Engagement\" to \"Alumni Engagement\"",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "Alumni Engagement"
+    },
+    {
+      "name" : "alumni_engagement",
+      "description": "Copy all text under \"Alumni Engagement\" to \"Student Engagement\"",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "Student Engagement"
+    },
+    {
+      "name" : "studnet_engagement",
+      "description": "Copy all text under \"Student Engagement\" to \"Faculty Engagement\"",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "Faculty Engagement"
+    },
+    {
+      "name" : "faculty_engagement",
+      "description": "Copy all text under \"Faculty Engagement\" to \"Ensuring Consistency\"",
+      "type": "text-field"
+    },
+    {
+      "type": "label",
+      "label": "Ensuring consistency"
+    },
+    {
+      "name" : "ensuring_consistency",
+      "description": "Copy all text under \"Ensuring Consistency\"",
+      "type": "text-field"
     }
   ]
 }
