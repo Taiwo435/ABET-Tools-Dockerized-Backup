@@ -51,6 +51,190 @@ def get_outcome_met_percentages(questionnaire):
     
 
     return cursor.fetchall()
+def get_improvement_actions_hardware(questionnaire):
+    """
+    Fetch improvement actions info from continuous_improvement.
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'hardware';
+    """)
+
+    return cursor.fetchall()
+
+def get_improvement_actions_year(questionnaire):
+    
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            status,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'semester_improvement' and semester_year IS NOT NULL;
+    """)
+
+    return cursor.fetchall()
+
+def get_improvement_actions_new_course(questionnaire):
+    
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'new_course';
+    """)
+
+    return cursor.fetchall()
+def get_improvement_actions_obj(questionnaire):
+    
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'peo_update';
+    """)
+    return cursor.fetchall()
+
+def get_improvement_concentration(questionnaire):
+    
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'concentration_update';
+    """)
+
+    return cursor.fetchall()
+
+def get_improvement_concentration_update_flowchart(questionnaire):
+    
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'concentration_flowchart';
+    """)
+
+    return cursor.fetchall()
+def get_improvement_adhoc(questionnaire):
+    
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'adhoc';
+    """)
+
+    return cursor.fetchall()
+
+def get_improvement_underway(questionnaire):
+    
+
+    cursor = questionnaire.db.cursor()
+
+    #if improvement_type is not None:
+    cursor.execute("""
+        SELECT
+            improvement_id,
+            program_id,
+            type,
+            status,
+            semester_year,
+            source,
+            problem_analysis,
+            actions_plans,
+            status_actions,
+            result
+        FROM continuous_improvement
+        WHERE type = 'semester_improvement' and status = 'ongoing';
+    """)
+
+    return cursor.fetchall()
 
 if __name__ == "__main__":
     

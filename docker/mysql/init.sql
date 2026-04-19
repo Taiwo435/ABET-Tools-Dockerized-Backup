@@ -311,7 +311,8 @@ CREATE TABLE IF NOT EXISTS outcome_met_percentages (
 -- One generic table for all improvement types
 CREATE TABLE IF NOT EXISTS continuous_improvement (
     improvement_id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL,
+    program_id INT NULL,
+    status ENUM('ongoing', 'completed') NULL,
     type ENUM(
         'hardware',
         'semester_improvement',
