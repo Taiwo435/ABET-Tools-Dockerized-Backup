@@ -99,7 +99,7 @@ The following sections describe the key issues addressed and the fixes implement
 ### User Agent Fuzzer
 - Not addressed (Informational)
 ### User Controllable HTML Element Attribute (Potential XSS)
-- Reviewed input fields flagged by ZAP in login and registraction
+- Reviewed input fields flagged by ZAP in login and registration
 - Confirmed user-controlled values in HTML are encoded with htmlspecialchars()
 - No unsafe raw attribute output identified in the flagged locations
 
