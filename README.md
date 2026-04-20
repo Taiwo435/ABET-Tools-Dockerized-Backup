@@ -10,7 +10,7 @@
 <!-- fancy icons from shields.io -->
 <!--![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hoang-danny05/ABET-Tools-Dockerized/WORKFLOW)-->
 
-- [The Main Application for ABET-Tools](#the-main-application-for-abet-tools)
+- [ThFeature/symfony legacyroutere Main Application for ABET-Tools](#the-main-application-for-abet-tools)
   - [Overview](#overview)
   - [Getting Started](#getting-started)
   - [ABET private key setup](#abet-private-key-setup)
@@ -36,7 +36,7 @@
 This is our application, containerized for easier development. Included are containers for:
 
 - The PHP/Apache server
-- Canvas Formatting APIs
+- [Canvas Formatting](/src/canvas_formatting_api) APIs
 - The report generation API
 - The Canvas Extraction API
 - The MySQL database (to simulate the real one)
