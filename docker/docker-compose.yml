@@ -23,7 +23,7 @@ services:
       - ../src/public:/var/www/html
       - ../src/abet_private:${ABET_PRIVATE_DIR:?error}
       - .:${ABET_PRIVATE_DIR:?error}/../../docker    # for the .env variable
-    user: "1000:33"
+    user: "{UID:1000}:33"
     networks:
       - app_network
     depends_on:
