@@ -13,6 +13,13 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  */
 class ApiProxy
 {
+    // TODO: possibly sort functions into a hierarchy based on service?
+    //  - extraction API
+    //  - reportgen API
+    //  - canvas scripts API
+    /////////////////////////////////////////////////////////////////////////
+    // Extraction API 
+    /////////////////////////////////////////////////////////////////////////
 
     /**
      * Uses the extraction_API endpoint to verify if a Canvas Access token is valid.
@@ -36,18 +43,31 @@ class ApiProxy
         return $response;
     }
 
-    public function getHappyMessage(): string
-    {
-        $messages = [
-            'You did it! You updated the system! Amazing!',
-            'That was one of the coolest updates I\'ve seen all day!',
-            'Great work! Keep going!',
-        ];
+    /////////////////////////////////////////////////////////////////////////
+    // Canvas Formatting API
+    /////////////////////////////////////////////////////////////////////////
 
-        $index = array_rand($messages);
+    /////////////////////////////////////////////////////////////////////////
+    // Report Generation API
+    /////////////////////////////////////////////////////////////////////////
 
-        return $messages[$index];
-    }
+    // an example function
+    // public function getHappyMessage(): string
+    // {
+    //     $messages = [
+    //         'You did it! You updated the system! Amazing!',
+    //         'That was one of the coolest updates I\'ve seen all day!',
+    //         'Great work! Keep going!',
+    //     ];
+
+    //     $index = array_rand($messages);
+
+    //     return $messages[$index];
+    // }
+
+    /////////////////////////////////////////////////////////////////////////
+    // Shared 
+    /////////////////////////////////////////////////////////////////////////
 
     /**
      * gets the base of a certain API
@@ -60,6 +80,7 @@ class ApiProxy
         $hosts = [
             API::Extraction->value => ['EXTRACTION_HOSTNAME', 'EXTRACTION_PORT', 'extraction_api', '8000'],
             API::Formatting->value  => ['CANVAS_FORMATTING_HOSTNAME', 'CANVAS_FORMATTING_PORT', 'canvas_formatting', '8001'],
+            API::ReportGeneration->value  => ['REPORTGEN_HOSTNAME', 'REPORTGEN_PORT', 'canvas_formatting', '8002'],
         ];
         [$hostEnv, $portEnv, $defaultHost, $defaultPort] = $hosts[$service->value];
         $host = getenv($hostEnv) ?: $defaultHost;
@@ -69,7 +90,11 @@ class ApiProxy
 
 }
 
+/**
+ *  enum to describe the different services that we have
+ */
 enum API : int{
     case Extraction = 1;
     case Formatting = 2;
+    case ReportGeneration = 3;
 }
