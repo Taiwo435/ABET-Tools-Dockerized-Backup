@@ -1,0 +1,72 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard | {% endblock %}
+{# you can override the base template with these blocks!  #}
+{% block body %}
+{% autoescape 'html' %}
+    <link rel="stylesheet" href="assets/css/toolcards.css">
+    <link rel="stylesheet" href="assets/css/checklist.css">
+
+    <section class="hero">
+        <h1>Admin Panel</h1>
+        <p>Access the core tools designed to empower the Sun Devil faculty. Select a tool below to learn more about its capabilities.</p>
+    </section>
+
+        <div class="tools-grid">
+
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">Destination Canvas Shell</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>Manage the destination of the extraction tool.</p>
+                        <a href="{{ path('app_admin_assignments_grades') }}" class="action-link">Config Tool 1 &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            {# <?php endif; ?> #}
+
+            {# <?php if (hasPermission($permissions, PERM_FACULTY_FORM_TOOL)): ?> #}
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">User Management</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>Manage user roles & permissions.</p>
+                        <a href="{{ path('app_admin_users') }}" class="action-link">Open Permissions Panel &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            {# <?php endif; ?> #}
+
+        </div>
+    </div>
+
+    <script>
+        function triggerToggle(headerElement) {
+            const button = headerElement.querySelector('.toggle-btn');
+            const card = headerElement.closest('.tool-card');
+            const content = card.querySelector('.card-body');
+
+            const isAlreadyOpen = !!content.style.maxHeight;
+
+            document.querySelectorAll('.card-body').forEach(el => {
+                el.style.maxHeight = null;
+            });
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            if (!isAlreadyOpen) {
+                content.style.maxHeight = content.scrollHeight + "px";
+                button.classList.add('active');
+            }
+        }
+    </script>
+{% endautoescape %}
+{% endblock %}

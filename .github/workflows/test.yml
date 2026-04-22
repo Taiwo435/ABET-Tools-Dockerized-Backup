@@ -78,6 +78,7 @@ jobs:
         run: |
           cp ./demo.env ./.env
           echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'firefox' }}" >> ./.env
+          echo -e "\nUID=$(id -u)" >> ./.env
 
       - name: run docker compose to start the application 
         working-directory: ./docker

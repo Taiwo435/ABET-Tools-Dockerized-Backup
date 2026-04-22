@@ -1,22 +1,16 @@
-<?php
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
-require_login();
-$csrfToken = csrf_token('tool1_proxy');
-$configPath = getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
-$config = require $configPath;
-$destIdCourses = $config['dest_courses']
-?>
+{# 
+Maps to select-courses.php 
+#}
+{% extends 'base.html.twig' %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Connect to className | ABET Tools</title>
+{% block title %}Select Course | {% endblock %}
+
+{% block styles%}
   <link rel="stylesheet" href="/assets/css/tool1.css">
   <link rel="stylesheet" href="/assets/css/select-courses.css">
-</head>
-<body>
+{% endblock %}
+
+{% block body %}
 
   <header class="site-header">
     <div class="site-title">ABET Tools - Connect to Class</div>
@@ -81,15 +75,14 @@ $destIdCourses = $config['dest_courses']
         </div>
 
 
-        <div class="alert alert-success" id="successAlert">
+        {# <div class="alert alert-success" id="successAlert">
           <div class="alert-content">
             <strong>Successfully connected!</strong>
             <div style="margin-top: 15px;">
-              <a href="select-courses.php" class="btn btn-primary">Continue to Select Courses →</a>
-              <!-- WTF is the point of this? it links to this file!! -->
+              <a href="{{ path() }}" class="btn btn-primary">Continue to Select Courses →</a>
             </div>
           </div>
-        </div>
+        </div> #}
 
         <div class="alert alert-error" id="errorAlert">
           <div class="alert-content">
@@ -590,5 +583,5 @@ $destIdCourses = $config['dest_courses']
 
     </script>
 
-</body>
-</html>
+
+{% endblock %}

@@ -42,11 +42,8 @@ final class HomeController extends AbstractController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/home2', name: 'app_homepage')]
     public function home(#[CurrentUser] User $user) {
-        $parts = explode('@', (string)$user->getEmail());
-        $asurite = $parts[0] ?? 'user';
-        return $this->render('homepage/home.html.twig', 
-            ['user'=> $user,
-            'asurite'=> $asurite]);
+        return $this->render('homepage/home.html.twig', [
+        ]);
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -54,8 +51,7 @@ final class HomeController extends AbstractController
     public function header(#[CurrentUser] User $user) {
         $parts = explode('@', (string)$user->getEmail());
         $asurite = $parts[0] ?? 'user';
-        return $this->render('shared/header.html.twig', 
-            ['user'=> $user,
-            'asurite'=> $asurite]);
+        return $this->render('shared/header.html.twig', [
+        ]);
     }
 }

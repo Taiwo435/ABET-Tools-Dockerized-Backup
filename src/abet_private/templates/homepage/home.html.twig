@@ -42,7 +42,7 @@
 
         <div class="tools-grid">
 
-            {% if user.hasPermission(enum('App\\Entity\\Permissions').ROLE_ASSIGNMENTS_GRADES)%}
+            {% if app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_ASSIGNMENTS_GRADES)%}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">Assigment & Grade Data</div>

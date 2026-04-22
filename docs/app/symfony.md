@@ -13,6 +13,7 @@ We are using Symfony 7.4, as the README says. If you want the REAL Symfony docs 
     - [Files to not touch](#files-to-not-touch)
   - [Changes to our pre-symfony workflow](#changes-to-our-pre-symfony-workflow)
     - [Making pages](#making-pages)
+    - [Frontend Development](#frontend-development)
 
 ## Prerequisites
 
@@ -28,13 +29,10 @@ composer install
 
 ## Deviations from default Symfony
 
-Make sure you also implement the autolaod files, if not automaticaly generated.
+<!-- Make sure you also implement the autolaod files, if not automaticaly generated.
 
-```php
 
-```
-
-if you have not already. This will install the vendor packages for you. 
+if you have not already. This will install the vendor packages for you.  -->
 
 ### Webserver
 
@@ -54,7 +52,7 @@ If it doesn't exist, it falls back to looking for existing PHP files in the `pub
 Composer allows you to to make shortcut scripts for repeated actions.
 These scripts are defined in composer.json
 
-composer.json
+**composer.json**
 ```json
 {
     "scripts": {
@@ -130,3 +128,7 @@ Symfony has some [AMAZING documentation for this.](https://symfony.com/doc/7.4/p
 
 Please read those docs if you want to make a page. 
 They are really in depth and teach you how to generate them super easily with tools. (**MakerBundle**)
+
+### Frontend Development
+
+CSS files are cached. To reload CSS files on update, please follow [these instructions for firefox.](https://support.mozilla.org/en-US/kb/clear-cookies-and-site-data-firefox)

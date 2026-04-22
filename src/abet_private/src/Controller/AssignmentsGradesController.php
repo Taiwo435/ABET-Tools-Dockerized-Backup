@@ -26,33 +26,44 @@ final class AssignmentsGradesController extends AbstractController
         ApiProxy $proxy,
         ) {
 
-        //asurite
-        $parts = explode('@', (string)$user->getEmail());
-        $asurite = $parts[0] ?? 'user';
-
-        // creates a task object and initializes some data for this example
+        /**
+         * This creates a form using these docs:
+         * @see https://symfony.com/doc/current/forms.html
+         */
+        // Initialize a AccessTokenForm that encapsulates the data returned
         $task = new AccessTokenForm();
         $task->setToken('');
 
+        // Use the form builder that we defined
         $form = $this->createForm(AccessTokenType::class, $task);
 
         $form->handleRequest($request);
+
         if ($form->isSubmitted() && $form->isValid()) {
             // $form->getData() holds the submitted values
             // but, the original `$task` variable has also been updated
             $task = $form->getData();
 
+            // use our API proxy to execute the task
             $response = $proxy->verifyToken($task->getToken());
 
-            var_dump($response->getStatusCode());
+            if ($response->getStatusCode() == 200) {
+                return $this->render('tools/assignments_grades/index.html.twig', [
+                    'form' => $form,
+                    'form_success' => true
+                ]);
+            }
 
-            // return;
-            //return $this->redirectToRoute('app_assignments_grades_jobs');
+            // The other case: the form has errored.
+            // expects the response to be {'detail': error-msg}
+            return $this->render('tools/assignments_grades/index.html.twig', [
+                'form' => $form,
+                'form_error' => $response->toArray(false)['detail'],
+            ]);
         }
 
         return $this->render('tools/assignments_grades/index.html.twig', [
             'form' => $form,
-            'asurite' => $asurite,
         ]);
     } 
 
@@ -62,17 +73,13 @@ final class AssignmentsGradesController extends AbstractController
         $parts = explode('@', (string)$user->getEmail());
         $asurite = $parts[0] ?? 'user';
         return $this->render('tools/assignments_grades/jobs.html.twig', [
-            'asurite' => $asurite,
         ]);
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    #[Route('/tool/assignmentsgrades/course_select', name: 'app_assignments_grades_course_select')]
+    #[Route('/tool/assignmentsgrades/new_extraction', name: 'app_assignments_grades_new_extraction')]
     public function course_select(#[CurrentUser] User $user) {
-        $parts = explode('@', (string)$user->getEmail());
-        $asurite = $parts[0] ?? 'user';
-        return $this->render('tools/assignments_grades/course_select.html.twig', [
-            'asurite' => $asurite,
+        return $this->render('tools/assignments_grades/new_extraction.html.twig', [
         ]);
     }
 
@@ -104,7 +111,6 @@ final class AssignmentsGradesController extends AbstractController
 
         return $this->render('tools/assignments_grades/testform.twig', [
             'form' => $form,
-            'asurite' => $asurite,
         ]);
     }
 

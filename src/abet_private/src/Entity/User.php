@@ -56,6 +56,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
+    public function getAsurite(): string
+    {
+        $parts = explode('@', (string)$this->email);
+        $asurite = $parts[0] ?? 'user';
+        return $asurite;
+    }
+
     public function setEmail(string $email): static
     {
         $this->email = $email;
