@@ -40,9 +40,16 @@ Maps to jobs.php
 
     <div class="card">
       <div class="card-body" style="padding:0" id="jobsContainer">
-        <div class="empty-state" id="loadingState">
+        {# <div class="empty-state" id="loadingState">
           <span class="spinner"></span> Loading…
-        </div>
+        </div> #}
+        {% if condition ?? false %}
+          <div class="empty-state">
+            <h3>No jobs yet</h3>
+            <p>Start an extraction from the <a href="{{ path('app_assignments_grades_new_extraction') }}">Extract Courses</a></p>
+          </div>`;
+        {% else %}
+        {% endif %}
       </div>
     </div>
 

@@ -26,10 +26,6 @@ final class AssignmentsGradesController extends AbstractController
         ApiProxy $proxy,
         ) {
 
-        //asurite
-        $parts = explode('@', (string)$user->getEmail());
-        $asurite = $parts[0] ?? 'user';
-
         /**
          * This creates a form using these docs:
          * @see https://symfony.com/doc/current/forms.html
@@ -54,7 +50,6 @@ final class AssignmentsGradesController extends AbstractController
             if ($response->getStatusCode() == 200) {
                 return $this->render('tools/assignments_grades/index.html.twig', [
                     'form' => $form,
-                    'asurite' => $asurite,
                     'form_success' => true
                 ]);
             }
@@ -63,14 +58,12 @@ final class AssignmentsGradesController extends AbstractController
             // expects the response to be {'detail': error-msg}
             return $this->render('tools/assignments_grades/index.html.twig', [
                 'form' => $form,
-                'asurite' => $asurite,
                 'form_error' => $response->toArray(false)['detail'],
             ]);
         }
 
         return $this->render('tools/assignments_grades/index.html.twig', [
             'form' => $form,
-            'asurite' => $asurite,
         ]);
     } 
 
@@ -80,17 +73,13 @@ final class AssignmentsGradesController extends AbstractController
         $parts = explode('@', (string)$user->getEmail());
         $asurite = $parts[0] ?? 'user';
         return $this->render('tools/assignments_grades/jobs.html.twig', [
-            'asurite' => $asurite,
         ]);
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/tool/assignmentsgrades/new_extraction', name: 'app_assignments_grades_new_extraction')]
     public function course_select(#[CurrentUser] User $user) {
-        $parts = explode('@', (string)$user->getEmail());
-        $asurite = $parts[0] ?? 'user';
         return $this->render('tools/assignments_grades/new_extraction.html.twig', [
-            'asurite' => $asurite,
         ]);
     }
 
@@ -122,7 +111,6 @@ final class AssignmentsGradesController extends AbstractController
 
         return $this->render('tools/assignments_grades/testform.twig', [
             'form' => $form,
-            'asurite' => $asurite,
         ]);
     }
 
