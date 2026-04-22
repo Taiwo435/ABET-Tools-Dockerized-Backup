@@ -67,11 +67,11 @@ final class AssignmentsGradesController extends AbstractController
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    #[Route('/tool/assignmentsgrades/course_select', name: 'app_assignments_grades_course_select')]
+    #[Route('/tool/assignmentsgrades/new_extraction', name: 'app_assignments_grades_new_extraction')]
     public function course_select(#[CurrentUser] User $user) {
         $parts = explode('@', (string)$user->getEmail());
         $asurite = $parts[0] ?? 'user';
-        return $this->render('tools/assignments_grades/course_select.html.twig', [
+        return $this->render('tools/assignments_grades/new_extraction.html.twig', [
             'asurite' => $asurite,
         ]);
     }
