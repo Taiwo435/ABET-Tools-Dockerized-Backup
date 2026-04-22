@@ -198,6 +198,11 @@ body {
   border-left: 4px solid;
 }
 
+/* twig only override */
+.twig {
+  display:block;
+}
+
 .alert-success {
   background: #e6f4ea;
   border-color: var(--success);
