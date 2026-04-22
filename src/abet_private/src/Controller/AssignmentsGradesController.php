@@ -69,16 +69,33 @@ final class AssignmentsGradesController extends AbstractController
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/tool/assignmentsgrades/jobs', name: 'app_assignments_grades_jobs')]
-    public function jobs(#[CurrentUser] User $user) {
-        $parts = explode('@', (string)$user->getEmail());
-        $asurite = $parts[0] ?? 'user';
-        return $this->render('tools/assignments_grades/jobs.html.twig', [
-        ]);
+    public function jobs(
+        #[CurrentUser] User $user, 
+        ApiProxy $proxy
+    ) {
+        $response = $proxy->getJobHistory($user);
+        $decoded_response = $response->toArray(false);
+
+        // normal flow, response is valid
+        if ($response->getStatusCode() == 200) {
+            return $this->render('tools/assignments_grades/jobs.html.twig', [
+                'jobs' => $decoded_response['jobs'],
+            ]);
+        }
+
+        // else, return and render the error message
+        // WARNING: if this happens on prod, it could expose sensitive information! 
+        if ($response->getStatusCode() == 200) {
+            return $this->render('tools/assignments_grades/jobs.html.twig', [
+                'jobs' => [],
+                'error' => $response->getContent(false)
+            ]);
+        }
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/tool/assignmentsgrades/new_extraction', name: 'app_assignments_grades_new_extraction')]
-    public function course_select(#[CurrentUser] User $user) {
+    public function course_select(#[CurrentUser] User $user, ApiProxy $proxy) {
         return $this->render('tools/assignments_grades/new_extraction.html.twig', [
         ]);
     }
