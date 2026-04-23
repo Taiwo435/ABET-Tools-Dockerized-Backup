@@ -33,13 +33,23 @@ Maps to tool1.php
             <div class="form-help">Generate at Canvas → Account → Settings → Approved Integrations → New Access Token</div>
         </div>
 
-        {{ form_success ?? false }}
-
         {% if (form_success ?? false) %}
             <div class="alert twig alert-success" id="successAlert">
                 <div class="alert-content">
                     <strong>Successfully connected!</strong>
                     <div style="margin-top: 15px;">
+                        <a href="{{ path('app_assignments_grades_new_extraction') }}" class="btn btn-primary">Continue to Select Courses →</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if app.session.has('canvas_token') and not (form_success ?? false) %}
+            <div class="alert twig alert-success" id="successAlert">
+                <div class="alert-content">
+                    <strong>You have already registered a token with the site!</strong>
+                    <div style="margin-top: 15px;">
+                        <a href="{{ path('app_assignments_grades_remove_token') }}" class="btn btn-primary">Reset Canvas Access Token</a>
                         <a href="{{ path('app_assignments_grades_new_extraction') }}" class="btn btn-primary">Continue to Select Courses →</a>
                     </div>
                 </div>

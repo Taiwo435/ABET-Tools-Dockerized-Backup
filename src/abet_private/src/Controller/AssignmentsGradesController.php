@@ -72,6 +72,18 @@ final class AssignmentsGradesController extends AbstractController
         ]);
     } 
 
+    /**
+     * Route that only exists to remove the canvas token from the user
+     */
+    #[Route('/tool/assignmentsgrades/remove_token', name: 'app_assignments_grades_remove_token')]
+    public function unregister_token(
+        Request $request
+    ) {
+        $session = $request->getSession();
+        $session->remove('canvas_token');
+        return $this->redirectToRoute('app_assignments_grades');
+    }
+
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/tool/assignmentsgrades/jobs', name: 'app_assignments_grades_jobs')]
     public function jobs(
