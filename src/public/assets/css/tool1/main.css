@@ -22,36 +22,15 @@ body {
   padding: 0;
 }
 
-.site-header {
-  background: var(--asu-maroon);
-  color: white;
-  padding: 1rem 2rem;
-  border-bottom: 4px solid var(--asu-gold);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .site-title {
   font-weight: 700;
   font-size: 1.25rem;
-}
-
-.nav-link {
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  font-size: 0.9rem;
-  margin-left: 10px;
 }
 
 .main-container {
   max-width: 1000px;
   margin: 40px auto;
   padding: 0 20px;
-}
-
-.page-header {
-  margin-bottom: 30px;
 }
 
 .page-title h1 {
