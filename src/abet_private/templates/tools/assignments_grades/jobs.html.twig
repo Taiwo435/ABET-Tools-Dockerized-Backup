@@ -4,25 +4,20 @@ Maps to jobs.php
 #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Viewing Jobs | {% endblock %}
+{% block title %}Job History | {% endblock %}
 
 {% block styles%}
   <link rel="stylesheet" href="/assets/css/tool1/main.css">
   <link rel="stylesheet" href="/assets/css/tool1/jobs.css">
 {% endblock %}
 
+{% block header_items %}
+  <a href="{{ path('app_assignments_grades_new_extraction') }}">New Extraction</a>
+  <a href="{{ path('app_assignments_grades_remove_token') }}">Remove Token</a>
+{% endblock %}
+
+
 {% block body %}
-
-
-  <header class="site-header">
-    <div class="site-title">ABET Tools - Job History</div>
-
-    <div class="header-actions">
-        <a href="{{ path('app_assignments_grades_new_extraction') }}" class="nav-link">New Extraction</a>
-        <a href="{{ path('app_homepage') }}" class="nav-link">← Back to Dashboard</a>
-    </div>
-
-  </header>
 
   <div class="main-container">
 

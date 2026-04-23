@@ -9,23 +9,19 @@ Maps to tool1.php
     <link rel="stylesheet" href="/assets/css/tool1/main.css">
 {% endblock %}
 
-{% block body %}
+{% block header_items %}
+    <a href="{{ path('app_assignments_grades_jobs') }}">View Jobs</a>
+{% endblock %}
 
-    <header class="site-header">
-        <div class="site-title">ABET Tools - Connect to Class</div>
-        <div class="header-actions">
-            <a href="{{ path('app_assignments_grades_jobs') }}" class="nav-link">View Jobs</a>
-            <a href="{{ path('app_homepage') }}" class="nav-link">← Back to Dashboard</a>
-        </div>
-    </header>
+{% block body %}
 
     <div class="main-container">
         
         <div class="page-header">
-        <div class="page-title">
-            <h1>Connect to Canvas Class</h1>
-            <p>Enter your Canvas Access Token</p>
-        </div>
+            <div class="page-title">
+                <h1>Connect to Canvas Class</h1>
+                <p>Enter your Canvas Access Token</p>
+            </div>
         </div>
 
         <div>
