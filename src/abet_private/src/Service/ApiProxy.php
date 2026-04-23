@@ -36,7 +36,7 @@ class ApiProxy
             $url,
             [
                 'headers' => [
-                    'canvas-access-token:' => $token
+                    'canvas-access-token' => $token,
                 ],
             ]
         );
