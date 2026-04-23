@@ -105,6 +105,7 @@ body {
   background: #5c132a;
 }
 
+#new_extraction,
 .filter-bar {
   background: white;
   border-radius: 8px;
