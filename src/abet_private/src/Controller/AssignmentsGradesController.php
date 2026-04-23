@@ -47,7 +47,11 @@ final class AssignmentsGradesController extends AbstractController
             // use our API proxy to execute the task
             $response = $proxy->verifyToken($task->getToken());
 
+
             if ($response->getStatusCode() == 200) {
+                // if successful, add to sessoin
+                $session = $request->getSession();
+                $session->set('canvas_token', $task->getToken());
                 return $this->render('tools/assignments_grades/index.html.twig', [
                     'form' => $form,
                     'form_success' => true
@@ -59,6 +63,7 @@ final class AssignmentsGradesController extends AbstractController
             return $this->render('tools/assignments_grades/index.html.twig', [
                 'form' => $form,
                 'form_error' => $response->toArray(false)['detail'],
+                'debug_error' => $response->getContent(false),
             ]);
         }
 
