@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Form;
+namespace App\Form\AssignmentsGrades;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -24,7 +24,7 @@ class NewExtractionType extends AbstractType
                 'row_attr' => ['class' => 'form-row'],
                 'attr' => ['class' => 'form-input', 'placeholder' => 'Paste Canvas access token here'],
             ])
-            ->add('department', ChoiceType::class, [
+            ->add('degree', ChoiceType::class, [
                 'label_html' => true,
                 'label' => 'Degree Program',
                 'label_attr' => ['class' => 'filter-label'],

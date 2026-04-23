@@ -1,24 +1,24 @@
 <?php
-namespace App\Entity\Task;
+namespace App\Entity\Task\AssignmentsGrades;
 
 /**
  * @see https://symfony.com/doc/current/forms.html#usage
  * to see why i made this
  */
-class ExtractionTokenForm
+class NewExtractionForm
 {
     protected string $term;
-    protected string $department;
+    protected string $degree;
 
 
-    public function getDepartment(): string
+    public function getDegree(): string
     {
-        return $this->department;
+        return $this->degree;
     }
 
-    public function setDepartment(string $department): void
+    public function setDegree(string $degree): void
     {
-        $this->department = $department;
+        $this->degree = $degree;
     }
 
     public function getTerm(): string

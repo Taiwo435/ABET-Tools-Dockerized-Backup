@@ -1,7 +1,6 @@
 <?php
 
-// namespace App\Controller\AssignmentsGrades;
-namespace App\Controller;
+namespace App\Controller\AssignmentsGrades;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -10,10 +9,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
-use App\Entity\Task\AccessTokenForm;
-use App\Entity\Task\ExtractionTokenForm;
-use App\Form\AccessTokenType;
-use App\Form\App\Form\NewExtractionType;
+use App\Entity\Task\AssignmentsGrades\AccessTokenForm;
+use App\Entity\Task\AssignmentsGrades\NewExtractionForm;
+use App\Form\AssignmentsGrades\AccessTokenType;
+use App\Form\AssignmentsGrades\NewExtractionType;
 use App\Form\NewExtractionType as FormNewExtractionType;
 use App\Service\API;
 use App\Service\ApiProxy;
@@ -126,12 +125,12 @@ final class AssignmentsGradesController extends AbstractController
          * @see https://symfony.com/doc/current/forms.html
          */
         // Initialize a AccessTokenForm that encapsulates the data returned
-        $task = new ExtractionTokenForm();
+        $task = new NewExtractionForm();
         $task->setTerm('');
-        $task->setDepartment('');
+        $task->setDegree('');
 
         // Use the form builder that we defined
-        $form = $this->createForm(FormNewExtractionType::class, $task);
+        $form = $this->createForm(NewExtractionType::class, $task);
 
         $form->handleRequest($request);
 
