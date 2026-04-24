@@ -3,7 +3,7 @@
 Hi! Good job for finding this! This will outline the intended development process for everyone in the project.
 The general steps include:
 
-1) General setup
+1) Install Dependencies
 2) Start Local Development
 3) Push to Github and make a PR
 4) Application staging
@@ -11,16 +11,26 @@ The general steps include:
 
 ---
 
-## General setup
+## Installing Dependencies
 
 Read this if you want a good idea on how to start developing on the project.
 You might want to skip this if you already read the README.
 
-### Installations
+### Applications
 
 - [Docker](../README.md#docker-installs), but more specifically:
   - Docker Engine
   - Docker Compose
+
+Docker is installed if you can run `docker compose` in the terminal
+ 
+If you're working backend: 
+```bash
+sudo apt install php8.3
+sudo apt install php8.3-xml
+sudo apt install php8.3-mysql
+sudo apt install composer
+```
 
 ### Setting up an SSH Key
 
@@ -33,8 +43,29 @@ I also recommend adding the ssh-add command in your `.bashrc` so it runs every t
 I cannot overstate how useful this will be to software dev.
 
 ```bash
+ssh-keygen -t ed25519
+
+# you can put the following lines in your .bashrc
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25516 # the path to the private key
+```
+
+Now, you should be able to clone the repository!
+
+```bash
 # if you use ssh, i recommend it
 git clone git@github.com:hoang-danny05/ABET-Tools-Dockerized.git
+```
+
+other useful git commands:
+
+```bash
+# make your own branch (uses the current branch as a base)
+git checkout -b BRANCH_NAME
+# synchronize current branch with remote repo (download)
+git pull origin BRANCH_NAME --rebase
+# synchronizes remote repo with current branch (upload)
+git push origin BRANCH_NAME
 ```
 
 ### Setting up your local development environment
@@ -56,7 +87,7 @@ Covered in the [main README](../README.md#getting-started) but here more thourog
 ### cPanel
 
 The entire project is can be viewed on our shared cPanel server.
-I cannot share the cPanel URL or login information.
+I cannot share the cPanel URL or login information here.
 If you're working with us, you should have the login information on the discord.
 
 Important paths for us are:
@@ -74,6 +105,12 @@ Important paths for us are:
 
 - backup for previous files that we made
 - use for cases where you fear the worst
+
+> [!TIP]
+> If your role involves working on the cPanel server a lot,
+> you can add your own SSH key onto the server to allow you to log on!
+> I'd advise for you to create a unique `id_abet_yourname_ed25516` key
+> and upload your public key onto the server as a trusted key. 
 
 ## Local Development
 
@@ -128,9 +165,14 @@ A Pull request can be opened at any time and resolved at any other time.
 
 ## Application staging
 
-Staging is in a WIP state at the moment. It is meant
-to simulate how deployment on the server will look like, on 
+Staging is not really mature at the moment. 
+It is meant to simulate how deployment on the server will look like, on 
 your local machine. 
+We resort to simply deploying to the database with CD.
+It takes less work and is in a better environment than staging. 
+
+However, we might need to re-implement staging once
+we start handling real user data. 
 
 > [!IMPORTANT]  
 > This depends on the fact that you are using
@@ -145,6 +187,25 @@ docker compose -f docker-compose-staging.yml
 ```
 
 ## Deployment to the server
+
+Every [Github Release](https://github.com/hoang-danny05/ABET-Tools-Dockerized/releases) is tied to a github action
+that triggers the deployment script.
+The workflow is located [here](/.github/workflows/deploy.yml). 
+
+We use releases because it gives us checkpoints to different states of the project.
+
+> [!IMPORTANT]
+> While it can revert the application state, this is not necessarily true
+with database schema changes. (or the server state in general)
+> Please be responsible with database schema changes and migrations!
+>
+> Please be VERY careful with changing configuration using root permissoins!
+> There is usually a better way!
+
+### Manual Deployment
+
+These steps serve as an archive for manual deployment. 
+Please only do this if you're debugging the deployment script.
 
 > [!CAUTION]  
 > The steps here can permanently affect the state of the
