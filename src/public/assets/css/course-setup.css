@@ -190,6 +190,24 @@
   font-family: inherit;
 }
 
+.btn-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+.btn-remove:hover{
+  background: #5c132a;
+  color: white;
+}
+
 .btn-primary {
   background: var(--asu-maroon);
   color: white;

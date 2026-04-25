@@ -21,7 +21,7 @@ $destCourses = $config['dest_courses'];
     <div class="site-title">ABET Tools - Connect to Class</div>
     <div class="header-actions">
       <a href="jobs.php" class="nav-link">View Jobs</a>
-      <a href="/../index.php" class="nav-link">← Back to Dashboard</a>
+      <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
     </div>
   </header>
 
@@ -93,6 +93,8 @@ $destCourses = $config['dest_courses'];
       successAlert.scrollIntoView({ behavior: 'smooth' });
     }
 
+    let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>';
+
     form.addEventListener('submit', async (e) => {
 
       e.preventDefault();
@@ -101,8 +103,6 @@ $destCourses = $config['dest_courses'];
         showError('All fields are required.');
         return;
       }
-
-      let csrfToken = '<?= htmlspecialchars($csrfToken, ENT_QUOTES, "UTF-8") ?>';
 
       connectBtn.disabled = true;
       connectBtn.textContent = 'Verifying…';

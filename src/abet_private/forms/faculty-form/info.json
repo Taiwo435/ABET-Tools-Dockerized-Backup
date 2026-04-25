@@ -9,12 +9,14 @@
             "type": "text",
             "name": "first_name",
             "label": "First Name",
+            "maxLength": 500,
             "required": true
         },
         {
             "type": "text",
             "name": "last_name",
             "label": "Last Name",
+            "maxLength": 100,
             "required": true
         },
         {
@@ -22,6 +24,8 @@
             "name": "asurite",
             "label": "ASURITE ID",
             "description": "Your 5–8 character username (e.g., jsmith2). NOT your 10 digit ASU ID number.",
+            "minLength": 5,
+            "maxLength": 8,
             "required": true
         },
 
@@ -44,6 +48,7 @@
             "name": "highest_degree",
             "label": "Highest Degree Earned- Type, Field, and Year",
             "description": "e.g., Ph.D. Computer Science, 2010",
+            "maxLength": 150,
             "required": true
         },
         {

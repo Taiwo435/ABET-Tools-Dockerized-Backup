@@ -1,0 +1,133 @@
+{
+  "title": "Equipment",
+  "name": "equipment",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "expandable-grid",
+      "name": "uto_lab_computers",
+      "label": "General University Lab Computers Provided by UTO (Central IT)",
+      "columns": [
+        {
+          "name": "pc_workstation",
+          "label": "PC Workstation",
+          "type": "text"
+        },
+        {
+          "name": "quantity",
+          "label": "Quantity",
+          "type": "text"
+        }
+      ],
+      "maxRows": 50,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "uto_lab_software",
+      "label": "Software Available in the UTO Labs and Classrooms",
+      "columns": [
+        {
+          "name": "program",
+          "label": "Program",
+          "type": "text"
+        },
+        {
+          "name": "installed_windows",
+          "label": "Installed on Windows",
+          "type": "checkbox"
+        },
+        {
+          "name": "installed_osx",
+          "label": "Installed on OS X",
+          "type": "checkbox"
+        },
+        {
+          "name": "installed_citrix",
+          "label": "Installed on Citrix",
+          "type": "checkbox"
+        }
+      ],
+      "maxRows": 100,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "scia_instructional_lab_equipment",
+      "label": "SCIA Instructional Labs Equipment",
+      "columns": [
+        {
+          "name": "pc_workstation",
+          "label": "PC Workstation",
+          "type": "text"
+        },
+        {
+          "name": "quantity",
+          "label": "Quantity",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "printers",
+      "label": "Printers",
+      "columns": [
+        {
+          "name": "printer_description",
+          "label": "Printer",
+          "type": "text"
+        },
+        {
+          "name": "quantity",
+          "label": "Quantity",
+          "type": "text"
+        }
+      ],
+      "maxRows": 20,
+      "required": false
+    },
+    {
+      "type": "expandable-grid",
+      "name": "scia_brickyard_software_list",
+      "label": "Software Available in School of Computing and Informatics Instructional Labs and Virtual Labs",
+      "columns": [
+        {
+          "name": "software_name",
+          "label": "Software Name",
+          "type": "text"
+        },
+        {
+          "name": "version_num",
+          "label": "Version",
+          "type": "text"
+        },
+        {
+          "name": "windows_version",
+          "label": "On Windows",
+          "type": "checkbox"
+        },
+        {
+          "name": "linux",
+          "label": "On Linux",
+          "type": "checkbox"
+        },
+        {
+          "name": "macos",
+          "label": "On macOS",
+          "type": "checkbox"
+        },
+        {
+          "name": "vdi_lab",
+          "label": "On VDI Lab",
+          "type": "checkbox"
+        }
+      ],
+      "maxRows": 50,
+      "required": false
+    }
+  ]
+}

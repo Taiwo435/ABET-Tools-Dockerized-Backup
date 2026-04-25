@@ -1,0 +1,223 @@
+{
+  "title": "Curriculum",
+  "name": "curriculum",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Technical Elevtive List"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "technical_electives",
+      "columns": [
+        {
+          "type": "text",
+          "name": "course_number",
+          "label": "Course Number"
+        },
+        {
+          "type": "text",
+          "name": "course_title",
+          "label": "Course Title"
+        },
+        {
+          "type": "text",
+          "name": "required_for",
+          "label": "Required for which program(s)?"
+        }
+      ],
+      "maxRows": 100
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Full Curriculum for the Program"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "program_curriculum",
+      "columns": [
+        {
+          "type": "text",
+          "name": "course_number_title",
+          "label": "Course Number and Title"
+        },
+        {
+          "type": "text",
+          "name": "semester_offered",
+          "label": "Semester Offered"
+        },
+        {
+          "type": "select",
+          "name": "course_type",
+          "label": "Course Type",
+          "options": {
+            "R": "Required (R)",
+            "E": "Elective (E)",
+            "SE": "Selected Elective (SE)"
+          }
+        },
+        {
+          "type": "text",
+          "name": "credit_hours_math_science",
+          "label": "# of Math and Basic Science Credit Hours",
+          "numerical": true
+        },
+        {
+          "type": "text",
+          "name": "credit_hours_engineering",
+          "label": "# of Engineering Credit Hours",
+          "numerical": true
+        },
+        {
+          "type": "text",
+          "name": "credit_hours_other",
+          "label": "# of Other/General Education Credit Hours",
+          "numerical": true
+        },
+        {
+          "type": "select",
+          "name": "significant_design",
+          "label": "Includes Significant Design Content?",
+          "options": {
+            "yes": "Yes",
+            "no": "No"
+          }
+        },
+        {
+          "type": "text",
+          "name": "last_two_terms",
+          "label": "Last Two Terms Offered"
+        },
+        {
+          "type": "text",
+          "name": "max_section_enrollment",
+          "label": "Max Section Enrollment during Last Two Terms",
+          "numerical": true
+        }
+      ],
+      "maxRows": 100
+    },
+    
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Course Alignment with PEOs",
+      "description": "Create a new row for each program education objective (PEO). For each objective, list the course(s) that support that objective, and which year they are scheduled in the curriculum."
+    },
+    {
+      "type": "expandable-grid",
+      "name": "peo_course_alignment",
+      "columns": [
+        {
+          "type": "text",
+          "name": "objective_number",
+          "label": "PEO Number",
+          "numerical": true
+        },
+        {
+          "type": "text",
+          "name": "freshman_courses",
+          "label": "Freshman Courses"
+        },
+        {
+          "type": "text",
+          "name": "sophomore_courses",
+          "label": "Sophomore Courses"
+        },
+        {
+          "type": "text",
+          "name": "junior_courses",
+          "label": "Junior Courses"
+        },
+        {
+          "type": "text",
+          "name": "senior_courses",
+          "label": "Senior Courses"
+        }
+      ],
+      "maxRows": 100,
+      "allowIncompleteRows": true
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Course Alignment with ABET Student Outcomes",
+      "description": "Create a new row for each student outcome. For each outcome, list the course(s) that support that outcome, and which year they are scheduled in the curriculum."
+    },
+    {
+      "type": "expandable-grid",
+      "name": "abet_course_alignment",
+      "columns": [
+        {
+          "type": "text",
+          "name": "student_outcome",
+          "label": "SO Number",
+          "numerical": true
+        },
+        {
+          "type": "text",
+          "name": "freshman_courses",
+          "label": "Freshman Courses"
+        },
+        {
+          "type": "text",
+          "name": "sophomore_courses",
+          "label": "Sophomore Courses"
+        },
+        {
+          "type": "text",
+          "name": "junior_courses",
+          "label": "Junior Courses"
+        },
+        {
+          "type": "text",
+          "name": "senior_courses",
+          "label": "Senior Courses"
+        }
+      ],
+      "maxRows": 100,
+      "allowIncompleteRows": true
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Math Pre and Co requisites"
+    },
+    {
+      "type": "expandable-grid",
+      "name": "technical_electives",
+      "columns": [
+        {
+          "type": "text",
+          "name": "course_number",
+          "label": "Course Number"
+        },
+        {
+          "type": "text",
+          "name": "pre_co_requisite",
+          "label": "Pre/Co-Requisite Course Number"
+        }
+      ],
+      "maxRows": 50
+    }
+    
+  ]
+}

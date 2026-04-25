@@ -3,6 +3,10 @@ namespace App;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+// all different codes found https://github.com/symfony/symfony/blob/7.4/src/Symfony/Component/HttpKernel/Exception/AccessDeniedHttpException.php
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Routing\Exception;
 
 class LegacyBridge
 {
@@ -28,6 +32,7 @@ class LegacyBridge
 
         //TODO: add pretty rewrites in .htaccess
         
+        // var_dump(get_loaded_extensions());
         // ----------------------------
         // .htaccess pretty paths but here
         // ----------------------------
@@ -121,13 +126,22 @@ class LegacyBridge
         if ($requestPathInfo == '/faculty-form/') {
             return "{$legacyRoot}/faculty-form/index.php";
         }
-
+        if ($requestPathInfo == '/faculty-form/review/') {
+            return "{$legacyRoot}/faculty-form/review/index.php";
+        }
+        if ($requestPathInfo == '/faculty-form/edit/') {
+            return "{$legacyRoot}/faculty-form/edit/index.php";
+        }
         // TOOL 3: Faculty form
         if ($requestPathInfo == '/coordinator-form/') {
             return "{$legacyRoot}/coordinator-form/index.php";
         }
-
-
+        if ($requestPathInfo == '/coordinator-form/edit/') {
+            return "{$legacyRoot}/coordinator-form/edit/index.php";
+        }
+        if ($requestPathInfo == '/coordinator-form/review/') {
+            return "{$legacyRoot}/coordinator-form/review/index.php";
+        }
         
 
         
@@ -140,21 +154,21 @@ class LegacyBridge
         }
 
         // Need to only show in DEVELOPMENT
-        var_dump(phpinfo());
-        var_dump("
-        <br>
-        request path: {$requestPathInfo}
-        <br>
-        fullPath: {$legacyRoot}{$requestPathInfo}
-        <br>
-        resolved path: {$resolvedPath}
-        ");
-        var_dump($requestPathInfo);
-        var_dump($legacyRoot);
+        // var_dump(phpinfo());
+        // var_dump("
+        // <br>
+        // request path: {$requestPathInfo}
+        // <br>
+        // fullPath: {$legacyRoot}{$requestPathInfo}
+        // <br>
+        // resolved path: {$resolvedPath}
+        // ");
+        // var_dump($requestPathInfo);
+        // var_dump($legacyRoot);
 
         // ... etc.
 
-        throw new \Exception("Unhandled legacy mapping for $requestPathInfo");
+        throw new NotFoundHttpException("Unhandled legacy mapping for $requestPathInfo");
     }
 
         /**
@@ -175,7 +189,7 @@ class LegacyBridge
 
         // obvious attacks begone
         if (str_contains($requestPathInfo, "\0") || str_contains($requestPathInfo, '..')) {
-            throw new \Exception('Invalid path');
+            throw new NotFoundHttpException('Invalid path');
         }
 
         // absolute canonical path
@@ -185,14 +199,14 @@ class LegacyBridge
         // NOTE: security auditors can easily log attack attempts if $resolvedPath is valid but is outside of $legacyRoot
         if ($resolvedPath === false || strncmp($resolvedPath, $legacyRoot, strlen($legacyRoot)) !== 0) {
             #throw new \Exception('Invalid path');
-            throw new \Exception("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
+            throw new NotFoundHttpException("Invalid path: {$legacyRoot} + {$requestPathInfo} == {$filepath} or {$resolvedPath}");
         }
 
         $allowedExtensions = ['php', ''];
 
         $ext = pathinfo($resolvedPath, PATHINFO_EXTENSION);
         if (!in_array($ext, $allowedExtensions, true)) {
-            throw new \Exception('Forbidden file type');
+            throw new NotFoundHttpException('Forbidden file type');
         }
     }
 

@@ -3,6 +3,10 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
+if ($_SERVER['APP_DEBUG']) {
+    umask(0000); // DON"T set file permissions :)
+}
+
 $job = $_GET['job'] ?? '';
 $file = $_GET['file'] ?? '';
 

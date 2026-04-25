@@ -5,6 +5,7 @@ Main business logic lives in assignment_extraction_api.py.
 """
 
 from celery import shared_task
+import os
 import requests
 
 from shared.base_task import TrackedTask
@@ -38,7 +39,10 @@ def run_extraction_pipeline(self, job_params: dict):
 
         self.update_progress(95, "Extraction complete. Starting Canvas module formatting...")
         
-        formatting_base = "http://canvas_formatting_api:8001"
+        
+        formatting_host = os.getenv("CANVAS_FORMATTING_HOSTNAME", "127.0.0.1")
+        formatting_port = os.getenv("CANVAS_FORMATTING_PORT", "8001")
+        formatting_base = f"http://{formatting_host}:{formatting_port}"
         format_url = f"{formatting_base}/format-and-upload/{job_params['course_id_to_push']}"
         
         params = {

@@ -1,14 +1,9 @@
 {
   "title": "Assessment and Continuous Assessment Plan",
-  "name": "assessment_plan",
+  "name": "assessmentPlan",
   "action": "submit.php",
   "method": "POST",
   "fields": [
-    {
-      "name": "introduction",
-      "label": "Introduction",
-      "type": "text-field"
-    },
     {
       "type": "expandable-grid",
       "name": "roles_and_responsibilities",
@@ -17,7 +12,7 @@
         {
           "name": "role",
           "label": "Role",
-          "type": "text-field"
+          "type": "text"
         },
         {
           "name": "responsibilities",
@@ -42,59 +37,68 @@
           "name": "method",
           "label": "Method",
           "type": "text-field"
-        },
-        {
-          "name": "frequency",
-          "label": "Frequency",
-          "type": "text-field"
-        },
-        {
-          "name": "use_of_input",
-          "label": "Use of Input",
-          "type": "text-field"
         }
       ],
       "maxRows": 20,
       "required": false
     },
+
     {
-      "name": "assessment_details",
-      "label": "Assessment Details",
-      "type": "text-field"
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "Assessment Details"
     },
     {
       "type": "expandable-grid",
-      "name": "assessment_processes",
-      "label": "Assessment Processes",
+      "name": "assessment_details",
       "columns": [
         {
-          "name": "process_or_method",
-          "label": "Process or Method",
-          "type": "text-field"
+          "type": "text",
+          "name": "course_number",
+          "label": "Course Number"
         },
         {
-          "name": "description",
-          "label": "Description",
-          "type": "text-field"
+          "type": "text",
+          "name": "so_1_details",
+          "label": "Student Outcome 1"
         },
         {
-          "name": "frequency",
-          "label": "Frequency",
-          "type": "text-field"
+          "type": "text",
+          "name": "so_2_details",
+          "label": "Student Outcome 2"
         },
         {
-          "name": "responsible_party",
-          "label": "Responsible Party",
-          "type": "text-field"
+          "type": "text",
+          "name": "so_3_details",
+          "label": "Student Outcome 3"
+        },
+        {
+          "type": "text",
+          "name": "so_4_details",
+          "label": "Student Outcome 4"
+        },
+        {
+          "type": "text",
+          "name": "so_5_details",
+          "label": "Student Outcome 5"
+        },
+        {
+          "type": "text",
+          "name": "so_6_details",
+          "label": "Student Outcome 6"
+        },
+        {
+          "type": "text",
+          "name": "so_7_details",
+          "label": "Student Outcome 7"
         }
       ],
-      "maxRows": 20,
+      "maxRows": 30,
+      "allowIncompleteRows": true,
       "required": false
-    },
-    {
-      "name": "hardware_sequence_improvement_process",
-      "label": "Elaboration of CSE Hardware Sequence Improvement Process",
-      "type": "text-field"
     }
   ]
 }

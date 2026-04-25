@@ -1,44 +1,13 @@
 {
   "title": "Institutional Summary",
-  "name": "institutional_summary",
+  "name": "institutionalSummary",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
-      "name": "institution",
-      "label": "The Institution",
-      "type": "text-field"
-    },
-    {
-      "name": "type_of_control",
-      "label": "Type of Control",
-      "type": "text-field"
-    },
-    {
-      "name": "educational_unit",
-      "label": "Educational Unit",
-      "type": "text-field"
-    },
-    {
-      "name": "academic_support_units",
-      "label": "Academic Support Units",
-      "type": "text-field"
-    },
-    {
-      "name": "non_academic_support_units",
-      "label": "Non-academic Support Units",
-      "type": "text-field"
-    },
-    {
-      "name": "credit_unit",
-      "label": "Credit Unit",
-      "type": "text-field"
-    },
-    {
       "type": "expandable-grid",
       "name": "program_enrollment_degree_data",
-      "label": "Table D-1 Program Enrollment and Degree Data",
-      "description": "Enter one row for each academic year and enrollment status combination.",
+      "label": "Program Enrollment and Degree Data",
       "columns": [
         {
           "name": "academic_year",
@@ -47,39 +16,39 @@
         },
         {
           "name": "enrollment_status",
-          "label": "Enrollment Status (FT/PT)",
+          "label": "Enrollment Status",
           "type": "select",
           "options": {
-            "FT": "FT",
-            "PT": "PT"
+            "enrollment_ft": "Full Time Students (FT)",
+            "enrollment_pt": "Part Time Students (PT)"
           }
         },
         {
-          "name": "first_year",
+          "name": "enrollment_1st",
           "label": "1st",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "second_year",
+          "name": "enrollment_2nd",
           "label": "2nd",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "third_year",
+          "name": "enrollment_3rd",
           "label": "3rd",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "fourth_year",
+          "name": "enrollment_4th",
           "label": "4th",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "fifth_year",
+          "name": "enrollment_5th",
           "label": "5th",
           "type": "text",
           "numerical": true
@@ -97,25 +66,25 @@
           "numerical": true
         },
         {
-          "name": "associates",
+          "name": "degrees_associates",
           "label": "Associates",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "bachelors",
+          "name": "degrees_bachelors",
           "label": "Bachelors",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "masters",
+          "name": "degrees_masters",
           "label": "Masters",
           "type": "text",
           "numerical": true
         },
         {
-          "name": "doctorates",
+          "name": "degrees_doctorates",
           "label": "Doctorates",
           "type": "text",
           "numerical": true
@@ -127,32 +96,27 @@
     {
       "type": "expandable-grid",
       "name": "personnel",
-      "label": "Table D-2 Personnel",
+      "label": "Personnel",
       "columns": [
         {
+          "type": "text",
           "name": "category",
-          "label": "Personnel Category",
-          "type": "text"
+          "label": "Personnel Category"
         },
         {
-          "name": "subcategory",
-          "label": "Subcategory",
-          "type": "text"
+          "type": "text",
+          "name": "headcount_ft",
+          "label": "Full-Time Head Count"
         },
         {
-          "name": "head_count",
-          "label": "Head Count",
-          "type": "text"
+          "type": "text",
+          "name": "headcount_pt",
+          "label": "Part-Time Head Count"
         },
         {
+          "type": "text",
           "name": "fte",
-          "label": "FTE",
-          "type": "text"
-        },
-        {
-          "name": "ft_pt",
-          "label": "FT/PT",
-          "type": "text"
+          "label": "Full-Time Equivalent"
         }
       ],
       "maxRows": 30,

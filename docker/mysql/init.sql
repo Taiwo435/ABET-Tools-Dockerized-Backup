@@ -99,8 +99,9 @@ CREATE TABLE IF NOT EXISTS course_sections (
 CREATE TABLE IF NOT EXISTS programs (
     program_id INT AUTO_INCREMENT PRIMARY KEY,
     program_name VARCHAR(255) NOT NULL,
-    -- e.g. "Computer Science"
-    program_code VARCHAR(50) NOT NULL -- e.g. BS, BSE
+    program_code VARCHAR(50) NOT NULL,
+    program_year VARCHAR(20) NOT NULL,
+    UNIQUE KEY unique_program (program_name, program_code, program_year)
 );
 -- Table 2: student_admission_requirements
 -- One row = one “admissions criteria row” from the screenshot (the 4 text cells).
@@ -544,19 +545,20 @@ CREATE TABLE IF NOT EXISTS report_sections (
 CREATE TABLE IF NOT EXISTS course_syllabi (
     syllabus_id INT AUTO_INCREMENT PRIMARY KEY,
     program_id INT NOT NULL,
+    course_subject VARCHAR(50),
     course_number VARCHAR(50),
     course_name VARCHAR(255),
     credits INT,
     contact_hours TEXT,
     credit_categorization VARCHAR(100),
-    instructor_name VARCHAR(255),
-    textbook TEXT,
+    instructor_name JSON,
+    textbook JSON,
     catalog_description TEXT,
     prerequisites TEXT,
     course_type ENUM('R', 'E', 'SE'),
-    specific_goals TEXT,
-    student_outcomes TEXT,
-    topics_covered TEXT,
+    specific_goals JSON,
+    student_outcomes JSON,
+    topics_covered JSON,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
 );

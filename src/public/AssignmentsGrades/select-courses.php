@@ -21,8 +21,8 @@ $destIdCourses = $config['dest_courses']
   <header class="site-header">
     <div class="site-title">ABET Tools - Connect to Class</div>
     <div class="header-actions">
-      <a href="jobs.php" class="btn-header">View Jobs</a>
-      <a href="/../index.php" class="nav-link">← Back to Dashboard</a>
+      <a href="jobs.php" class="nav-link">View Jobs</a>
+      <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
     </div>
   </header>
 
@@ -51,19 +51,8 @@ $destIdCourses = $config['dest_courses']
             <option id="cs-option" value="CS" data-dest-id="240102">Computer Science (CS)</option>
           </select>
         </div>
-        <!-- <div class="filter-group">
-            <label for="departmentFilter" class ="filter-label"> Department </label>
-            <select class="filter-select" id="departmentFilter">
-                <option value="Biological and Health Systems Engineering"> School of Biological and Health Systems Engineering </option>
-                <option value="(SCAI)"> School of Computing and Augmented Intelligence (SCAI) </option>
-                <option value="(SECEE)"> School of Electrical, Computer and Energy Engineering (SECEE) </option>
-                <option value="(SEMTE)"> School for Engineering of Matter, Transport and Energy (SEMTE) </option>
-                <option value="(SSEBE)"> School of Sustainable Engineering and the Built Environment (SSEBE) </option>
-                <option value="(MSN)"> School of Manufacturing Systems and Networks (MSN) </option>
-                <option value="Polytechnic School"> The Polytechnic School </option>
-                <option value="Integrated Engineering"> School of Integrated Engineering </option>
-            </select>
-        </div>   -->
+
+        </div>  
         <div class="filter-group" style="margin-left: auto; align-self: flex-end;">
             <button id="go-btn" class="btn btn-primary" style="padding: 10px 20px;">Load Courses</button>
         </div>

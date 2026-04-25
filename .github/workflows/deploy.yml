@@ -26,4 +26,4 @@ jobs:
           run: "rsync --version || (echo 'rsync is not installed' && exit 1)"
 
         - name: Run Deployment Script to Remote Server
-          run: ./scripts/deployment/deploy.bash -y
+          run: APP_VERSION=${{ github.event.release.tag_name }} ./scripts/deployment/deploy.bash -y

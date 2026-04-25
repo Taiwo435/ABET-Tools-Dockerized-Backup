@@ -50,6 +50,12 @@ if [[ "$run_action" == true ]]; then
         rsync -avz --delete "$REMOTE/docker/.env" "$REPO_ROOT/docker/prod.env" 
         echo "[INFO] Sensitive .env file copied from server."
 
+        if [ -n "$APP_VERSION" ]; then
+            echo "APP_VERSION=$APP_VERSION" >> "$REPO_ROOT/docker/prod.env" 
+            echo >> "$REPO_ROOT/docker/prod.env" 
+            echo "[INFO] APP_VERSION updated"
+        fi
+
         # build .htaccess with .env secrets
         bash "$REPO_ROOT/scripts/deployment/build_files.bash"
         echo "[INFO] .htaccess file built with environment variables."
@@ -67,6 +73,11 @@ if [[ "$run_action" == true ]]; then
         # Run composer install
         ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer install --no-dev --optimize-autoloader --no-interaction"
         echo "[INFO] Composer install successful"
+
+        # Run composer update
+        # ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer update --no-dev --optimize-autoloader --no-interaction"
+        # echo "[INFO] Composer update successful"
+
 
         ssh -t osburn@"$HOSTNAME" "cd /home/osburn/abet_docker/src/abet_private && composer doctrine migrate --no-interaction"
         echo "[INFO] Migrations Ran"
