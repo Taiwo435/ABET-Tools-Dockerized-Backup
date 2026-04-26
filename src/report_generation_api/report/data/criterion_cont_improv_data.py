@@ -1,6 +1,43 @@
 def get_outcome_assessment_info(questionnaire):
     """
-    Fetch outcome assessment info (outcome number, course name, assessment method).
+    Fetch outcome assessment info joined with program name.
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT 
+            oa.outcome_number,
+            oa.course_name,
+            oa.assessment_method,
+            p.program_name
+        FROM outcome_assessment oa
+        JOIN programs p ON oa.program_id = p.program_id
+    """)
+
+    return cursor.fetchall()
+
+def get_outcome_attainment_level(questionnaire):
+    """
+    Fetch outcome assessment info joined with program name.
+    """
+
+    cursor = questionnaire.db.cursor()
+
+    cursor.execute("""
+        SELECT 
+            oa.outcome_number,
+            oa.course_name,
+            oa.attainment_level,
+            p.program_name
+        FROM outcome_attainment_level oa
+        JOIN programs p ON oa.program_id = p.program_id""")
+
+    return cursor.fetchall()
+
+def get_assessment_summary(questionnaire):
+    """
+    Fetch assessment summary info (outcome number, semester, result).
     """
 
     cursor = questionnaire.db.cursor()
@@ -8,11 +45,9 @@ def get_outcome_assessment_info(questionnaire):
     cursor.execute("""
         SELECT 
             outcome_number,
-            course_name,
-            assessment_method
-        FROM outcome_assessment
-    """)
-    
+            semester,
+            result
+        FROM assessment_summary""")
 
     return cursor.fetchall()
 def get_outcome_attainment_criteria(questionnaire):
