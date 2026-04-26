@@ -38,6 +38,11 @@ function decrypt_value(string $encrypted): string {
     return openssl_decrypt(base64_encode($data), 'AES-256-CBC', $key, 0, $iv) ?: '';
 }
 
+function post_str(string $key): string {
+    return isset($_POST[$key]) ? trim((string)$_POST[$key]) : '';
+}
+
+
 // CSRF validation (uses shared csrf.php library)
 if ($_SERVER['REQUEST_METHOD'] === 'POST')
 {
@@ -230,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
       <label class = "validation-title"><input type = "checkbox" id="request-verification"> Would you like to verify the above course IDs?</label><br>
       <label style="display: none; font-size: 14px; font-weight: 600; color: #333; margin-top: 12px; margin-bottom: 6px;" id="label-enter-token" >Enter your Canvas Access Token</label><br>
       <input type = "password" style="display: none; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 260px; outline: none;" id="input-canvas-token"><br>
-      <button class="btn btn-secondary " id="button-submit-token" style="display: none; margin-bottom: 30px;" type="button"> Submit Token </button>
+      <button class="btn btn-secondary " id="button-submit-token" style="display: none; margin-bottom: 15px;" type="button"> Submit Token </button>
       <label id="canvas_access_token_warning" style="display: none;"></label>
       <div class="loading-overlay" style = "display: none;"><i class='fas fa-spinner fa-spin'></i> Verifying classes, please wait...</div>
       <label id="label-verified-courses" style="display: none;" class="alert alert-success"> Courses Found: </label>
@@ -288,10 +293,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
           {
             const success_msg = document.getElementById('alert-success-destination-id');
             const errors_msg = document.getElementById('alert-error-destination-id');
+            const label_verified_courses = document.getElementById('label-verified-courses');
+            const label_unverified_courses = document.getElementById('label-unverified-courses');
             success_msg.style.display = 
             label_enter_token.style.display = "none";
             input_canvas_access_token.style.display = "none";
             submit_canvas_token_button.style.display = "none";
+            label_verified_courses.style.display = "none";
+            label_unverified_courses.style.display = "none";
           }
         });
 
@@ -306,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
           let label_verified_courses = document.getElementById("label-verified-courses");
           let label_unverified_courses = document.getElementById("label-unverified-courses");
           const canvas_token = input_canvas_access_token.value.trim(); // Fetch Canvas Token
-          
+          console.log(canvas_token)
           //If token DNE, return an error
           if (canvas_token === "")
           {
@@ -459,10 +468,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
             const success_msg = document.getElementById('alert-success-destination-id');
             const errors_msg = document.getElementById('alert-error-destination-id');
             try{
-
+              
               //Update ID into destination-courses.php; if successful, show success response otherwise show error response
               const storeRes = await fetch('admin.php', {method: 'POST', body: storeBody});
               const storeData = await storeRes.json();
+              console.log(storeData)
               if (storeData.status)
               {
                 current_dest_courses = storeData.courses;
@@ -474,6 +484,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
                 errors_msg.style.display = "inline";
               }
             } catch(err) {
+              console.log("here");
                 success_msg.style.display = "none";
                 errors_msg.style.display = "inline";
             } 
