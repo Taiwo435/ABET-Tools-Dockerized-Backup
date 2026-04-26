@@ -214,6 +214,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_openai'])) {
   <h1>Admin Panel</h1>
   <p class="subtitle">Manage destination course IDs and application settings.</p>
 
+    <div class="section-title">Syllabus Templates</div>
+
+  <p class="subtitle">
+    Create and manage syllabus templates for courses.
+  </p>
+
+  <a href="templates.php" class="btn btn-primary">Manage Syllabus Templates</a>
+
   <?php if ($success): ?>
     <div class="alert alert-success">Destination courses updated successfully.</div>
   <?php endif; ?>
