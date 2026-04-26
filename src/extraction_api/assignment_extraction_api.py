@@ -33,6 +33,7 @@ import docx
 from csv_filter import RosterMap, parse_roster_for_major_map
 from xhtml2pdf import pisa
 from upload_abet_reports import upload_abet_report
+from update_database import DatabaseManager
 from quiz_statistics import render_quiz_statistics_pdf
 
 # Logging setup
@@ -53,6 +54,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+db_manager = DatabaseManager()
 
 
 # Enums
@@ -1076,7 +1079,7 @@ def verify_course(
 
     client = CanvasGradesFetcher(access_token=canvas_access_token)
     course_info = client.api_request(
-        f"courses/{course_id}", params={"include[]": ["term"]}
+        f"courses/{course_id}", params={"include[]": ["term", "teachers"]}
     )
     if not course_info:
         raise HTTPException(
@@ -1115,152 +1118,8 @@ def verify_course(
         "course_code": course_info.get("course_code"),
         "term": course_info.get("term", {}).get("name"),
         "duplicate_status": duplicate,
+        "teachers": course_info.get("teachers", []),
     }
-
-
-# ------------------------------------
-# Deprecating process-course-with-roster endpoint
-# ------------------------------------
-
-
-# @app.post("/process-course-with-roster/{course_id}")
-# def process_course_with_roster(
-#     course_id: str,
-#     canvas_access_token: Annotated[str, Header()],
-#     roster_file: Optional[UploadFile] = File(None),
-#     tasks: TaskType = Query(
-#         TaskType.ALL, description="Tasks to run: 'extract', 'abet', or 'all'"
-#     ),
-# ):
-#     # Early token validation
-#     if not canvas_access_token or not str(canvas_access_token).strip():
-#         raise HTTPException(status_code=401, detail="Canvas access token is required.")
-
-#     student_major_map = RosterMap()
-
-#     # Only run roster parsing if the task actually requires it (ABET or ALL)
-#     if tasks in (TaskType.ABET, TaskType.ALL):
-#         if not roster_file:
-#             raise HTTPException(
-#                 status_code=400,
-#                 detail="The 'roster_file' is required when tasks include 'abet' or 'all'.",
-#             )
-#         student_major_map = parse_roster_upload(roster_file)
-
-#     temp_dir = create_temp_dir()
-#     try:
-#         grades_fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
-#         course_info = grades_fetcher.api_request(
-#             f"courses/{course_id}", params={"include[]": ["syllabus_body", "term"]}
-#         )
-
-#         if not course_info:
-#             raise HTTPException(
-#                 status_code=404, detail="Course not found or invalid token."
-#             )
-
-#         course_code = course_info.get(
-#             "course_code", "course"
-#         )  # e.g., "2023Fall-T-CSE423-70483" for a real course
-#         semester_code = get_semester_short_code(
-#             course_info.get("term", {}).get("name", "")
-#         )  # e.g., f25
-
-#         course_folder_name = re.sub(
-#             r'[<>:"/\\|?*]', "", course_info.get("name") or course_code
-#         )
-
-#         all_assignments = get_all_assignments(course_id, grades_fetcher)
-#         if not all_assignments:
-#             raise HTTPException(
-#                 status_code=404, detail="No assignments found in the course."
-#             )
-
-#         if tasks in (TaskType.EXTRACT, TaskType.ALL):
-#             syllabus_path = extract_and_save_syllabus(
-#                 course_id, course_info, grades_fetcher, temp_dir
-#             )
-#             if syllabus_path:
-#                 syllabus_files = [
-#                     os.path.join(syllabus_path, f) for f in os.listdir(syllabus_path)
-#                 ]
-#                 grades_fetcher.upload_files(
-#                     course_id,
-#                     f"{course_folder_name}/Syllabus",
-#                     syllabus_files,
-#                 )
-
-#         # Data Gathering Phase (Always Runs)
-#         assignment_texts_map = {}
-#         logger.info("Starting Data Gathering Phase")
-
-#         # Prefetch all submissions once and index by assignment_id to avoid
-#         # redundant per-assignment API calls.
-#         all_submissions = grades_fetcher.fetch_all_course_submissions(int(course_id))
-#         submissions_by_assignment = defaultdict(list)
-#         for sub in all_submissions:
-#             submissions_by_assignment[sub["assignment_id"]].append(sub)
-
-#         for assignment in all_assignments:
-#             logger.info("Gathering artifacts for: %s", assignment["name"])
-#             local_files, extracted_texts = extract_and_save_artifacts(
-#                 assignment,
-#                 grades_fetcher,
-#                 temp_dir,
-#                 prefetched_submissions=submissions_by_assignment.get(assignment["id"]),
-#             )
-#             assignment_texts_map[assignment["id"]] = extracted_texts
-
-#             sanitized_name = sanitize_filename(assignment["name"])
-#             assignment_folder_path = os.path.join(
-#                 temp_dir, f"{assignment['id']}_{sanitized_name}"
-#             )
-#             report_path = generate_assignment_grade_report(
-#                 grades_fetcher,
-#                 assignment,
-#                 assignment_folder_path,
-#                 prefetched_submissions=submissions_by_assignment.get(assignment["id"]),
-#             )
-#             if report_path:
-#                 local_files.append(report_path)
-
-#             if tasks in (TaskType.EXTRACT, TaskType.ALL):
-#                 if local_files:
-#                     logger.info("Uploading artifacts for '%s'...", assignment["name"])
-#                     canvas_folder = f"{course_folder_name}/Assignments/{sanitized_name}"
-#                     grades_fetcher.upload_files(course_id, canvas_folder, local_files)
-#                 else:
-#                     logger.info("No artifacts found to upload for this assignment.")
-
-#         logger.info("Data Gathering Complete")
-
-#         # ABET Report Generation Phase (Conditional)
-#         if tasks in (TaskType.ABET, TaskType.ALL):
-#             logger.info("Starting ABET Report Generation Phase")
-#             if abet_assignments := find_abet_assignments(all_assignments):
-#                 outcome_map, outcome_details = find_abet_outcomes(abet_assignments)
-#                 if outcome_map:
-#                     generate_outcome_reports(
-#                         grades_fetcher,
-#                         outcome_map,
-#                         outcome_details,
-#                         course_info,
-#                         course_folder_name,
-#                         course_id,
-#                         student_major_map,
-#                         assignment_texts_map,
-#                         temp_dir,
-#                     )
-#                 else:
-#                     logger.info(
-#                         "No assignments with rubric outcomes found for summary report generation."
-#                     )
-#             else:
-#                 logger.info("No ABET-tagged assignments found.")
-
-#         return {"message": f"Processing complete for tasks: '{tasks.value}'."}
-#     finally:
-#         cleanup_temp_dir(temp_dir)
 
 
 @app.post("/generate-report-json/{course_id}")
@@ -1354,6 +1213,69 @@ def generate_report_json(
         cleanup_temp_dir(temp_dir)
 
 
+# Canvas course listing (used by select-courses.php)
+
+ALLOWED_COURSE_IDS = {
+    240102
+}  # Always show Testing Ground course if present in response
+
+
+@app.get("/canvas/courses")
+def list_canvas_courses(
+    canvas_access_token: Annotated[str, Header()],
+    enrollment_type: str = Query(default="teacher"),
+):
+    """Fetch instructor courses from Canvas, filtered to CSE + allowed IDs."""
+    fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
+    courses = fetcher.get_paginated_list(
+        "courses",
+        params={
+            "enrollment_type": enrollment_type,
+            "include[]": ["term", "total_students", "teachers"],
+        },
+    )
+    # Keep only CSE courses + explicitly allowed course IDs
+    filtered = [
+        c
+        for c in courses
+        if c.get("id") in ALLOWED_COURSE_IDS
+        or (c.get("course_code") or "").upper().startswith("CSE")
+        # Also match term-prefixed codes like "2023Fall-T-CSE423-70483"
+        or "CSE" in (c.get("course_code") or "").upper()
+    ]
+    return filtered
+
+
+@app.get("/verify-token")
+def verify_canvas_token(canvas_access_token: Annotated[str, Header()]):
+    """Verify a Canvas access token is valid by hitting /users/self."""
+    fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
+    resp = fetcher.session.get(
+        f"{fetcher.canvas_domain}/api/v1/users/self",
+        timeout=10,
+    )
+    if resp.status_code == 401:
+        raise HTTPException(status_code=401, detail="Token is invalid or expired.")
+    if not resp.ok:
+        raise HTTPException(status_code=resp.status_code, detail=f"Unexpected Canvas response: {resp.status_code}")
+    return {"valid": True}
+
+
+@app.get("/jobs")
+def get_jobs(
+    submitted_by_user_id: Annotated[
+        int | None, Header(alias="submitted-by-user-id")
+    ] = None,
+    limit: int = 50,
+):
+    from shared.db import list_jobs
+
+    jobs = list_jobs(
+        service="extraction", submitted_by=submitted_by_user_id, limit=limit
+    )
+    return {"success": True, "jobs": jobs}
+
+
 @app.get("/job-status/{job_id}")
 def get_job_status(job_id: str):
     """Check job status from Redis with MySQL fallback."""
@@ -1418,6 +1340,7 @@ def get_job_status(job_id: str):
 def run_pipeline_sync(
     course_id_to_push: str,
     canvas_access_token: str,
+    user_id: str,
     course_ids_to_pull: list[str],
     student_major_map: RosterMap,
     on_progress: Callable[[int, str], None] | None = None,
@@ -1576,6 +1499,9 @@ def run_pipeline_sync(
                         ],
                     }
                     upload_abet_report(course_id_to_push, report_json, grades_fetcher)
+                    db_manager.update_course_data(
+                        report_json=report_json, user_id=user_id, table="courses"
+                    )
                     logger.info(
                         "Uploaded ABET reports for course '%s'", course_id_to_pull
                     )
@@ -1598,6 +1524,8 @@ def move_data_between_courses(
         List[str], Query(min_length=1, description="Enter all Course IDs to pull from")
     ],
     roster_file: UploadFile = File(...),
+    course_name: Annotated[str | None, Query()] = None,
+    overwrite: Annotated[bool, Query()] = False,
     submitted_by_user_id: Annotated[int | None, Header()] = None,
 ):
     from shared.celery_app import celery_app
@@ -1626,11 +1554,29 @@ def move_data_between_courses(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse roster file: {e}")
 
+    from shared.locks import acquire_course_lock, release_course_lock
+
+    # Prevent duplicate extraction of the same source course
+    locked_ids = []
+    for cid in course_ids_to_pull:
+        if not acquire_course_lock(cid, course_id_to_push):
+            # Roll back any locks we just acquired
+            for acquired in locked_ids:
+                release_course_lock(acquired, course_id_to_push)
+            raise HTTPException(
+                status_code=409,
+                detail=f"Course {cid} is already being extracted (by you or another user). Please wait for the current extraction to finish before trying again.",
+            )
+        locked_ids.append(cid)
+
     # Serialize RosterMap to plain dict for Celery
     job_params = {
         "course_id_to_push": course_id_to_push,
         "canvas_access_token": canvas_access_token,
+        "submitted_by_user_id": submitted_by_user_id,
         "course_ids_to_pull": course_ids_to_pull,
+        "course_name": course_name,
+        "overwrite": overwrite,
         "roster": {
             "by_asurite": dict(student_major_map.by_asurite),
             "by_id": dict(student_major_map.by_id),

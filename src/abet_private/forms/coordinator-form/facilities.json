@@ -1,0 +1,22 @@
+{
+  "title": "Facilities",
+  "name": "facilities",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "expandable-grid",
+      "name": "computer_resources_table",
+      "label": "Computing Classroom Facilities",
+      "columns": [
+        { "name": "building_code", "label": "Bldg. Code", "type": "text" },
+        { "name": "room_number", "label": "Room Number", "type": "text" },
+        { "name": "capacity", "label": "Capacity", "type": "text" },
+        { "name": "use", "label": "Use", "type": "text" },
+        { "name": "zoom_level", "label": "Zoom Level", "type": "text" }
+      ],
+      "maxRows": 20,
+      "required": false
+    }
+  ]
+}

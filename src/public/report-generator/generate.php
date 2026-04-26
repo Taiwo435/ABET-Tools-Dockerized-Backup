@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 if ($_SERVER['APP_DEBUG']) {
     umask(0000); // DON"T set file permissions :)
@@ -29,6 +30,7 @@ register_shutdown_function(function () {
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
+
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();

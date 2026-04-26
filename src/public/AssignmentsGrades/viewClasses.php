@@ -1,6 +1,7 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_login();
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -339,6 +340,7 @@ require_login();
       <a href="/AssignmentsGrades/canvasTest.php" class="btn-primary">+ Add New Class</a>
     </div>
 
+  
     <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="filter-group">

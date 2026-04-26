@@ -1,5 +1,6 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 ?>
 
 <link rel="stylesheet" href="/assets/css/pdfviewer.css">

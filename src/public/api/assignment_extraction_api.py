@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-
 # Enums
 class TaskType(str, enum.Enum):
     """Valid task types for the process-course-with-roster endpoint."""

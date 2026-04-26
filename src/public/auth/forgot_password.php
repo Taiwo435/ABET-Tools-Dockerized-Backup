@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/reset_password_lib.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -92,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="error"><?= htmlspecialchars($err, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endforeach; ?>
 
-    <form method="post" action="">
+    <form method="post" action="/auth/forgot_password.php">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(fp_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
 
       <label for="email">Email</label>
@@ -109,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="links">
-      <a href="login.php">Back to Login</a>
+      <a href="/auth/login.php">Back to Login</a>
     </div>
   </div>
 </body>

@@ -2,9 +2,10 @@ FROM composer:2 as vendor
 
 WORKDIR /app
 
-COPY ../../src/abet_private .
+COPY ../../src/abet_private/composer.json .
+COPY ../../src/abet_private/composer.lock .
 
-RUN composer install --no-dev --prefer-dist --no-interaction
+RUN composer install --prefer-dist --no-interaction
 
 ################################3
 # ORIGNAL BUILD STEP
@@ -16,7 +17,6 @@ ENV ABET_PRIVATE_DIR=$ABET_PRIVATE_DIR
 
 WORKDIR $ABET_PRIVATE_DIR
 
-COPY --from=vendor /app/vendor $ABET_PRIVATE_DIR/vendor
 
 WORKDIR /var/www/html
 
@@ -32,7 +32,6 @@ RUN apt-get install -y \
     python3-pip \
     libreoffice-writer
 
-
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* 
 
 RUN pip3 install --no-cache-dir --break-system-packages \
@@ -43,19 +42,31 @@ RUN pip3 install --no-cache-dir --break-system-packages \
 
 RUN docker-php-ext-install pdo pdo_mysql
 
-# the reverse proxy will handle the SSL, so we don't need to set up certificates here
+# The server will handle SSL, we don't need it here.
 RUN a2enmod rewrite
+RUN a2enmod setenvif
 RUN a2enmod headers
 RUN a2enmod proxy
 RUN a2enmod proxy_http
 
 COPY docker/app/config/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
-#RUN if [ "$BUILD_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
+#RUN if [ "$APP_ENV" = "development" ]; then echo "Development environment"; else echo "Production environment"; fi
 
 # change php.ini based on environment variable
-RUN if [ "$BUILD_ENV" = "development" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+# doesn't really matter...
+# RUN if [ "$APP_ENV" = "dev" ]; then mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"; else mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; fi
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-
-#RUN mkdir -p /var/www/
 WORKDIR /var/www
+
+VOLUME ["/home/docker"]
+VOLUME ["/home/abet_private"]
+# RUN ["install", "-d", "-o", "www-data", "-g", "www-data", "-m", "0766", "${ABET_PRIVATE_DIR}/report_jobs"] 
+# RUN ["install", "-d", "-o", "www-data", "-g", "www-data", "-m", "0766", "${ABET_PRIVATE_DIR}/var"] 
+
+COPY --from=vendor /app/vendor /var/www/vendor
+COPY docker/app/entrypoint.sh /home/entrypoint.sh
+
+# don't trust the docker/ volume
+ENTRYPOINT [ "/home/entrypoint.sh" ]

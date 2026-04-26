@@ -1,76 +1,59 @@
 {
-    "title": "General Criteria",
-    "name": "generalCriteria",
-    "action": "submit.php",
-    "method": "POST",
-    "fields": [
-        {
-            "type": "expandable-grid",
-            "name": "freshman_criteria",
-            "label": "Freshman students who have completed 0-11 transferable college credits post high school",
-            "columns": [
-                {
-                    "name": "majors",
-                    "label": "Majors (multiple allowed in a single box)",
-                    "type": "text-field"
-                },
-                {
-                    "name": "admission_criteria",
-                    "label": "Admission Criteria",
-                    "type": "text-field"
-                }
-            ],
-            "maxRows": 10,
-            "required": false
-            
-        },
+  "title": "General Criteria",
+  "name": "generalCriteria",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Freshman Criteria",
+      "description": "For students who have completed 0-11 transferable college credits post high school"
+    },
+    {
+      "type": "text-field",
+      "name": "freshman",
+      "label": ""
+    },
 
-        {
-            "type": "expandable-grid",
-            "name": "transfer_criteria_12_to_23",
-            "label": "Transfer students who have completed 12-23 transferable college credits post high school",
-            "columns": [
-                {
-                    "name": "majors",
-                    "label": "Majors (multiple allowed in a single box)",
-                    "type": "text-field"
-                },
-                {
-                    "name": "admission_criteria",
-                    "label": "Admission Criteria",
-                    "type": "text-field"
-                }
-            ],
-            "maxRows": 10,
-            "required": false
-            
-        },
+    {
+      "type": "section-break"
+    },
 
-        {
-            "type": "expandable-grid",
-            "name": "transfer_criteria_24",
-            "label": "Transfer students with 24 or more transferable college credit hours post high school",
-            "description": "Must meet EITHER the primary criteria OR the secondary criteria (both not required)",
-            "columns": [
-                {
-                    "name": "majors",
-                    "label": "Majors (multiple allowed in a single box)",
-                    "type": "text-field"
-                },
-                {
-                    "name": "primary_criteria",
-                    "label": "Primary Criteria",
-                    "type": "text-field"
-                },
-                {
-                    "name": "secondary_criteria",
-                    "label": "Secondary Criteria",
-                    "type": "text-field"
-                }
-            ],
-            "maxRows": 10,
-            "required": false
-            
-        }
-    ]
+    {
+      "type": "section-label",
+      "label": "12-23 Credit Transfer Criteria",
+      "description": "For students who have completed 12-23 transferable college credits post high school"
+    },
+    {
+      "type": "text-field",
+      "name": "transfer_12_23",
+      "label": ""
+    },
+
+    {
+      "type": "section-break"
+    },
+
+    {
+      "type": "section-label",
+      "label": "24+ Credit Transfer Criteria",
+      "description": "Students who have completed 24 or more transferable college credits post high school."
+    },
+    {
+      "type": "section-label",
+      "label": "",
+      "description": "The 24+ Credit section has a primary and secondary criteria. To qualify, students can meet either the primary or secondary criteria. They do not need to meet both."
+    },
+
+    {
+      "type": "text-field",
+      "name": "transfer_24_primary",
+      "label": "Primary Criteria"
+    },
+    {
+      "type": "text-field",
+      "name": "transfer_24_secondary",
+      "label": "Secondary Criteria"
+    }
+  ]
 }

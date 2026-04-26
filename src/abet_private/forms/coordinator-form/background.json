@@ -1,13 +1,17 @@
 {
-    "title": "Background Information",
-    "name": "background",
-    "action": "submit.php",
-    "method": "POST",
-    "fields": [
-        {
-            "name": "contact-information",
-            "label": "Contact Information",
-            "type": "text-field"
-        }
-    ]
+  "title": "Background Information",
+  "name": "background",
+  "action": "submit.php",
+  "method": "POST",
+  "fields": [
+    {
+      "type": "section-label",
+      "label": "Contact Information"
+    },
+    {
+      "name": "contact_information",
+      "description": "List name, mailing address, telephone number, and e-mail address for the primary pre-visit contact person for the program.",
+      "type": "text-field"
+    }
+  ]
 }

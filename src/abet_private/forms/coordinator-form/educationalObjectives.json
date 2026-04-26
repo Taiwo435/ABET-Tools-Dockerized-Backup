@@ -1,13 +1,16 @@
 {
-  "title": "Educational Objectives",
+  "title": "Program Educational Objectives",
   "name": "educationalObjectives",
   "action": "submit.php",
   "method": "POST",
   "fields": [
     {
+      "type": "section-label",
+      "label": "Process for Review of Program Educational Objectives"
+    },
+    {
       "type": "expandable-grid",
-      "name": "educational_objectives",
-      "label": "Review of educational objectives for the Computer Systems Engineering program.",
+      "name": "peo_review_process",
       "columns": [
         {
           "name": "input_method",
@@ -21,7 +24,7 @@
         },
         {
           "name": "constituencies",
-          "label": "Constituencies",
+          "label": "Constituencies Involved",
           "type": "text"
         }
       ],
