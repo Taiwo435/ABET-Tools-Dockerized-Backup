@@ -4,6 +4,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\BrowserKit\Response;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\ResponseInterface;
+use App\Entity\User;
 
 // Acts as a service for stuff
 
@@ -35,7 +36,29 @@ class ApiProxy
             $url,
             [
                 'headers' => [
-                    'canvas-access-token:' => $token
+                    'canvas-access-token' => $token,
+                ],
+            ]
+        );
+
+        return $response;
+    }
+
+    /**
+     * Returns the extraction jobs that have been instantiated.
+     * @param User $user The user who submitted the request
+     * @return ResponseInterface The response by the API
+     */
+    public function getJobHistory(User $user) {
+        $client = HttpClient::create();
+        $url    = $this->api_base(API::Extraction) . '/jobs?limit=50';
+
+        $response = $client->request(
+            'GET',
+            $url,
+            [
+                'headers' => [
+                    'submitted-by-user-id' => $user->getId() ?? 0,
                 ],
             ]
         );

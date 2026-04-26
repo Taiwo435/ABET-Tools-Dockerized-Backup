@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Form;
+namespace App\Form\AssignmentsGrades;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -8,6 +8,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
+/**
+ * @see https://symfony.com/doc/current/forms.html#creating-forms-in-controllers
+ * helps you understand what the hell I'm doing
+ */
 class AccessTokenType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void

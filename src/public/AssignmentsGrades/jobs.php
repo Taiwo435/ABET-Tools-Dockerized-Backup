@@ -85,9 +85,14 @@ $csrfToken = csrf_token('tool1_proxy');
       <thead><tr><th>Course</th><th>Status</th><th>Message</th><th>Started</th></tr></thead><tbody>`;
 
     for (const j of jobs) {
+      // WTF does this do???
+      // search the params column, for which I have no idea what it stores.
       const params = typeof j.params === 'string' ? JSON.parse(j.params) : (j.params || {});
+      // retrieve the metadata, which may also not even exist
       const meta = typeof j.result_meta === 'string' ? JSON.parse(j.result_meta || '{}') : (j.result_meta || {});
+      // Quantum ahh course label
       const courseLabel = params.course_name || meta.course_folder_name || params.course_ids_to_pull?.[0] || j.id?.substring(0, 8);
+      // Debug message from stuff.
       const msg = j.message || (j.status === 'failed' ? (j.error_message || '') : '');
 
       html += `<tr>

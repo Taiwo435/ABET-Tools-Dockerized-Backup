@@ -1,6 +1,10 @@
 <?php
-namespace App\Entity\Task;
+namespace App\Entity\Task\AssignmentsGrades;
 
+/**
+ * @see https://symfony.com/doc/current/forms.html#usage
+ * to understand why
+ */
 class AccessTokenForm
 {
     protected string $token;

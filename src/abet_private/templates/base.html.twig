@@ -41,8 +41,9 @@
                 </div>
             </a>
             <div class="header-right-alligned">
-            <a class="home-link" href="{{ path('app_homepage') }}"><img class="home-icon" src="/assets/img/home-icon.svg" alt="home page"></a>
-            <div class="auth-nav">
+                {% block header_items %}
+                {% endblock %}
+                <div class="auth-nav">
                     <div class="dropdown">
                         <button type="button" onclick="toggleProfile(event)" class="auth-btn dropbtn" aria-expanded="false" aria-controls="profileDropdown">
                             My Profile
@@ -66,8 +67,12 @@
                             <a href="/logout" class="logout-item">Log Out</a>
                         </div>
                     </div>
-                    <a href="/login" class="auth-link">Log In</a>
-            </div>
+                </div>
+                <a class="home-link" href="{{ path('app_homepage') }}">
+                    <img class="home-icon" src="/assets/img/home-icon2.svg" alt="home page">
+                </a>
+                {# removed because all sites that use it have users already logged in #}
+                {# <a href="/login" class="auth-link">Log In</a> #}
             </div>
         </header>
     {% endblock %}
