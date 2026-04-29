@@ -227,6 +227,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
     }
 
+    /**
+     * printable permissions
+     * @return int                             The value of the user's access.
+     */
+    public function getPermissions() : int {
+        return $this->permissions;
+    }
+
     // /**
     //  * Possible roles are in the Permissions enum
     //  * @see Permissions
