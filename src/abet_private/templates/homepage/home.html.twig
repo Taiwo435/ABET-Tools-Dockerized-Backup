@@ -119,6 +119,23 @@
             </div>
             {# <?php endif; ?> #}
 
+            {% if app.debug %}
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">DEBUG PANEL</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>
+                        Permissions: {{ app.user.Permissions }} <br />
+                        </p>
+                        <a href="{{ path('app_assignments_grades') }}" class="action-link">Launch Tool 1 &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 
