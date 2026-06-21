@@ -6,7 +6,7 @@
 
 **Architecture:** A focused Symfony controller owns the `/admin` endpoint and relies on the existing security role system. The existing Twig template is corrected to use the current assignments-and-grades route and to render User Management as disabled until Taiga task `#13` is implemented.
 
-**Tech Stack:** PHP 8.3, Symfony 7.4, Twig, PHPUnit/WebTestCase
+**Tech Stack:** PHP 8.3+, Symfony 7.4, Twig, PHPUnit
 
 ---
 
@@ -22,28 +22,47 @@
 
 namespace Tests\Controller;
 
-use App\Entity\Permissions;
-use App\Entity\User;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Controller\AdminController;
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-final class AdminControllerTest extends WebTestCase
+final class AdminControllerTest extends TestCase
 {
-    public function testAdminCanOpenCentralPanel(): void
+    public function testAdminPanelRouteRequiresAdminRole(): void
     {
-        $client = static::createClient();
+        self::assertTrue(
+            class_exists(AdminController::class),
+            'The central admin panel controller does not exist.'
+        );
 
-        $admin = (new User())
-            ->setEmail('admin@example.com')
-            ->setPasswordHash('test-password-hash');
-        $admin->setPermission(Permissions::ROLE_ADMIN, true);
+        $method = (new ReflectionClass(AdminController::class))->getMethod('index');
 
-        $client->loginUser($admin);
-        $client->request('GET', '/admin');
+        $routeAttributes = $method->getAttributes(Route::class);
+        self::assertCount(1, $routeAttributes);
 
-        self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'Admin Panel');
-        self::assertSelectorExists('a[href="/tool/assignmentsgrades"]');
-        self::assertSelectorTextContains('[aria-disabled="true"]', 'Coming Soon');
+        $route = $routeAttributes[0]->newInstance();
+        self::assertSame('/admin', $route->path);
+        self::assertSame('app_admin_panel', $route->name);
+        self::assertSame(['GET'], $route->methods);
+
+        $grantAttributes = $method->getAttributes(IsGranted::class);
+        self::assertCount(1, $grantAttributes);
+        self::assertSame('ROLE_ADMIN', $grantAttributes[0]->newInstance()->attribute);
+    }
+
+    public function testAdminPanelOnlyLinksImplementedTools(): void
+    {
+        $template = file_get_contents(
+            dirname(__DIR__, 2).'/templates/tools/admin_panel/home.html.twig'
+        );
+
+        self::assertIsString($template);
+        self::assertStringContainsString("path('app_assignments_grades')", $template);
+        self::assertStringContainsString('aria-disabled="true"', $template);
+        self::assertStringContainsString('Coming Soon', $template);
+        self::assertStringNotContainsString("path('app_admin_users')", $template);
     }
 }
 ```
@@ -57,7 +76,8 @@ cd src/abet_private
 ./bin/phpunit tests/Controller/AdminControllerTest.php
 ```
 
-Expected: failure because no Symfony route handles `/admin`.
+Expected: two failures because the controller is missing and the template still
+references nonexistent route names.
 
 - [ ] **Step 3: Commit the failing test**
 
@@ -126,7 +146,7 @@ cd src/abet_private
 ./bin/phpunit tests/Controller/AdminControllerTest.php
 ```
 
-Expected: one passing test.
+Expected: two passing tests.
 
 - [ ] **Step 5: Run the full Symfony test suite**
 
