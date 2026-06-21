@@ -44,4 +44,17 @@ final class AdminControllerTest extends TestCase
         self::assertStringContainsString('Coming Soon', $template);
         self::assertStringNotContainsString("path('app_admin_users')", $template);
     }
+
+    public function testDoctrineMapsTheExistingEntityDirectory(): void
+    {
+        $configuration = file_get_contents(
+            dirname(__DIR__, 2).'/config/packages/doctrine.yaml'
+        );
+
+        self::assertIsString($configuration);
+        self::assertStringContainsString(
+            "dir: '%kernel.project_dir%/src/Entity'",
+            $configuration
+        );
+    }
 }

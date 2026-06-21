@@ -90,6 +90,7 @@ git commit -m "test: cover central admin panel"
 
 **Files:**
 - Create: `src/abet_private/src/Controller/AdminController.php`
+- Modify: `src/abet_private/config/packages/doctrine.yaml`
 - Modify: `src/abet_private/templates/tools/admin_panel/home.html.twig`
 
 - [ ] **Step 1: Add the minimal controller**
@@ -115,7 +116,15 @@ final class AdminController extends AbstractController
 }
 ```
 
-- [ ] **Step 2: Correct the working tool link**
+- [ ] **Step 2: Correct Doctrine's entity mapping**
+
+Correct Doctrine's existing invalid entity directory:
+
+```yaml
+dir: '%kernel.project_dir%/src/Entity'
+```
+
+- [ ] **Step 3: Correct the working tool link**
 
 Replace:
 
@@ -129,7 +138,7 @@ with:
 <a href="{{ path('app_assignments_grades') }}" class="action-link">Configure Tool 1 &rarr;</a>
 ```
 
-- [ ] **Step 3: Disable the unfinished User Management action**
+- [ ] **Step 4: Disable the unfinished User Management action**
 
 Replace the nonexistent `app_admin_users` link with:
 
@@ -137,7 +146,7 @@ Replace the nonexistent `app_admin_users` link with:
 <span class="action-link" aria-disabled="true">Coming Soon</span>
 ```
 
-- [ ] **Step 4: Run the focused test**
+- [ ] **Step 5: Run the focused test**
 
 Run:
 
@@ -146,9 +155,9 @@ cd src/abet_private
 ./bin/phpunit tests/Controller/AdminControllerTest.php
 ```
 
-Expected: two passing tests.
+Expected: three passing tests.
 
-- [ ] **Step 5: Run the full Symfony test suite**
+- [ ] **Step 6: Run the full Symfony test suite**
 
 Run:
 
@@ -157,9 +166,12 @@ cd src/abet_private
 ./bin/phpunit
 ```
 
-Expected: all tests pass.
+Expected: non-database tests pass. The existing `UserORMTest` cases require the
+project MySQL service, and the existing homepage test targets a missing `/home`
+Symfony route; record those baseline failures if the services and legacy route
+are unavailable.
 
-- [ ] **Step 6: Run static repository checks**
+- [ ] **Step 7: Run static repository checks**
 
 Run:
 
@@ -170,10 +182,11 @@ git status --short
 
 Expected: no whitespace errors; only the planned files are modified.
 
-- [ ] **Step 7: Commit the implementation**
+- [ ] **Step 8: Commit the implementation**
 
 ```bash
 git add src/abet_private/src/Controller/AdminController.php \
+  src/abet_private/config/packages/doctrine.yaml \
   src/abet_private/templates/tools/admin_panel/home.html.twig
 git commit -m "feat: expose protected central admin panel"
 ```
