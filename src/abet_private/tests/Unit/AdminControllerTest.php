@@ -40,9 +40,47 @@ final class AdminControllerTest extends TestCase
 
         self::assertIsString($template);
         self::assertStringContainsString("path('app_assignments_grades')", $template);
-        self::assertStringContainsString('aria-disabled="true"', $template);
-        self::assertStringContainsString('Coming Soon', $template);
-        self::assertStringNotContainsString("path('app_admin_users')", $template);
+        self::assertStringContainsString("path('app_admin_users')", $template);
+        self::assertStringNotContainsString('aria-disabled="true"', $template);
+        self::assertStringNotContainsString('Coming Soon', $template);
+    }
+
+    public function testAdminUsersRouteRequiresAdminRole(): void
+    {
+        self::assertTrue(
+            class_exists(AdminController::class),
+            'The admin controller does not exist.'
+        );
+
+        $method = (new ReflectionClass(AdminController::class))->getMethod('users');
+
+        $routeAttributes = $method->getAttributes(Route::class);
+        self::assertCount(1, $routeAttributes);
+
+        $route = $routeAttributes[0]->newInstance();
+        self::assertSame('/admin/users', $route->path);
+        self::assertSame('app_admin_users', $route->name);
+        self::assertSame(['GET'], $route->methods);
+
+        $grantAttributes = $method->getAttributes(IsGranted::class);
+        self::assertCount(1, $grantAttributes);
+        self::assertSame('ROLE_ADMIN', $grantAttributes[0]->newInstance()->attribute);
+    }
+
+    public function testAdminUsersTemplateShowsUserManagementFields(): void
+    {
+        $template = file_get_contents(
+            dirname(__DIR__, 2).'/templates/tools/admin_panel/users.html.twig'
+        );
+
+        self::assertIsString($template);
+        self::assertStringContainsString('User Management', $template);
+        self::assertStringContainsString('users', $template);
+        self::assertStringContainsString('user.email', $template);
+        self::assertStringContainsString('user.role', $template);
+        self::assertStringContainsString('user.active', $template);
+        self::assertStringContainsString('user.permissions', $template);
+        self::assertStringContainsString('Unknown', $template);
     }
 
     public function testDoctrineMapsTheExistingEntityDirectory(): void
