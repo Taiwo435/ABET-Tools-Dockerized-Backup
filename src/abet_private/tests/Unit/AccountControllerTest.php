@@ -10,7 +10,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class AccountControllerTest extends TestCase
 {
-    public function testAccountProfileRouteRequiresAuthenticatedUser(): void
+    public function testAccountOverviewRouteRequiresAuthenticatedUserWithoutShadowingLegacyProfile(): void
     {
         self::assertTrue(
             class_exists(AccountController::class),
@@ -23,8 +23,8 @@ final class AccountControllerTest extends TestCase
         self::assertCount(1, $routeAttributes);
 
         $route = $routeAttributes[0]->newInstance();
-        self::assertSame('/account/me/', $route->path);
-        self::assertSame('app_account_me', $route->name);
+        self::assertSame('/account/overview/', $route->path);
+        self::assertSame('app_account_overview', $route->name);
         self::assertSame(['GET'], $route->methods);
 
         $grantAttributes = $method->getAttributes(IsGranted::class);
@@ -51,14 +51,14 @@ final class AccountControllerTest extends TestCase
         self::assertStringNotContainsString('token', strtolower($template));
     }
 
-    public function testBaseHeaderLinksToSymfonyAccountProfileRoute(): void
+    public function testBaseHeaderLinksToSymfonyAccountOverviewRoute(): void
     {
         $template = file_get_contents(
             dirname(__DIR__, 2).'/templates/base.html.twig'
         );
 
         self::assertIsString($template);
-        self::assertStringContainsString("path('app_account_me')", $template);
+        self::assertStringContainsString("path('app_account_overview')", $template);
         self::assertStringNotContainsString('href="/account/me/"', $template);
     }
 }

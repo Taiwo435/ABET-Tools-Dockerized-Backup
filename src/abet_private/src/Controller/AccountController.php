@@ -12,7 +12,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AccountController extends AbstractController
 {
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    #[Route('/account/me/', name: 'app_account_me', methods: ['GET'])]
+    #[Route('/account/overview/', name: 'app_account_overview', methods: ['GET'])]
     public function me(#[CurrentUser] User $user): Response
     {
         return $this->render('account/me.html.twig', [
