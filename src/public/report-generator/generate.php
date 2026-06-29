@@ -176,7 +176,7 @@ try {
     // Paths
     $jobsRoot      = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
     $generatorPath = realpath(__DIR__ . '/../cgi-bin/abetReportGenerator.py');
-    $LongReportPath = realpath(__DIR__ . '/../cgi-bin/FacultyInfoDB.py');
+    $LongReportPath = realpath(__DIR__ . '/../api/FacultyInfoDB.py');
     $pythonBin     = '';
     foreach (['/usr/bin/python3', '/usr/local/bin/python3', '/bin/python3'] as $candidate) {
         if (is_file($candidate) && is_executable($candidate)) {
