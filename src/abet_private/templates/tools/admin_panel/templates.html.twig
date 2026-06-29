@@ -1,0 +1,197 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Canvas Shell Templates | {% endblock %}
+
+{% block styles %}
+    <style>
+        .templates-shell {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        .templates-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .templates-header h1 {
+            margin: 0 0 8px;
+            font-size: 2rem;
+            line-height: 1.2;
+        }
+
+        .templates-header p {
+            max-width: 720px;
+            margin: 0;
+            color: #565656;
+            line-height: 1.55;
+        }
+
+        .templates-section {
+            margin-top: 28px;
+        }
+
+        .templates-section h2 {
+            margin: 0 0 12px;
+            font-size: 1.25rem;
+        }
+
+        .templates-table-wrap {
+            overflow-x: auto;
+            border: 1px solid #d7d7d7;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .templates-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        .templates-table th,
+        .templates-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e6e6e6;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .templates-table th {
+            background: #f6f6f6;
+            color: #333;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .templates-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .templates-empty,
+        .templates-alert {
+            border: 1px solid #d7d7d7;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fff;
+            color: #565656;
+        }
+
+        .templates-alert {
+            border-color: #e0b4b4;
+            background: #fff6f6;
+            color: #8a1f1f;
+        }
+
+        .templates-list {
+            margin: 0;
+            padding-left: 18px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="templates-shell">
+        <div class="templates-header">
+            <div>
+                <h1>Canvas Shell Templates</h1>
+                <p>Review existing course syllabus templates and draft new template rows from stored Canvas course selections.</p>
+            </div>
+            <a href="{{ path('app_admin_panel') }}" class="action-link">Back to Admin Panel</a>
+        </div>
+
+        <section class="templates-section" aria-labelledby="existing-templates-heading">
+            <h2 id="existing-templates-heading">Existing Templates</h2>
+
+            {% if loadError %}
+                <div class="templates-alert">{{ loadError }}</div>
+            {% elseif templates is empty %}
+                <div class="templates-empty">No saved course syllabus templates were found.</div>
+            {% else %}
+                <div class="templates-table-wrap">
+                    <table class="templates-table">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Name</th>
+                                <th>Credits</th>
+                                <th>Contact Hours</th>
+                                <th>Type</th>
+                                <th>Instructors</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for template in templates %}
+                                <tr>
+                                    <td>{{ template.courseSubject }} {{ template.courseNumber }}</td>
+                                    <td>{{ template.courseName|default('Untitled') }}</td>
+                                    <td>{{ template.credits|default('') }}</td>
+                                    <td>{{ template.contactHours|default('') }}</td>
+                                    <td>{{ template.courseType|default('') }}</td>
+                                    <td>
+                                        {% if template.instructors is not empty %}
+                                            <ul class="templates-list">
+                                                {% for instructor in template.instructors %}
+                                                    <li>{{ instructor }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            Not recorded
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ template.updatedAt|default('Not recorded') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="templates-section" aria-labelledby="stored-course-drafts-heading">
+            <h2 id="stored-course-drafts-heading">Stored Course Drafts</h2>
+
+            {% if drafts is empty %}
+                <div class="templates-empty">No stored Canvas course selections are available for drafting.</div>
+            {% else %}
+                <div class="templates-table-wrap">
+                    <table class="templates-table">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Name</th>
+                                <th>Term</th>
+                                <th>Instructors</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for draft in drafts %}
+                                <tr>
+                                    <td>{{ draft.courseSubject }} {{ draft.courseNumber }}</td>
+                                    <td>{{ draft.courseName|default(draft.courseCode) }}</td>
+                                    <td>{{ draft.term|default('Not recorded') }}</td>
+                                    <td>
+                                        {% if draft.instructors is not empty %}
+                                            <ul class="templates-list">
+                                                {% for instructor in draft.instructors %}
+                                                    <li>{{ instructor }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            Not recorded
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}
