@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Account | {% endblock %}
+
+{% block styles %}
+    <style>
+        .account-shell {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        .account-header {
+            margin-bottom: 24px;
+        }
+
+        .account-header h1 {
+            margin: 0 0 8px;
+            font-size: 2rem;
+            line-height: 1.2;
+        }
+
+        .account-header p {
+            max-width: 680px;
+            margin: 0;
+            color: #565656;
+            line-height: 1.55;
+        }
+
+        .account-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .account-field {
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fff;
+        }
+
+        .account-field dt {
+            margin: 0 0 6px;
+            color: #666;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .account-field dd {
+            margin: 0;
+            color: #1f1f1f;
+            font-size: 1rem;
+            overflow-wrap: anywhere;
+        }
+
+        .account-list {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .account-list li + li {
+            margin-top: 4px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="account-shell">
+        <div class="account-header">
+            <h1>My Account</h1>
+            <p>Review the active account details used for ABET Tools access.</p>
+        </div>
+
+        <dl class="account-grid">
+            <div class="account-field">
+                <dt>Email</dt>
+                <dd>{{ profile.email|default('Unavailable') }}</dd>
+            </div>
+
+            <div class="account-field">
+                <dt>ASURITE</dt>
+                <dd>{{ profile.asurite|default('Unavailable') }}</dd>
+            </div>
+
+            <div class="account-field">
+                <dt>Role</dt>
+                <dd>{{ profile.role|default('Unavailable')|title }}</dd>
+            </div>
+
+            <div class="account-field">
+                <dt>Status</dt>
+                <dd>{{ profile.status|default('Unavailable') }}</dd>
+            </div>
+
+            <div class="account-field">
+                <dt>Access</dt>
+                <dd>
+                    {% if profile.permissions is defined and profile.permissions|length > 0 %}
+                        <ul class="account-list">
+                            {% for permission in profile.permissions %}
+                                <li>{{ permission|replace({'_': ' '})|title }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        Unavailable
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div class="account-field">
+                <dt>Last Login</dt>
+                <dd>
+                    {% if profile.lastLogin %}
+                        {{ profile.lastLogin|date('M j, Y g:i A') }}
+                    {% else %}
+                        Not recorded
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div class="account-field">
+                <dt>Created</dt>
+                <dd>{{ profile.createdAt|date('M j, Y g:i A') }}</dd>
+            </div>
+        </dl>
+    </main>
+{% endblock %}
