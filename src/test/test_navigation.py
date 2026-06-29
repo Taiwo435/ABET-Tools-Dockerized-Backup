@@ -52,6 +52,10 @@ load_dotenv(f"{PROJECT_DIR}/docker/.env")
 #         exit(1)
 
 def expect_route(driver, path):
+    try:
+        WebDriverWait(driver, 5).until(EC.url_to_be(f"{WEBSITE_URL}{path}"))
+    except:
+        pass
     assert driver.current_url == f"{WEBSITE_URL}{path}", f"User not at {path} after button pressed"
 
 @pytest.fixture
@@ -128,7 +132,7 @@ def test_login_invalid_credentials(driver):
     
     driver.implicitly_wait(2)  # Wait for the next page to load
 
-    assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page after invalid credentials"
+    expect_route(driver, "/login")
 
 @pytest.mark.order(1)
 def test_register_and_login_valid_credentials_logout(driver):
@@ -197,7 +201,7 @@ def test_register_and_login_valid_credentials_logout(driver):
     login_button.click()
     driver.implicitly_wait(2)  # Wait for the next page to load
 
-    assert driver.current_url == f"{WEBSITE_URL}/home", "User not redirected to home after valid login"
+    expect_route(driver, "/home")
 
 # @with_webdriver
 def test_navigation(driver): 
@@ -221,9 +225,9 @@ def test_navigation(driver):
     email_input.send_keys(EMAIL_ADDRESS)
     password_input.send_keys(PASSWORD)
     login_button.click()
-    driver.implicitly_wait(2)  # Wait for the next page to load
+    WebDriverWait(driver, 10).until(lambda d: "Log Out" in d.page_source)  # Wait for the next page to load
 
-    assert driver.current_url == f"{WEBSITE_URL}/home", "User not redirected to home after valid login"
+    expect_route(driver, "/home")
 
     ###############################################
     # ACCOUNT PAGES
