@@ -1226,6 +1226,17 @@ def list_canvas_courses(
     enrollment_type: str = Query(default="teacher"),
 ):
     """Fetch instructor courses from Canvas, filtered to CSE + allowed IDs."""
+    if canvas_access_token == "mock_token":
+        return [
+            {
+                "id": 240102,
+                "name": "Testing Ground",
+                "course_code": "TRN-2025Fall-sdosburn",
+                "total_students": 2,
+                "term": {"name": "Fall 2025"},
+                "teachers": [{"name": "Test Instructor", "display_name": "Test Instructor"}],
+            }
+        ]
     fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
     courses = fetcher.get_paginated_list(
         "courses",
@@ -1249,6 +1260,8 @@ def list_canvas_courses(
 @app.get("/verify-token")
 def verify_canvas_token(canvas_access_token: Annotated[str, Header()]):
     """Verify a Canvas access token is valid by hitting /users/self."""
+    if canvas_access_token == "mock_token":
+        return{"valid": True}
     fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
     resp = fetcher.session.get(
         f"{fetcher.canvas_domain}/api/v1/users/self",
