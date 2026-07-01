@@ -44,6 +44,19 @@
             </div>
             {# <?php endif; ?> #}
 
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">Canvas Shell Templates</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>List current templates and draft template rows from stored Canvas course selections.</p>
+                        <a href="{{ path('app_admin_templates') }}" class="action-link">Review Templates &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
