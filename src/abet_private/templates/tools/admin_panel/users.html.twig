@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}User Management | {% endblock %}
+
+{% block body %}
+{% autoescape 'html' %}
+    <section class="hero">
+        <h1>User Management</h1>
+        <p>Review active accounts, roles, permissions, and account activity from the central admin panel.</p>
+    </section>
+
+    <main class="main-container">
+        <div class="page-header">
+            <div class="page-title">
+                <h2>Users</h2>
+                <p>{{ users|length }} account{{ users|length == 1 ? '' : 's' }} found.</p>
+            </div>
+            <a href="{{ path('app_admin_panel') }}" class="btn btn-secondary">Back to Admin Panel</a>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Permissions</th>
+                        <th>Last Login</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.role|capitalize }}</td>
+                            <td>
+                                <span class="status-pill {{ user.active ? 'active' : 'inactive' }}">
+                                    {{ user.active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>{{ user.permissions|join(', ') }}</td>
+                            <td>{{ user.lastLogin ? user.lastLogin|date('Y-m-d H:i') : 'Never' }}</td>
+                            <td>{{ user.createdAt ? user.createdAt|date('Y-m-d') : 'Unknown' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-state">No users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <style>
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--asu-white);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 780px;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e6e6e6;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .admin-table th {
+            background: var(--asu-maroon);
+            color: var(--asu-white);
+            font-weight: 700;
+        }
+
+        .status-pill {
+            display: inline-block;
+            min-width: 72px;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .status-pill.active {
+            background: #d8f0df;
+            color: #155b2d;
+        }
+
+        .status-pill.inactive {
+            background: #f6d9df;
+            color: var(--error-red);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-weight: 600;
+        }
+    </style>
+{% endautoescape %}
+{% endblock %}
