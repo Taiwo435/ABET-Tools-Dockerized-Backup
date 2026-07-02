@@ -610,7 +610,34 @@ CREATE TABLE IF NOT EXISTS settings (
     setting_value TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- SYLLABUS TEMPLATES
+CREATE TABLE IF NOT EXISTS syllabus_templates (
+    template_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NULL,
+    course_subject VARCHAR(50) NOT NULL,
+    course_number VARCHAR(50) NOT NULL,
+    course_name VARCHAR(255) NOT NULL,
+    delivery_type ENUM('in_person', 'hybrid', 'online') NOT NULL,
+    credit_hours DECIMAL(4,1),
+    contact_hours DECIMAL(6,1),
+    course_type ENUM('R', 'E', 'SE'),
+    course_coordinators JSON,
+    textbooks JSON,
+    catalog_description TEXT,
+    prerequisites TEXT,
+    course_outcomes JSON,
+    student_outcomes JSON,
+    topics JSON,
+    created_by INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_template_course_delivery (program_id, course_subject, course_number, delivery_type),
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
 -- Insert default OpenAI key placeholder
 INSERT INTO settings (setting_key, setting_value)
 VALUES ('openai_api_key', '') ON DUPLICATE KEY
 UPDATE setting_key = setting_key;
+
