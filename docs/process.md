@@ -163,6 +163,10 @@ Otherwise, you may need help from the other parties to figure out what to keep.
 
 A Pull request can be opened at any time and resolved at any other time.
 
+Before requesting review, run through the
+[PR review checklist](review_checklist.md) so reviewers can focus on the
+behavior change instead of setup, screenshots, or missing test notes.
+
 ## Application staging
 
 Staging is not really mature at the moment. 
