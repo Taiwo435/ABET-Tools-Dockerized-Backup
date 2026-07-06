@@ -8,10 +8,7 @@ require_login();
 $csrfToken = csrf_token('tool1_proxy');
 
 // Redirect non-admins away
-if (($_SESSION['user_role'] ?? '') !== 'admin') {
-    header('Location: /home');
-    exit;
-}
+require_role('admin');
 
 $configPath = getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
 $config = require $configPath;

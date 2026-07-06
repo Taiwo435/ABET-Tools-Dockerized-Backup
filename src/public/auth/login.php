@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error = 'Please enter a valid email.';
       log_login_event(null, $email, 'failed_password', 'invalid_email_format');
     } else {
-      $stmt = db()->prepare('SELECT id, email, password_hash, role, is_active, permissions FROM users WHERE email = :email LIMIT 1');
+      $stmt = db()->prepare('SELECT id, email, password_hash, is_active, permissions FROM users WHERE email = :email LIMIT 1');
       $stmt->execute([':email' => $email]);
       $user = $stmt->fetch();
 
@@ -86,7 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_email'] = (string)$user['email'];
-        $_SESSION['user_role'] = (string)$user['role'];
         $_SESSION['user_permissions'] = (int)$user['permissions'];
         $_SESSION['created_at'] = time();
         $_SESSION['last_activity'] = time();
@@ -95,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         log_login_event((int)$user['id'], (string)$user['email'], 'success', null);
         log_audit((int)$user['id'], 'login_success', 'user', (string)$user['id'], [
-          'role' => (string)$user['role']
+         'permissions' => (int)$user['permissions']
         ]);
 
         header('Location: /home');

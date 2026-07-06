@@ -31,7 +31,7 @@ class Services {
             'dbname' => $_ENV['MYSQL_DATABASE'],
             'user' => $_ENV['MYSQL_USER'],
             'password' => $_ENV['MYSQL_PASS'],
-            'host' => "127.0.0.1",
+            'host' => $_ENV['MYSQL_HOSTNAME'],
             'driver' => 'pdo_mysql',
         ];
 
@@ -42,7 +42,7 @@ class Services {
 
     public static function getEntityManager() {
         if (static::$instance === null) {
-            $paths = [__DIR__.'/database/entities'];
+            $paths = [__DIR__.'/src/Entity'];
 
             $isDevMode = true;
 
@@ -52,7 +52,7 @@ class Services {
                 'dbname' => $_ENV['MYSQL_DATABASE'],
                 'user' => $_ENV['MYSQL_USER'],
                 'password' => $_ENV['MYSQL_PASS'],
-                'host' => "127.0.0.1",
+                 'host' => $_ENV['MYSQL_HOSTNAME'],
                 'driver' => 'pdo_mysql',
             ];
 

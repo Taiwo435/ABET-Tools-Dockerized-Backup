@@ -2,11 +2,7 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 
-$role = $_SESSION['user_role'] ?? 'faculty';
-if ($role !== 'admin') {
-    http_response_code(403);
-    die("Access denied. Admins only.");
-}
+require_role('admin');
 
 $csrfToken = csrf_token('syllabus_templates');
 

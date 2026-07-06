@@ -1,8 +1,10 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
-$role = $_SESSION['user_role'] ?? 'faculty';
+$permissions = (int)($_SESSION['user_permissions'] ?? 0);
+$role = ($permissions & \App\Entity\Permissions::ROLE_ADMIN->value) ? 'admin' : 'faculty';
 
 error_log("user role: " . $role);
 if (empty($_SESSION['class_data'])) {

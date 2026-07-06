@@ -24,7 +24,6 @@ final class AdminController extends AbstractController
         $users = array_map(
             static fn ($user): array => [
                 'email' => $user->getEmail(),
-                'role' => $user->getRole(),
                 'active' => $user->isActive(),
                 'permissions' => $user->getRoles(),
                 'lastLogin' => $user->getLastLogin(),

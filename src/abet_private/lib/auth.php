@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
 
 /**
  * Auth/session helpers
@@ -116,8 +118,10 @@ function require_login(string $redirectTo = '/login'): void {
 function require_role(string $role): void {
   require_login();
 
-  $current = (string)($_SESSION['user_role'] ?? '');
-  if ($current !== $role) {
+  $permissions = (int)($_SESSION['user_permissions'] ?? 0);
+  $isAdmin = ($permissions & \App\Entity\Permissions::ROLE_ADMIN->value) !== 0;
+
+  if ($role === 'admin' && !$isAdmin) {
     http_response_code(403);
     echo 'Forbidden';
     exit;

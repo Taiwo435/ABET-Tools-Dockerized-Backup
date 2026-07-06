@@ -6,7 +6,6 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use InvalidArgumentException;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -26,9 +25,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column(name:"password_hash", type: "string", length:255)]
     private ?string $password = null;
-
-    #[ORM\Column(type: "string", columnDefinition: "ENUM('admin', 'faculty')")]
-    private string $role = 'faculty';
 
     /**
      * @var int The user permissions that define user roles
@@ -77,29 +73,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPasswordHash(string $passwordHash): self
     {
         $this->password = $passwordHash;
-        return $this;
-    }
-
-    /**
-     * Gets the User role between (admin, faculty)
-     * @deprecated Use getRoles() for a more descriptive role interface
-     */
-    public function getRole(): string
-    {
-        return $this->role;
-    }
-
-    /**
-     * Gets the User role between (admin, faculty)
-     * @deprecated Use getRoles() for a more descriptive role interface
-     */
-    public function setRole(string $role): self
-    {
-        if (!in_array($role, ['admin', 'faculty'])) {
-            throw new InvalidArgumentException("Invalid role");
-        }
-
-        $this->role = $role;
         return $this;
     }
 
@@ -206,10 +179,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @return bool                             The value of the user's access.
      */
     public function hasPermission(Permissions $permission) : bool {
-        if ($this->role === 'admin') {
-            return true;
-        }
-        return ($this->permissions & $permission->value) != 0;
+    if ($this->permissions & Permissions::ROLE_ADMIN->value) {
+        return true;
+    }
+    return ($this->permissions & $permission->value) != 0;
     }
 
     /**
@@ -277,7 +250,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         $this->password = null;
-        $this->role = "";
         $this->permissions = 0;
     }
 }

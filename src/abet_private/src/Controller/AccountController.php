@@ -19,7 +19,6 @@ final class AccountController extends AbstractController
             'profile' => [
                 'email' => $user->getEmail(),
                 'asurite' => $user->getAsurite(),
-                'role' => $user->getRole(),
                 'status' => $user->isActive() ? 'Active' : 'Inactive',
                 'permissions' => $user->getRoles(),
                 'lastLogin' => $user->getLastLogin(),

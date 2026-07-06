@@ -1,9 +1,9 @@
 <?php
-
-
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
+require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
 
 start_session();
 
@@ -28,8 +28,6 @@ function verify_register_csrf(?string $token): bool {
 
   return hash_equals($_SESSION['csrf_token_register'], $token);
 }
-
-
 
 /**
  * Password policy:
@@ -64,29 +62,8 @@ function password_policy_check(string $password): array {
   ];
 }
 
-/**
- * Returns the default permissions bitmask for a given role.
- * Must stay in sync with the Permissions enum in User.php.
- *
- * Permissions bit positions:
- *   AdminPanel           = 1 << 0 =  1
- *   GradeDataTool        = 1 << 1 =  2
- *   CanvasFormattingTool = 1 << 2 =  4
- *   ReportGenTool        = 1 << 3 =  8
- *   FacultyFormTool      = 1 << 4 = 16
- *   CoordinatorFormTool  = 1 << 5 = 32
- */
-function default_permissions_for_role(string $role): int {
-  if ($role === 'admin') {
-    // Admin gets all permissions
-    return (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
-  }
-  // Faculty gets GradeDataTool + CanvasFormattingTool + FacultyFormTool
-  return (1 << 1) | (1 << 2) | (1 << 4);
-}
-
 $email = '';
-$role = 'faculty';
+$selectedPermissions = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!verify_register_csrf($_POST['csrf_token'] ?? null)) {
@@ -96,7 +73,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = strtolower(trim($_POST['email'] ?? ''));
   $password = (string)($_POST['password'] ?? '');
   $confirm = (string)($_POST['confirm_password'] ?? '');
-  $role = in_array($_POST['role'] ?? '', ['admin', 'faculty']) ? $_POST['role'] : 'faculty';
+
+  $selectedPermissions = array_values(array_intersect(
+    $_POST['permissions'] ?? [],
+    array_map(fn($c) => $c->name, App\Entity\Permissions::cases())
+  ));
 
   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Please enter a valid email address.';
@@ -127,10 +108,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $errors[] = 'An account with that email already exists.';
     } else {
       $hash = password_hash($password, PASSWORD_BCRYPT);
-      $permissions = default_permissions_for_role($role);
 
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active, permissions) VALUES (?, ?, ?, 1, ?)");
-      $stmt->execute([$email, $hash, $role, $permissions]);
+      $permissions = 0;
+      foreach (App\Entity\Permissions::cases() as $case) {
+        if (in_array($case->name, $selectedPermissions)) {
+          $permissions |= $case->value;
+        }
+      }
+
+      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions) VALUES (?, ?, 1, ?)");
+      $stmt->execute([$email, $hash, $permissions]);
 
       $success = true;
     }
@@ -175,8 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <?php if ($errors): ?>
           <div class="msg error" id="error-box">
-            <?php foreach ($errors as $e): ?>
-              <?php echo htmlspecialchars($e, ENT_QUOTES, 'UTF-8'); ?><br>
+            <?php foreach ($errors as $err): ?>
+              <?php echo htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?><br>
             <?php endforeach; ?>
           </div>
         <?php endif; ?>
@@ -196,11 +183,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
           <div class="form-group">
-            <label for="role">Role</label>
-            <select id="role" name="role">
-              <option value="faculty" <?php echo $role === 'faculty' ? 'selected' : ''; ?>>Faculty</option>
-              <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>Admin</option>
-            </select>
+            <label>Permissions</label>
+            <?php foreach (App\Entity\Permissions::cases() as $case): ?>
+              <label style="display:block;font-weight:normal;">
+                <input type="checkbox" name="permissions[]" value="<?php echo e($case->name); ?>"
+                  <?php echo in_array($case->name, $selectedPermissions) ? 'checked' : ''; ?>>
+                <?php echo e(str_replace('_', ' ', $case->name)); ?>
+              </label>
+            <?php endforeach; ?>
           </div>
 
           <div class="form-group">

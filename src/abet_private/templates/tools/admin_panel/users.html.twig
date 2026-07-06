@@ -23,7 +23,6 @@
                 <thead>
                     <tr>
                         <th>Email</th>
-                        <th>Role</th>
                         <th>Status</th>
                         <th>Permissions</th>
                         <th>Last Login</th>
@@ -34,7 +33,6 @@
                     {% for user in users %}
                         <tr>
                             <td>{{ user.email }}</td>
-                            <td>{{ user.role|capitalize }}</td>
                             <td>
                                 <span class="status-pill {{ user.active ? 'active' : 'inactive' }}">
                                     {{ user.active ? 'Active' : 'Inactive' }}
@@ -46,7 +44,7 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="6" class="empty-state">No users found.</td>
+                            <td colspan="5" class="empty-state">No users found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
