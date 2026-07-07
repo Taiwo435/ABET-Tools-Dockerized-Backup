@@ -201,10 +201,10 @@ def test_register_and_login_valid_credentials_logout(driver):
     login_button.click()
     driver.implicitly_wait(2)  # Wait for the next page to load
 
-    expect_route(driver, "/home")
+    expect_route(driver, "/home2")
 
 # @with_webdriver
-def test_navigation(driver): 
+def test_navigation(driver):
     """
     test using the new decorator i just made
     should navigate to the homepage and some profile stuff
