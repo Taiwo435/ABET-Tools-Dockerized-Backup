@@ -273,12 +273,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $data;
     }
 
-    #[\Deprecated]
+	/**
+	*Issue #132: Commented out original lines below.
+        *Wiping these fields instantly destroyed the active session state upon login,
+        *causing immediate authentication drops. Safely bypassed to keep user in memory.
+    	*/
+#[\Deprecated]
     public function eraseCredentials(): void
     {
-        $this->password = null;
-        $this->role = "";
-        $this->permissions = 0;
+    // $this->password = null;
+    // $this->permissions = null;
+    // $this->permissions = 0;
     }
 }
 
