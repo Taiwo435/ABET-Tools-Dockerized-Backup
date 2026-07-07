@@ -35,7 +35,7 @@ def login(driver):
     login_button.click()
 
     WebDriverWait(driver, 10).until(
-        EC.url_to_be(f"{WEBSITE_URL}/home2")
+        EC.url_to_be(f"{WEBSITE_URL}/home")
     )
 
 

@@ -201,7 +201,7 @@ def test_register_and_login_valid_credentials_logout(driver):
     login_button.click()
     driver.implicitly_wait(2)  # Wait for the next page to load
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
 # @with_webdriver
 def test_navigation(driver):
