@@ -227,7 +227,7 @@ def test_navigation(driver):
     login_button.click()
     WebDriverWait(driver, 10).until(lambda d: "Log Out" in d.page_source)  # Wait for the next page to load
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
     ###############################################
     # ACCOUNT PAGES
