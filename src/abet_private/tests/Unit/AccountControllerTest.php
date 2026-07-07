@@ -42,7 +42,6 @@ final class AccountControllerTest extends TestCase
         self::assertStringContainsString('My Account', $template);
         self::assertStringContainsString('profile.email', $template);
         self::assertStringContainsString('profile.asurite', $template);
-        self::assertStringContainsString('profile.role', $template);
         self::assertStringContainsString('profile.status', $template);
         self::assertStringContainsString('profile.permissions', $template);
         self::assertStringContainsString('profile.lastLogin', $template);

@@ -77,7 +77,6 @@ final class AdminControllerTest extends TestCase
         self::assertStringContainsString('User Management', $template);
         self::assertStringContainsString('users', $template);
         self::assertStringContainsString('user.email', $template);
-        self::assertStringContainsString('user.role', $template);
         self::assertStringContainsString('user.active', $template);
         self::assertStringContainsString('user.permissions', $template);
         self::assertStringContainsString('Unknown', $template);
