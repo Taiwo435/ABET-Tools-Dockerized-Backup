@@ -27,17 +27,16 @@ class Services {
     private static ?EntityManager $instance = null;
 
     public static function getConnection() : Connection {
-        $connectionParams = [
-            'dbname' => $_ENV['MYSQL_DATABASE'],
-            'user' => $_ENV['MYSQL_USER'],
-            'password' => $_ENV['MYSQL_PASS'],
-            'host' => $_ENV['MYSQL_HOSTNAME'],
-            'driver' => 'pdo_mysql',
-        ];
+    $connectionParams = [
+        'dbname' => $_ENV['MYSQL_DATABASE'],
+        'user' => $_ENV['MYSQL_USER'],
+        'password' => $_ENV['MYSQL_PASS'],
+        'host' => file_exists('/.dockerenv') ? $_ENV['MYSQL_HOSTNAME'] : '127.0.0.1',
+        'driver' => 'pdo_mysql',
+    ];
 
-        return DriverManager::getConnection($connectionParams);
-    } 
-
+    return DriverManager::getConnection($connectionParams);
+    }
 
 
     public static function getEntityManager() {
@@ -52,7 +51,7 @@ class Services {
                 'dbname' => $_ENV['MYSQL_DATABASE'],
                 'user' => $_ENV['MYSQL_USER'],
                 'password' => $_ENV['MYSQL_PASS'],
-                 'host' => $_ENV['MYSQL_HOSTNAME'],
+                'host' => file_exists('/.dockerenv') ? $_ENV['MYSQL_HOSTNAME'] : '127.0.0.1',
                 'driver' => 'pdo_mysql',
             ];
 
