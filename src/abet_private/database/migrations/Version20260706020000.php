@@ -15,11 +15,15 @@ final class Version20260706020000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE users DROP COLUMN role');
+        if ($schema->getTable('users')->hasColumn('role')) {
+            $this->addSql('ALTER TABLE users DROP COLUMN role');
+        }
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql("ALTER TABLE users ADD role ENUM('admin', 'faculty') NOT NULL DEFAULT 'faculty'");
+        if (!$schema->getTable('users')->hasColumn('role')) {
+            $this->addSql("ALTER TABLE users ADD role ENUM('admin', 'faculty') NOT NULL DEFAULT 'faculty'");
+        }
     }
 }
