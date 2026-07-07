@@ -25,6 +25,7 @@ security:
                 check_path: app_login
                 default_target_path: app_homepage # once user logs in, go here
                 enable_csrf: true
+                default_target_path: /home
             logout:
                 path: app_logout
                 # where to redirect after logout
