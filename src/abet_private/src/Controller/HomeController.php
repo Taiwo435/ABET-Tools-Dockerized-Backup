@@ -38,9 +38,9 @@ final class HomeController extends AbstractController
     //         'asurite'=> $asurite]);
     // }
 
-    // home2
+    // home
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    #[Route('/home2', name: 'app_homepage')]
+    #[Route('/home', name: 'app_homepage')]
     public function home(#[CurrentUser] User $user) {
         return $this->render('homepage/home.html.twig', [
         ]);
