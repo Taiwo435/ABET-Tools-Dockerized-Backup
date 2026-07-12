@@ -104,7 +104,7 @@
             </div>
             {# <?php endif; ?> #}
 
-            {# <?php if (hasPermission($permissions, PERM_ADMIN_PANEL)): ?> #}
+            {% if is_granted('ROLE_ADMIN') %}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">Admin Panel</div>
@@ -113,11 +113,11 @@
                 <div class="card-body">
                     <div class="card-body-inner">
                         <p>Manage destination course IDs, user permissions, and other admin settings.</p>
-                        <a href="/AssignmentsGrades/admin.php" class="action-link">Open Admin Panel &rarr;</a>
+                        <a href="{{ path('app_admin_panel') }}" class="action-link">Open Admin Panel &rarr;</a>
                     </div>
                 </div>
             </div>
-            {# <?php endif; ?> #}
+            {% endif %}
 
             {% if app.debug %}
             <div class="tool-card">

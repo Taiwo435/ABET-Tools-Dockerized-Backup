@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Shared Syllabus Templates | {% endblock %}
+
+{% block styles %}
+    <style>
+        .syllabus-page { width: 100%; max-width: 1180px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
+        .syllabus-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
+        .syllabus-toolbar__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+        .syllabus-filter { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }
+        .syllabus-filter label { display: grid; gap: .35rem; color: #444; font-size: .85rem; font-weight: 700; }
+        .syllabus-filter select { min-width: 190px; padding: .65rem .75rem; border: 1px solid #b7b7b7; border-radius: 5px; background: var(--asu-white); font: inherit; }
+        .syllabus-filter select:focus { outline: 3px solid rgba(255, 198, 39, .45); border-color: var(--asu-maroon); }
+        .syllabus-table-wrap { overflow-x: auto; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
+        .syllabus-table { width: 100%; min-width: 940px; border-collapse: collapse; }
+        .syllabus-table th, .syllabus-table td { padding: .9rem 1rem; border-bottom: 1px solid #e6e6e6; text-align: left; vertical-align: top; }
+        .syllabus-table th { background: var(--asu-maroon); color: var(--asu-white); font-size: .82rem; font-weight: 700; letter-spacing: .025em; }
+        .syllabus-table tbody tr:hover { background: #fffaf0; }
+        .syllabus-table tbody tr:last-child td { border-bottom: 0; }
+        .course-code { color: var(--asu-maroon); font-size: 1rem; }
+        .course-name, .cell-detail { color: #666; font-size: .88rem; }
+        .status-pill { display: inline-block; padding: .22rem .65rem; border-radius: 999px; font-size: .78rem; font-weight: 700; line-height: 1.4; }
+        .status-pill--complete { background: #d8f0df; color: #155b2d; }
+        .status-pill--incomplete { background: #fff0bf; color: #684c00; }
+        .status-detail { display: block; margin-top: .35rem; color: #666; font-size: .82rem; }
+        .missing-list { margin: 0; padding-left: 1.1rem; color: #5d4200; font-size: .88rem; }
+        .missing-none { color: #39704a; font-weight: 600; }
+        .table-action { color: var(--asu-maroon); font-weight: 700; text-decoration: none; }
+        .table-action:hover { text-decoration: underline; text-underline-offset: 3px; }
+        .empty-state { padding: 3rem 1.5rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); text-align: center; }
+        .empty-state h2 { margin-bottom: .4rem; color: var(--asu-maroon); }
+        .empty-state p { margin-bottom: 1.2rem; color: #666; }
+        @media (max-width: 700px) {
+            .syllabus-toolbar, .syllabus-filter { align-items: stretch; }
+            .syllabus-toolbar > *, .syllabus-filter label, .syllabus-filter select { width: 100%; }
+            .syllabus-toolbar__actions a, .syllabus-filter button { flex: 1; text-align: center; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="hero hero-small">
+        <h1>Shared Syllabus Templates</h1>
+        <p>Create and maintain reusable course syllabus templates for faculty.</p>
+    </section>
+
+    <main class="syllabus-page">
+        <div class="syllabus-toolbar">
+            <form method="get" class="syllabus-filter">
+                <label for="completeness">Show templates
+                    <select id="completeness" name="completeness">
+                        <option value=""{% if completenessFilter == '' %} selected{% endif %}>All completeness states</option>
+                        <option value="complete"{% if completenessFilter == 'complete' %} selected{% endif %}>Complete</option>
+                        <option value="incomplete"{% if completenessFilter == 'incomplete' %} selected{% endif %}>Incomplete</option>
+                    </select>
+                </label>
+                <button type="submit" class="button-secondary">Apply filter</button>
+            </form>
+            <div class="syllabus-toolbar__actions">
+                <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
+                <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create Shared Template</a>
+            </div>
+        </div>
+
+        {% if templates is empty %}
+            <div class="empty-state">
+                <h2>No matching templates</h2>
+                <p>No templates match the selected filter.</p>
+                <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create the first template</a>
+            </div>
+        {% else %}
+            <div class="syllabus-table-wrap">
+                <table class="syllabus-table">
+                    <thead>
+                        <tr><th>Course</th><th>Program</th><th>Template state</th><th>Revision</th><th>Required before publishing</th><th>Updated</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for template in templates %}
+                        {% set revision = template.workingRevision %}
+                        <tr>
+                            <td><strong class="course-code">{{ template.commonCourse.courseSubject }} {{ template.commonCourse.courseNumber }}</strong><div class="course-name">{{ template.commonCourse.courseName }}</div></td>
+                            <td>{{ template.commonCourse.program.code }} <span class="cell-detail">{{ template.commonCourse.program.year }}</span></td>
+                            <td>
+                                <span class="status-pill status-pill--{{ revision.completenessStatus.value }}">{{ revision.completenessStatus.value|title }}</span>
+                                <span class="status-detail">{{ template.status.value|replace({'_': ' '})|title }}</span>
+                            </td>
+                            <td><strong>Rev. {{ revision.revisionNumber }}</strong></td>
+                            <td>
+                                {% if revision.missingFields is empty %}
+                                    <span class="missing-none">Ready to publish</span>
+                                {% else %}
+                                    <ul class="missing-list">
+                                        {% for field in revision.missingFields %}<li>{{ field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'}) }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </td>
+                            <td>{{ template.updatedAt|date('M j, Y') }}</td>
+                            <td>
+                                {% if template.status.value == 'draft' %}
+                                    <a class="table-action" href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}">Edit draft &rarr;</a>
+                                {% else %}
+                                    <span class="cell-detail">Published</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </main>
+{% endblock %}

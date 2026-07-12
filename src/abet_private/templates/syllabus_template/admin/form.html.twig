@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ pageTitle }} | {% endblock %}
+
+{% block styles %}
+    <style>
+        .template-editor { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
+        .editor-topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .editor-meta { color: #666; font-size: .92rem; }
+        .editor-meta strong { color: var(--asu-maroon); }
+        .editor-card { overflow: hidden; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
+        .editor-section { padding: 1.5rem 1.75rem; border-bottom: 1px solid #e7e7e7; }
+        .editor-section:last-child { border-bottom: 0; }
+        .editor-section__heading { margin-bottom: 1rem; }
+        .editor-section__heading h2 { color: var(--asu-maroon); font-size: 1.18rem; }
+        .editor-section__heading p { color: #666; font-size: .9rem; }
+        .editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+        .editor-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .editor-field { min-width: 0; }
+        .editor-field--wide { grid-column: 1 / -1; }
+        .editor-field label { display: block; margin-bottom: .35rem; color: #333; font-size: .9rem; font-weight: 700; }
+        .editor-field input, .editor-field select, .editor-field textarea { width: 100%; padding: .7rem .8rem; border: 1px solid #aaa; border-radius: 5px; background: var(--asu-white); color: var(--text-dark); font: inherit; transition: border-color .2s, box-shadow .2s; }
+        .editor-field textarea { min-height: 120px; resize: vertical; }
+        .editor-field input:focus, .editor-field select:focus, .editor-field textarea:focus { outline: none; border-color: var(--asu-maroon); box-shadow: 0 0 0 3px rgba(255, 198, 39, .4); }
+        .editor-field ul { margin: .35rem 0 0; padding-left: 1.1rem; color: var(--error-red); font-size: .85rem; }
+        .editor-help { margin-top: .3rem; color: #666; font-size: .82rem; }
+        .required-note { display: inline-block; margin-left: .35rem; color: #666; font-size: .78rem; font-weight: 500; }
+        .missing-panel { display: flex; gap: .8rem; margin-bottom: 1rem; padding: 1rem 1.15rem; border-left: 5px solid var(--asu-gold); border-radius: 5px; background: #fff7db; color: #4f3a00; }
+        .missing-panel__icon { font-size: 1.25rem; }
+        .missing-panel ul { display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; margin: .35rem 0 0; padding-left: 1.1rem; }
+        .flash { margin-bottom: 1rem; padding: .85rem 1rem; border-radius: 5px; font-weight: 600; }
+        .flash--success { border-left: 5px solid #218739; background: #e4f3e8; color: #155b2d; }
+        .flash--error { border-left: 5px solid var(--error-red); background: #f8e1e5; color: var(--error-red); }
+        .editor-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.25rem 1.75rem; background: #fafafa; }
+        .editor-actions__group { display: flex; flex-wrap: wrap; gap: .75rem; }
+        .publish-panel { margin-top: 1.25rem; padding: 1.25rem 1.5rem; background: var(--asu-white); border: 1px solid #dedede; border-left: 5px solid var(--asu-gold); border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
+        .publish-panel h2 { color: var(--asu-maroon); font-size: 1.1rem; }
+        .publish-panel p { margin: .25rem 0 1rem; color: #666; font-size: .9rem; }
+        .button-primary:disabled { background: #aaa; color: #f4f4f4; cursor: not-allowed; }
+        @media (max-width: 720px) {
+            .editor-grid, .editor-grid--three { grid-template-columns: 1fr; }
+            .editor-field--wide { grid-column: auto; }
+            .editor-section, .editor-actions { padding: 1.2rem; }
+            .editor-actions, .editor-actions__group, .editor-actions button, .editor-actions a { width: 100%; text-align: center; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="hero hero-small">
+        <h1>{{ pageTitle }}</h1>
+        <p>{{ submission ? 'Save changes as a new revision, then publish when all required information is complete.' : 'Start with the course details. You can save an incomplete draft and finish it later.' }}</p>
+    </section>
+
+    <main class="template-editor">
+        <div class="editor-topbar">
+            <div class="editor-meta">
+                {% if submission %}
+                    <strong>{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong>
+                    &middot; {{ submission.commonCourse.courseName }} &middot; Working revision {{ submission.workingRevision.revisionNumber }}
+                {% else %}
+                    Coordinator-created shared template
+                {% endif %}
+            </div>
+            <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Back to Templates</a>
+        </div>
+
+        {% for message in app.flashes('success') %}<div class="flash flash--success">{{ message }}</div>{% endfor %}
+        {% for message in app.flashes('error') %}<div class="flash flash--error">{{ message }}</div>{% endfor %}
+
+        {% if submission and submission.workingRevision.missingFields is not empty %}
+            <div class="missing-panel">
+                <div class="missing-panel__icon" aria-hidden="true">&#9888;</div>
+                <div>
+                    <strong>This draft is not ready to publish.</strong>
+                    <div>Complete the following required information:</div>
+                    <ul>{% for field in submission.workingRevision.missingFields %}<li>{{ field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'}) }}</li>{% endfor %}</ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {{ form_start(form, {attr: {class: 'editor-card'}}) }}
+            {{ form_errors(form) }}
+
+            {% if form.program is defined %}
+                <section class="editor-section">
+                    <div class="editor-section__heading"><h2>Course details</h2><p>Identify the common course this shared syllabus belongs to.</p></div>
+                    <div class="editor-grid editor-grid--three">
+                        <div class="editor-field editor-field--wide">{{ form_label(form.program) }}{{ form_widget(form.program) }}{{ form_errors(form.program) }}</div>
+                        <div class="editor-field">{{ form_label(form.courseSubject) }}{{ form_widget(form.courseSubject) }}{{ form_errors(form.courseSubject) }}</div>
+                        <div class="editor-field">{{ form_label(form.courseNumber) }}{{ form_widget(form.courseNumber) }}{{ form_errors(form.courseNumber) }}</div>
+                        <div class="editor-field">{{ form_label(form.deliveryType) }}{{ form_widget(form.deliveryType) }}{{ form_errors(form.deliveryType) }}</div>
+                        <div class="editor-field editor-field--wide">{{ form_label(form.courseName) }}{{ form_widget(form.courseName) }}{{ form_errors(form.courseName) }}</div>
+                    </div>
+                </section>
+            {% endif %}
+
+            <section class="editor-section">
+                <div class="editor-section__heading"><h2>Required syllabus information</h2><p>These fields must be complete before the shared template can be published.</p></div>
+                <div class="editor-grid editor-grid--three">
+                    <div class="editor-field">{{ form_label(form.creditHours) }} <span class="required-note">Required to publish</span>{{ form_widget(form.creditHours) }}{{ form_errors(form.creditHours) }}</div>
+                    <div class="editor-field">{{ form_label(form.creditCategorization) }} <span class="required-note">Required to publish</span>{{ form_widget(form.creditCategorization) }}{{ form_errors(form.creditCategorization) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.courseCoordinators) }} <span class="required-note">At least one required</span>{{ form_widget(form.courseCoordinators) }}<div class="editor-help">{{ form_help(form.courseCoordinators) }}</div>{{ form_errors(form.courseCoordinators) }}</div>
+                </div>
+            </section>
+
+            <section class="editor-section">
+                <div class="editor-section__heading"><h2>Additional syllabus information</h2><p>Add the reusable description and outcomes faculty should receive from this template.</p></div>
+                <div class="editor-grid">
+                    <div class="editor-field editor-field--wide">{{ form_label(form.catalogDescription) }}{{ form_widget(form.catalogDescription) }}{{ form_errors(form.catalogDescription) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.courseOutcomes) }}{{ form_widget(form.courseOutcomes) }}<div class="editor-help">{{ form_help(form.courseOutcomes) }}</div>{{ form_errors(form.courseOutcomes) }}</div>
+                </div>
+            </section>
+
+            <div class="editor-actions">
+                <span class="editor-meta">{{ submission ? 'Saving creates revision ' ~ (submission.workingRevision.revisionNumber + 1) ~ '; earlier revisions remain unchanged.' : 'You can complete the required fields now or return to this draft later.' }}</span>
+                <div class="editor-actions__group">
+                    <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Cancel</a>
+                    <button type="submit" class="button-primary">{{ submission ? 'Save New Revision' : 'Create Draft' }}</button>
+                </div>
+            </div>
+        {{ form_end(form) }}
+
+        {% if submission %}
+            <section class="publish-panel">
+                <h2>Publish shared template</h2>
+                <p>{{ submission.workingRevision.complete ? 'This revision contains all required information and is ready for faculty use.' : 'Publishing becomes available after all required information is saved.' }}</p>
+                <form method="post" action="{{ path('app_admin_syllabus_templates_publish', {id: submission.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('publish-syllabus-template-' ~ submission.id) }}">
+                    <button type="submit" class="button-primary"{% if not submission.workingRevision.complete %} disabled{% endif %}>Publish Current Revision</button>
+                </form>
+            </section>
+        {% endif %}
+    </main>
+{% endblock %}

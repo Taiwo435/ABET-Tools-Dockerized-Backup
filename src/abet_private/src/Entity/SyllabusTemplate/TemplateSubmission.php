@@ -3,11 +3,12 @@
 namespace App\Entity\SyllabusTemplate;
 
 use App\Entity\User;
+use App\Repository\SyllabusTemplate\TemplateSubmissionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: TemplateSubmissionRepository::class)]
 #[ORM\Table(name: 'syllabus_template_submissions')]
 #[ORM\Index(name: 'idx_syllabus_submission_queue', columns: ['status', 'submitted_at'])]
 #[ORM\Index(name: 'idx_syllabus_proposal_origin_status', columns: ['origin', 'status'])]
@@ -98,6 +99,8 @@ class TemplateSubmission
     public function getReview(): ?TemplateReview { return $this->review; }
     public function getSubmittedAt(): ?\DateTimeImmutable { return $this->submittedAt; }
     public function getDecidedAt(): ?\DateTimeImmutable { return $this->decidedAt; }
+    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
 
     /** @return Collection<int, TemplateRevision> */
     public function getRevisions(): Collection { return $this->revisions; }
