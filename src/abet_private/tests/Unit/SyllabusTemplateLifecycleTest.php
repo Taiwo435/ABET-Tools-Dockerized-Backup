@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Entity\SyllabusTemplate\CommonCourse;
 use App\Entity\SyllabusTemplate\DeliveryType;
+use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\ReviewDecision;
 use App\Entity\SyllabusTemplate\RevisionAuthorType;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
@@ -18,7 +19,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     public function testFacultySubmissionCanBeApprovedUnchanged(): void
     {
         [$course, $submission, $faculty, $coordinator] = $this->fixture();
-        $revision = $submission->addRevision($faculty, RevisionAuthorType::Faculty, ['courseName' => 'Software Engineering']);
+        $revision = $this->completeFacultyRevision($submission, $faculty);
 
         $submission->submit($revision);
         $review = new TemplateReview($submission, $coordinator, ReviewDecision::Approved, 'Meets the common-course standard.');
@@ -33,9 +34,11 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     public function testApprovalWithEditsPreservesFacultyRevisionAndPublishesCoordinatorRevision(): void
     {
         [$course, $submission, $faculty, $coordinator] = $this->fixture();
-        $facultyRevision = $submission->addRevision($faculty, RevisionAuthorType::Faculty, ['catalogDescription' => 'Original']);
+        $facultyRevision = $this->completeFacultyRevision($submission, $faculty, ['catalogDescription' => 'Original']);
         $submission->submit($facultyRevision);
-        $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, ['catalogDescription' => 'Edited']);
+        $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent([
+            'catalogDescription' => 'Edited',
+        ]));
 
         $review = new TemplateReview($submission, $coordinator, ReviewDecision::ApprovedWithEdits, 'Standardized the catalog description.');
         $submission->recordReview($review, $coordinatorRevision);
@@ -50,7 +53,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     public function testDenialRequiresCommentAndDoesNotPublishRevision(): void
     {
         [$course, $submission, $faculty, $coordinator] = $this->fixture();
-        $revision = $submission->addRevision($faculty, RevisionAuthorType::Faculty, ['topics' => ['Testing']]);
+        $revision = $this->completeFacultyRevision($submission, $faculty);
         $submission->submit($revision);
 
         $review = new TemplateReview($submission, $coordinator, ReviewDecision::Denied, 'Required outcomes are missing.');
@@ -64,17 +67,17 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     public function testSubmittedFacultyRevisionCannotBeMutatedByAddingAnotherFacultyRevision(): void
     {
         [, $submission, $faculty] = $this->fixture();
-        $revision = $submission->addRevision($faculty, RevisionAuthorType::Faculty, ['topics' => ['Testing']]);
+        $revision = $this->completeFacultyRevision($submission, $faculty);
         $submission->submit($revision);
 
         $this->expectException(\DomainException::class);
-        $submission->addRevision($faculty, RevisionAuthorType::Faculty, ['topics' => ['Changed']]);
+        $submission->addRevision($faculty, RevisionAuthorType::Faculty, $this->completeContent(['topics' => ['Changed']]));
     }
 
     public function testDenialWithoutFeedbackIsRejected(): void
     {
         [, $submission, $faculty, $coordinator] = $this->fixture();
-        $revision = $submission->addRevision($faculty, RevisionAuthorType::Faculty, ['topics' => ['Testing']]);
+        $revision = $this->completeFacultyRevision($submission, $faculty);
         $submission->submit($revision);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -84,11 +87,83 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     public function testFacultyCannotReviewOwnSubmission(): void
     {
         [, $submission, $faculty] = $this->fixture();
-        $revision = $submission->addRevision($faculty, RevisionAuthorType::Faculty, ['topics' => ['Testing']]);
+        $revision = $this->completeFacultyRevision($submission, $faculty);
         $submission->submit($revision);
 
         $this->expectException(\InvalidArgumentException::class);
         new TemplateReview($submission, $faculty, ReviewDecision::Approved);
+    }
+
+    public function testCoordinatorCanKeepAnIncompleteTemplateDraftAndPublishACompleteRevision(): void
+    {
+        [$course, , , $coordinator] = $this->fixture();
+        $proposal = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $incomplete = $proposal->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            ['catalogDescription' => 'Draft'],
+        );
+
+        self::assertSame(SubmissionStatus::Draft, $proposal->getStatus());
+        self::assertSame(['creditHours', 'courseCoordinators', 'creditCategorization'], $incomplete->getMissingFields());
+        self::assertSame($incomplete, $proposal->getWorkingRevision());
+
+        $complete = $proposal->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            $this->completeContent(['catalogDescription' => 'Complete template', 'courseOutcomes' => ['Outcome']]),
+        );
+        $proposal->publishCoordinatorTemplate($complete);
+
+        self::assertSame(SubmissionStatus::Approved, $proposal->getStatus());
+        self::assertSame($complete, $proposal->getApprovedRevision());
+        self::assertSame($complete, $course->getCurrentApprovedRevision());
+        self::assertNull($proposal->getReview());
+    }
+
+    public function testIncompleteCoordinatorTemplateCannotBePublished(): void
+    {
+        [$course, , , $coordinator] = $this->fixture();
+        $proposal = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $revision = $proposal->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            [],
+        );
+
+        $this->expectException(\DomainException::class);
+        $proposal->publishCoordinatorTemplate($revision);
+    }
+
+    public function testFacultyProposalRecordsTheApprovedTemplateUsedForPrefill(): void
+    {
+        [$course, , $faculty, $coordinator] = $this->fixture();
+        $coordinatorProposal = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $template = $coordinatorProposal->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            $this->completeContent(),
+        );
+        $coordinatorProposal->publishCoordinatorTemplate($template);
+
+        $facultyProposal = new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission, $template);
+
+        self::assertSame($template, $facultyProposal->getBasedOnRevision());
+        self::assertSame(ProposalOrigin::FacultySubmission, $facultyProposal->getOrigin());
+        self::assertSame($faculty, $facultyProposal->getSubmittedBy());
+    }
+
+    public function testIncompleteFacultyProposalCannotBeSubmitted(): void
+    {
+        [, $submission, $faculty] = $this->fixture();
+        $revision = $submission->addRevision(
+            $faculty,
+            RevisionAuthorType::Faculty,
+            ['creditHours' => 3],
+        );
+
+        $this->expectException(\DomainException::class);
+        $submission->submit($revision);
     }
 
     /** @return array{CommonCourse, TemplateSubmission, User, User} */
@@ -99,6 +174,29 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $program = new Program('Computer Science', 'BS', '2026');
         $course = new CommonCourse($program, 'cse', '360', 'Software Engineering', DeliveryType::InPerson);
 
-        return [$course, new TemplateSubmission($course, $faculty), $faculty, $coordinator];
+        return [
+            $course,
+            new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission),
+            $faculty,
+            $coordinator,
+        ];
+    }
+
+    private function completeFacultyRevision(TemplateSubmission $submission, User $faculty, array $content = []): \App\Entity\SyllabusTemplate\TemplateRevision
+    {
+        return $submission->addRevision(
+            $faculty,
+            RevisionAuthorType::Faculty,
+            $this->completeContent($content),
+        );
+    }
+
+    private function completeContent(array $overrides = []): array
+    {
+        return $overrides + [
+            'creditHours' => 3,
+            'courseCoordinators' => ['Coordinator Name'],
+            'creditCategorization' => 'engineering',
+        ];
     }
 }

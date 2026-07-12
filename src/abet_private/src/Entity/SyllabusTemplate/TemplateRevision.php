@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'syllabus_template_revisions')]
 #[ORM\UniqueConstraint(name: 'uniq_syllabus_submission_revision', columns: ['submission_id', 'revision_number'])]
+#[ORM\Index(name: 'idx_syllabus_revision_completeness', columns: ['completeness_status'])]
 class TemplateRevision
 {
     #[ORM\Id]
@@ -32,16 +33,37 @@ class TemplateRevision
     #[ORM\Column(type: 'json')]
     private array $content;
 
+    #[ORM\Column(name: 'completeness_status', length: 16, enumType: CompletenessStatus::class)]
+    private CompletenessStatus $completenessStatus;
+
+    #[ORM\Column(name: 'missing_fields', type: 'json')]
+    private array $missingFields;
+
     #[ORM\Column(name: 'schema_version', options: ['default' => 1])]
     private int $schemaVersion = 1;
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(TemplateSubmission $submission, User $author, RevisionAuthorType $authorType, int $revisionNumber, array $content)
+    public function __construct(
+        TemplateSubmission $submission,
+        User $author,
+        RevisionAuthorType $authorType,
+        int $revisionNumber,
+        array $content,
+        CompletenessStatus $completenessStatus,
+        array $missingFields = [],
+    )
     {
-        if ($revisionNumber <= 0 || $content === []) {
-            throw new \InvalidArgumentException('A positive revision number and non-empty content are required.');
+        if ($revisionNumber <= 0) {
+            throw new \InvalidArgumentException('A positive revision number is required.');
+        }
+        $missingFields = array_values(array_unique(array_filter(array_map('strval', $missingFields))));
+        if ($completenessStatus === CompletenessStatus::Complete && $missingFields !== []) {
+            throw new \InvalidArgumentException('A complete revision cannot have missing fields.');
+        }
+        if ($completenessStatus === CompletenessStatus::Incomplete && $missingFields === []) {
+            throw new \InvalidArgumentException('An incomplete revision must identify its missing fields.');
         }
 
         $this->submission = $submission;
@@ -49,6 +71,8 @@ class TemplateRevision
         $this->authorType = $authorType;
         $this->revisionNumber = $revisionNumber;
         $this->content = $content;
+        $this->completenessStatus = $completenessStatus;
+        $this->missingFields = $missingFields;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -58,5 +82,8 @@ class TemplateRevision
     public function getAuthorType(): RevisionAuthorType { return $this->authorType; }
     public function getRevisionNumber(): int { return $this->revisionNumber; }
     public function getContent(): array { return $this->content; }
+    public function getCompletenessStatus(): CompletenessStatus { return $this->completenessStatus; }
+    public function getMissingFields(): array { return $this->missingFields; }
+    public function isComplete(): bool { return $this->completenessStatus === CompletenessStatus::Complete; }
     public function getSchemaVersion(): int { return $this->schemaVersion; }
 }

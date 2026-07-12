@@ -33,7 +33,10 @@ class TemplateReview
 
     public function __construct(TemplateSubmission $submission, User $reviewer, ReviewDecision $decision, ?string $comment = null)
     {
-        if ($reviewer === $submission->getFaculty()) {
+        if ($submission->getOrigin() !== ProposalOrigin::FacultySubmission) {
+            throw new \InvalidArgumentException('Only faculty submissions receive coordinator reviews.');
+        }
+        if ($reviewer === $submission->getSubmittedBy()) {
             throw new \InvalidArgumentException('Faculty cannot review their own submission.');
         }
 

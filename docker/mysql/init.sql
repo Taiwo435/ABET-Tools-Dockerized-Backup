@@ -658,19 +658,25 @@ CREATE TABLE IF NOT EXISTS syllabus_common_courses (
 CREATE TABLE IF NOT EXISTS syllabus_template_submissions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     common_course_id INT NOT NULL,
-    faculty_user_id INT NOT NULL,
+    submitted_by_user_id INT NOT NULL,
+    working_revision_id INT NULL,
+    based_on_revision_id INT NULL,
     submitted_revision_id INT NULL,
     approved_revision_id INT NULL,
+    origin VARCHAR(32) NOT NULL,
     status VARCHAR(32) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     submitted_at DATETIME NULL,
     decided_at DATETIME NULL,
     INDEX idx_syllabus_submission_course (common_course_id),
-    INDEX idx_syllabus_submission_faculty (faculty_user_id),
+    INDEX idx_syllabus_submission_owner (submitted_by_user_id),
+    INDEX idx_syllabus_submission_working (working_revision_id),
+    INDEX idx_syllabus_submission_based_on (based_on_revision_id),
     INDEX idx_syllabus_submission_queue (status, submitted_at),
+    INDEX idx_syllabus_proposal_origin_status (origin, status),
     FOREIGN KEY (common_course_id) REFERENCES syllabus_common_courses(id) ON DELETE RESTRICT,
-    FOREIGN KEY (faculty_user_id) REFERENCES users(id) ON DELETE RESTRICT
+    FOREIGN KEY (submitted_by_user_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS syllabus_template_revisions (
@@ -680,10 +686,13 @@ CREATE TABLE IF NOT EXISTS syllabus_template_revisions (
     author_type VARCHAR(32) NOT NULL,
     revision_number INT NOT NULL,
     content JSON NOT NULL,
+    completeness_status VARCHAR(16) NOT NULL,
+    missing_fields JSON NOT NULL,
     schema_version INT NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL,
     UNIQUE KEY uniq_syllabus_submission_revision (submission_id, revision_number),
     INDEX idx_syllabus_revision_author (author_user_id),
+    INDEX idx_syllabus_revision_completeness (completeness_status),
     FOREIGN KEY (submission_id) REFERENCES syllabus_template_submissions(id) ON DELETE CASCADE,
     FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE RESTRICT
 );
@@ -705,7 +714,11 @@ ALTER TABLE syllabus_template_submissions
     ADD CONSTRAINT fk_syllabus_submitted_revision
         FOREIGN KEY (submitted_revision_id) REFERENCES syllabus_template_revisions(id) ON DELETE RESTRICT,
     ADD CONSTRAINT fk_syllabus_approved_revision
-        FOREIGN KEY (approved_revision_id) REFERENCES syllabus_template_revisions(id) ON DELETE RESTRICT;
+        FOREIGN KEY (approved_revision_id) REFERENCES syllabus_template_revisions(id) ON DELETE RESTRICT,
+    ADD CONSTRAINT fk_syllabus_working_revision
+        FOREIGN KEY (working_revision_id) REFERENCES syllabus_template_revisions(id) ON DELETE RESTRICT,
+    ADD CONSTRAINT fk_syllabus_based_on_revision
+        FOREIGN KEY (based_on_revision_id) REFERENCES syllabus_template_revisions(id) ON DELETE SET NULL;
 
 ALTER TABLE syllabus_common_courses
     ADD CONSTRAINT fk_syllabus_current_revision
