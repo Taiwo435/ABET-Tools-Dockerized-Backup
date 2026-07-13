@@ -11,7 +11,12 @@
         .faculty-editor__form > div > div { display: grid; gap: .35rem; margin-bottom: 1rem; }
         .faculty-editor input, .faculty-editor textarea { box-sizing: border-box; width: 100%; padding: .65rem; }
         .faculty-editor textarea { min-height: 7rem; }
-        .faculty-editor__actions { display: flex; gap: .75rem; margin-top: 1rem; }
+        .faculty-editor__actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .75rem; margin-top: 1rem; }
+        .faculty-editor__actions > .button-primary,
+        .faculty-editor__actions > .button-secondary,
+        .faculty-editor__actions > .hold-delete-control { box-sizing: border-box; flex: 0 0 170px; width: 170px; }
+        .faculty-editor__actions > .button-primary,
+        .faculty-editor__actions > .button-secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: .65rem .85rem; font-size: .95rem; line-height: 1.2; text-align: center; white-space: nowrap; }
     </style>
 
     <main class="faculty-editor">
@@ -40,16 +45,23 @@
                 <button type="submit" class="button-primary">{{ submission ? 'Save working copy' : 'Create my draft' }}</button>
                 <a href="{{ path('app_faculty_syllabus_templates') }}" class="button-secondary">Back to templates</a>
                 {% if submission %}
-                    <button type="submit" class="button-secondary" form="delete-faculty-draft">Delete draft</button>
+                    <div class="hold-delete-control">
+                        <button type="button" class="hold-delete-button" data-hold-delete data-delete-form="delete-faculty-draft" aria-pressed="false" aria-describedby="delete-faculty-draft-warning">
+                            <span class="hold-delete-button__fill" aria-hidden="true"></span>
+                            <span class="hold-delete-button__label" data-hold-delete-label>Hold to delete</span>
+                        </button>
+                        <small id="delete-faculty-draft-warning" class="hold-delete-warning">Deletions are permanent.</small>
+                    </div>
                 {% endif %}
             </div>
         {{ form_end(form) }}
 
         {% if submission %}
-            <form id="delete-faculty-draft" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: submission.id}) }}" onsubmit="return confirm('Delete this draft? This cannot be undone.');">
+            <form id="delete-faculty-draft" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: submission.id}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete-faculty-syllabus-' ~ submission.id) }}">
             </form>
             <p>Submission for coordinator review will be added in a later step.</p>
         {% endif %}
     </main>
+    {% include 'syllabus_template/faculty/_hold_delete_behavior.html.twig' %}
 {% endblock %}

@@ -11,6 +11,10 @@
         .faculty-syllabus th, .faculty-syllabus td { padding: .75rem; border-bottom: 1px solid #ddd; text-align: left; }
         .faculty-syllabus th { background: var(--asu-maroon); color: #fff; }
         .faculty-syllabus form { margin: 0; }
+        .faculty-draft-list { display: grid; gap: .8rem; padding: 0; list-style: none; }
+        .faculty-draft-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: .8rem; border-bottom: 1px solid #ddd; }
+        .faculty-draft-row:last-child { padding-bottom: 0; border-bottom: 0; }
+        .faculty-draft-row__actions { display: flex; flex-wrap: wrap; align-items: start; gap: .75rem; }
     </style>
 
     <main class="faculty-syllabus">
@@ -24,11 +28,21 @@
         {% if drafts is not empty %}
             <section class="faculty-syllabus__section">
                 <h2>Your drafts</h2>
-                <ul>
+                <ul class="faculty-draft-list">
                     {% for draft in drafts %}
-                        <li>
-                            {{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }} — {{ draft.commonCourse.courseName }}
-                            <a href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
+                        <li class="faculty-draft-row">
+                            <div><strong>{{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }}</strong> — {{ draft.commonCourse.courseName }}</div>
+                            <div class="faculty-draft-row__actions">
+                                <a class="button-secondary" href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
+                                <form id="delete-faculty-draft-{{ draft.id }}" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: draft.id}) }}" class="hold-delete-control">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-faculty-syllabus-' ~ draft.id) }}">
+                                    <button type="button" class="hold-delete-button" data-hold-delete data-delete-form="delete-faculty-draft-{{ draft.id }}" aria-pressed="false" aria-describedby="delete-faculty-draft-warning-{{ draft.id }}">
+                                        <span class="hold-delete-button__fill" aria-hidden="true"></span>
+                                        <span class="hold-delete-button__label" data-hold-delete-label>Hold to delete</span>
+                                    </button>
+                                    <small id="delete-faculty-draft-warning-{{ draft.id }}" class="hold-delete-warning">Deletions are permanent.</small>
+                                </form>
+                            </div>
                         </li>
                     {% endfor %}
                 </ul>
@@ -58,4 +72,5 @@
             {% endif %}
         </section>
     </main>
+    {% include 'syllabus_template/faculty/_hold_delete_behavior.html.twig' %}
 {% endblock %}

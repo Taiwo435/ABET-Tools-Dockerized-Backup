@@ -42,10 +42,12 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
     {
         $index = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/faculty/index.html.twig');
         $form = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/faculty/form.html.twig');
+        $holdDelete = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/faculty/_hold_delete_behavior.html.twig');
         $homepage = file_get_contents(dirname(__DIR__, 2).'/templates/homepage/home.html.twig');
 
         self::assertIsString($index);
         self::assertIsString($form);
+        self::assertIsString($holdDelete);
         self::assertIsString($homepage);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_use'", $index);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_edit'", $index);
@@ -54,7 +56,16 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('Create my draft', $form);
         self::assertStringContainsString('Nothing is saved until', $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $form);
-        self::assertStringContainsString('Delete draft', $form);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $index);
+        self::assertStringContainsString('Hold to delete', $index);
+        self::assertStringContainsString('Hold to delete', $form);
+        self::assertStringContainsString('Deletions are permanent.', $index);
+        self::assertStringContainsString('Deletions are permanent.', $form);
+        self::assertStringNotContainsString('confirm(', $form);
+        self::assertStringContainsString('const holdDuration = 2000', $holdDelete);
+        self::assertStringContainsString("button.addEventListener('pointerdown', begin)", $holdDelete);
+        self::assertStringContainsString("button.addEventListener('keydown', begin)", $holdDelete);
+        self::assertStringContainsString('requestSubmit()', $holdDelete);
         self::assertStringContainsString("path('app_faculty_syllabus_templates')", $homepage);
     }
 }
