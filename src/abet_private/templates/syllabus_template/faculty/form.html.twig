@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ submission ? 'Edit Faculty Syllabus' : 'Preview Syllabus Template' }} | {% endblock %}
+
+{% block body %}
+    <style>
+        .faculty-editor { width: min(850px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
+        .faculty-editor h1 { color: var(--asu-maroon); }
+        .faculty-editor__summary, .faculty-editor__form { padding: 1.25rem; background: #fff; border: 1px solid #ddd; border-radius: 6px; }
+        .faculty-editor__form { margin-top: 1rem; }
+        .faculty-editor__form > div > div { display: grid; gap: .35rem; margin-bottom: 1rem; }
+        .faculty-editor input, .faculty-editor textarea { box-sizing: border-box; width: 100%; padding: .65rem; }
+        .faculty-editor textarea { min-height: 7rem; }
+        .faculty-editor__actions { display: flex; gap: .75rem; margin-top: 1rem; }
+    </style>
+
+    <main class="faculty-editor">
+        <h1>{{ course.courseSubject }} {{ course.courseNumber }} {{ submission ? 'Faculty Working Copy' : 'Template Preview' }}</h1>
+        <div class="faculty-editor__summary">
+            <strong>{{ course.courseName }}</strong><br>
+            {{ course.program.name }} · {{ course.deliveryType.value|replace({'_': ' '})|title }}
+            {% if submission %}
+                <p>This draft was copied from approved revision {{ basedOnRevision.revisionNumber }}. Later shared-template changes will not overwrite your work.</p>
+            {% else %}
+                <p>Preview and adjust approved revision {{ basedOnRevision.revisionNumber }}. Nothing is saved until you select “Create my draft” below.</p>
+            {% endif %}
+        </div>
+
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}<p role="status" class="flash-{{ type }}">{{ message }}</p>{% endfor %}
+        {% endfor %}
+
+        {{ form_start(form, {attr: {class: 'faculty-editor__form'}}) }}
+            {{ form_row(form.creditHours) }}
+            {{ form_row(form.courseCoordinators) }}
+            {{ form_row(form.creditCategorization) }}
+            {{ form_row(form.catalogDescription) }}
+            {{ form_row(form.courseOutcomes) }}
+            <div class="faculty-editor__actions">
+                <button type="submit" class="button-primary">{{ submission ? 'Save working copy' : 'Create my draft' }}</button>
+                <a href="{{ path('app_faculty_syllabus_templates') }}" class="button-secondary">Back to templates</a>
+                {% if submission %}
+                    <button type="submit" class="button-secondary" form="delete-faculty-draft">Delete draft</button>
+                {% endif %}
+            </div>
+        {{ form_end(form) }}
+
+        {% if submission %}
+            <form id="delete-faculty-draft" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: submission.id}) }}" onsubmit="return confirm('Delete this draft? This cannot be undone.');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-faculty-syllabus-' ~ submission.id) }}">
+            </form>
+            <p>Submission for coordinator review will be added in a later step.</p>
+        {% endif %}
+    </main>
+{% endblock %}

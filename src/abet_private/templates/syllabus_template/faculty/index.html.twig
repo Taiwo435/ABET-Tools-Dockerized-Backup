@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Faculty Syllabus Templates | {% endblock %}
+
+{% block body %}
+    <style>
+        .faculty-syllabus { width: min(1050px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
+        .faculty-syllabus h1 { color: var(--asu-maroon); }
+        .faculty-syllabus__section { margin-top: 1.5rem; padding: 1.25rem; background: #fff; border: 1px solid #ddd; border-radius: 6px; }
+        .faculty-syllabus table { width: 100%; border-collapse: collapse; }
+        .faculty-syllabus th, .faculty-syllabus td { padding: .75rem; border-bottom: 1px solid #ddd; text-align: left; }
+        .faculty-syllabus th { background: var(--asu-maroon); color: #fff; }
+        .faculty-syllabus form { margin: 0; }
+    </style>
+
+    <main class="faculty-syllabus">
+        <h1>Faculty Syllabus Templates</h1>
+        <p>Select an approved shared template to create your own independent working copy.</p>
+
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}<p role="status" class="flash-{{ type }}">{{ message }}</p>{% endfor %}
+        {% endfor %}
+
+        {% if drafts is not empty %}
+            <section class="faculty-syllabus__section">
+                <h2>Your drafts</h2>
+                <ul>
+                    {% for draft in drafts %}
+                        <li>
+                            {{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }} — {{ draft.commonCourse.courseName }}
+                            <a href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        <section class="faculty-syllabus__section">
+            <h2>Available shared templates</h2>
+            {% if courses is empty %}
+                <p>No approved shared syllabus templates are available yet.</p>
+            {% else %}
+                <table>
+                    <thead><tr><th>Course</th><th>Program</th><th>Delivery</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for course in courses %}
+                        <tr>
+                            <td><strong>{{ course.courseSubject }} {{ course.courseNumber }}</strong><br>{{ course.courseName }}</td>
+                            <td>{{ course.program.name }}</td>
+                            <td>{{ course.deliveryType.value|replace({'_': ' '})|title }}</td>
+                            <td>
+                                <a href="{{ path('app_faculty_syllabus_templates_use', {id: course.id}) }}" class="button-primary">Use template</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

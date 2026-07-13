@@ -196,6 +196,21 @@ class TemplateSubmission
         return $this->addRevision($author, RevisionAuthorType::Coordinator, $content);
     }
 
+    public function prepareFacultyDraftDeletion(User $owner): void
+    {
+        if ($this->origin !== ProposalOrigin::FacultySubmission
+            || $this->status !== SubmissionStatus::Draft
+            || $this->submittedBy !== $owner) {
+            throw new \DomainException('Only the proposal owner can delete their faculty draft.');
+        }
+
+        // Break revision references before the submission is removed so the
+        // database can cascade-delete its immutable, unsubmitted revisions.
+        $this->workingRevision = null;
+        $this->basedOnRevision = null;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function recordReview(TemplateReview $review, TemplateRevision $approvedRevision, ?\DateTimeImmutable $at = null): void
     {
         if ($this->origin !== ProposalOrigin::FacultySubmission) {

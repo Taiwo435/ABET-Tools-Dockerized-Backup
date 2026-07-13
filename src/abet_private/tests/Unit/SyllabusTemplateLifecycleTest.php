@@ -208,6 +208,61 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         self::assertSame($faculty, $facultyProposal->getSubmittedBy());
     }
 
+    public function testFacultyWorkingCopyRemainsIndependentFromApprovedSharedRevision(): void
+    {
+        [$course, , $faculty, $coordinator] = $this->fixture();
+        $sharedTemplate = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $approvedRevision = $sharedTemplate->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            $this->completeContent(['catalogDescription' => 'Approved shared description']),
+        );
+        $sharedTemplate->publishCoordinatorTemplate($approvedRevision);
+
+        $facultyProposal = new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission, $approvedRevision);
+        $initialCopy = $facultyProposal->addRevision($faculty, RevisionAuthorType::Faculty, $approvedRevision->getContent());
+        $editedCopy = $facultyProposal->addRevision(
+            $faculty,
+            RevisionAuthorType::Faculty,
+            array_replace($initialCopy->getContent(), ['catalogDescription' => 'Faculty-specific description']),
+        );
+
+        self::assertSame($approvedRevision, $facultyProposal->getBasedOnRevision());
+        self::assertSame('Approved shared description', $approvedRevision->getContent()['catalogDescription']);
+        self::assertSame('Approved shared description', $initialCopy->getContent()['catalogDescription']);
+        self::assertSame('Faculty-specific description', $editedCopy->getContent()['catalogDescription']);
+        self::assertSame($editedCopy, $facultyProposal->getWorkingRevision());
+    }
+
+    public function testFacultyOwnerCanPrepareTheirUnsubmittedDraftForDeletion(): void
+    {
+        [$course, , $faculty, $coordinator] = $this->fixture();
+        $sharedTemplate = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $approvedRevision = $sharedTemplate->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            $this->completeContent(),
+        );
+        $sharedTemplate->publishCoordinatorTemplate($approvedRevision);
+        $facultyDraft = new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission, $approvedRevision);
+        $facultyDraft->addRevision($faculty, RevisionAuthorType::Faculty, $approvedRevision->getContent());
+
+        $facultyDraft->prepareFacultyDraftDeletion($faculty);
+
+        self::assertNull($facultyDraft->getWorkingRevision());
+        self::assertNull($facultyDraft->getBasedOnRevision());
+    }
+
+    public function testAnotherUserCannotPrepareFacultyDraftForDeletion(): void
+    {
+        [, $submission, , $coordinator] = $this->fixture();
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Only the proposal owner can delete their faculty draft.');
+
+        $submission->prepareFacultyDraftDeletion($coordinator);
+    }
+
     public function testIncompleteFacultyProposalCannotBeSubmitted(): void
     {
         [, $submission, $faculty] = $this->fixture();
