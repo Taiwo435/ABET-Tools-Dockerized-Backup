@@ -40,6 +40,28 @@ final class CoordinatorTemplateDataTest extends TestCase
         self::assertSame(['preserve-me'], $content['customSchemaField']);
     }
 
+    public function testEditingLoadsCourseIdentityAlongsideRevisionContent(): void
+    {
+        $user = (new User())->setEmail('coordinator@example.edu');
+        $program = new Program('Computer Science', 'BS', '2026');
+        $course = new CommonCourse($program, 'CSE', '340', 'Principles of Programming Languages', DeliveryType::Hybrid);
+        $submission = new TemplateSubmission($course, $user, ProposalOrigin::CoordinatorCreated);
+        $submission->addRevision($user, RevisionAuthorType::Coordinator, [
+            'creditHours' => 3,
+            'courseCoordinators' => ['Bazzi'],
+            'creditCategorization' => 'engineering',
+        ]);
+
+        $data = CoordinatorTemplateData::fromSubmission($submission);
+
+        self::assertSame($program, $data->program);
+        self::assertSame('CSE', $data->courseSubject);
+        self::assertSame('340', $data->courseNumber);
+        self::assertSame('Principles of Programming Languages', $data->courseName);
+        self::assertSame(DeliveryType::Hybrid, $data->deliveryType);
+        self::assertSame(3.0, $data->creditHours);
+    }
+
     public function testOptionalDescriptionAndOutcomesCanBeSubmittedBlank(): void
     {
         $data = new CoordinatorTemplateData();

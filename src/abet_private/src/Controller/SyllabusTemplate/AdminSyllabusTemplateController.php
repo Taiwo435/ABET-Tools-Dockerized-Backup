@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -47,23 +48,27 @@ final class AdminSyllabusTemplateController extends AbstractController
                 throw new \LogicException('A program is required for a shared syllabus template.');
             }
 
-            $course = new CommonCourse(
-                $data->program,
-                $data->courseSubject,
-                $data->courseNumber,
-                $data->courseName,
-                $data->deliveryType,
-            );
-            $submission = new TemplateSubmission($course, $user, ProposalOrigin::CoordinatorCreated);
-            $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
+            if ($this->courseIdentityExists($entityManager, $data)) {
+                $form->addError(new FormError('A shared template already exists for this program, course, and delivery type.'));
+            } else {
+                $course = new CommonCourse(
+                    $data->program,
+                    $data->courseSubject,
+                    $data->courseNumber,
+                    $data->courseName,
+                    $data->deliveryType,
+                );
+                $submission = new TemplateSubmission($course, $user, ProposalOrigin::CoordinatorCreated);
+                $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
 
-            $entityManager->persist($course);
-            $entityManager->persist($submission);
-            $entityManager->flush();
+                $entityManager->persist($course);
+                $entityManager->persist($submission);
+                $entityManager->flush();
 
-            $this->addFlash('success', 'Shared syllabus template draft created.');
+                $this->addFlash('success', 'Shared syllabus template draft created.');
 
-            return $this->redirectToRoute('app_admin_syllabus_templates_edit', ['id' => $submission->getId()]);
+                return $this->redirectToRoute('app_admin_syllabus_templates_edit', ['id' => $submission->getId()]);
+            }
         }
 
         return $this->render('syllabus_template/admin/form.html.twig', [
@@ -83,20 +88,32 @@ final class AdminSyllabusTemplateController extends AbstractController
     ): Response
     {
         $this->assertEditableCoordinatorDraft($submission);
-        $workingRevision = $submission->getWorkingRevision();
-        $data = $workingRevision === null
-            ? new CoordinatorTemplateData()
-            : CoordinatorTemplateData::fromRevision($workingRevision);
-        $form = $this->createForm(CoordinatorTemplateType::class, $data);
+        $data = CoordinatorTemplateData::fromSubmission($submission);
+        $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
-            $entityManager->flush();
+            if ($data->program === null) {
+                throw new \LogicException('A program is required for a shared syllabus template.');
+            }
 
-            $this->addFlash('success', 'A new immutable draft revision was saved.');
+            if ($this->courseIdentityExists($entityManager, $data, $submission->getCommonCourse())) {
+                $form->addError(new FormError('A shared template already exists for this program, course, and delivery type.'));
+            } else {
+                $submission->getCommonCourse()->updateDraftDetails(
+                    $data->program,
+                    $data->courseSubject,
+                    $data->courseNumber,
+                    $data->courseName,
+                    $data->deliveryType,
+                );
+                $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
+                $entityManager->flush();
 
-            return $this->redirectToRoute('app_admin_syllabus_templates_edit', ['id' => $submission->getId()]);
+                $this->addFlash('success', 'Course details and a new immutable draft revision were saved.');
+
+                return $this->redirectToRoute('app_admin_syllabus_templates_edit', ['id' => $submission->getId()]);
+            }
         }
 
         return $this->render('syllabus_template/admin/form.html.twig', [
@@ -136,5 +153,21 @@ final class AdminSyllabusTemplateController extends AbstractController
             || $submission->getStatus() !== SubmissionStatus::Draft) {
             throw $this->createNotFoundException('An editable coordinator template draft was not found.');
         }
+    }
+
+    private function courseIdentityExists(
+        EntityManagerInterface $entityManager,
+        CoordinatorTemplateData $data,
+        ?CommonCourse $currentCourse = null,
+    ): bool
+    {
+        $existing = $entityManager->getRepository(CommonCourse::class)->findOneBy([
+            'program' => $data->program,
+            'courseSubject' => strtoupper(trim($data->courseSubject)),
+            'courseNumber' => trim($data->courseNumber),
+            'deliveryType' => $data->deliveryType,
+        ]);
+
+        return $existing !== null && $existing !== $currentCourse;
     }
 }

@@ -135,6 +135,33 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $proposal->publishCoordinatorTemplate($revision);
     }
 
+    public function testCoordinatorCanCorrectCourseDetailsBeforePublication(): void
+    {
+        [$course, , , $coordinator] = $this->fixture();
+        $proposal = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $proposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent());
+        $newProgram = new Program('Computer Systems Engineering', 'BSE', '2027');
+
+        $course->updateDraftDetails($newProgram, 'cse', '361', 'Software Engineering II', DeliveryType::Online);
+
+        self::assertSame($newProgram, $course->getProgram());
+        self::assertSame('CSE', $course->getCourseSubject());
+        self::assertSame('361', $course->getCourseNumber());
+        self::assertSame('Software Engineering II', $course->getCourseName());
+        self::assertSame(DeliveryType::Online, $course->getDeliveryType());
+    }
+
+    public function testPublishedCourseDetailsCannotBeChangedThroughDraftEditing(): void
+    {
+        [$course, , , $coordinator] = $this->fixture();
+        $proposal = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $revision = $proposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent());
+        $proposal->publishCoordinatorTemplate($revision);
+
+        $this->expectException(\DomainException::class);
+        $course->updateDraftDetails($course->getProgram(), 'CSE', '999', 'Changed', DeliveryType::Online);
+    }
+
     public function testFacultyProposalRecordsTheApprovedTemplateUsedForPrefill(): void
     {
         [$course, , $faculty, $coordinator] = $this->fixture();

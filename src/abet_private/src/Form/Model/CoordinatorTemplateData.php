@@ -5,6 +5,7 @@ namespace App\Form\Model;
 use App\Entity\Program;
 use App\Entity\SyllabusTemplate\DeliveryType;
 use App\Entity\SyllabusTemplate\TemplateRevision;
+use App\Entity\SyllabusTemplate\TemplateSubmission;
 
 final class CoordinatorTemplateData
 {
@@ -40,6 +41,20 @@ final class CoordinatorTemplateData
         $data->creditCategorization = (string)($content['creditCategorization'] ?? '');
         $data->catalogDescription = (string)($content['catalogDescription'] ?? '');
         $data->courseOutcomes = self::listToLines($content['courseOutcomes'] ?? []);
+
+        return $data;
+    }
+
+    public static function fromSubmission(TemplateSubmission $submission): self
+    {
+        $revision = $submission->getWorkingRevision();
+        $data = $revision === null ? new self() : self::fromRevision($revision);
+        $course = $submission->getCommonCourse();
+        $data->program = $course->getProgram();
+        $data->courseSubject = $course->getCourseSubject();
+        $data->courseNumber = $course->getCourseNumber();
+        $data->courseName = $course->getCourseName();
+        $data->deliveryType = $course->getDeliveryType();
 
         return $data;
     }

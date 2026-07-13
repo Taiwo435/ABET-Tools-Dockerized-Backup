@@ -63,6 +63,33 @@ class CommonCourse
     public function getDeliveryType(): DeliveryType { return $this->deliveryType; }
     public function getCurrentApprovedRevision(): ?TemplateRevision { return $this->currentApprovedRevision; }
 
+    public function updateDraftDetails(
+        Program $program,
+        string $courseSubject,
+        string $courseNumber,
+        string $courseName,
+        DeliveryType $deliveryType,
+    ): void
+    {
+        if ($this->currentApprovedRevision !== null) {
+            throw new \DomainException('Published common-course details cannot be changed through draft editing.');
+        }
+
+        $courseSubject = strtoupper(trim($courseSubject));
+        $courseNumber = trim($courseNumber);
+        $courseName = trim($courseName);
+        if ($courseSubject === '' || $courseNumber === '' || $courseName === '') {
+            throw new \InvalidArgumentException('Course subject, number, and name are required.');
+        }
+
+        $this->program = $program;
+        $this->courseSubject = $courseSubject;
+        $this->courseNumber = $courseNumber;
+        $this->courseName = $courseName;
+        $this->deliveryType = $deliveryType;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function publish(TemplateRevision $revision): void
     {
         if ($revision->getSubmission()->getCommonCourse() !== $this) {
