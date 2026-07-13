@@ -102,4 +102,27 @@ final class CoordinatorTemplateDataTest extends TestCase
         self::assertSame('', $revision->getContent()['catalogDescription']);
         self::assertSame([], $revision->getContent()['courseOutcomes']);
     }
+
+    public function testEquivalentDraftDataIgnoresHarmlessWhitespaceAndCase(): void
+    {
+        $program = new Program('Computer Science', 'BS', '2026');
+        $original = new CoordinatorTemplateData();
+        $original->program = $program;
+        $original->courseSubject = 'CSE';
+        $original->courseNumber = '340';
+        $original->courseName = 'Programming Languages';
+        $original->creditHours = 3;
+        $original->courseCoordinators = 'Bazzi';
+        $original->creditCategorization = 'engineering';
+
+        $submitted = clone $original;
+        $submitted->courseSubject = ' cse ';
+        $submitted->courseNumber = ' 340 ';
+        $submitted->courseName = ' Programming Languages ';
+
+        self::assertTrue($submitted->isEquivalentTo($original));
+
+        $submitted->courseName = 'Programming Language Concepts';
+        self::assertFalse($submitted->isEquivalentTo($original));
+    }
 }

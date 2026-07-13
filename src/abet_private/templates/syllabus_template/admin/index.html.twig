@@ -13,18 +13,22 @@
         .syllabus-filter select:focus { outline: 3px solid rgba(255, 198, 39, .45); border-color: var(--asu-maroon); }
         .syllabus-table-wrap { overflow-x: auto; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
         .syllabus-table { width: 100%; min-width: 940px; border-collapse: collapse; }
-        .syllabus-table th, .syllabus-table td { padding: .9rem 1rem; border-bottom: 1px solid #e6e6e6; text-align: left; vertical-align: top; }
+        .syllabus-table th, .syllabus-table td { padding: .9rem 1rem; border-bottom: 1px solid #e6e6e6; text-align: left; }
         .syllabus-table th { background: var(--asu-maroon); color: var(--asu-white); font-size: .82rem; font-weight: 700; letter-spacing: .025em; }
+        .syllabus-table tbody td { vertical-align: middle; }
         .syllabus-table tbody tr:hover { background: #fffaf0; }
         .syllabus-table tbody tr:last-child td { border-bottom: 0; }
         .course-code { color: var(--asu-maroon); font-size: 1rem; }
         .course-name, .cell-detail { color: #666; font-size: .88rem; }
-        .status-pill { display: inline-block; padding: .22rem .65rem; border-radius: 999px; font-size: .78rem; font-weight: 700; line-height: 1.4; }
-        .status-pill--complete { background: #d8f0df; color: #155b2d; }
-        .status-pill--incomplete { background: #fff0bf; color: #684c00; }
-        .status-detail { display: block; margin-top: .35rem; color: #666; font-size: .82rem; }
+        .template-state { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; }
+        .completeness-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; font-size: .9rem; font-weight: 800; line-height: 1; }
+        .completeness-icon--complete { background: #d8f0df; color: #155b2d; }
+        .completeness-icon--incomplete { background: #f9d7dc; color: #9f1d3f; }
         .missing-list { margin: 0; padding-left: 1.1rem; color: #5d4200; font-size: .88rem; }
         .missing-none { color: #39704a; font-weight: 600; }
+        .publish-cell, .action-cell { text-align: center !important; vertical-align: middle !important; }
+        .table-form { display: flex; justify-content: center; margin: 0; }
+        .table-button { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.5rem; margin: 0; padding: .45rem .75rem; font-size: .82rem; line-height: 1.2; text-align: center; white-space: nowrap; }
         .table-action { color: var(--asu-maroon); font-weight: 700; text-decoration: none; }
         .table-action:hover { text-decoration: underline; text-underline-offset: 3px; }
         .empty-state { padding: 3rem 1.5rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); text-align: center; }
@@ -81,13 +85,27 @@
                             <td><strong class="course-code">{{ template.commonCourse.courseSubject }} {{ template.commonCourse.courseNumber }}</strong><div class="course-name">{{ template.commonCourse.courseName }}</div></td>
                             <td>{{ template.commonCourse.program.code }} <span class="cell-detail">{{ template.commonCourse.program.year }}</span></td>
                             <td>
-                                <span class="status-pill status-pill--{{ revision.completenessStatus.value }}">{{ revision.completenessStatus.value|title }}</span>
-                                <span class="status-detail">{{ template.status.value|replace({'_': ' '})|title }}</span>
+                                <span class="template-state">
+                                    {{ template.status.value|replace({'_': ' '})|title }}
+                                    <span
+                                        class="completeness-icon completeness-icon--{{ revision.completenessStatus.value }}"
+                                        role="img"
+                                        aria-label="{{ revision.completenessStatus.value|title }}"
+                                        title="{{ revision.completenessStatus.value|title }}"
+                                    >{{ revision.completenessStatus.value == 'complete' ? '✓' : '×' }}</span>
+                                </span>
                             </td>
                             <td><strong>Rev. {{ revision.revisionNumber }}</strong></td>
-                            <td>
+                            <td class="publish-cell">
                                 {% if revision.missingFields is empty %}
-                                    <span class="missing-none">Ready to publish</span>
+                                    {% if template.status.value == 'draft' %}
+                                        <form method="post" action="{{ path('app_admin_syllabus_templates_publish', {id: template.id}) }}" class="table-form">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('publish-syllabus-template-' ~ template.id) }}">
+                                            <button type="submit" class="button-primary table-button">Publish now</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="missing-none">Published</span>
+                                    {% endif %}
                                 {% else %}
                                     <ul class="missing-list">
                                         {% for field in revision.missingFields %}<li>{{ field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'}) }}</li>{% endfor %}
@@ -95,11 +113,11 @@
                                 {% endif %}
                             </td>
                             <td>{{ template.updatedAt|date('M j, Y') }}</td>
-                            <td>
+                            <td class="action-cell">
                                 {% if template.status.value == 'draft' %}
-                                    <a class="table-action" href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}">Edit draft &rarr;</a>
+                                    <a class="button-primary table-button" href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}">Edit draft</a>
                                 {% else %}
-                                    <span class="cell-detail">Published</span>
+                                    <a href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}" class="button-primary table-button">Create new revision</a>
                                 {% endif %}
                             </td>
                         </tr>

@@ -31,6 +31,7 @@
         .flash { margin-bottom: 1rem; padding: .85rem 1rem; border-radius: 5px; font-weight: 600; }
         .flash--success { border-left: 5px solid #218739; background: #e4f3e8; color: #155b2d; }
         .flash--error { border-left: 5px solid var(--error-red); background: #f8e1e5; color: var(--error-red); }
+        .flash--info { border-left: 5px solid var(--asu-gold); background: #fff7db; color: #4f3a00; }
         .editor-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.25rem 1.75rem; background: #fafafa; }
         .editor-actions__group { display: flex; flex-wrap: wrap; gap: .75rem; }
         .publish-panel { margin-top: 1.25rem; padding: 1.25rem 1.5rem; background: var(--asu-white); border: 1px solid #dedede; border-left: 5px solid var(--asu-gold); border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
@@ -67,6 +68,7 @@
 
         {% for message in app.flashes('success') %}<div class="flash flash--success">{{ message }}</div>{% endfor %}
         {% for message in app.flashes('error') %}<div class="flash flash--error">{{ message }}</div>{% endfor %}
+        {% for message in app.flashes('info') %}<div class="flash flash--info">{{ message }}</div>{% endfor %}
 
         {% if submission and submission.workingRevision.missingFields is not empty %}
             <div class="missing-panel">
@@ -116,12 +118,12 @@
                 <span class="editor-meta">{{ submission ? 'Saving creates revision ' ~ (submission.workingRevision.revisionNumber + 1) ~ '; earlier revisions remain unchanged.' : 'You can complete the required fields now or return to this draft later.' }}</span>
                 <div class="editor-actions__group">
                     <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Cancel</a>
-                    <button type="submit" class="button-primary">{{ submission ? 'Save New Revision' : 'Create Draft' }}</button>
+                    <button type="submit" class="button-primary">{{ submission ? (submission.status.value == 'approved' ? 'Save as New Revision' : 'Save New Revision') : 'Create Draft' }}</button>
                 </div>
             </div>
         {{ form_end(form) }}
 
-        {% if submission %}
+        {% if submission and submission.status.value == 'draft' %}
             <section class="publish-panel">
                 <h2>Publish shared template</h2>
                 <p>{{ submission.workingRevision.complete ? 'This revision contains all required information and is ready for faculty use.' : 'Publishing becomes available after all required information is saved.' }}</p>

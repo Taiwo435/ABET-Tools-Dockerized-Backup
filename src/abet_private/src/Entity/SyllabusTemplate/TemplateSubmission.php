@@ -183,6 +183,19 @@ class TemplateSubmission
         $this->commonCourse->publish($revision);
     }
 
+    public function beginCoordinatorRevision(User $author, array $content): TemplateRevision
+    {
+        if ($this->origin !== ProposalOrigin::CoordinatorCreated
+            || $this->status !== SubmissionStatus::Approved
+            || $this->approvedRevision === null) {
+            throw new \DomainException('Only a published coordinator template can begin a new revision.');
+        }
+
+        $this->status = SubmissionStatus::Draft;
+
+        return $this->addRevision($author, RevisionAuthorType::Coordinator, $content);
+    }
+
     public function recordReview(TemplateReview $review, TemplateRevision $approvedRevision, ?\DateTimeImmutable $at = null): void
     {
         if ($this->origin !== ProposalOrigin::FacultySubmission) {

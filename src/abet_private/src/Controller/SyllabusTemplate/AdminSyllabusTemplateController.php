@@ -87,7 +87,8 @@ final class AdminSyllabusTemplateController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response
     {
-        $this->assertEditableCoordinatorDraft($submission);
+        $this->assertCoordinatorTemplateEditable($submission);
+        $originalData = CoordinatorTemplateData::fromSubmission($submission);
         $data = CoordinatorTemplateData::fromSubmission($submission);
         $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => true]);
         $form->handleRequest($request);
@@ -97,17 +98,28 @@ final class AdminSyllabusTemplateController extends AbstractController
                 throw new \LogicException('A program is required for a shared syllabus template.');
             }
 
+            if ($data->isEquivalentTo($originalData)) {
+                $this->addFlash('info', 'No changes were detected, so no new revision was created.');
+
+                return $this->redirectToRoute('app_admin_syllabus_templates_edit', ['id' => $submission->getId()]);
+            }
+
             if ($this->courseIdentityExists($entityManager, $data, $submission->getCommonCourse())) {
                 $form->addError(new FormError('A shared template already exists for this program, course, and delivery type.'));
             } else {
+                if ($submission->getStatus() === SubmissionStatus::Approved) {
+                    $submission->beginCoordinatorRevision($user, $data->toContent());
+                } else {
+                    $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
+                }
                 $submission->getCommonCourse()->updateDraftDetails(
+                    $submission,
                     $data->program,
                     $data->courseSubject,
                     $data->courseNumber,
                     $data->courseName,
                     $data->deliveryType,
                 );
-                $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
                 $entityManager->flush();
 
                 $this->addFlash('success', 'Course details and a new immutable draft revision were saved.');
@@ -147,10 +159,18 @@ final class AdminSyllabusTemplateController extends AbstractController
         return $this->redirectToRoute('app_admin_syllabus_templates');
     }
 
-    private function assertEditableCoordinatorDraft(TemplateSubmission $submission): void
+    private function assertCoordinatorTemplateEditable(TemplateSubmission $submission): void
     {
         if ($submission->getOrigin() !== ProposalOrigin::CoordinatorCreated
-            || $submission->getStatus() !== SubmissionStatus::Draft) {
+            || !in_array($submission->getStatus(), [SubmissionStatus::Draft, SubmissionStatus::Approved], true)) {
+            throw $this->createNotFoundException('An editable coordinator template was not found.');
+        }
+    }
+
+    private function assertEditableCoordinatorDraft(TemplateSubmission $submission): void
+    {
+        $this->assertCoordinatorTemplateEditable($submission);
+        if ($submission->getStatus() !== SubmissionStatus::Draft) {
             throw $this->createNotFoundException('An editable coordinator template draft was not found.');
         }
     }

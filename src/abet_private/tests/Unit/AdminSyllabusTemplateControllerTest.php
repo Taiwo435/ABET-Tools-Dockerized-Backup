@@ -76,8 +76,12 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("path('app_admin_syllabus_templates_new')", $index);
         self::assertStringContainsString("path('app_admin_syllabus_templates_edit'", $index);
         self::assertStringContainsString("path('app_admin_syllabus_templates_publish'", $form);
+        self::assertStringContainsString("path('app_admin_syllabus_templates_publish'", $index);
+        self::assertStringContainsString("path('app_admin_syllabus_templates_edit'", $index);
         self::assertStringContainsString('submission.workingRevision.missingFields', $form);
         self::assertStringContainsString('Publish Current Revision', $form);
         self::assertStringContainsString('form.program is defined', $form);
+        self::assertStringContainsString('Publish now', $index);
+        self::assertStringContainsString('Create new revision', $index);
     }
 }

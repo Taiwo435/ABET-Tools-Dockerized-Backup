@@ -142,7 +142,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $proposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent());
         $newProgram = new Program('Computer Systems Engineering', 'BSE', '2027');
 
-        $course->updateDraftDetails($newProgram, 'cse', '361', 'Software Engineering II', DeliveryType::Online);
+        $course->updateDraftDetails($proposal, $newProgram, 'cse', '361', 'Software Engineering II', DeliveryType::Online);
 
         self::assertSame($newProgram, $course->getProgram());
         self::assertSame('CSE', $course->getCourseSubject());
@@ -159,7 +159,35 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $proposal->publishCoordinatorTemplate($revision);
 
         $this->expectException(\DomainException::class);
-        $course->updateDraftDetails($course->getProgram(), 'CSE', '999', 'Changed', DeliveryType::Online);
+        $course->updateDraftDetails($proposal, $course->getProgram(), 'CSE', '999', 'Changed', DeliveryType::Online);
+    }
+
+    public function testPublishedCoordinatorTemplateCanBeginAndPublishANewRevision(): void
+    {
+        [$course, , , $coordinator] = $this->fixture();
+        $proposal = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $firstRevision = $proposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent([
+            'catalogDescription' => 'Original description',
+        ]));
+        $proposal->publishCoordinatorTemplate($firstRevision);
+
+        $newDraft = $proposal->beginCoordinatorRevision($coordinator, $firstRevision->getContent());
+
+        self::assertSame(SubmissionStatus::Draft, $proposal->getStatus());
+        self::assertSame(2, $newDraft->getRevisionNumber());
+        self::assertSame($firstRevision->getContent(), $newDraft->getContent());
+        self::assertSame($firstRevision, $proposal->getApprovedRevision());
+        self::assertSame($firstRevision, $course->getCurrentApprovedRevision());
+
+        $updated = $proposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent([
+            'catalogDescription' => 'Updated description',
+        ]));
+        $proposal->publishCoordinatorTemplate($updated);
+
+        self::assertSame(SubmissionStatus::Approved, $proposal->getStatus());
+        self::assertSame($updated, $proposal->getApprovedRevision());
+        self::assertSame($updated, $course->getCurrentApprovedRevision());
+        self::assertSame($firstRevision, $proposal->getRevisions()->get(0));
     }
 
     public function testFacultyProposalRecordsTheApprovedTemplateUsedForPrefill(): void

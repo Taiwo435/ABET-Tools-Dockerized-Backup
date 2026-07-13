@@ -64,6 +64,7 @@ class CommonCourse
     public function getCurrentApprovedRevision(): ?TemplateRevision { return $this->currentApprovedRevision; }
 
     public function updateDraftDetails(
+        TemplateSubmission $submission,
         Program $program,
         string $courseSubject,
         string $courseNumber,
@@ -71,8 +72,10 @@ class CommonCourse
         DeliveryType $deliveryType,
     ): void
     {
-        if ($this->currentApprovedRevision !== null) {
-            throw new \DomainException('Published common-course details cannot be changed through draft editing.');
+        if ($submission->getCommonCourse() !== $this
+            || $submission->getOrigin() !== ProposalOrigin::CoordinatorCreated
+            || $submission->getStatus() !== SubmissionStatus::Draft) {
+            throw new \DomainException('Course details can only be changed through their coordinator template draft.');
         }
 
         $courseSubject = strtoupper(trim($courseSubject));
