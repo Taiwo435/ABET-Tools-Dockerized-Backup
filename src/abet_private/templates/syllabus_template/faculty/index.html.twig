@@ -15,11 +15,19 @@
         .faculty-draft-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: .8rem; border-bottom: 1px solid #ddd; }
         .faculty-draft-row:last-child { padding-bottom: 0; border-bottom: 0; }
         .faculty-draft-row__actions { display: flex; flex-wrap: wrap; align-items: start; gap: .75rem; }
+        .faculty-syllabus__toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
+        .faculty-proposal-list { display: grid; gap: .65rem; padding: 0; list-style: none; }
+        .faculty-proposal-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding-bottom: .65rem; border-bottom: 1px solid #ddd; }
     </style>
 
     <main class="faculty-syllabus">
-        <h1>Faculty Syllabus Templates</h1>
-        <p>Select an approved shared template to create your own independent working copy.</p>
+        <div class="faculty-syllabus__toolbar">
+            <div>
+                <h1>Faculty Syllabus Templates</h1>
+                <p>Start with a blank syllabus or use an approved shared template.</p>
+            </div>
+            <a href="{{ path('app_faculty_syllabus_templates_new') }}" class="button-primary">Create blank draft</a>
+        </div>
 
         {% for type, messages in app.flashes %}
             {% for message in messages %}<p role="status" class="flash-{{ type }}">{{ message }}</p>{% endfor %}
@@ -43,6 +51,20 @@
                                     <small id="delete-faculty-draft-warning-{{ draft.id }}" class="hold-delete-warning">Deletions are permanent.</small>
                                 </form>
                             </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        {% if proposals is not empty %}
+            <section class="faculty-syllabus__section">
+                <h2>Your submitted proposals</h2>
+                <ul class="faculty-proposal-list">
+                    {% for proposal in proposals %}
+                        <li>
+                            <span><strong>{{ proposal.commonCourse.courseSubject }} {{ proposal.commonCourse.courseNumber }}</strong> — {{ proposal.commonCourse.courseName }}</span>
+                            <span>{{ proposal.status.value|replace({'_': ' '})|title }}</span>
                         </li>
                     {% endfor %}
                 </ul>

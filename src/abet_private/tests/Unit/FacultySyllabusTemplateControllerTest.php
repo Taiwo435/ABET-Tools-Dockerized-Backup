@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use App\Controller\SyllabusTemplate\FacultySyllabusTemplateController;
+use App\Entity\SyllabusTemplate\TemplateSubmission;
+use Doctrine\ORM\Mapping\OneToMany;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -32,8 +34,10 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
     {
         return [
             'index' => ['index', '/syllabus-templates', 'app_faculty_syllabus_templates', ['GET']],
+            'create blank' => ['createBlank', '/syllabus-templates/new', 'app_faculty_syllabus_templates_new', ['GET', 'POST']],
             'use template' => ['useTemplate', '/syllabus-templates/{id}/use', 'app_faculty_syllabus_templates_use', ['GET', 'POST']],
             'edit' => ['edit', '/syllabus-templates/drafts/{id}/edit', 'app_faculty_syllabus_templates_edit', ['GET', 'POST']],
+            'submit' => ['submit', '/syllabus-templates/drafts/{id}/submit', 'app_faculty_syllabus_templates_submit', ['POST']],
             'delete' => ['delete', '/syllabus-templates/drafts/{id}/delete', 'app_faculty_syllabus_templates_delete', ['POST']],
         ];
     }
@@ -50,10 +54,16 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertIsString($holdDelete);
         self::assertIsString($homepage);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_use'", $index);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_new')", $index);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_edit'", $index);
         self::assertStringContainsString('Use template', $index);
         self::assertStringContainsString('Save working copy', $form);
         self::assertStringContainsString('Create my draft', $form);
+        self::assertStringContainsString('Create blank draft', $form);
+        self::assertStringContainsString('form.program is defined', $form);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_submit'", $form);
+        self::assertStringContainsString('Submit for approval', $form);
+        self::assertStringContainsString('Your submitted proposals', $index);
         self::assertStringContainsString('Nothing is saved until', $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $index);
@@ -67,5 +77,14 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("button.addEventListener('keydown', begin)", $holdDelete);
         self::assertStringContainsString('requestSubmit()', $holdDelete);
         self::assertStringContainsString("path('app_faculty_syllabus_templates')", $homepage);
+    }
+
+    public function testDeletingDraftSubmissionAlsoRemovesItsOwnedRevisions(): void
+    {
+        $property = (new ReflectionClass(TemplateSubmission::class))->getProperty('revisions');
+        $mapping = $property->getAttributes(OneToMany::class)[0]->newInstance();
+
+        self::assertContains('persist', $mapping->cascade);
+        self::assertContains('remove', $mapping->cascade);
     }
 }

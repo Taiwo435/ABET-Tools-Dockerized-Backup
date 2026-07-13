@@ -33,7 +33,7 @@ class TemplateSubmission
     #[ORM\Column(length: 32, enumType: SubmissionStatus::class)]
     private SubmissionStatus $status = SubmissionStatus::Draft;
 
-    #[ORM\OneToMany(mappedBy: 'submission', targetEntity: TemplateRevision::class, cascade: ['persist'])]
+    #[ORM\OneToMany(mappedBy: 'submission', targetEntity: TemplateRevision::class, cascade: ['persist', 'remove'])]
     #[ORM\OrderBy(['revisionNumber' => 'ASC'])]
     private Collection $revisions;
 

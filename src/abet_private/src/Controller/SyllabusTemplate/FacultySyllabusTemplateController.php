@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -46,6 +47,65 @@ final class FacultySyllabusTemplateController extends AbstractController
                 'origin' => ProposalOrigin::FacultySubmission,
                 'status' => SubmissionStatus::Draft,
             ], ['updatedAt' => 'DESC']),
+            'proposals' => $submissions->findBy([
+                'submittedBy' => $user,
+                'origin' => ProposalOrigin::FacultySubmission,
+                'status' => [
+                    SubmissionStatus::Submitted,
+                    SubmissionStatus::Approved,
+                    SubmissionStatus::ApprovedWithEdits,
+                    SubmissionStatus::Denied,
+                ],
+            ], ['updatedAt' => 'DESC']),
+        ]);
+    }
+
+    #[IsGranted('ROLE_USER')]
+    #[Route('/syllabus-templates/new', name: 'app_faculty_syllabus_templates_new', methods: ['GET', 'POST'], priority: 10)]
+    public function createBlank(
+        Request $request,
+        #[CurrentUser] User $user,
+        EntityManagerInterface $entityManager,
+    ): Response
+    {
+        $data = new CoordinatorTemplateData();
+        $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => true]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            if ($data->program === null) {
+                throw new \LogicException('A program is required for a faculty syllabus draft.');
+            }
+
+            if ($this->courseIdentityExists($entityManager, $data)) {
+                $form->addError(new FormError('This common course already exists. Use its available shared template instead.'));
+            } else {
+                $course = new CommonCourse(
+                    $data->program,
+                    $data->courseSubject,
+                    $data->courseNumber,
+                    $data->courseName,
+                    $data->deliveryType,
+                );
+                $submission = new TemplateSubmission($course, $user, ProposalOrigin::FacultySubmission);
+                $submission->addRevision($user, RevisionAuthorType::Faculty, $data->toContent());
+
+                $entityManager->persist($course);
+                $entityManager->persist($submission);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Your blank faculty syllabus draft was created.');
+
+                return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);
+            }
+        }
+
+        return $this->render('syllabus_template/faculty/form.html.twig', [
+            'form' => $form,
+            'submission' => null,
+            'course' => null,
+            'basedOnRevision' => null,
+            'pageTitle' => 'Create Blank Faculty Draft',
         ]);
     }
 
@@ -96,6 +156,7 @@ final class FacultySyllabusTemplateController extends AbstractController
             'submission' => null,
             'course' => $course,
             'basedOnRevision' => $approvedRevision,
+            'pageTitle' => sprintf('Use %s %s Template', $course->getCourseSubject(), $course->getCourseNumber()),
         ]);
     }
 
@@ -115,21 +176,44 @@ final class FacultySyllabusTemplateController extends AbstractController
             throw $this->createNotFoundException('A faculty working revision was not found.');
         }
 
-        $originalData = CoordinatorTemplateData::fromRevision($workingRevision);
-        $data = CoordinatorTemplateData::fromRevision($workingRevision);
-        $form = $this->createForm(CoordinatorTemplateType::class, $data);
+        $originalData = CoordinatorTemplateData::fromSubmission($submission);
+        $data = CoordinatorTemplateData::fromSubmission($submission);
+        $isBlankDraft = $submission->getBasedOnRevision() === null;
+        $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => $isBlankDraft]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             if ($data->isEquivalentTo($originalData)) {
                 $this->addFlash('info', 'No changes were detected.');
             } else {
-                $submission->addRevision($user, RevisionAuthorType::Faculty, $data->toContent());
-                $entityManager->flush();
-                $this->addFlash('success', 'Your faculty working copy was saved.');
+                if ($isBlankDraft && $data->program === null) {
+                    throw new \LogicException('A program is required for a blank faculty syllabus draft.');
+                }
+
+                if ($isBlankDraft && $this->courseIdentityExists($entityManager, $data, $submission->getCommonCourse())) {
+                    $form->addError(new FormError('This common course already exists. Choose a different identity or use its shared template.'));
+                } else {
+                    $submission->addRevision($user, RevisionAuthorType::Faculty, $data->toContent());
+                    if ($isBlankDraft) {
+                        $submission->getCommonCourse()->updateBlankFacultyDraftDetails(
+                            $submission,
+                            $data->program,
+                            $data->courseSubject,
+                            $data->courseNumber,
+                            $data->courseName,
+                            $data->deliveryType,
+                        );
+                    }
+                    $entityManager->flush();
+                    $this->addFlash('success', 'Your faculty working copy was saved.');
+
+                    return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);
+                }
             }
 
-            return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);
+            if (!$form->getErrors(true)->count()) {
+                return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);
+            }
         }
 
         return $this->render('syllabus_template/faculty/form.html.twig', [
@@ -137,7 +221,37 @@ final class FacultySyllabusTemplateController extends AbstractController
             'submission' => $submission,
             'course' => $submission->getCommonCourse(),
             'basedOnRevision' => $submission->getBasedOnRevision(),
+            'pageTitle' => sprintf('Edit %s %s Faculty Draft', $submission->getCommonCourse()->getCourseSubject(), $submission->getCommonCourse()->getCourseNumber()),
         ]);
+    }
+
+    #[IsGranted('ROLE_USER')]
+    #[Route('/syllabus-templates/drafts/{id}/submit', name: 'app_faculty_syllabus_templates_submit', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function submit(
+        TemplateSubmission $submission,
+        Request $request,
+        #[CurrentUser] User $user,
+        EntityManagerInterface $entityManager,
+    ): Response
+    {
+        $this->assertFacultyDraftOwner($submission, $user);
+
+        if (!$this->isCsrfTokenValid('submit-faculty-syllabus-'.$submission->getId(), $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Invalid submission token.');
+        }
+
+        $revision = $submission->getWorkingRevision();
+        if ($revision === null || !$revision->isComplete()) {
+            $this->addFlash('error', 'Complete all required fields before submitting this draft for approval.');
+
+            return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);
+        }
+
+        $submission->submit($revision);
+        $entityManager->flush();
+        $this->addFlash('success', 'Your syllabus proposal was submitted for approval.');
+
+        return $this->redirectToRoute('app_faculty_syllabus_templates');
     }
 
     #[IsGranted('ROLE_USER')]
@@ -150,6 +264,9 @@ final class FacultySyllabusTemplateController extends AbstractController
     ): Response
     {
         $this->assertFacultyDraftOwner($submission, $user);
+        $course = $submission->getCommonCourse();
+        $deleteBlankCourse = $submission->getBasedOnRevision() === null
+            && $course->getCurrentApprovedRevision() === null;
 
         if (!$this->isCsrfTokenValid('delete-faculty-syllabus-'.$submission->getId(), $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException('Invalid draft deletion token.');
@@ -159,6 +276,10 @@ final class FacultySyllabusTemplateController extends AbstractController
         $entityManager->flush();
         $entityManager->remove($submission);
         $entityManager->flush();
+        if ($deleteBlankCourse) {
+            $entityManager->remove($course);
+            $entityManager->flush();
+        }
 
         $this->addFlash('success', 'Your faculty syllabus draft was deleted.');
 
@@ -172,5 +293,21 @@ final class FacultySyllabusTemplateController extends AbstractController
             || $submission->getSubmittedBy() !== $user) {
             throw $this->createNotFoundException('An editable faculty syllabus draft was not found.');
         }
+    }
+
+    private function courseIdentityExists(
+        EntityManagerInterface $entityManager,
+        CoordinatorTemplateData $data,
+        ?CommonCourse $currentCourse = null,
+    ): bool
+    {
+        $existing = $entityManager->getRepository(CommonCourse::class)->findOneBy([
+            'program' => $data->program,
+            'courseSubject' => strtoupper(trim($data->courseSubject)),
+            'courseNumber' => trim($data->courseNumber),
+            'deliveryType' => $data->deliveryType,
+        ]);
+
+        return $existing !== null && $existing !== $currentCourse;
     }
 }

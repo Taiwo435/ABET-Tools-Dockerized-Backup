@@ -263,6 +263,51 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $submission->prepareFacultyDraftDeletion($coordinator);
     }
 
+    public function testBlankFacultyDraftCanUpdateAllCourseIdentityFieldsBeforeSubmission(): void
+    {
+        [$course, , $faculty] = $this->fixture();
+        $submission = new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission);
+        $submission->addRevision($faculty, RevisionAuthorType::Faculty, $this->completeContent());
+        $newProgram = new Program('Software Engineering', 'BS', '2027');
+
+        $course->updateBlankFacultyDraftDetails(
+            $submission,
+            $newProgram,
+            'ser',
+            '401',
+            'Capstone Design',
+            DeliveryType::Hybrid,
+        );
+
+        self::assertSame($newProgram, $course->getProgram());
+        self::assertSame('SER', $course->getCourseSubject());
+        self::assertSame('401', $course->getCourseNumber());
+        self::assertSame('Capstone Design', $course->getCourseName());
+        self::assertSame(DeliveryType::Hybrid, $course->getDeliveryType());
+    }
+
+    public function testTemplateBasedFacultyDraftCannotRenameSharedCourse(): void
+    {
+        [$course, , $faculty, $coordinator] = $this->fixture();
+        $sharedTemplate = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $approvedRevision = $sharedTemplate->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent());
+        $sharedTemplate->publishCoordinatorTemplate($approvedRevision);
+        $facultyDraft = new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission, $approvedRevision);
+        $facultyDraft->addRevision($faculty, RevisionAuthorType::Faculty, $approvedRevision->getContent());
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Course details can only be changed through their blank faculty draft.');
+
+        $course->updateBlankFacultyDraftDetails(
+            $facultyDraft,
+            $course->getProgram(),
+            'SER',
+            '401',
+            'Changed Shared Course',
+            DeliveryType::Online,
+        );
+    }
+
     public function testIncompleteFacultyProposalCannotBeSubmitted(): void
     {
         [, $submission, $faculty] = $this->fixture();
