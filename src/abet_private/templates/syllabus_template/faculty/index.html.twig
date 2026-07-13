@@ -14,7 +14,14 @@
         .faculty-draft-list { display: grid; gap: .8rem; padding: 0; list-style: none; }
         .faculty-draft-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: .8rem; border-bottom: 1px solid #ddd; }
         .faculty-draft-row:last-child { padding-bottom: 0; border-bottom: 0; }
+        .faculty-draft-row__title { line-height: 1.5; }
         .faculty-draft-row__actions { display: flex; flex-wrap: wrap; align-items: start; gap: .75rem; }
+        .completeness-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; margin-left: .25rem; border-radius: 50%; font-size: .9rem; font-weight: 800; line-height: 1; vertical-align: text-bottom; cursor: help; }
+        .completeness-icon--complete { background: #d8f0df; color: #155b2d; }
+        .completeness-icon--incomplete { background: #f9d7dc; color: #9f1d3f; }
+        .completeness-icon::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + .55rem); left: 50%; z-index: 10; box-sizing: border-box; width: max-content; max-width: min(300px, 80vw); padding: .55rem .7rem; border-radius: 5px; background: #2f2f2f; color: #fff; font-size: .78rem; font-weight: 600; line-height: 1.35; text-align: left; white-space: normal; opacity: 0; pointer-events: none; transform: translate(-50%, .25rem); transition: opacity .15s ease, transform .15s ease; }
+        .completeness-icon:hover::after, .completeness-icon:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+        .completeness-icon:focus-visible { outline: 3px solid rgba(255, 198, 39, .55); outline-offset: 2px; }
         .faculty-syllabus__toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
         .faculty-proposal-list { display: grid; gap: .65rem; padding: 0; list-style: none; }
         .faculty-proposal-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding-bottom: .65rem; border-bottom: 1px solid #ddd; }
@@ -38,8 +45,22 @@
                 <h2>Your drafts</h2>
                 <ul class="faculty-draft-list">
                     {% for draft in drafts %}
+                        {% set missingLabels = [] %}
+                        {% for field in draft.workingRevision.missingFields %}
+                            {% set missingLabels = missingLabels|merge([field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'})]) %}
+                        {% endfor %}
+                        {% set completenessLabel = draft.workingRevision.complete ? 'Complete' : 'Incomplete — Missing: ' ~ missingLabels|join(', ') %}
                         <li class="faculty-draft-row">
-                            <div><strong>{{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }}</strong> — {{ draft.commonCourse.courseName }}</div>
+                            <div class="faculty-draft-row__title">
+                                <span><strong>{{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }}</strong> — {{ draft.commonCourse.courseName }}</span>
+                                <span
+                                    class="completeness-icon completeness-icon--{{ draft.workingRevision.completenessStatus.value }}"
+                                    role="img"
+                                    tabindex="0"
+                                    aria-label="{{ completenessLabel }}"
+                                    data-tooltip="{{ completenessLabel }}"
+                                >{{ draft.workingRevision.complete ? '✓' : '×' }}</span>
+                            </div>
                             <div class="faculty-draft-row__actions">
                                 <a class="button-secondary" href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
                                 <form id="delete-faculty-draft-{{ draft.id }}" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: draft.id}) }}" class="hold-delete-control">

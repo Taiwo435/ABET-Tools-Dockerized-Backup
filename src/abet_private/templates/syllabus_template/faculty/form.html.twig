@@ -2,77 +2,143 @@
 
 {% block title %}{{ pageTitle }} | {% endblock %}
 
-{% block body %}
+{% block styles %}
     <style>
-        .faculty-editor { width: min(850px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
-        .faculty-editor h1 { color: var(--asu-maroon); }
-        .faculty-editor__summary, .faculty-editor__form { padding: 1.25rem; background: #fff; border: 1px solid #ddd; border-radius: 6px; }
-        .faculty-editor__form { margin-top: 1rem; }
-        .faculty-editor__form > div > div { display: grid; gap: .35rem; margin-bottom: 1rem; }
-        .faculty-editor input, .faculty-editor textarea, .faculty-editor select { box-sizing: border-box; width: 100%; padding: .65rem; }
-        .faculty-editor textarea { min-height: 7rem; }
-        .faculty-editor__actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .75rem; margin-top: 1rem; }
-        .faculty-editor__actions > .button-primary,
-        .faculty-editor__actions > .button-secondary,
-        .faculty-editor__actions > .hold-delete-control { box-sizing: border-box; flex: 0 0 170px; width: 170px; }
-        .faculty-editor__actions > .button-primary,
-        .faculty-editor__actions > .button-secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: .65rem .85rem; font-size: .95rem; line-height: 1.2; text-align: center; white-space: nowrap; }
-        .faculty-editor__submit { margin-top: 1rem; padding: 1rem 1.25rem; background: #fffaf0; border: 1px solid #e1c36a; border-radius: 6px; }
-        .faculty-editor__submit p { margin-top: 0; }
-        .faculty-editor__submit form { margin: 0; }
-        .faculty-editor__submit .button-primary:disabled { background: #aaa; cursor: not-allowed; }
+        .template-editor { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
+        .editor-topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .editor-meta { color: #666; font-size: .92rem; }
+        .editor-meta strong { color: var(--asu-maroon); }
+        .editor-card { overflow: hidden; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
+        .editor-section { padding: 1.5rem 1.75rem; border-bottom: 1px solid #e7e7e7; }
+        .editor-section:last-child { border-bottom: 0; }
+        .editor-section__heading { margin-bottom: 1rem; }
+        .editor-section__heading h2 { color: var(--asu-maroon); font-size: 1.18rem; }
+        .editor-section__heading p { color: #666; font-size: .9rem; }
+        .editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+        .editor-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .editor-field { min-width: 0; }
+        .editor-field--wide { grid-column: 1 / -1; }
+        .editor-field label { display: block; margin-bottom: .35rem; color: #333; font-size: .9rem; font-weight: 700; }
+        .editor-field input, .editor-field select, .editor-field textarea { box-sizing: border-box; width: 100%; padding: .7rem .8rem; border: 1px solid #aaa; border-radius: 5px; background: var(--asu-white); color: var(--text-dark); font: inherit; transition: border-color .2s, box-shadow .2s; }
+        .editor-field textarea { min-height: 120px; resize: vertical; }
+        .editor-field input:focus, .editor-field select:focus, .editor-field textarea:focus { outline: none; border-color: var(--asu-maroon); box-shadow: 0 0 0 3px rgba(255, 198, 39, .4); }
+        .editor-field ul { margin: .35rem 0 0; padding-left: 1.1rem; color: var(--error-red); font-size: .85rem; }
+        .editor-help { margin-top: .3rem; color: #666; font-size: .82rem; }
+        .required-note { display: inline-block; margin-left: .35rem; color: #666; font-size: .78rem; font-weight: 500; }
+        .missing-panel { display: flex; gap: .8rem; margin-bottom: 1rem; padding: 1rem 1.15rem; border-left: 5px solid var(--asu-gold); border-radius: 5px; background: #fff7db; color: #4f3a00; }
+        .missing-panel__icon { font-size: 1.25rem; }
+        .missing-panel ul { display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; margin: .35rem 0 0; padding-left: 1.1rem; }
+        .flash { margin-bottom: 1rem; padding: .85rem 1rem; border-radius: 5px; font-weight: 600; }
+        .flash--success { border-left: 5px solid #218739; background: #e4f3e8; color: #155b2d; }
+        .flash--error { border-left: 5px solid var(--error-red); background: #f8e1e5; color: var(--error-red); }
+        .flash--info { border-left: 5px solid var(--asu-gold); background: #fff7db; color: #4f3a00; }
+        .editor-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.25rem 1.75rem; background: #fafafa; }
+        .editor-actions__group { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .75rem; }
+        .editor-actions__group > .button-primary,
+        .editor-actions__group > .button-secondary,
+        .editor-actions__group > .hold-delete-control { box-sizing: border-box; flex: 0 0 170px; width: 170px; }
+        .editor-actions__group > .button-primary,
+        .editor-actions__group > .button-secondary { display: inline-flex; align-items: center; justify-content: center; height: 42px; min-height: 42px; padding: .65rem .85rem; border-width: 1px; line-height: 1.2; text-align: center; white-space: nowrap; }
+        .editor-actions__group > .button-primary { border: 1px solid transparent; }
+        .publish-panel { margin-top: 1.25rem; padding: 1.25rem 1.5rem; background: var(--asu-white); border: 1px solid #dedede; border-left: 5px solid var(--asu-gold); border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
+        .publish-panel h2 { color: var(--asu-maroon); font-size: 1.1rem; }
+        .publish-panel p { margin: .25rem 0 1rem; color: #666; font-size: .9rem; }
+        .button-primary:disabled { background: #aaa; color: #f4f4f4; cursor: not-allowed; }
+        @media (max-width: 720px) {
+            .editor-grid, .editor-grid--three { grid-template-columns: 1fr; }
+            .editor-field--wide { grid-column: auto; }
+            .editor-section, .editor-actions { padding: 1.2rem; }
+            .editor-actions, .editor-actions__group, .editor-actions__group > *, .editor-actions button, .editor-actions a { width: 100%; flex-basis: 100%; text-align: center; }
+        }
     </style>
+{% endblock %}
 
-    <main class="faculty-editor">
+{% block body %}
+    <section class="hero hero-small">
         <h1>{{ pageTitle }}</h1>
-        {% if course %}
-            <div class="faculty-editor__summary">
-                <strong>{{ course.courseName }}</strong><br>
-                {{ course.program.name }} · {{ course.deliveryType.value|replace({'_': ' '})|title }}
-                {% if submission and basedOnRevision %}
-                    <p>This draft was copied from approved revision {{ basedOnRevision.revisionNumber }}. Later shared-template changes will not overwrite your work.</p>
-                {% elseif basedOnRevision %}
-                    <p>Preview and adjust approved revision {{ basedOnRevision.revisionNumber }}. Nothing is saved until you select “Create my draft” below.</p>
+        <p>{{ submission ? 'Save changes as a new revision, then submit when all required information is complete.' : (basedOnRevision ? 'Adjust the shared template before creating your independent faculty draft.' : 'Start with the course details. You can save an incomplete draft and finish it later.') }}</p>
+    </section>
+
+    <main class="template-editor">
+        <div class="editor-topbar">
+            <div class="editor-meta">
+                {% if submission %}
+                    <strong>{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong>
+                    &middot; {{ submission.commonCourse.courseName }} &middot; Working revision {{ submission.workingRevision.revisionNumber }}
+                    {% if basedOnRevision %}&middot; Based on shared revision {{ basedOnRevision.revisionNumber }}{% endif %}
+                {% elseif course %}
+                    <strong>{{ course.courseSubject }} {{ course.courseNumber }}</strong>
+                    &middot; {{ course.courseName }} &middot; Shared template preview
                 {% else %}
-                    <p>This is a blank faculty proposal. Course details and syllabus content remain editable until submission.</p>
+                    Faculty-created blank proposal
                 {% endif %}
             </div>
-        {% else %}
-            <div class="faculty-editor__summary">
-                <p>Enter the common-course details and any syllabus content you have. Incomplete drafts can be saved and finished later.</p>
+            <a href="{{ path('app_faculty_syllabus_templates') }}" class="button-secondary">Back to Templates</a>
+        </div>
+
+        {% for message in app.flashes('success') %}<div class="flash flash--success">{{ message }}</div>{% endfor %}
+        {% for message in app.flashes('error') %}<div class="flash flash--error">{{ message }}</div>{% endfor %}
+        {% for message in app.flashes('info') %}<div class="flash flash--info">{{ message }}</div>{% endfor %}
+
+        {% if submission and submission.workingRevision.missingFields is not empty %}
+            <div class="missing-panel">
+                <div class="missing-panel__icon" aria-hidden="true">&#9888;</div>
+                <div>
+                    <strong>This draft is not ready to submit.</strong>
+                    <div>Complete the following required information:</div>
+                    <ul>{% for field in submission.workingRevision.missingFields %}<li>{{ field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'}) }}</li>{% endfor %}</ul>
+                </div>
             </div>
         {% endif %}
 
-        {% for type, messages in app.flashes %}
-            {% for message in messages %}<p role="status" class="flash-{{ type }}">{{ message }}</p>{% endfor %}
-        {% endfor %}
-
-        {{ form_start(form, {attr: {class: 'faculty-editor__form'}}) }}
+        {{ form_start(form, {attr: {class: 'editor-card'}}) }}
             {{ form_errors(form) }}
+
             {% if form.program is defined %}
-                {{ form_row(form.program) }}
-                {{ form_row(form.courseSubject) }}
-                {{ form_row(form.courseNumber) }}
-                {{ form_row(form.courseName) }}
-                {{ form_row(form.deliveryType) }}
-            {% endif %}
-            {{ form_row(form.creditHours) }}
-            {{ form_row(form.courseCoordinators) }}
-            {{ form_row(form.creditCategorization) }}
-            {{ form_row(form.catalogDescription) }}
-            {{ form_row(form.courseOutcomes) }}
-            <div class="faculty-editor__actions">
-                <button type="submit" class="button-primary">{{ submission ? 'Save working copy' : (basedOnRevision ? 'Create my draft' : 'Create blank draft') }}</button>
-                <a href="{{ path('app_faculty_syllabus_templates') }}" class="button-secondary">Back to templates</a>
-                {% if submission %}
-                    <div class="hold-delete-control">
-                        <button type="button" class="hold-delete-button" data-hold-delete data-delete-form="delete-faculty-draft" aria-pressed="false" aria-describedby="delete-faculty-draft-warning">
-                            <span class="hold-delete-button__fill" aria-hidden="true"></span>
-                            <span class="hold-delete-button__label" data-hold-delete-label>Hold to delete</span>
-                        </button>
-                        <small id="delete-faculty-draft-warning" class="hold-delete-warning">Deletions are permanent.</small>
+                <section class="editor-section">
+                    <div class="editor-section__heading"><h2>Course details</h2><p>Identify the common course this faculty syllabus proposal belongs to.</p></div>
+                    <div class="editor-grid editor-grid--three">
+                        <div class="editor-field editor-field--wide">{{ form_label(form.program) }}{{ form_widget(form.program) }}{{ form_errors(form.program) }}</div>
+                        <div class="editor-field">{{ form_label(form.courseSubject) }}{{ form_widget(form.courseSubject) }}{{ form_errors(form.courseSubject) }}</div>
+                        <div class="editor-field">{{ form_label(form.courseNumber) }}{{ form_widget(form.courseNumber) }}{{ form_errors(form.courseNumber) }}</div>
+                        <div class="editor-field">{{ form_label(form.deliveryType) }}{{ form_widget(form.deliveryType) }}{{ form_errors(form.deliveryType) }}</div>
+                        <div class="editor-field editor-field--wide">{{ form_label(form.courseName) }}{{ form_widget(form.courseName) }}{{ form_errors(form.courseName) }}</div>
                     </div>
-                {% endif %}
+                </section>
+            {% endif %}
+
+            <section class="editor-section">
+                <div class="editor-section__heading"><h2>Required syllabus information</h2><p>These fields must be complete before the proposal can be submitted for approval.</p></div>
+                <div class="editor-grid editor-grid--three">
+                    <div class="editor-field">{{ form_label(form.creditHours) }} <span class="required-note">Required to submit</span>{{ form_widget(form.creditHours) }}{{ form_errors(form.creditHours) }}</div>
+                    <div class="editor-field">{{ form_label(form.creditCategorization) }} <span class="required-note">Required to submit</span>{{ form_widget(form.creditCategorization) }}{{ form_errors(form.creditCategorization) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.courseCoordinators) }} <span class="required-note">At least one required</span>{{ form_widget(form.courseCoordinators) }}<div class="editor-help">{{ form_help(form.courseCoordinators) }}</div>{{ form_errors(form.courseCoordinators) }}</div>
+                </div>
+            </section>
+
+            <section class="editor-section">
+                <div class="editor-section__heading"><h2>Additional syllabus information</h2><p>Add the catalog description and course outcomes for this proposal.</p></div>
+                <div class="editor-grid">
+                    <div class="editor-field editor-field--wide">{{ form_label(form.catalogDescription) }}{{ form_widget(form.catalogDescription) }}{{ form_errors(form.catalogDescription) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.courseOutcomes) }}{{ form_widget(form.courseOutcomes) }}<div class="editor-help">{{ form_help(form.courseOutcomes) }}</div>{{ form_errors(form.courseOutcomes) }}</div>
+                </div>
+            </section>
+
+            <div class="editor-actions">
+                <span class="editor-meta">{{ submission ? 'Saving creates revision ' ~ (submission.workingRevision.revisionNumber + 1) ~ '; earlier revisions remain unchanged.' : (basedOnRevision ? 'Nothing is saved until you choose Create my draft.' : 'You can complete the required fields now or return to this draft later.') }}</span>
+                <div class="editor-actions__group">
+                    <a href="{{ path('app_faculty_syllabus_templates') }}" class="button-secondary">Cancel</a>
+                    <button type="submit" class="button-primary">{{ submission ? 'Save working copy' : (basedOnRevision ? 'Create my draft' : 'Create blank draft') }}</button>
+                    {% if submission %}
+                        <div class="hold-delete-control">
+                            <button type="button" class="hold-delete-button" data-hold-delete data-delete-form="delete-faculty-draft" aria-pressed="false" aria-describedby="delete-faculty-draft-warning">
+                                <span class="hold-delete-button__fill" aria-hidden="true"></span>
+                                <span class="hold-delete-button__label" data-hold-delete-label>Hold to delete</span>
+                            </button>
+                            <small id="delete-faculty-draft-warning" class="hold-delete-warning">Deletions are permanent.</small>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         {{ form_end(form) }}
 
@@ -80,8 +146,9 @@
             <form id="delete-faculty-draft" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: submission.id}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete-faculty-syllabus-' ~ submission.id) }}">
             </form>
-            <section class="faculty-editor__submit">
-                <p>{{ submission.workingRevision.complete ? 'This draft contains all required information and is ready for approval.' : 'Complete credit hours, at least one course coordinator, and credit categorization before submitting.' }}</p>
+            <section class="publish-panel">
+                <h2>Submit syllabus proposal</h2>
+                <p>{{ submission.workingRevision.complete ? 'This revision contains all required information and is ready for coordinator approval.' : 'Submission becomes available after all required information is saved.' }}</p>
                 <form method="post" action="{{ path('app_faculty_syllabus_templates_submit', {id: submission.id}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('submit-faculty-syllabus-' ~ submission.id) }}">
                     <button type="submit" class="button-primary"{% if not submission.workingRevision.complete %} disabled{% endif %}>Submit for approval</button>

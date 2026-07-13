@@ -71,6 +71,12 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('Hold to delete', $form);
         self::assertStringContainsString('Deletions are permanent.', $index);
         self::assertStringContainsString('Deletions are permanent.', $form);
+        self::assertStringContainsString('draft.workingRevision.completenessStatus.value', $index);
+        self::assertStringContainsString('draft.workingRevision.missingFields', $index);
+        self::assertStringContainsString('data-tooltip="{{ completenessLabel }}"', $index);
+        self::assertStringContainsString('Incomplete — Missing:', $index);
+        self::assertStringContainsString('.completeness-icon:hover::after', $index);
+        self::assertStringContainsString("draft.workingRevision.complete ? '✓' : '×'", $index);
         self::assertStringNotContainsString('confirm(', $form);
         self::assertStringContainsString('const holdDuration = 2000', $holdDelete);
         self::assertStringContainsString("button.addEventListener('pointerdown', begin)", $holdDelete);
