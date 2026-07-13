@@ -13,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Positive;
 
 /** @extends AbstractType<CoordinatorTemplateData> */
@@ -27,9 +28,21 @@ final class CoordinatorTemplateType extends AbstractType
                     'choice_label' => static fn (Program $program): string => sprintf('%s (%s %s)', $program->getName(), $program->getCode(), $program->getYear()),
                     'placeholder' => 'Select a program',
                 ])
-                ->add('courseSubject', TextType::class, ['label' => 'Course subject'])
-                ->add('courseNumber', TextType::class, ['label' => 'Course number'])
-                ->add('courseName', TextType::class, ['label' => 'Course name'])
+                ->add('courseSubject', TextType::class, [
+                    'label' => 'Course subject',
+                    'empty_data' => '',
+                    'constraints' => [new NotBlank()],
+                ])
+                ->add('courseNumber', TextType::class, [
+                    'label' => 'Course number',
+                    'empty_data' => '',
+                    'constraints' => [new NotBlank()],
+                ])
+                ->add('courseName', TextType::class, [
+                    'label' => 'Course name',
+                    'empty_data' => '',
+                    'constraints' => [new NotBlank()],
+                ])
                 ->add('deliveryType', EnumType::class, [
                     'class' => DeliveryType::class,
                     'choice_label' => static fn (DeliveryType $type): string => match ($type) {
@@ -50,13 +63,23 @@ final class CoordinatorTemplateType extends AbstractType
                 'required' => false,
                 'label' => 'Course coordinators',
                 'help' => 'Enter one coordinator per line.',
+                'empty_data' => '',
             ])
-            ->add('creditCategorization', TextType::class, ['required' => false, 'label' => 'Credit categorization'])
-            ->add('catalogDescription', TextareaType::class, ['required' => false, 'label' => 'Catalog description'])
+            ->add('creditCategorization', TextType::class, [
+                'required' => false,
+                'label' => 'Credit categorization',
+                'empty_data' => '',
+            ])
+            ->add('catalogDescription', TextareaType::class, [
+                'required' => false,
+                'label' => 'Catalog description',
+                'empty_data' => '',
+            ])
             ->add('courseOutcomes', TextareaType::class, [
                 'required' => false,
                 'label' => 'Course outcomes',
                 'help' => 'Enter one outcome per line.',
+                'empty_data' => '',
             ]);
     }
 
