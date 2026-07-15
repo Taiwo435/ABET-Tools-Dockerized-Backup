@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       // Users can no longer self-select permissions at signup (#89).
       $permissions = \App\Entity\Permissions::ROLE_FACULTY_FORM->value;
 
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions) VALUES (?, ?, 1, ?)");
+      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions) VALUES (?, ?, 0, ?)");
       $stmt->execute([$email, $hash, $permissions]);
 
       $success = true;
