@@ -4,6 +4,7 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
 require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/mailer.php';
 
 start_session();
 
@@ -107,8 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       // Users can no longer self-select permissions at signup (#89).
       $permissions = \App\Entity\Permissions::ROLE_FACULTY_FORM->value;
 
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions) VALUES (?, ?, 0, ?)");
-      $stmt->execute([$email, $hash, $permissions]);
+      $verificationToken = bin2hex(random_bytes(32));
+
+      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions, email_verification_token) VALUES (?, ?, 0, ?, ?)");
+      $stmt->execute([$email, $hash, $permissions, $verificationToken]);
+
+      $verifyUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/verify-email?token=' . $verificationToken;
+      send_verification_email($email, $verifyUrl);
 
       $success = true;
     }
@@ -146,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?php if ($success): ?>
         <div class="msg success">
-          <strong>Success!</strong> Account created. You can now sign in.
+          <strong>Success!</strong> Account created. Please check your email to verify your account before signing in.
         </div>
         <a href="/login" class="btn-submit" style="display:block; text-align:center; text-decoration:none;">Go to Sign In</a>
       <?php else: ?>

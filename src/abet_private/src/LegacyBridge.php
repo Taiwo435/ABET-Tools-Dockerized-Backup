@@ -65,6 +65,10 @@ class LegacyBridge
             return "{$legacyRoot}/auth/logout.php";
         }
 
+        if ($requestPathInfo == '/verify-email') {
+            return "{$legacyRoot}/auth/verify_email.php";
+        }
+
         // account profile stuff
         // NOTE: I had to change paths because some links ended with /
         if ($requestPathInfo == '/account/profile/') {
