@@ -63,7 +63,6 @@ function password_policy_check(string $password): array {
 }
 
 $email = '';
-$selectedPermissions = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!verify_register_csrf($_POST['csrf_token'] ?? null)) {
@@ -73,11 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = strtolower(trim($_POST['email'] ?? ''));
   $password = (string)($_POST['password'] ?? '');
   $confirm = (string)($_POST['confirm_password'] ?? '');
-
-  $selectedPermissions = array_values(array_intersect(
-    $_POST['permissions'] ?? [],
-    array_map(fn($c) => $c->name, App\Entity\Permissions::cases())
-  ));
 
   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Please enter a valid email address.';
@@ -109,12 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       $hash = password_hash($password, PASSWORD_BCRYPT);
 
-      $permissions = 0;
-      foreach (App\Entity\Permissions::cases() as $case) {
-        if (in_array($case->name, $selectedPermissions)) {
-          $permissions |= $case->value;
-        }
-      }
+      // New accounts always default to the lowest-privilege role (Faculty).
+      // Users can no longer self-select permissions at signup (#89).
+      $permissions = \App\Entity\Permissions::ROLE_FACULTY_FORM->value;
 
       $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions) VALUES (?, ?, 1, ?)");
       $stmt->execute([$email, $hash, $permissions]);
@@ -180,17 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               required
               value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>"
             />
-          </div>
-
-          <div class="form-group">
-            <label>Permissions</label>
-            <?php foreach (App\Entity\Permissions::cases() as $case): ?>
-              <label style="display:block;font-weight:normal;">
-                <input type="checkbox" name="permissions[]" value="<?php echo e($case->name); ?>"
-                  <?php echo in_array($case->name, $selectedPermissions) ? 'checked' : ''; ?>>
-                <?php echo e(str_replace('_', ' ', $case->name)); ?>
-              </label>
-            <?php endforeach; ?>
           </div>
 
           <div class="form-group">
