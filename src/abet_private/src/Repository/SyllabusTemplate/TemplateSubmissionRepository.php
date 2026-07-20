@@ -5,6 +5,7 @@ namespace App\Repository\SyllabusTemplate;
 use App\Entity\Program;
 use App\Entity\SyllabusTemplate\CompletenessStatus;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
+use App\Entity\SyllabusTemplate\ReviewDecision;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -160,5 +161,89 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
             ->setParameter('status', SubmissionStatus::Submitted->value)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function findFacultyReview(int $id): ?TemplateSubmission
+    {
+        return $this->createQueryBuilder('submission')
+            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'approvedRevision', 'basedOnRevision', 'currentApprovedRevision', 'review', 'reviewer')
+            ->innerJoin('submission.commonCourse', 'course')
+            ->innerJoin('course.program', 'program')
+            ->innerJoin('submission.submittedBy', 'submitter')
+            ->innerJoin('submission.submittedRevision', 'submittedRevision')
+            ->leftJoin('submission.approvedRevision', 'approvedRevision')
+            ->leftJoin('submission.basedOnRevision', 'basedOnRevision')
+            ->leftJoin('course.currentApprovedRevision', 'currentApprovedRevision')
+            ->leftJoin('submission.review', 'review')
+            ->leftJoin('review.reviewer', 'reviewer')
+            ->andWhere('submission.id = :id')
+            ->andWhere('submission.origin = :origin')
+            ->andWhere('submission.status IN (:statuses)')
+            ->andWhere('submission.submittedAt IS NOT NULL')
+            ->setParameter('id', $id)
+            ->setParameter('origin', ProposalOrigin::FacultySubmission->value)
+            ->setParameter('statuses', [
+                SubmissionStatus::Submitted->value,
+                SubmissionStatus::Approved->value,
+                SubmissionStatus::ApprovedWithEdits->value,
+                SubmissionStatus::Denied->value,
+            ])
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /** @return list<TemplateSubmission> */
+    public function findReviewedFacultySubmissions(?Program $program = null, ?ReviewDecision $decision = null): array
+    {
+        $builder = $this->createQueryBuilder('submission')
+            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'approvedRevision', 'review', 'reviewer')
+            ->innerJoin('submission.commonCourse', 'course')
+            ->innerJoin('course.program', 'program')
+            ->innerJoin('submission.submittedBy', 'submitter')
+            ->innerJoin('submission.submittedRevision', 'submittedRevision')
+            ->leftJoin('submission.approvedRevision', 'approvedRevision')
+            ->innerJoin('submission.review', 'review')
+            ->innerJoin('review.reviewer', 'reviewer')
+            ->andWhere('submission.origin = :origin')
+            ->andWhere('submission.status IN (:statuses)')
+            ->andWhere('submission.decidedAt IS NOT NULL')
+            ->setParameter('origin', ProposalOrigin::FacultySubmission->value)
+            ->setParameter('statuses', [
+                SubmissionStatus::Approved->value,
+                SubmissionStatus::ApprovedWithEdits->value,
+                SubmissionStatus::Denied->value,
+            ])
+            ->orderBy('submission.decidedAt', 'DESC')
+            ->addOrderBy('submission.id', 'DESC');
+
+        if ($program !== null) {
+            $builder
+                ->andWhere('course.program = :programFilter')
+                ->setParameter('programFilter', $program);
+        }
+        if ($decision !== null) {
+            $builder
+                ->andWhere('review.decision = :decisionFilter')
+                ->setParameter('decisionFilter', $decision->value);
+        }
+
+        return $builder->getQuery()->getResult();
+    }
+
+    /** @return list<Program> */
+    public function findReviewedFacultyReviewPrograms(): array
+    {
+        $reviewedSubmissions = $this->findReviewedFacultySubmissions();
+        $programs = [];
+        foreach ($reviewedSubmissions as $submission) {
+            $program = $submission->getCommonCourse()->getProgram();
+            $programs[$program->getId()] = $program;
+        }
+
+        usort($programs, static fn (Program $left, Program $right): int =>
+            ($left->getName() <=> $right->getName()) ?: ($right->getYear() <=> $left->getYear())
+        );
+
+        return array_values($programs);
     }
 }

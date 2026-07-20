@@ -47,6 +47,27 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertSame('ROLE_ADMIN', $grant->attribute);
     }
 
+    public function testRemainingReviewRoutesAreAdminOnly(): void
+    {
+        $routes = [
+            'deny' => ['/admin/syllabus-template-reviews/{id}/deny', 'app_admin_syllabus_template_review_deny', ['POST']],
+            'approveWithEdits' => ['/admin/syllabus-template-reviews/{id}/edit', 'app_admin_syllabus_template_review_edit', ['GET', 'POST']],
+            'reviewHistory' => ['/admin/syllabus-template-reviews/history', 'app_admin_syllabus_template_review_history', ['GET']],
+        ];
+
+        $reflection = new ReflectionClass(AdminSyllabusTemplateController::class);
+        foreach ($routes as $methodName => [$path, $name, $methods]) {
+            $method = $reflection->getMethod($methodName);
+            $route = $method->getAttributes(Route::class)[0]->newInstance();
+            $grant = $method->getAttributes(IsGranted::class)[0]->newInstance();
+
+            self::assertSame($path, $route->path);
+            self::assertSame($name, $route->name);
+            self::assertSame($methods, $route->methods);
+            self::assertSame('ROLE_ADMIN', $grant->attribute);
+        }
+    }
+
     public function testRepositoryDefinesPendingFacultyReviewQueryAndCount(): void
     {
         $reflection = new ReflectionClass(TemplateSubmissionRepository::class);
@@ -57,6 +78,9 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertTrue($reflection->hasMethod('countPendingFacultyReviews'));
         self::assertTrue($reflection->hasMethod('findPendingFacultyReview'));
         self::assertTrue($reflection->hasMethod('findPendingFacultyReviewPrograms'));
+        self::assertTrue($reflection->hasMethod('findFacultyReview'));
+        self::assertTrue($reflection->hasMethod('findReviewedFacultySubmissions'));
+        self::assertTrue($reflection->hasMethod('findReviewedFacultyReviewPrograms'));
         self::assertStringContainsString('ProposalOrigin::FacultySubmission->value', $source);
         self::assertStringContainsString('SubmissionStatus::Submitted->value', $source);
         self::assertStringContainsString("submission.submittedAt IS NOT NULL", $source);
@@ -109,12 +133,19 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString("'pendingSubmissions' => \$submissions->findPendingFacultyReviews(\$selectedProgram)", $source);
         self::assertStringContainsString("'pendingReviewCount' => \$submissions->countPendingFacultyReviews(\$selectedProgram)", $source);
         self::assertStringContainsString("'programs' => \$submissions->findPendingFacultyReviewPrograms()", $source);
-        self::assertStringContainsString('$submissions->findPendingFacultyReview($id)', $source);
+        self::assertStringContainsString('$submissions->findFacultyReview($id)', $source);
         self::assertStringContainsString("'sharedTemplateChanged' => \$submission->hasSharedTemplateChanged()", $source);
         self::assertStringContainsString("isCsrfTokenValid('approve-syllabus-submission-'", $source);
         self::assertStringContainsString('ReviewDecision::Approved', $source);
         self::assertStringContainsString('$submission->recordReview($review, $submittedRevision)', $source);
         self::assertStringContainsString('$entityManager->persist($review)', $source);
+        self::assertStringContainsString("isCsrfTokenValid('deny-syllabus-submission-'", $source);
+        self::assertStringContainsString('ReviewDecision::Denied', $source);
+        self::assertStringContainsString('$submission->recordDenial($review)', $source);
+        self::assertStringContainsString('CoordinatorTemplateData::fromRevision($submittedRevision)', $source);
+        self::assertStringContainsString('ReviewDecision::ApprovedWithEdits', $source);
+        self::assertStringContainsString('$submission->addRevision($user, RevisionAuthorType::Coordinator, $content)', $source);
+        self::assertStringContainsString('$submission->recordReview($review, $coordinatorRevision)', $source);
     }
 
     public function testReviewDetailShowsFrozenRevisionStaleWarningAndApproveUnchangedAction(): void
@@ -132,11 +163,36 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('content.courseOutcomes', $detail);
         self::assertStringContainsString('Shared template changed since this proposal began.', $detail);
         self::assertStringContainsString('The proposal must be reconciled before approval.', $detail);
-        self::assertStringContainsString('content above is read-only', $detail);
+        self::assertStringContainsString('submitted faculty revision is frozen and remains read-only', $detail);
         self::assertStringContainsString("path('app_admin_syllabus_template_review_approve'", $detail);
         self::assertStringContainsString("csrf_token('approve-syllabus-submission-'", $detail);
         self::assertStringContainsString('Approve unchanged', $detail);
         self::assertStringContainsString('{% if sharedTemplateChanged %} disabled{% endif %}', $detail);
-        self::assertStringNotContainsString('Deny submission', $detail);
+        self::assertStringContainsString('Deny submission', $detail);
+        self::assertStringContainsString("csrf_token('deny-syllabus-submission-'", $detail);
+        self::assertStringContainsString('Coordinator feedback is required', file_get_contents((new ReflectionClass(AdminSyllabusTemplateController::class))->getFileName()));
+        self::assertStringContainsString("path('app_admin_syllabus_template_review_edit'", $detail);
+        self::assertStringContainsString('{% if submission.review %}', $detail);
+    }
+
+    public function testReviewEditAndHistoryTemplatesPreserveAuditContext(): void
+    {
+        $edit = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/review_edit.html.twig');
+        $history = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/review_history.html.twig');
+
+        self::assertIsString($edit);
+        self::assertIsString($history);
+        self::assertStringContainsString('Opening this page does not create a revision', $edit);
+        self::assertStringContainsString('Approve with edits', $edit);
+        self::assertStringContainsString("csrf_token('approve-with-edits-syllabus-submission-'", $edit);
+        self::assertStringContainsString('frozen faculty submission', $edit);
+        self::assertStringContainsString('Completed Syllabus Reviews', $history);
+        self::assertStringContainsString('submission.review.decision.value', $history);
+        self::assertStringContainsString('submission.review.reviewer.asurite', $history);
+        self::assertStringContainsString('submission.decidedAt', $history);
+        self::assertStringContainsString('submission.submittedRevision.revisionNumber', $history);
+        self::assertStringContainsString('submission.approvedRevision', $history);
+        self::assertStringContainsString('submission.review.comment', $history);
+        self::assertStringContainsString("path('app_admin_syllabus_template_review'", $history);
     }
 }

@@ -36,8 +36,14 @@
         .decision-panel p { margin: .25rem 0 1rem; color: #666; font-size: .9rem; }
         .decision-panel__warning { color: #8a2038 !important; font-weight: 700; }
         .decision-panel .button-primary:disabled { background: #aaa; color: #f4f4f4; cursor: not-allowed; }
+        .decision-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+        .decision-panel--deny { border-left-color: var(--error-red); }
+        .decision-panel textarea { box-sizing: border-box; width: 100%; min-height: 115px; margin: .35rem 0 .75rem; padding: .7rem; border: 1px solid #aaa; border-radius: 4px; font: inherit; }
+        .field-error { margin: 0 0 .65rem !important; color: var(--error-red) !important; font-weight: 700; }
+        .review-outcome { margin-top: 1rem; padding: 1.25rem 1.5rem; border-left: 5px solid var(--asu-maroon); border-radius: 7px; background: var(--asu-white); box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
+        .review-outcome__feedback { padding: .8rem; background: #f6f6f6; white-space: pre-wrap; }
         @media (max-width: 760px) {
-            .context-grid, .read-grid, .read-grid--three { grid-template-columns: 1fr; }
+            .context-grid, .read-grid, .read-grid--three, .decision-grid { grid-template-columns: 1fr; }
             .read-field--wide { grid-column: auto; }
             .review-section { padding: 1.2rem; }
             .review-detail__topbar a { width: 100%; box-sizing: border-box; text-align: center; }
@@ -50,7 +56,7 @@
     {% set content = revision.content %}
     <section class="hero hero-small">
         <h1>Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</h1>
-        <p>Read the faculty member's frozen submitted revision before making a decision.</p>
+        <p>{{ submission.review ? 'Read-only record of the frozen submission and completed review.' : "Read the faculty member's frozen submitted revision before making a decision." }}</p>
     </section>
 
     <main class="review-detail">
@@ -59,7 +65,7 @@
                 <strong>{{ submission.commonCourse.courseName }}</strong>
                 &middot; Submitted {{ submission.submittedAt|date('M j, Y \a\t g:i A') }}
             </div>
-            <a href="{{ path('app_admin_syllabus_template_reviews') }}" class="button-secondary">Back to Review Queue</a>
+            <a href="{{ path(submission.review ? 'app_admin_syllabus_template_review_history' : 'app_admin_syllabus_template_reviews') }}" class="button-secondary">Back to {{ submission.review ? 'Review History' : 'Review Queue' }}</a>
         </div>
 
         {% for message in app.flashes('error') %}<div class="flash flash--error" role="alert">{{ message }}</div>{% endfor %}
@@ -71,7 +77,7 @@
             <div class="context-item"><dt>Submitted revision</dt><dd>Rev. {{ revision.revisionNumber }}</dd></div>
         </dl>
 
-        {% if sharedTemplateChanged %}
+        {% if sharedTemplateChanged and not submission.review %}
             <div class="stale-warning" role="alert">
                 <div class="stale-warning__icon" aria-hidden="true">&#9888;</div>
                 <div>
@@ -119,16 +125,45 @@
             </section>
         </article>
 
-        <div class="review-note">The submitted proposal content above is read-only. Approval with edits and denial with feedback will be added in later review slices.</div>
+        <div class="review-note">The submitted faculty revision is frozen and remains read-only for the full audit history.</div>
 
-        <section class="decision-panel">
-            <h2>Approve unchanged</h2>
-            <p>Publish the frozen faculty revision exactly as submitted. This records a final review decision and removes the proposal from the pending queue.</p>
-            {% if sharedTemplateChanged %}<p class="decision-panel__warning">Unavailable because the shared template changed after this faculty copy was created.</p>{% endif %}
-            <form method="post" action="{{ path('app_admin_syllabus_template_review_approve', {id: submission.id}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('approve-syllabus-submission-' ~ submission.id) }}">
-                <button type="submit" class="button-primary"{% if sharedTemplateChanged %} disabled{% endif %}>Approve unchanged</button>
-            </form>
-        </section>
+        {% if submission.review %}
+            <section class="review-outcome">
+                <h2>Completed review</h2>
+                <dl class="context-grid">
+                    <div class="context-item"><dt>Decision</dt><dd>{{ submission.review.decision.value|replace({'_': ' '})|title }}</dd></div>
+                    <div class="context-item"><dt>Reviewer</dt><dd>{{ submission.review.reviewer.asurite }}</dd></div>
+                    <div class="context-item"><dt>Decided</dt><dd>{{ submission.decidedAt|date('M j, Y g:i A') }}</dd></div>
+                    <div class="context-item"><dt>Published revision</dt><dd>{{ submission.approvedRevision ? 'Rev. ' ~ submission.approvedRevision.revisionNumber : 'None' }}</dd></div>
+                </dl>
+                {% if submission.review.comment %}<p class="review-outcome__feedback"><strong>Feedback:</strong> {{ submission.review.comment }}</p>{% endif %}
+            </section>
+        {% else %}
+            <div class="decision-grid">
+                <section class="decision-panel">
+                    <h2>Approve unchanged</h2>
+                    <p>Publish the frozen faculty revision exactly as submitted.</p>
+                    {% if sharedTemplateChanged %}<p class="decision-panel__warning">Unavailable because the shared template changed after this faculty copy was created.</p>{% endif %}
+                    <form method="post" action="{{ path('app_admin_syllabus_template_review_approve', {id: submission.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('approve-syllabus-submission-' ~ submission.id) }}">
+                        <button type="submit" class="button-primary"{% if sharedTemplateChanged %} disabled{% endif %}>Approve unchanged</button>
+                    </form>
+                    <p><a href="{{ path('app_admin_syllabus_template_review_edit', {id: submission.id}) }}">Review and approve with edits</a></p>
+                </section>
+
+                <section class="decision-panel decision-panel--deny">
+                    <h2>Deny submission</h2>
+                    <p>Return a final denial decision with feedback visible to the faculty member.</p>
+                    <form method="post" action="{{ path('app_admin_syllabus_template_review_deny', {id: submission.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('deny-syllabus-submission-' ~ submission.id) }}">
+                        <label for="denial-feedback"><strong>Coordinator feedback</strong></label>
+                        <textarea id="denial-feedback" name="feedback" required aria-describedby="denial-feedback-help denial-feedback-error">{{ denialFeedback|default('') }}</textarea>
+                        <small id="denial-feedback-help">Required. Explain what must be corrected.</small>
+                        {% if denialError|default(null) %}<p id="denial-feedback-error" class="field-error" role="alert">{{ denialError }}</p>{% endif %}
+                        <button type="submit" class="button-secondary">Deny submission</button>
+                    </form>
+                </section>
+            </div>
+        {% endif %}
     </main>
 {% endblock %}

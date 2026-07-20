@@ -68,6 +68,8 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('{% if draft.workingRevision.complete %}', $index);
         self::assertStringContainsString('faculty-draft-submit-form', $index);
         self::assertStringContainsString('Your submitted proposals', $index);
+        self::assertStringContainsString('Coordinator feedback:', $index);
+        self::assertStringContainsString('proposal.review.comment', $index);
         self::assertStringContainsString('Nothing is saved until', $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $index);

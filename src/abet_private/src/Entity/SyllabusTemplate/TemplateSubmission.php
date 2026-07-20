@@ -106,8 +106,7 @@ class TemplateSubmission
     {
         $currentApprovedRevision = $this->commonCourse->getCurrentApprovedRevision();
 
-        return $this->basedOnRevision !== null
-            && $currentApprovedRevision !== null
+        return $currentApprovedRevision !== null
             && $this->basedOnRevision !== $currentApprovedRevision;
     }
 
@@ -260,6 +259,13 @@ class TemplateSubmission
         if ($review->getDecision() === ReviewDecision::ApprovedWithEdits
             && ($approvedRevision === $this->submittedRevision || $approvedRevision->getAuthorType() !== RevisionAuthorType::Coordinator)) {
             throw new \DomainException('Approval with edits requires a coordinator-authored revision.');
+        }
+        if ($review->getDecision() === ReviewDecision::ApprovedWithEdits
+            && $approvedRevision->getContent() === $this->submittedRevision?->getContent()) {
+            throw new \DomainException('Approval with edits requires a meaningful content change.');
+        }
+        if ($review->getDecision() === ReviewDecision::ApprovedWithEdits && $this->hasSharedTemplateChanged()) {
+            throw new \DomainException('Approval with edits cannot replace a newer shared template revision without reconciliation.');
         }
         if (!$approvedRevision->isComplete()) {
             throw new \DomainException('An incomplete revision cannot be approved.');

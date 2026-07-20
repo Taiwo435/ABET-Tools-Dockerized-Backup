@@ -29,6 +29,9 @@
         .faculty-syllabus__toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
         .faculty-proposal-list { display: grid; gap: .65rem; padding: 0; list-style: none; }
         .faculty-proposal-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding-bottom: .65rem; border-bottom: 1px solid #ddd; }
+        .faculty-proposal { width: 100%; }
+        .faculty-proposal__summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; }
+        .faculty-proposal__feedback { margin: .65rem 0 0; padding: .75rem .9rem; border-left: 4px solid var(--asu-maroon); background: #f6f6f6; color: #444; white-space: pre-wrap; }
     </style>
 
     <main class="faculty-syllabus">
@@ -93,9 +96,14 @@
                 <h2>Your submitted proposals</h2>
                 <ul class="faculty-proposal-list">
                     {% for proposal in proposals %}
-                        <li>
-                            <span><strong>{{ proposal.commonCourse.courseSubject }} {{ proposal.commonCourse.courseNumber }}</strong> — {{ proposal.commonCourse.courseName }}</span>
-                            <span>{{ proposal.status.value|replace({'_': ' '})|title }}</span>
+                        <li class="faculty-proposal">
+                            <div class="faculty-proposal__summary">
+                                <span><strong>{{ proposal.commonCourse.courseSubject }} {{ proposal.commonCourse.courseNumber }}</strong> — {{ proposal.commonCourse.courseName }}</span>
+                                <span>{{ proposal.status.value|replace({'_': ' '})|title }}</span>
+                            </div>
+                            {% if proposal.review and proposal.review.comment %}
+                                <p class="faculty-proposal__feedback"><strong>Coordinator feedback:</strong> {{ proposal.review.comment }}</p>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>

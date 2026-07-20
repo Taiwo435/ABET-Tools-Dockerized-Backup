@@ -81,6 +81,67 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         self::assertSame(2, $submission->getRevisions()->count());
     }
 
+    public function testApprovalWithEditsCannotReplaceANewerSharedTemplateWithoutReconciliation(): void
+    {
+        [$course, , $faculty, $coordinator] = $this->fixture();
+        $sharedTemplate = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $firstSharedRevision = $sharedTemplate->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent());
+        $sharedTemplate->publishCoordinatorTemplate($firstSharedRevision);
+        $facultyProposal = new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission, $firstSharedRevision);
+        $facultyRevision = $this->completeFacultyRevision($facultyProposal, $faculty, $firstSharedRevision->getContent());
+        $facultyProposal->submit($facultyRevision);
+
+        $newSharedRevision = $sharedTemplate->beginCoordinatorRevision($coordinator, $this->completeContent(['catalogDescription' => 'New shared baseline']));
+        $sharedTemplate->publishCoordinatorTemplate($newSharedRevision);
+        $coordinatorRevision = $facultyProposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent(['catalogDescription' => 'Review edit']));
+        $review = new TemplateReview($facultyProposal, $coordinator, ReviewDecision::ApprovedWithEdits);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Approval with edits cannot replace a newer shared template revision without reconciliation.');
+
+        try {
+            $facultyProposal->recordReview($review, $coordinatorRevision);
+        } finally {
+            self::assertSame($facultyRevision, $facultyProposal->getSubmittedRevision());
+            self::assertSame($newSharedRevision, $course->getCurrentApprovedRevision());
+        }
+    }
+
+    public function testApprovalWithEditsRejectsAnUnchangedCoordinatorRevision(): void
+    {
+        [, $submission, $faculty, $coordinator] = $this->fixture();
+        $facultyRevision = $this->completeFacultyRevision($submission, $faculty);
+        $submission->submit($facultyRevision);
+        $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, $facultyRevision->getContent());
+        $review = new TemplateReview($submission, $coordinator, ReviewDecision::ApprovedWithEdits);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Approval with edits requires a meaningful content change.');
+
+        $submission->recordReview($review, $coordinatorRevision);
+    }
+
+    public function testBlankFacultyProposalCannotReplaceASharedTemplatePublishedWhileItWaited(): void
+    {
+        [$course, $facultyProposal, $faculty, $coordinator] = $this->fixture();
+        $facultyRevision = $this->completeFacultyRevision($facultyProposal, $faculty);
+        $facultyProposal->submit($facultyRevision);
+
+        $sharedTemplate = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $sharedRevision = $sharedTemplate->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent());
+        $sharedTemplate->publishCoordinatorTemplate($sharedRevision);
+
+        self::assertTrue($facultyProposal->hasSharedTemplateChanged());
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Approval without edits cannot replace a newer shared template revision.');
+
+        $facultyProposal->recordReview(
+            new TemplateReview($facultyProposal, $coordinator, ReviewDecision::Approved),
+            $facultyRevision,
+        );
+    }
+
     public function testDenialRequiresCommentAndDoesNotPublishRevision(): void
     {
         [$course, $submission, $faculty, $coordinator] = $this->fixture();

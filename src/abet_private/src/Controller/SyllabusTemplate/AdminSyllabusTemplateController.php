@@ -9,6 +9,7 @@ use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\ReviewDecision;
 use App\Entity\SyllabusTemplate\RevisionAuthorType;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
+use App\Entity\SyllabusTemplate\TemplateContentCompleteness;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
 use App\Entity\SyllabusTemplate\TemplateReview;
 use App\Entity\User;
@@ -62,15 +63,146 @@ final class AdminSyllabusTemplateController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[Route('/admin/syllabus-template-reviews/history', name: 'app_admin_syllabus_template_review_history', methods: ['GET'], priority: 10)]
+    public function reviewHistory(
+        Request $request,
+        TemplateSubmissionRepository $submissions,
+        EntityManagerInterface $entityManager,
+    ): Response
+    {
+        $programId = $request->query->getInt('program');
+        $selectedProgram = $programId > 0
+            ? $entityManager->getRepository(Program::class)->find($programId)
+            : null;
+        $selectedDecision = ReviewDecision::tryFrom($request->query->getString('decision'));
+
+        return $this->render('syllabus_template/admin/review_history.html.twig', [
+            'reviewedSubmissions' => $submissions->findReviewedFacultySubmissions($selectedProgram, $selectedDecision),
+            'programs' => $submissions->findReviewedFacultyReviewPrograms(),
+            'decisions' => ReviewDecision::cases(),
+            'selectedProgram' => $selectedProgram,
+            'selectedProgramId' => $selectedProgram?->getId() ?? 0,
+            'selectedDecision' => $selectedDecision?->value ?? '',
+        ]);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/syllabus-template-reviews/{id}', name: 'app_admin_syllabus_template_review', requirements: ['id' => '\\d+'], methods: ['GET'])]
     public function reviewDetail(int $id, TemplateSubmissionRepository $submissions): Response
+    {
+        $submission = $submissions->findFacultyReview($id);
+        if ($submission === null) {
+            throw $this->createNotFoundException('A faculty syllabus submission was not found.');
+        }
+
+        return $this->render('syllabus_template/admin/review_detail.html.twig', [
+            'submission' => $submission,
+            'sharedTemplateChanged' => $submission->hasSharedTemplateChanged(),
+        ]);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/admin/syllabus-template-reviews/{id}/deny', name: 'app_admin_syllabus_template_review_deny', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function deny(
+        int $id,
+        Request $request,
+        #[CurrentUser] User $user,
+        TemplateSubmissionRepository $submissions,
+        EntityManagerInterface $entityManager,
+    ): Response
     {
         $submission = $submissions->findPendingFacultyReview($id);
         if ($submission === null) {
             throw $this->createNotFoundException('A pending faculty syllabus submission was not found.');
         }
 
-        return $this->render('syllabus_template/admin/review_detail.html.twig', [
+        if (!$this->isCsrfTokenValid('deny-syllabus-submission-'.$submission->getId(), $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Invalid syllabus denial token.');
+        }
+
+        $feedback = trim($request->request->getString('feedback'));
+        if ($feedback === '') {
+            return $this->render('syllabus_template/admin/review_detail.html.twig', [
+                'submission' => $submission,
+                'sharedTemplateChanged' => $submission->hasSharedTemplateChanged(),
+                'denialFeedback' => $request->request->getString('feedback'),
+                'denialError' => 'Coordinator feedback is required to deny this submission.',
+            ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
+        }
+
+        $review = new TemplateReview($submission, $user, ReviewDecision::Denied, $feedback);
+        $submission->recordDenial($review);
+        $entityManager->persist($review);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf(
+            '%s %s was denied and the faculty member can now see the review feedback.',
+            $submission->getCommonCourse()->getCourseSubject(),
+            $submission->getCommonCourse()->getCourseNumber(),
+        ));
+
+        return $this->redirectToRoute('app_admin_syllabus_template_reviews');
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/admin/syllabus-template-reviews/{id}/edit', name: 'app_admin_syllabus_template_review_edit', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
+    public function approveWithEdits(
+        int $id,
+        Request $request,
+        #[CurrentUser] User $user,
+        TemplateSubmissionRepository $submissions,
+        EntityManagerInterface $entityManager,
+    ): Response
+    {
+        $submission = $submissions->findPendingFacultyReview($id);
+        if ($submission === null) {
+            throw $this->createNotFoundException('A pending faculty syllabus submission was not found.');
+        }
+
+        $submittedRevision = $submission->getSubmittedRevision();
+        if ($submittedRevision === null) {
+            throw new \LogicException('A pending faculty submission must have a frozen submitted revision.');
+        }
+
+        $originalData = CoordinatorTemplateData::fromRevision($submittedRevision);
+        $data = CoordinatorTemplateData::fromRevision($submittedRevision);
+        $form = $this->createForm(CoordinatorTemplateType::class, $data);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            if (!$this->isCsrfTokenValid('approve-with-edits-syllabus-submission-'.$submission->getId(), $request->request->getString('_decision_token'))) {
+                throw $this->createAccessDeniedException('Invalid syllabus approval token.');
+            }
+
+            if ($submission->hasSharedTemplateChanged()) {
+                $form->addError(new FormError('This proposal is based on an older shared template and must be reconciled before approval.'));
+            } elseif ($data->isEquivalentTo($originalData)) {
+                $form->addError(new FormError('Make at least one meaningful change before approving with edits.'));
+            } else {
+                $content = $data->toContent();
+                $completeness = TemplateContentCompleteness::assess($content);
+                if ($completeness['status'] !== CompletenessStatus::Complete) {
+                    $form->addError(new FormError('Complete all required fields before approving with edits.'));
+                } else {
+                    $coordinatorRevision = $submission->addRevision($user, RevisionAuthorType::Coordinator, $content);
+                    $review = new TemplateReview($submission, $user, ReviewDecision::ApprovedWithEdits);
+                    $submission->recordReview($review, $coordinatorRevision);
+                    $entityManager->persist($review);
+                    $entityManager->flush();
+
+                    $this->addFlash('success', sprintf(
+                        '%s %s was approved with coordinator edits and published as the shared template.',
+                        $submission->getCommonCourse()->getCourseSubject(),
+                        $submission->getCommonCourse()->getCourseNumber(),
+                    ));
+
+                    return $this->redirectToRoute('app_admin_syllabus_template_reviews');
+                }
+            }
+        }
+
+        return $this->render('syllabus_template/admin/review_edit.html.twig', [
+            'form' => $form,
             'submission' => $submission,
             'sharedTemplateChanged' => $submission->hasSharedTemplateChanged(),
         ]);
