@@ -201,7 +201,7 @@ def test_register_and_login_valid_credentials_logout(driver):
     login_button.click()
     driver.implicitly_wait(2)  # Wait for the next page to load
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
 # @with_webdriver
 def test_navigation(driver):
@@ -248,7 +248,7 @@ def test_navigation(driver):
     back_link = driver.find_element(By.XPATH, "/html/body/div/div[1]/div[1]/a");
     back_link.click()
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
     ###############################################
     # /account/profile
@@ -266,7 +266,7 @@ def test_navigation(driver):
     back_link = driver.find_element(By.XPATH, "/html/body/div/div/div[2]/a[1]");
     back_link.click()
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
     ###############################################
     # /account/settings
@@ -282,7 +282,7 @@ def test_navigation(driver):
     back_link = driver.find_element(By.CLASS_NAME, "back-btn")
     back_link.click()
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
     ###############################################
     # /account/privacy
@@ -298,7 +298,7 @@ def test_navigation(driver):
     back_link = driver.find_element(By.CLASS_NAME, "back-btn")
     back_link.click()
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
     ###############################################
     # /account/help
@@ -314,7 +314,7 @@ def test_navigation(driver):
     back_link = driver.find_element(By.CLASS_NAME, "back-btn")
     back_link.click()
 
-    expect_route(driver, "/home2")
+    expect_route(driver, "/home")
 
     ###############################################
     # Tools (no buttons because they are expected to change)
