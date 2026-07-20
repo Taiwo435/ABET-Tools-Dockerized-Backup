@@ -38,4 +38,14 @@ class Program
     public function getName(): string { return $this->name; }
     public function getCode(): string { return $this->code; }
     public function getYear(): string { return $this->year; }
+
+    public function getInitials(): string
+    {
+        $words = preg_split('/[\s-]+/', $this->name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return implode('', array_map(
+            static fn (string $word): string => strtoupper(substr($word, 0, 1)),
+            $words,
+        ));
+    }
 }

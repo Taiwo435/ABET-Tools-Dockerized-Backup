@@ -1,0 +1,115 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }} | {% endblock %}
+
+{% block styles %}
+    <style>
+        .review-detail { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
+        .review-detail__topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .review-detail__meta { color: #666; font-size: .92rem; }
+        .review-detail__meta strong { color: var(--asu-maroon); }
+        .context-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1rem; }
+        .context-item { padding: .9rem 1rem; background: var(--asu-white); border: 1px solid #e2e2e2; border-radius: 6px; }
+        .context-item dt { margin-bottom: .25rem; color: #666; font-size: .78rem; font-weight: 700; letter-spacing: .025em; text-transform: uppercase; }
+        .context-item dd { margin: 0; color: #333; font-weight: 700; }
+        .stale-warning { display: flex; gap: .8rem; margin-bottom: 1rem; padding: 1rem 1.15rem; border-left: 5px solid var(--asu-gold); border-radius: 5px; background: #fff7db; color: #4f3a00; }
+        .stale-warning__icon { font-size: 1.25rem; }
+        .review-card { overflow: hidden; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
+        .review-section { padding: 1.5rem 1.75rem; border-bottom: 1px solid #e7e7e7; }
+        .review-section:last-child { border-bottom: 0; }
+        .review-section__heading { margin-bottom: 1rem; }
+        .review-section__heading h2 { color: var(--asu-maroon); font-size: 1.18rem; }
+        .review-section__heading p { color: #666; font-size: .9rem; }
+        .read-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+        .read-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .read-field { min-width: 0; }
+        .read-field--wide { grid-column: 1 / -1; }
+        .read-field__label { display: block; margin-bottom: .35rem; color: #555; font-size: .82rem; font-weight: 700; }
+        .read-field__value { min-height: 1.35rem; color: #222; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .read-list { margin: 0; padding-left: 1.2rem; color: #222; line-height: 1.55; }
+        .not-provided { color: #777; font-style: italic; }
+        .review-note { margin-top: 1rem; padding: 1rem 1.15rem; border: 1px solid #dedede; border-left: 5px solid var(--asu-gold); border-radius: 6px; background: var(--asu-white); color: #555; }
+        @media (max-width: 760px) {
+            .context-grid, .read-grid, .read-grid--three { grid-template-columns: 1fr; }
+            .read-field--wide { grid-column: auto; }
+            .review-section { padding: 1.2rem; }
+            .review-detail__topbar a { width: 100%; box-sizing: border-box; text-align: center; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {% set revision = submission.submittedRevision %}
+    {% set content = revision.content %}
+    <section class="hero hero-small">
+        <h1>Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</h1>
+        <p>Read the faculty member's frozen submitted revision before making a decision.</p>
+    </section>
+
+    <main class="review-detail">
+        <div class="review-detail__topbar">
+            <div class="review-detail__meta">
+                <strong>{{ submission.commonCourse.courseName }}</strong>
+                &middot; Submitted {{ submission.submittedAt|date('M j, Y \a\t g:i A') }}
+            </div>
+            <a href="{{ path('app_admin_syllabus_template_reviews') }}" class="button-secondary">Back to Review Queue</a>
+        </div>
+
+        <dl class="context-grid">
+            <div class="context-item"><dt>Faculty</dt><dd>{{ submission.submittedBy.asurite }}</dd></div>
+            <div class="context-item"><dt>Program</dt><dd>{{ submission.commonCourse.program.initials }} {{ submission.commonCourse.program.year }}</dd></div>
+            <div class="context-item"><dt>Delivery</dt><dd>{{ submission.commonCourse.deliveryType.value|replace({'_': ' '})|title }}</dd></div>
+            <div class="context-item"><dt>Submitted revision</dt><dd>Rev. {{ revision.revisionNumber }}</dd></div>
+        </dl>
+
+        {% if sharedTemplateChanged %}
+            <div class="stale-warning" role="alert">
+                <div class="stale-warning__icon" aria-hidden="true">&#9888;</div>
+                <div>
+                    <strong>Shared template changed since this proposal began.</strong>
+                    <div>This faculty copy was based on revision {{ submission.basedOnRevision.revisionNumber }}, while revision {{ submission.commonCourse.currentApprovedRevision.revisionNumber }} is currently published. The proposal must be reconciled before approval.</div>
+                </div>
+            </div>
+        {% endif %}
+
+        <article class="review-card">
+            <section class="review-section">
+                <div class="review-section__heading"><h2>Course details</h2><p>Common-course identity associated with this submission.</p></div>
+                <div class="read-grid read-grid--three">
+                    <div class="read-field"><span class="read-field__label">Course subject</span><div class="read-field__value">{{ submission.commonCourse.courseSubject }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Course number</span><div class="read-field__value">{{ submission.commonCourse.courseNumber }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Delivery type</span><div class="read-field__value">{{ submission.commonCourse.deliveryType.value|replace({'_': ' '})|title }}</div></div>
+                    <div class="read-field read-field--wide"><span class="read-field__label">Course name</span><div class="read-field__value">{{ submission.commonCourse.courseName }}</div></div>
+                </div>
+            </section>
+
+            <section class="review-section">
+                <div class="review-section__heading"><h2>Required syllabus information</h2><p>Fields required when the faculty member submitted this revision.</p></div>
+                <div class="read-grid read-grid--three">
+                    <div class="read-field"><span class="read-field__label">Credit hours</span><div class="read-field__value">{{ content.creditHours }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Credit categorization</span><div class="read-field__value">{{ content.creditCategorization }}</div></div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Course coordinators</span>
+                        <ul class="read-list">{% for coordinator in content.courseCoordinators %}<li>{{ coordinator }}</li>{% endfor %}</ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="review-section">
+                <div class="review-section__heading"><h2>Additional syllabus information</h2><p>Optional catalog description and course outcomes included in the proposal.</p></div>
+                <div class="read-grid">
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Catalog description</span>
+                        <div class="read-field__value">{% if content.catalogDescription is not empty %}{{ content.catalogDescription }}{% else %}<span class="not-provided">Not provided</span>{% endif %}</div>
+                    </div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Course outcomes</span>
+                        {% if content.courseOutcomes is not empty %}<ul class="read-list">{% for outcome in content.courseOutcomes %}<li>{{ outcome }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <div class="review-note">Decision actions will be added in the next coordinator-review slice. This page is read-only.</div>
+    </main>
+{% endblock %}

@@ -7,6 +7,8 @@
         .syllabus-page { width: 100%; max-width: 1180px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .syllabus-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
         .syllabus-toolbar__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+        .review-queue-link { display: inline-flex; align-items: center; gap: .5rem; }
+        .review-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; height: 1.5rem; padding: 0 .35rem; border-radius: 999px; background: var(--asu-gold); color: #3b2a00; font-size: .78rem; font-weight: 800; line-height: 1; }
         .syllabus-filter { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }
         .syllabus-filter label { display: grid; gap: .35rem; color: #444; font-size: .85rem; font-weight: 700; }
         .syllabus-filter select { min-width: 190px; padding: .65rem .75rem; border: 1px solid #b7b7b7; border-radius: 5px; background: var(--asu-white); font: inherit; }
@@ -62,6 +64,10 @@
             </form>
             <div class="syllabus-toolbar__actions">
                 <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
+                <a href="{{ path('app_admin_syllabus_template_reviews') }}" class="button-secondary review-queue-link">
+                    Review faculty submissions
+                    <span class="review-count" aria-label="{{ pendingReviewCount }} pending faculty {{ pendingReviewCount == 1 ? 'submission' : 'submissions' }}">{{ pendingReviewCount }}</span>
+                </a>
                 <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create Shared Template</a>
             </div>
         </div>

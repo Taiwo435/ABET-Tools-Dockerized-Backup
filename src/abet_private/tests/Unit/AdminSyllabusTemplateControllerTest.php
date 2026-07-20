@@ -33,6 +33,8 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('revision.completenessStatus.value', $template);
         self::assertStringContainsString('revision.missingFields', $template);
         self::assertStringContainsString('template.status.value', $template);
+        self::assertStringContainsString("path('app_admin_syllabus_template_reviews')", $template);
+        self::assertStringContainsString('{{ pendingReviewCount }}', $template);
     }
 
     public function testAdminPanelLinksToSharedSyllabusTemplates(): void

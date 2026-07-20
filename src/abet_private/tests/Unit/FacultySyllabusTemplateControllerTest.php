@@ -63,6 +63,10 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('form.program is defined', $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_submit'", $form);
         self::assertStringContainsString('Submit for approval', $form);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_submit', {id: draft.id})", $index);
+        self::assertStringContainsString("csrf_token('submit-faculty-syllabus-' ~ draft.id)", $index);
+        self::assertStringContainsString('{% if draft.workingRevision.complete %}', $index);
+        self::assertStringContainsString('faculty-draft-submit-form', $index);
         self::assertStringContainsString('Your submitted proposals', $index);
         self::assertStringContainsString('Nothing is saved until', $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $form);

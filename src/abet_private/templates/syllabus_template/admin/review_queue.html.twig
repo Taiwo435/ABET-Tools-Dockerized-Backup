@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Faculty Syllabus Review Queue | {% endblock %}
+
+{% block styles %}
+    <style>
+        .review-page { width: 100%; max-width: 1180px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
+        .review-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
+        .review-summary { display: flex; align-items: center; gap: .75rem; }
+        .review-count { display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem; padding: 0 .5rem; border-radius: 999px; background: var(--asu-gold); color: #3b2a00; font-size: 1rem; font-weight: 800; line-height: 1; }
+        .review-summary strong { display: block; color: var(--asu-maroon); }
+        .review-summary span:last-child { color: #666; font-size: .88rem; }
+        .review-filter { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; margin: 0; }
+        .review-filter label { display: grid; gap: .3rem; color: #444; font-size: .82rem; font-weight: 700; }
+        .review-filter select { min-width: 220px; padding: .6rem .7rem; border: 1px solid #b7b7b7; border-radius: 5px; background: var(--asu-white); font: inherit; }
+        .review-filter select:focus { outline: 3px solid rgba(255, 198, 39, .45); border-color: var(--asu-maroon); }
+        .review-filter button { min-height: 2.55rem; }
+        .review-table-wrap { overflow-x: auto; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
+        .review-table { width: 100%; min-width: 980px; border-collapse: collapse; }
+        .review-table th, .review-table td { padding: .9rem 1rem; border-bottom: 1px solid #e6e6e6; text-align: left; vertical-align: middle; }
+        .review-table th { background: var(--asu-maroon); color: var(--asu-white); font-size: .82rem; font-weight: 700; letter-spacing: .025em; }
+        .review-table tbody tr:hover { background: #fffaf0; }
+        .review-table tbody tr:last-child td { border-bottom: 0; }
+        .course-code { color: var(--asu-maroon); font-size: 1rem; }
+        .course-name, .cell-detail { color: #666; font-size: .88rem; }
+        .review-action { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.5rem; padding: .45rem .75rem; font-size: .82rem; line-height: 1.2; text-align: center; white-space: nowrap; }
+        .empty-state { padding: 3rem 1.5rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); text-align: center; }
+        .empty-state h2 { margin-bottom: .4rem; color: var(--asu-maroon); }
+        .empty-state p { margin-bottom: 1.2rem; color: #666; }
+        @media (max-width: 700px) {
+            .review-toolbar { align-items: stretch; }
+            .review-toolbar > *, .review-toolbar a, .review-filter label, .review-filter select, .review-filter button { width: 100%; }
+            .review-toolbar a, .review-filter button { box-sizing: border-box; text-align: center; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="hero hero-small">
+        <h1>Faculty Syllabus Review Queue</h1>
+        <p>Review complete faculty proposals in the order they were submitted.</p>
+    </section>
+
+    <main class="review-page">
+        <div class="review-toolbar">
+            <div class="review-summary">
+                <span class="review-count" aria-hidden="true">{{ pendingReviewCount }}</span>
+                <span>
+                    <strong>{{ pendingReviewCount }} pending {{ pendingReviewCount == 1 ? 'submission' : 'submissions' }}</strong>
+                    <span>Oldest submissions appear first{% if selectedProgram %} for {{ selectedProgram.initials }} {{ selectedProgram.year }}{% endif %}.</span>
+                </span>
+            </div>
+            <form method="get" class="review-filter">
+                <label for="program-filter">Filter by program
+                    <select id="program-filter" name="program">
+                        <option value="0">All programs</option>
+                        {% for program in programs %}
+                            <option value="{{ program.id }}"{% if selectedProgramId == program.id %} selected{% endif %}>{{ program.initials }} {{ program.year }} — {{ program.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button type="submit" class="button-secondary">Apply filter</button>
+            </form>
+            <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Back to Shared Templates</a>
+        </div>
+
+        {% if pendingSubmissions is empty %}
+            <div class="empty-state">
+                <h2>{{ selectedProgram ? 'No pending submissions match this program' : 'No faculty submissions are waiting' }}</h2>
+                <p>{{ selectedProgram ? 'Choose another program or show all programs.' : 'Newly submitted syllabus proposals will appear here for coordinator review.' }}</p>
+                <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Return to Shared Templates</a>
+            </div>
+        {% else %}
+            <div class="review-table-wrap">
+                <table class="review-table">
+                    <thead>
+                        <tr><th>Course</th><th>Program</th><th>Submitted by</th><th>Revision</th><th>Submitted</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for submission in pendingSubmissions %}
+                        <tr>
+                            <td>
+                                <strong class="course-code">{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong>
+                                <div class="course-name">{{ submission.commonCourse.courseName }}</div>
+                            </td>
+                            <td>
+                                <strong>{{ submission.commonCourse.program.initials }}</strong>
+                                <span class="cell-detail">{{ submission.commonCourse.program.year }}</span>
+                                <div class="cell-detail">{{ submission.commonCourse.deliveryType.value|replace({'_': ' '})|title }}</div>
+                            </td>
+                            <td>
+                                <strong>{{ submission.submittedBy.asurite }}</strong>
+                                <div class="cell-detail">{{ submission.submittedBy.email }}</div>
+                            </td>
+                            <td><strong>Rev. {{ submission.submittedRevision.revisionNumber }}</strong></td>
+                            <td>
+                                <strong>{{ submission.submittedAt|date('M j, Y') }}</strong>
+                                <div class="cell-detail">{{ submission.submittedAt|date('g:i A') }}</div>
+                            </td>
+                            <td><a href="{{ path('app_admin_syllabus_template_review', {id: submission.id}) }}" class="button-primary review-action">Review submission</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </main>
+{% endblock %}

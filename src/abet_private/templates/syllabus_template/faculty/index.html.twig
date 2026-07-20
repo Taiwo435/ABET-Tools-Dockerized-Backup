@@ -16,6 +16,10 @@
         .faculty-draft-row:last-child { padding-bottom: 0; border-bottom: 0; }
         .faculty-draft-row__title { line-height: 1.5; }
         .faculty-draft-row__actions { display: flex; flex-wrap: wrap; align-items: start; gap: .75rem; }
+        .faculty-draft-row__action { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 170px; height: 42px; min-height: 42px; padding: .65rem .85rem; border-width: 1px; line-height: 1.2; text-align: center; white-space: nowrap; }
+        .faculty-draft-row__action.button-primary { border: 1px solid transparent; }
+        .faculty-draft-submit-form, .faculty-draft-row__actions > .hold-delete-control { width: 170px; }
+        .faculty-draft-submit-form .faculty-draft-row__action { width: 100%; }
         .completeness-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; margin-left: .25rem; border-radius: 50%; font-size: .9rem; font-weight: 800; line-height: 1; vertical-align: text-bottom; cursor: help; }
         .completeness-icon--complete { background: #d8f0df; color: #155b2d; }
         .completeness-icon--incomplete { background: #f9d7dc; color: #9f1d3f; }
@@ -62,7 +66,13 @@
                                 >{{ draft.workingRevision.complete ? '✓' : '×' }}</span>
                             </div>
                             <div class="faculty-draft-row__actions">
-                                <a class="button-secondary" href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
+                                <a class="button-secondary faculty-draft-row__action" href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
+                                {% if draft.workingRevision.complete %}
+                                    <form method="post" action="{{ path('app_faculty_syllabus_templates_submit', {id: draft.id}) }}" class="faculty-draft-submit-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('submit-faculty-syllabus-' ~ draft.id) }}">
+                                        <button type="submit" class="button-primary faculty-draft-row__action">Submit for approval</button>
+                                    </form>
+                                {% endif %}
                                 <form id="delete-faculty-draft-{{ draft.id }}" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: draft.id}) }}" class="hold-delete-control">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete-faculty-syllabus-' ~ draft.id) }}">
                                     <button type="button" class="hold-delete-button" data-hold-delete data-delete-form="delete-faculty-draft-{{ draft.id }}" aria-pressed="false" aria-describedby="delete-faculty-draft-warning-{{ draft.id }}">

@@ -2,6 +2,7 @@
 
 namespace App\Controller\SyllabusTemplate;
 
+use App\Entity\Program;
 use App\Entity\SyllabusTemplate\CompletenessStatus;
 use App\Entity\SyllabusTemplate\CommonCourse;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
@@ -32,6 +33,50 @@ final class AdminSyllabusTemplateController extends AbstractController
         return $this->render('syllabus_template/admin/index.html.twig', [
             'templates' => $submissions->findCoordinatorTemplates($filter),
             'completenessFilter' => $filter?->value ?? '',
+            'pendingReviewCount' => $submissions->countPendingFacultyReviews(),
+        ]);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/admin/syllabus-template-reviews', name: 'app_admin_syllabus_template_reviews', methods: ['GET'])]
+    public function reviewQueue(
+        Request $request,
+        TemplateSubmissionRepository $submissions,
+        EntityManagerInterface $entityManager,
+    ): Response
+    {
+        $programId = $request->query->getInt('program');
+        $selectedProgram = $programId > 0
+            ? $entityManager->getRepository(Program::class)->find($programId)
+            : null;
+
+        return $this->render('syllabus_template/admin/review_queue.html.twig', [
+            'pendingSubmissions' => $submissions->findPendingFacultyReviews($selectedProgram),
+            'pendingReviewCount' => $submissions->countPendingFacultyReviews($selectedProgram),
+            'programs' => $submissions->findPendingFacultyReviewPrograms(),
+            'selectedProgram' => $selectedProgram,
+            'selectedProgramId' => $selectedProgram?->getId() ?? 0,
+        ]);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/admin/syllabus-template-reviews/{id}', name: 'app_admin_syllabus_template_review', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function reviewDetail(int $id, TemplateSubmissionRepository $submissions): Response
+    {
+        $submission = $submissions->findPendingFacultyReview($id);
+        if ($submission === null) {
+            throw $this->createNotFoundException('A pending faculty syllabus submission was not found.');
+        }
+
+        $basedOnRevision = $submission->getBasedOnRevision();
+        $currentApprovedRevision = $submission->getCommonCourse()->getCurrentApprovedRevision();
+        $sharedTemplateChanged = $basedOnRevision !== null
+            && $currentApprovedRevision !== null
+            && $basedOnRevision->getId() !== $currentApprovedRevision->getId();
+
+        return $this->render('syllabus_template/admin/review_detail.html.twig', [
+            'submission' => $submission,
+            'sharedTemplateChanged' => $sharedTemplateChanged,
         ]);
     }
 
