@@ -115,7 +115,7 @@
             </section>
 
             <div class="editor-actions">
-                <span class="editor-meta">{{ submission ? 'Saving creates revision ' ~ (submission.workingRevision.revisionNumber + 1) ~ '; earlier revisions remain unchanged.' : 'You can complete the required fields now or return to this draft later.' }}</span>
+                <span class="editor-meta">{% if submission and submission.origin.value == 'faculty_submission' %}Saving creates a coordinator draft based on this approved faculty revision; the faculty submission remains unchanged.{% elseif submission %}Saving creates revision {{ submission.workingRevision.revisionNumber + 1 }}; earlier revisions remain unchanged.{% else %}You can complete the required fields now or return to this draft later.{% endif %}</span>
                 <div class="editor-actions__group">
                     <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Cancel</a>
                     <button type="submit" class="button-primary">{{ submission ? (submission.status.value == 'approved' ? 'Save as New Revision' : 'Save New Revision') : 'Create Draft' }}</button>

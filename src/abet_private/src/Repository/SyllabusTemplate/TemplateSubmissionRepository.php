@@ -19,26 +19,46 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
     }
 
     /** @return list<TemplateSubmission> */
-    public function findCoordinatorTemplates(?CompletenessStatus $completeness = null): array
+    public function findManagedTemplates(?CompletenessStatus $completeness = null): array
     {
         $builder = $this->createQueryBuilder('submission')
-            ->addSelect('course', 'program', 'revision')
+            ->addSelect('course', 'program', 'revision', 'currentApprovedRevision')
             ->innerJoin('submission.commonCourse', 'course')
             ->innerJoin('course.program', 'program')
             ->innerJoin('submission.workingRevision', 'revision')
-            ->andWhere('submission.origin = :origin')
-            ->setParameter('origin', ProposalOrigin::CoordinatorCreated->value)
+            ->leftJoin('course.currentApprovedRevision', 'currentApprovedRevision')
+            ->andWhere('(submission.origin = :coordinatorOrigin AND submission.status = :draftStatus) OR submission.approvedRevision = currentApprovedRevision')
+            ->setParameter('coordinatorOrigin', ProposalOrigin::CoordinatorCreated->value)
+            ->setParameter('draftStatus', SubmissionStatus::Draft->value)
             ->orderBy('course.courseSubject', 'ASC')
             ->addOrderBy('course.courseNumber', 'ASC')
-            ->addOrderBy('submission.updatedAt', 'DESC');
+            ->addOrderBy('submission.updatedAt', 'DESC')
+            ->addOrderBy('submission.id', 'DESC');
 
-        if ($completeness !== null) {
-            $builder
-                ->andWhere('revision.completenessStatus = :completeness')
-                ->setParameter('completeness', $completeness->value);
+        $managedByCourse = [];
+        foreach ($builder->getQuery()->getResult() as $submission) {
+            $courseId = $submission->getCommonCourse()->getId();
+            $existing = $managedByCourse[$courseId] ?? null;
+            $isCoordinatorDraft = $submission->getOrigin() === ProposalOrigin::CoordinatorCreated
+                && $submission->getStatus() === SubmissionStatus::Draft;
+            $existingIsCoordinatorDraft = $existing !== null
+                && $existing->getOrigin() === ProposalOrigin::CoordinatorCreated
+                && $existing->getStatus() === SubmissionStatus::Draft;
+
+            if ($existing === null || ($isCoordinatorDraft && !$existingIsCoordinatorDraft)) {
+                $managedByCourse[$courseId] = $submission;
+            }
         }
 
-        return $builder->getQuery()->getResult();
+        $templates = array_values($managedByCourse);
+        if ($completeness !== null) {
+            $templates = array_values(array_filter(
+                $templates,
+                static fn (TemplateSubmission $submission): bool => $submission->getWorkingRevision()?->getCompletenessStatus() === $completeness,
+            ));
+        }
+
+        return $templates;
     }
 
     /** @return list<TemplateSubmission> */

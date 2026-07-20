@@ -102,6 +102,15 @@ class TemplateSubmission
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
 
+    public function hasSharedTemplateChanged(): bool
+    {
+        $currentApprovedRevision = $this->commonCourse->getCurrentApprovedRevision();
+
+        return $this->basedOnRevision !== null
+            && $currentApprovedRevision !== null
+            && $this->basedOnRevision !== $currentApprovedRevision;
+    }
+
     /** @return Collection<int, TemplateRevision> */
     public function getRevisions(): Collection { return $this->revisions; }
 
@@ -196,6 +205,26 @@ class TemplateSubmission
         return $this->addRevision($author, RevisionAuthorType::Coordinator, $content);
     }
 
+    public function createCoordinatorRevisionDraft(User $author, array $content): self
+    {
+        if ($this->origin !== ProposalOrigin::FacultySubmission
+            || !in_array($this->status, [SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits], true)
+            || $this->approvedRevision === null
+            || $this->commonCourse->getCurrentApprovedRevision() !== $this->approvedRevision) {
+            throw new \DomainException('Only the current approved faculty template can seed a coordinator revision draft.');
+        }
+
+        $draft = new self(
+            $this->commonCourse,
+            $author,
+            ProposalOrigin::CoordinatorCreated,
+            $this->approvedRevision,
+        );
+        $draft->addRevision($author, RevisionAuthorType::Coordinator, $content);
+
+        return $draft;
+    }
+
     public function prepareFacultyDraftDeletion(User $owner): void
     {
         if ($this->origin !== ProposalOrigin::FacultySubmission
@@ -224,6 +253,9 @@ class TemplateSubmission
         }
         if ($review->getDecision() === ReviewDecision::Approved && $approvedRevision !== $this->submittedRevision) {
             throw new \DomainException('Approval without edits must publish the submitted faculty revision.');
+        }
+        if ($review->getDecision() === ReviewDecision::Approved && $this->hasSharedTemplateChanged()) {
+            throw new \DomainException('Approval without edits cannot replace a newer shared template revision.');
         }
         if ($review->getDecision() === ReviewDecision::ApprovedWithEdits
             && ($approvedRevision === $this->submittedRevision || $approvedRevision->getAuthorType() !== RevisionAuthorType::Coordinator)) {

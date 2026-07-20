@@ -89,7 +89,7 @@
                         {% set revision = template.workingRevision %}
                         <tr>
                             <td><strong class="course-code">{{ template.commonCourse.courseSubject }} {{ template.commonCourse.courseNumber }}</strong><div class="course-name">{{ template.commonCourse.courseName }}</div></td>
-                            <td>{{ template.commonCourse.program.code }} <span class="cell-detail">{{ template.commonCourse.program.year }}</span></td>
+                            <td><strong>{{ template.commonCourse.program.initials }}</strong> <span class="cell-detail">{{ template.commonCourse.program.year }}</span></td>
                             <td>
                                 <span class="template-state">
                                     {{ template.status.value|replace({'_': ' '})|title }}
@@ -110,7 +110,7 @@
                                             <button type="submit" class="button-primary table-button">Publish now</button>
                                         </form>
                                     {% else %}
-                                        <span class="missing-none">Published</span>
+                                        <span class="missing-none">Published{{ template.origin.value == 'faculty_submission' ? ' from faculty proposal' : '' }}</span>
                                     {% endif %}
                                 {% else %}
                                     <ul class="missing-list">

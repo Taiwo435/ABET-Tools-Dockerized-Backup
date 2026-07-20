@@ -6,9 +6,11 @@ use App\Entity\Program;
 use App\Entity\SyllabusTemplate\CompletenessStatus;
 use App\Entity\SyllabusTemplate\CommonCourse;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
+use App\Entity\SyllabusTemplate\ReviewDecision;
 use App\Entity\SyllabusTemplate\RevisionAuthorType;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
+use App\Entity\SyllabusTemplate\TemplateReview;
 use App\Entity\User;
 use App\Form\Model\CoordinatorTemplateData;
 use App\Form\SyllabusTemplate\CoordinatorTemplateType;
@@ -31,7 +33,7 @@ final class AdminSyllabusTemplateController extends AbstractController
         $filter = CompletenessStatus::tryFrom($request->query->getString('completeness'));
 
         return $this->render('syllabus_template/admin/index.html.twig', [
-            'templates' => $submissions->findCoordinatorTemplates($filter),
+            'templates' => $submissions->findManagedTemplates($filter),
             'completenessFilter' => $filter?->value ?? '',
             'pendingReviewCount' => $submissions->countPendingFacultyReviews(),
         ]);
@@ -68,16 +70,54 @@ final class AdminSyllabusTemplateController extends AbstractController
             throw $this->createNotFoundException('A pending faculty syllabus submission was not found.');
         }
 
-        $basedOnRevision = $submission->getBasedOnRevision();
-        $currentApprovedRevision = $submission->getCommonCourse()->getCurrentApprovedRevision();
-        $sharedTemplateChanged = $basedOnRevision !== null
-            && $currentApprovedRevision !== null
-            && $basedOnRevision->getId() !== $currentApprovedRevision->getId();
-
         return $this->render('syllabus_template/admin/review_detail.html.twig', [
             'submission' => $submission,
-            'sharedTemplateChanged' => $sharedTemplateChanged,
+            'sharedTemplateChanged' => $submission->hasSharedTemplateChanged(),
         ]);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/admin/syllabus-template-reviews/{id}/approve-unchanged', name: 'app_admin_syllabus_template_review_approve', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function approveUnchanged(
+        int $id,
+        Request $request,
+        #[CurrentUser] User $user,
+        TemplateSubmissionRepository $submissions,
+        EntityManagerInterface $entityManager,
+    ): Response
+    {
+        $submission = $submissions->findPendingFacultyReview($id);
+        if ($submission === null) {
+            throw $this->createNotFoundException('A pending faculty syllabus submission was not found.');
+        }
+
+        if (!$this->isCsrfTokenValid('approve-syllabus-submission-'.$submission->getId(), $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Invalid syllabus approval token.');
+        }
+
+        if ($submission->hasSharedTemplateChanged()) {
+            $this->addFlash('error', 'This proposal is based on an older shared template and must be reconciled before approval.');
+
+            return $this->redirectToRoute('app_admin_syllabus_template_review', ['id' => $submission->getId()]);
+        }
+
+        $submittedRevision = $submission->getSubmittedRevision();
+        if ($submittedRevision === null) {
+            throw new \LogicException('A pending faculty submission must have a frozen submitted revision.');
+        }
+
+        $review = new TemplateReview($submission, $user, ReviewDecision::Approved);
+        $submission->recordReview($review, $submittedRevision);
+        $entityManager->persist($review);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf(
+            '%s %s was approved unchanged and published as the shared template.',
+            $submission->getCommonCourse()->getCourseSubject(),
+            $submission->getCommonCourse()->getCourseNumber(),
+        ));
+
+        return $this->redirectToRoute('app_admin_syllabus_template_reviews');
     }
 
     #[IsGranted('ROLE_ADMIN')]
@@ -132,7 +172,7 @@ final class AdminSyllabusTemplateController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response
     {
-        $this->assertCoordinatorTemplateEditable($submission);
+        $this->assertAdminTemplateEditable($submission);
         $originalData = CoordinatorTemplateData::fromSubmission($submission);
         $data = CoordinatorTemplateData::fromSubmission($submission);
         $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => true]);
@@ -152,13 +192,17 @@ final class AdminSyllabusTemplateController extends AbstractController
             if ($this->courseIdentityExists($entityManager, $data, $submission->getCommonCourse())) {
                 $form->addError(new FormError('A shared template already exists for this program, course, and delivery type.'));
             } else {
-                if ($submission->getStatus() === SubmissionStatus::Approved) {
+                $editableSubmission = $submission;
+                if ($submission->getOrigin() === ProposalOrigin::FacultySubmission) {
+                    $editableSubmission = $submission->createCoordinatorRevisionDraft($user, $data->toContent());
+                    $entityManager->persist($editableSubmission);
+                } elseif ($submission->getStatus() === SubmissionStatus::Approved) {
                     $submission->beginCoordinatorRevision($user, $data->toContent());
                 } else {
                     $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
                 }
-                $submission->getCommonCourse()->updateDraftDetails(
-                    $submission,
+                $editableSubmission->getCommonCourse()->updateDraftDetails(
+                    $editableSubmission,
                     $data->program,
                     $data->courseSubject,
                     $data->courseNumber,
@@ -169,7 +213,7 @@ final class AdminSyllabusTemplateController extends AbstractController
 
                 $this->addFlash('success', 'Course details and a new immutable draft revision were saved.');
 
-                return $this->redirectToRoute('app_admin_syllabus_templates_edit', ['id' => $submission->getId()]);
+                return $this->redirectToRoute('app_admin_syllabus_templates_edit', ['id' => $editableSubmission->getId()]);
             }
         }
 
@@ -204,17 +248,23 @@ final class AdminSyllabusTemplateController extends AbstractController
         return $this->redirectToRoute('app_admin_syllabus_templates');
     }
 
-    private function assertCoordinatorTemplateEditable(TemplateSubmission $submission): void
+    private function assertAdminTemplateEditable(TemplateSubmission $submission): void
     {
-        if ($submission->getOrigin() !== ProposalOrigin::CoordinatorCreated
-            || !in_array($submission->getStatus(), [SubmissionStatus::Draft, SubmissionStatus::Approved], true)) {
-            throw $this->createNotFoundException('An editable coordinator template was not found.');
+        $isCoordinatorTemplate = $submission->getOrigin() === ProposalOrigin::CoordinatorCreated
+            && in_array($submission->getStatus(), [SubmissionStatus::Draft, SubmissionStatus::Approved], true);
+        $isCurrentApprovedFacultyTemplate = $submission->getOrigin() === ProposalOrigin::FacultySubmission
+            && in_array($submission->getStatus(), [SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits], true)
+            && $submission->getApprovedRevision() !== null
+            && $submission->getCommonCourse()->getCurrentApprovedRevision() === $submission->getApprovedRevision();
+
+        if (!$isCoordinatorTemplate && !$isCurrentApprovedFacultyTemplate) {
+            throw $this->createNotFoundException('An editable shared template was not found.');
         }
     }
 
     private function assertEditableCoordinatorDraft(TemplateSubmission $submission): void
     {
-        $this->assertCoordinatorTemplateEditable($submission);
+        $this->assertAdminTemplateEditable($submission);
         if ($submission->getStatus() !== SubmissionStatus::Draft) {
             throw $this->createNotFoundException('An editable coordinator template draft was not found.');
         }

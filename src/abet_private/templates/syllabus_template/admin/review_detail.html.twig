@@ -29,6 +29,13 @@
         .read-list { margin: 0; padding-left: 1.2rem; color: #222; line-height: 1.55; }
         .not-provided { color: #777; font-style: italic; }
         .review-note { margin-top: 1rem; padding: 1rem 1.15rem; border: 1px solid #dedede; border-left: 5px solid var(--asu-gold); border-radius: 6px; background: var(--asu-white); color: #555; }
+        .flash { margin-bottom: 1rem; padding: .85rem 1rem; border-radius: 5px; font-weight: 600; }
+        .flash--error { border-left: 5px solid var(--error-red); background: #f8e1e5; color: var(--error-red); }
+        .decision-panel { margin-top: 1.25rem; padding: 1.25rem 1.5rem; background: var(--asu-white); border: 1px solid #dedede; border-left: 5px solid #218739; border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
+        .decision-panel h2 { color: var(--asu-maroon); font-size: 1.1rem; }
+        .decision-panel p { margin: .25rem 0 1rem; color: #666; font-size: .9rem; }
+        .decision-panel__warning { color: #8a2038 !important; font-weight: 700; }
+        .decision-panel .button-primary:disabled { background: #aaa; color: #f4f4f4; cursor: not-allowed; }
         @media (max-width: 760px) {
             .context-grid, .read-grid, .read-grid--three { grid-template-columns: 1fr; }
             .read-field--wide { grid-column: auto; }
@@ -54,6 +61,8 @@
             </div>
             <a href="{{ path('app_admin_syllabus_template_reviews') }}" class="button-secondary">Back to Review Queue</a>
         </div>
+
+        {% for message in app.flashes('error') %}<div class="flash flash--error" role="alert">{{ message }}</div>{% endfor %}
 
         <dl class="context-grid">
             <div class="context-item"><dt>Faculty</dt><dd>{{ submission.submittedBy.asurite }}</dd></div>
@@ -110,6 +119,16 @@
             </section>
         </article>
 
-        <div class="review-note">Decision actions will be added in the next coordinator-review slice. This page is read-only.</div>
+        <div class="review-note">The submitted proposal content above is read-only. Approval with edits and denial with feedback will be added in later review slices.</div>
+
+        <section class="decision-panel">
+            <h2>Approve unchanged</h2>
+            <p>Publish the frozen faculty revision exactly as submitted. This records a final review decision and removes the proposal from the pending queue.</p>
+            {% if sharedTemplateChanged %}<p class="decision-panel__warning">Unavailable because the shared template changed after this faculty copy was created.</p>{% endif %}
+            <form method="post" action="{{ path('app_admin_syllabus_template_review_approve', {id: submission.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('approve-syllabus-submission-' ~ submission.id) }}">
+                <button type="submit" class="button-primary"{% if sharedTemplateChanged %} disabled{% endif %}>Approve unchanged</button>
+            </form>
+        </section>
     </main>
 {% endblock %}

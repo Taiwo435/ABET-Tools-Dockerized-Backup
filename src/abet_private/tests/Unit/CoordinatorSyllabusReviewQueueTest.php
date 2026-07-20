@@ -35,6 +35,18 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertSame('ROLE_ADMIN', $grant->attribute);
     }
 
+    public function testApproveUnchangedRouteIsAdminOnlyAndPostOnly(): void
+    {
+        $method = (new ReflectionClass(AdminSyllabusTemplateController::class))->getMethod('approveUnchanged');
+        $route = $method->getAttributes(Route::class)[0]->newInstance();
+        $grant = $method->getAttributes(IsGranted::class)[0]->newInstance();
+
+        self::assertSame('/admin/syllabus-template-reviews/{id}/approve-unchanged', $route->path);
+        self::assertSame('app_admin_syllabus_template_review_approve', $route->name);
+        self::assertSame(['POST'], $route->methods);
+        self::assertSame('ROLE_ADMIN', $grant->attribute);
+    }
+
     public function testRepositoryDefinesPendingFacultyReviewQueryAndCount(): void
     {
         $reflection = new ReflectionClass(TemplateSubmissionRepository::class);
@@ -98,10 +110,14 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString("'pendingReviewCount' => \$submissions->countPendingFacultyReviews(\$selectedProgram)", $source);
         self::assertStringContainsString("'programs' => \$submissions->findPendingFacultyReviewPrograms()", $source);
         self::assertStringContainsString('$submissions->findPendingFacultyReview($id)', $source);
-        self::assertStringContainsString("'sharedTemplateChanged' => \$sharedTemplateChanged", $source);
+        self::assertStringContainsString("'sharedTemplateChanged' => \$submission->hasSharedTemplateChanged()", $source);
+        self::assertStringContainsString("isCsrfTokenValid('approve-syllabus-submission-'", $source);
+        self::assertStringContainsString('ReviewDecision::Approved', $source);
+        self::assertStringContainsString('$submission->recordReview($review, $submittedRevision)', $source);
+        self::assertStringContainsString('$entityManager->persist($review)', $source);
     }
 
-    public function testReviewDetailShowsFrozenRevisionAndStaleTemplateWarningWithoutDecisionForms(): void
+    public function testReviewDetailShowsFrozenRevisionStaleWarningAndApproveUnchangedAction(): void
     {
         $detail = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/review_detail.html.twig');
 
@@ -116,9 +132,11 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('content.courseOutcomes', $detail);
         self::assertStringContainsString('Shared template changed since this proposal began.', $detail);
         self::assertStringContainsString('The proposal must be reconciled before approval.', $detail);
-        self::assertStringContainsString('This page is read-only.', $detail);
-        self::assertStringNotContainsString('<form', $detail);
-        self::assertStringNotContainsString('Approve unchanged', $detail);
+        self::assertStringContainsString('content above is read-only', $detail);
+        self::assertStringContainsString("path('app_admin_syllabus_template_review_approve'", $detail);
+        self::assertStringContainsString("csrf_token('approve-syllabus-submission-'", $detail);
+        self::assertStringContainsString('Approve unchanged', $detail);
+        self::assertStringContainsString('{% if sharedTemplateChanged %} disabled{% endif %}', $detail);
         self::assertStringNotContainsString('Deny submission', $detail);
     }
 }

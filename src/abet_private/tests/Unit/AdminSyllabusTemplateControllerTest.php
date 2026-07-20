@@ -33,6 +33,7 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('revision.completenessStatus.value', $template);
         self::assertStringContainsString('revision.missingFields', $template);
         self::assertStringContainsString('template.status.value', $template);
+        self::assertStringContainsString('template.commonCourse.program.initials', $template);
         self::assertStringContainsString("path('app_admin_syllabus_template_reviews')", $template);
         self::assertStringContainsString('{{ pendingReviewCount }}', $template);
     }
@@ -85,5 +86,22 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('form.program is defined', $form);
         self::assertStringContainsString('Publish now', $index);
         self::assertStringContainsString('Create new revision', $index);
+        self::assertStringContainsString("template.origin.value == 'faculty_submission'", $index);
+        self::assertStringContainsString('approved faculty revision; the faculty submission remains unchanged', $form);
+    }
+
+    public function testAdminManagerIncludesCurrentApprovedFacultyTemplates(): void
+    {
+        $repository = file_get_contents(dirname(__DIR__, 2).'/src/Repository/SyllabusTemplate/TemplateSubmissionRepository.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/src/Controller/SyllabusTemplate/AdminSyllabusTemplateController.php');
+
+        self::assertIsString($repository);
+        self::assertIsString($controller);
+        self::assertStringContainsString('findManagedTemplates', $repository);
+        self::assertStringContainsString('submission.approvedRevision = currentApprovedRevision', $repository);
+        self::assertStringContainsString('ProposalOrigin::CoordinatorCreated', $repository);
+        self::assertStringContainsString('SubmissionStatus::Draft', $repository);
+        self::assertStringContainsString('$submissions->findManagedTemplates($filter)', $controller);
+        self::assertStringContainsString('$submission->createCoordinatorRevisionDraft($user, $data->toContent())', $controller);
     }
 }

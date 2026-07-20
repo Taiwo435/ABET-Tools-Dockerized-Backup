@@ -31,6 +31,37 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         self::assertSame($revision, $course->getCurrentApprovedRevision());
     }
 
+    public function testApprovalUnchangedCannotReplaceANewerSharedTemplateRevision(): void
+    {
+        [$course, , $faculty, $coordinator] = $this->fixture();
+        $sharedTemplate = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
+        $firstSharedRevision = $sharedTemplate->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent());
+        $sharedTemplate->publishCoordinatorTemplate($firstSharedRevision);
+
+        $facultyProposal = new TemplateSubmission($course, $faculty, ProposalOrigin::FacultySubmission, $firstSharedRevision);
+        $facultyRevision = $this->completeFacultyRevision($facultyProposal, $faculty, $firstSharedRevision->getContent());
+        $facultyProposal->submit($facultyRevision);
+
+        $newSharedRevision = $sharedTemplate->beginCoordinatorRevision($coordinator, $this->completeContent([
+            'catalogDescription' => 'Newer shared content',
+        ]));
+        $sharedTemplate->publishCoordinatorTemplate($newSharedRevision);
+
+        self::assertTrue($facultyProposal->hasSharedTemplateChanged());
+        $review = new TemplateReview($facultyProposal, $coordinator, ReviewDecision::Approved);
+
+        try {
+            $facultyProposal->recordReview($review, $facultyRevision);
+            self::fail('Approval unchanged should reject a proposal based on an outdated shared revision.');
+        } catch (\DomainException $exception) {
+            self::assertSame('Approval without edits cannot replace a newer shared template revision.', $exception->getMessage());
+        }
+
+        self::assertSame(SubmissionStatus::Submitted, $facultyProposal->getStatus());
+        self::assertNull($facultyProposal->getReview());
+        self::assertSame($newSharedRevision, $course->getCurrentApprovedRevision());
+    }
+
     public function testApprovalWithEditsPreservesFacultyRevisionAndPublishesCoordinatorRevision(): void
     {
         [$course, $submission, $faculty, $coordinator] = $this->fixture();
@@ -188,6 +219,32 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         self::assertSame($updated, $proposal->getApprovedRevision());
         self::assertSame($updated, $course->getCurrentApprovedRevision());
         self::assertSame($firstRevision, $proposal->getRevisions()->get(0));
+    }
+
+    public function testCurrentApprovedFacultyTemplateCanSeedAnIndependentCoordinatorDraft(): void
+    {
+        [$course, $facultyProposal, $faculty, $coordinator] = $this->fixture();
+        $facultyRevision = $this->completeFacultyRevision($facultyProposal, $faculty, [
+            'catalogDescription' => 'Approved faculty content',
+        ]);
+        $facultyProposal->submit($facultyRevision);
+        $facultyProposal->recordReview(
+            new TemplateReview($facultyProposal, $coordinator, ReviewDecision::Approved),
+            $facultyRevision,
+        );
+
+        $coordinatorDraft = $facultyProposal->createCoordinatorRevisionDraft($coordinator, array_replace(
+            $facultyRevision->getContent(),
+            ['catalogDescription' => 'Coordinator revision draft'],
+        ));
+
+        self::assertSame(ProposalOrigin::CoordinatorCreated, $coordinatorDraft->getOrigin());
+        self::assertSame(SubmissionStatus::Draft, $coordinatorDraft->getStatus());
+        self::assertSame($facultyRevision, $coordinatorDraft->getBasedOnRevision());
+        self::assertSame('Coordinator revision draft', $coordinatorDraft->getWorkingRevision()?->getContent()['catalogDescription']);
+        self::assertSame(SubmissionStatus::Approved, $facultyProposal->getStatus());
+        self::assertSame('Approved faculty content', $facultyRevision->getContent()['catalogDescription']);
+        self::assertSame($facultyRevision, $course->getCurrentApprovedRevision());
     }
 
     public function testFacultyProposalRecordsTheApprovedTemplateUsedForPrefill(): void
