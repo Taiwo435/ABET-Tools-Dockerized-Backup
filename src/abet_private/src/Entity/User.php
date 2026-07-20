@@ -116,7 +116,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * Allows users to be deactivated to allow for rollbacks
-     * 
+     *
      * @param bool $isActive    New active state
      * @return User             for the method chaining pattern (fluent interface)
      */
@@ -128,7 +128,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * Returns last user login time
-     * 
+     *
      * @return \DateTimeInterface|null
      */
     public function getLastLogin(): ?\DateTimeInterface
@@ -139,7 +139,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * Allows people to set last login time
      * Note: we should update this to updateLastLoginTime();
-     * 
+     *
      * @param mixed $lastLogin new last login time
      * @return User             for method chaining
      */
@@ -147,11 +147,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->lastLogin = $lastLogin;
         return $this;
-    }   
-    
+    }
+
     /**
      * The time the user was created at
-     * 
+     *
      * @return \DateTimeInterface
      */
     public function getCreatedAt(): \DateTimeInterface
@@ -273,17 +273,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $data;
     }
 
-	/**
-	*Issue #132: Commented out original lines below.
-        *Wiping these fields instantly destroyed the active session state upon login,
-        *causing immediate authentication drops. Safely bypassed to keep user in memory.
-    	*/
-#[\Deprecated]
+    /**
+     * Intentionally left blank.
+     *
+     * $password stores a bcrypt hash (never plaintext), so there is nothing
+     * sensitive here that needs erasing after authentication.
+     *
+     * Do NOT null out $permissions here. $permissions is a typed, non-nullable
+     * int column — assigning null to it throws a TypeError, which previously
+     * caused an immediate crash right after a successful login (see #132).
+     */
+
     public function eraseCredentials(): void
     {
-    // $this->password = null;
-    // $this->permissions = null;
-    // $this->permissions = 0;
+
     }
 }
 

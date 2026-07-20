@@ -25,21 +25,8 @@
         <p>Please sign in to access your dashboard.</p>
       </div>
 
-      {% if error %}
-        <div class="error-box">
-          <strong>Error:</strong> <?php echo e($error); ?>
-        </div>
-      {% endif %}
-
-      {# <?php if ($error): ?>
-        <div class="error-box">
-          <strong>Error:</strong> <?php echo e($error); ?>
-        </div>
-      <?php endif; ?> #}
-
       <form method="POST" autocomplete="on">
-        {# <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>"> #}
-        {% if error %}
+          {% if error %}
             <div class="msg error">
               <strong>Error:</strong>
               {{ error.messageKey|trans(error.messageData, 'security') }}
