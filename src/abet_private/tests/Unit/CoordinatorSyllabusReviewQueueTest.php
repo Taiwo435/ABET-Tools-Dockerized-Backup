@@ -142,10 +142,12 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString("isCsrfTokenValid('deny-syllabus-submission-'", $source);
         self::assertStringContainsString('ReviewDecision::Denied', $source);
         self::assertStringContainsString('$submission->recordDenial($review)', $source);
-        self::assertStringContainsString('CoordinatorTemplateData::fromRevision($submittedRevision)', $source);
+        self::assertStringContainsString('CoordinatorTemplateData::fromSubmission($submission)', $source);
+        self::assertStringContainsString("['include_course_identity' => true]", $source);
         self::assertStringContainsString('ReviewDecision::ApprovedWithEdits', $source);
         self::assertStringContainsString('$submission->addRevision($user, RevisionAuthorType::Coordinator, $content)', $source);
-        self::assertStringContainsString('$submission->recordReview($review, $coordinatorRevision)', $source);
+        self::assertStringContainsString('$submission->getCommonCourse()->updateDuringFacultyReview(', $source);
+        self::assertStringContainsString('courseDetailsChanged: $courseDetailsChanged', $source);
     }
 
     public function testReviewDetailShowsFrozenRevisionStaleWarningAndApproveUnchangedAction(): void
@@ -166,12 +168,21 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('submitted faculty revision is frozen and remains read-only', $detail);
         self::assertStringContainsString("path('app_admin_syllabus_template_review_approve'", $detail);
         self::assertStringContainsString("csrf_token('approve-syllabus-submission-'", $detail);
-        self::assertStringContainsString('Approve unchanged', $detail);
+        self::assertStringContainsString('Approve submission', $detail);
         self::assertStringContainsString('{% if sharedTemplateChanged %} disabled{% endif %}', $detail);
         self::assertStringContainsString('Deny submission', $detail);
         self::assertStringContainsString("csrf_token('deny-syllabus-submission-'", $detail);
         self::assertStringContainsString('Coordinator feedback is required', file_get_contents((new ReflectionClass(AdminSyllabusTemplateController::class))->getFileName()));
         self::assertStringContainsString("path('app_admin_syllabus_template_review_edit'", $detail);
+        self::assertStringContainsString('class="button-primary review-approval-action"', $detail);
+        self::assertStringContainsString('>Approve Unchanged</button>', $detail);
+        self::assertStringContainsString('class="button-primary review-approval-action">Review and approve with edits</a>', $detail);
+        self::assertStringContainsString('<details class="denial-disclosure"', $detail);
+        self::assertStringContainsString('{% if denialError|default(null) %} open{% endif %}', $detail);
+        self::assertStringContainsString('<summary class="button-primary review-approval-action">Deny submission</summary>', $detail);
+        self::assertStringContainsString('class="button-primary review-approval-action">Confirm denial</button>', $detail);
+        self::assertStringContainsString('.denial-disclosure > summary { list-style: none; cursor: pointer; }', $detail);
+        self::assertStringContainsString('.review-approval-action { display: inline-flex;', $detail);
         self::assertStringContainsString('{% if submission.review %}', $detail);
     }
 
@@ -185,7 +196,12 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('Opening this page does not create a revision', $edit);
         self::assertStringContainsString('Approve with edits', $edit);
         self::assertStringContainsString("csrf_token('approve-with-edits-syllabus-submission-'", $edit);
-        self::assertStringContainsString('frozen faculty submission', $edit);
+        self::assertStringContainsString('frozen faculty-submitted revision', $edit);
+        self::assertStringContainsString('form_row(form.program)', $edit);
+        self::assertStringContainsString('form_row(form.courseSubject)', $edit);
+        self::assertStringContainsString('form_row(form.courseNumber)', $edit);
+        self::assertStringContainsString('form_row(form.courseName)', $edit);
+        self::assertStringContainsString('form_row(form.deliveryType)', $edit);
         self::assertStringContainsString('Completed Syllabus Reviews', $history);
         self::assertStringContainsString('submission.review.decision.value', $history);
         self::assertStringContainsString('submission.review.reviewer.asurite', $history);

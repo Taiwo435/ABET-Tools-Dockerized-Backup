@@ -124,5 +124,11 @@ final class CoordinatorTemplateDataTest extends TestCase
 
         $submitted->courseName = 'Programming Language Concepts';
         self::assertFalse($submitted->isEquivalentTo($original));
+        self::assertFalse($submitted->hasSameCourseIdentityAs($original));
+
+        $submitted->courseName = 'Programming Languages';
+        $submitted->catalogDescription = 'Coordinator clarification';
+        self::assertTrue($submitted->hasSameCourseIdentityAs($original));
+        self::assertFalse($submitted->isEquivalentTo($original));
     }
 }

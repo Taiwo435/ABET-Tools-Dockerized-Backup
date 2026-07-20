@@ -73,12 +73,17 @@ final class CoordinatorTemplateData
 
     public function isEquivalentTo(self $other): bool
     {
+        return $this->hasSameCourseIdentityAs($other)
+            && $this->toContent() === $other->toContent();
+    }
+
+    public function hasSameCourseIdentityAs(self $other): bool
+    {
         return $this->program === $other->program
             && strtoupper(trim($this->courseSubject)) === strtoupper(trim($other->courseSubject))
             && trim($this->courseNumber) === trim($other->courseNumber)
             && trim($this->courseName) === trim($other->courseName)
-            && $this->deliveryType === $other->deliveryType
-            && $this->toContent() === $other->toContent();
+            && $this->deliveryType === $other->deliveryType;
     }
 
     /** @return list<string> */

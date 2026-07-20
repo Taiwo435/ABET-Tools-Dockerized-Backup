@@ -239,7 +239,12 @@ class TemplateSubmission
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    public function recordReview(TemplateReview $review, TemplateRevision $approvedRevision, ?\DateTimeImmutable $at = null): void
+    public function recordReview(
+        TemplateReview $review,
+        TemplateRevision $approvedRevision,
+        ?\DateTimeImmutable $at = null,
+        bool $courseDetailsChanged = false,
+    ): void
     {
         if ($this->origin !== ProposalOrigin::FacultySubmission) {
             throw new \DomainException('Coordinator-created templates do not require a review decision.');
@@ -261,7 +266,8 @@ class TemplateSubmission
             throw new \DomainException('Approval with edits requires a coordinator-authored revision.');
         }
         if ($review->getDecision() === ReviewDecision::ApprovedWithEdits
-            && $approvedRevision->getContent() === $this->submittedRevision?->getContent()) {
+            && $approvedRevision->getContent() === $this->submittedRevision?->getContent()
+            && !$courseDetailsChanged) {
             throw new \DomainException('Approval with edits requires a meaningful content change.');
         }
         if ($review->getDecision() === ReviewDecision::ApprovedWithEdits && $this->hasSharedTemplateChanged()) {

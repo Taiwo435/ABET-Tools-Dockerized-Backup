@@ -164,9 +164,9 @@ final class AdminSyllabusTemplateController extends AbstractController
             throw new \LogicException('A pending faculty submission must have a frozen submitted revision.');
         }
 
-        $originalData = CoordinatorTemplateData::fromRevision($submittedRevision);
-        $data = CoordinatorTemplateData::fromRevision($submittedRevision);
-        $form = $this->createForm(CoordinatorTemplateType::class, $data);
+        $originalData = CoordinatorTemplateData::fromSubmission($submission);
+        $data = CoordinatorTemplateData::fromSubmission($submission);
+        $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -178,15 +178,30 @@ final class AdminSyllabusTemplateController extends AbstractController
                 $form->addError(new FormError('This proposal is based on an older shared template and must be reconciled before approval.'));
             } elseif ($data->isEquivalentTo($originalData)) {
                 $form->addError(new FormError('Make at least one meaningful change before approving with edits.'));
+            } elseif ($data->program === null) {
+                $form->addError(new FormError('A program is required before approving with edits.'));
+            } elseif ($this->courseIdentityExists($entityManager, $data, $submission->getCommonCourse())) {
+                $form->addError(new FormError('Another shared template already uses this program, course, and delivery type.'));
             } else {
                 $content = $data->toContent();
                 $completeness = TemplateContentCompleteness::assess($content);
                 if ($completeness['status'] !== CompletenessStatus::Complete) {
                     $form->addError(new FormError('Complete all required fields before approving with edits.'));
                 } else {
+                    $courseDetailsChanged = !$data->hasSameCourseIdentityAs($originalData);
                     $coordinatorRevision = $submission->addRevision($user, RevisionAuthorType::Coordinator, $content);
+                    if ($courseDetailsChanged) {
+                        $submission->getCommonCourse()->updateDuringFacultyReview(
+                            $submission,
+                            $data->program,
+                            $data->courseSubject,
+                            $data->courseNumber,
+                            $data->courseName,
+                            $data->deliveryType,
+                        );
+                    }
                     $review = new TemplateReview($submission, $user, ReviewDecision::ApprovedWithEdits);
-                    $submission->recordReview($review, $coordinatorRevision);
+                    $submission->recordReview($review, $coordinatorRevision, courseDetailsChanged: $courseDetailsChanged);
                     $entityManager->persist($review);
                     $entityManager->flush();
 
@@ -244,7 +259,7 @@ final class AdminSyllabusTemplateController extends AbstractController
         $entityManager->flush();
 
         $this->addFlash('success', sprintf(
-            '%s %s was approved unchanged and published as the shared template.',
+            '%s %s submission was approved and published as the shared template.',
             $submission->getCommonCourse()->getCourseSubject(),
             $submission->getCommonCourse()->getCourseNumber(),
         ));

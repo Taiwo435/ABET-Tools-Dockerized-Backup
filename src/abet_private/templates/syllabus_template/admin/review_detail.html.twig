@@ -36,8 +36,13 @@
         .decision-panel p { margin: .25rem 0 1rem; color: #666; font-size: .9rem; }
         .decision-panel__warning { color: #8a2038 !important; font-weight: 700; }
         .decision-panel .button-primary:disabled { background: #aaa; color: #f4f4f4; cursor: not-allowed; }
+        .review-approval-action { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; max-width: 280px; min-height: 2.75rem; }
         .decision-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
         .decision-panel--deny { border-left-color: var(--error-red); }
+        .denial-disclosure > summary { list-style: none; cursor: pointer; }
+        .denial-disclosure > summary::-webkit-details-marker { display: none; }
+        .denial-disclosure[open] > summary { margin-bottom: 1rem; }
+        .denial-disclosure form { padding-top: 1rem; border-top: 1px solid #dedede; }
         .decision-panel textarea { box-sizing: border-box; width: 100%; min-height: 115px; margin: .35rem 0 .75rem; padding: .7rem; border: 1px solid #aaa; border-radius: 4px; font: inherit; }
         .field-error { margin: 0 0 .65rem !important; color: var(--error-red) !important; font-weight: 700; }
         .review-outcome { margin-top: 1rem; padding: 1.25rem 1.5rem; border-left: 5px solid var(--asu-maroon); border-radius: 7px; background: var(--asu-white); box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
@@ -141,27 +146,30 @@
         {% else %}
             <div class="decision-grid">
                 <section class="decision-panel">
-                    <h2>Approve unchanged</h2>
+                    <h2>Approve submission</h2>
                     <p>Publish the frozen faculty revision exactly as submitted.</p>
                     {% if sharedTemplateChanged %}<p class="decision-panel__warning">Unavailable because the shared template changed after this faculty copy was created.</p>{% endif %}
                     <form method="post" action="{{ path('app_admin_syllabus_template_review_approve', {id: submission.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('approve-syllabus-submission-' ~ submission.id) }}">
-                        <button type="submit" class="button-primary"{% if sharedTemplateChanged %} disabled{% endif %}>Approve unchanged</button>
+                        <button type="submit" class="button-primary review-approval-action"{% if sharedTemplateChanged %} disabled{% endif %}>Approve Unchanged</button>
                     </form>
-                    <p><a href="{{ path('app_admin_syllabus_template_review_edit', {id: submission.id}) }}">Review and approve with edits</a></p>
+                    <p><a href="{{ path('app_admin_syllabus_template_review_edit', {id: submission.id}) }}" class="button-primary review-approval-action">Review and approve with edits</a></p>
                 </section>
 
                 <section class="decision-panel decision-panel--deny">
                     <h2>Deny submission</h2>
                     <p>Return a final denial decision with feedback visible to the faculty member.</p>
-                    <form method="post" action="{{ path('app_admin_syllabus_template_review_deny', {id: submission.id}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('deny-syllabus-submission-' ~ submission.id) }}">
-                        <label for="denial-feedback"><strong>Coordinator feedback</strong></label>
-                        <textarea id="denial-feedback" name="feedback" required aria-describedby="denial-feedback-help denial-feedback-error">{{ denialFeedback|default('') }}</textarea>
-                        <small id="denial-feedback-help">Required. Explain what must be corrected.</small>
-                        {% if denialError|default(null) %}<p id="denial-feedback-error" class="field-error" role="alert">{{ denialError }}</p>{% endif %}
-                        <button type="submit" class="button-secondary">Deny submission</button>
-                    </form>
+                    <details class="denial-disclosure"{% if denialError|default(null) %} open{% endif %}>
+                        <summary class="button-primary review-approval-action">Deny submission</summary>
+                        <form method="post" action="{{ path('app_admin_syllabus_template_review_deny', {id: submission.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('deny-syllabus-submission-' ~ submission.id) }}">
+                            <label for="denial-feedback"><strong>Coordinator feedback</strong></label>
+                            <textarea id="denial-feedback" name="feedback" required aria-describedby="denial-feedback-help denial-feedback-error">{{ denialFeedback|default('') }}</textarea>
+                            <small id="denial-feedback-help">Required. Explain what must be corrected.</small>
+                            {% if denialError|default(null) %}<p id="denial-feedback-error" class="field-error" role="alert">{{ denialError }}</p>{% endif %}
+                            <button type="submit" class="button-primary review-approval-action">Confirm denial</button>
+                        </form>
+                    </details>
                 </section>
             </div>
         {% endif %}

@@ -125,6 +125,37 @@ class CommonCourse
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    public function updateDuringFacultyReview(
+        TemplateSubmission $submission,
+        Program $program,
+        string $courseSubject,
+        string $courseNumber,
+        string $courseName,
+        DeliveryType $deliveryType,
+    ): void
+    {
+        if ($submission->getCommonCourse() !== $this
+            || $submission->getOrigin() !== ProposalOrigin::FacultySubmission
+            || $submission->getStatus() !== SubmissionStatus::Submitted
+            || $submission->getReview() !== null) {
+            throw new \DomainException('Course details can only be corrected while a faculty submission is pending review.');
+        }
+
+        $courseSubject = strtoupper(trim($courseSubject));
+        $courseNumber = trim($courseNumber);
+        $courseName = trim($courseName);
+        if ($courseSubject === '' || $courseNumber === '' || $courseName === '') {
+            throw new \InvalidArgumentException('Course subject, number, and name are required.');
+        }
+
+        $this->program = $program;
+        $this->courseSubject = $courseSubject;
+        $this->courseNumber = $courseNumber;
+        $this->courseName = $courseName;
+        $this->deliveryType = $deliveryType;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function publish(TemplateRevision $revision): void
     {
         if ($revision->getSubmission()->getCommonCourse() !== $this) {

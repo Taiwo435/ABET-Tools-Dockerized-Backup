@@ -20,7 +20,7 @@
 
     <section class="hero hero-small">
         <h1>Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }} with Edits</h1>
-        <p>Create a coordinator-authored revision without changing the frozen faculty submission.</p>
+        <p>Correct course details and syllabus content while preserving the frozen faculty-submitted revision.</p>
     </section>
 
     <main class="review-edit">
@@ -29,11 +29,18 @@
             <p>Seeded from faculty revision {{ submission.submittedRevision.revisionNumber }} submitted by {{ submission.submittedBy.asurite }}.</p>
         </div>
 
-        <div class="review-edit__notice">Opening this page does not create a revision. A new immutable coordinator revision is created only after meaningful, complete edits are submitted.</div>
+        <div class="review-edit__notice">Opening this page does not create a revision. Course corrections and a new immutable coordinator revision are saved only after meaningful, complete edits are submitted.</div>
         {% if sharedTemplateChanged %}<div class="review-edit__notice review-edit__notice--error" role="alert">This proposal is based on an older shared template. Approval is blocked until a separate reconciliation workflow is available.</div>{% endif %}
 
         {{ form_start(form, {attr: {class: 'review-edit__form'}}) }}
             {{ form_errors(form) }}
+            <h2>Course details</h2>
+            {{ form_row(form.program) }}
+            {{ form_row(form.courseSubject) }}
+            {{ form_row(form.courseNumber) }}
+            {{ form_row(form.courseName) }}
+            {{ form_row(form.deliveryType) }}
+            <h2>Syllabus content</h2>
             {{ form_row(form.creditHours) }}
             {{ form_row(form.courseCoordinators) }}
             {{ form_row(form.creditCategorization) }}

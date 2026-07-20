@@ -81,6 +81,59 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         self::assertSame(2, $submission->getRevisions()->count());
     }
 
+    public function testApprovalWithEditsCanCorrectAllCourseDetailsWithoutChangingSubmittedRevision(): void
+    {
+        [$course, $submission, $faculty, $coordinator] = $this->fixture();
+        $facultyRevision = $this->completeFacultyRevision($submission, $faculty);
+        $submission->submit($facultyRevision);
+        $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, $facultyRevision->getContent());
+        $newProgram = new Program('Software Engineering', 'BS', '2027');
+
+        $course->updateDuringFacultyReview(
+            $submission,
+            $newProgram,
+            'ser',
+            '401',
+            'Capstone Design',
+            DeliveryType::Hybrid,
+        );
+        $review = new TemplateReview($submission, $coordinator, ReviewDecision::ApprovedWithEdits);
+        $submission->recordReview($review, $coordinatorRevision, courseDetailsChanged: true);
+
+        self::assertSame(SubmissionStatus::ApprovedWithEdits, $submission->getStatus());
+        self::assertSame($facultyRevision, $submission->getSubmittedRevision());
+        self::assertSame($coordinatorRevision, $submission->getApprovedRevision());
+        self::assertSame($newProgram, $course->getProgram());
+        self::assertSame('SER', $course->getCourseSubject());
+        self::assertSame('401', $course->getCourseNumber());
+        self::assertSame('Capstone Design', $course->getCourseName());
+        self::assertSame(DeliveryType::Hybrid, $course->getDeliveryType());
+    }
+
+    public function testCourseDetailsCannotBeChangedAfterFacultyReviewIsComplete(): void
+    {
+        [$course, $submission, $faculty, $coordinator] = $this->fixture();
+        $facultyRevision = $this->completeFacultyRevision($submission, $faculty);
+        $submission->submit($facultyRevision);
+        $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent(['catalogDescription' => 'Edited']));
+        $submission->recordReview(
+            new TemplateReview($submission, $coordinator, ReviewDecision::ApprovedWithEdits),
+            $coordinatorRevision,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Course details can only be corrected while a faculty submission is pending review.');
+
+        $course->updateDuringFacultyReview(
+            $submission,
+            $course->getProgram(),
+            'CSE',
+            '999',
+            'Too Late',
+            DeliveryType::Online,
+        );
+    }
+
     public function testApprovalWithEditsCannotReplaceANewerSharedTemplateWithoutReconciliation(): void
     {
         [$course, , $faculty, $coordinator] = $this->fixture();
