@@ -38,11 +38,17 @@ final class HomeController extends AbstractController
     //         'asurite'=> $asurite]);
     // }
 
-    // home2
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    #[Route('/home2', name: 'app_homepage')]
+    #[Route('/home', name: 'app_homepage')]
     public function home(#[CurrentUser] User $user) {
+        $missingPermissions = array_filter(
+            AccountController::REQUESTABLE_PERMISSIONS,
+            static fn (Permissions $permission): bool => !$user->hasPermission($permission),
+        );
+
         return $this->render('homepage/home.html.twig', [
+            'hasMissingPermissions' => count($missingPermissions) > 0,
+            'pendingPermissions' => $user->getRequestedPermissionNames(),
         ]);
     }
 

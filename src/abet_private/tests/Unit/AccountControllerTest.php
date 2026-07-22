@@ -60,4 +60,48 @@ final class AccountControllerTest extends TestCase
         self::assertStringContainsString("path('app_account_overview')", $template);
         self::assertStringNotContainsString('href="/account/me/"', $template);
     }
+
+    public function testRequestAccessRouteRequiresAuthenticatedUserAndSupportsGetAndPost(): void
+    {
+        $method = (new ReflectionClass(AccountController::class))->getMethod('requestAccess');
+
+        $routeAttributes = $method->getAttributes(Route::class);
+        self::assertCount(1, $routeAttributes);
+
+        $route = $routeAttributes[0]->newInstance();
+        self::assertSame('/account/request-access', $route->path);
+        self::assertSame('app_account_request_access', $route->name);
+        self::assertSame(['GET', 'POST'], $route->methods);
+
+        $grantAttributes = $method->getAttributes(IsGranted::class);
+        self::assertCount(1, $grantAttributes);
+        self::assertSame('IS_AUTHENTICATED_FULLY', $grantAttributes[0]->newInstance()->attribute);
+    }
+
+    /**
+     * ROLE_ADMIN is requestable like any other permission, but that only
+     * queues it for review — it still requires an existing admin to approve
+     * it via AdminController::approve(), same as every other permission.
+     */
+    public function testRequestAccessOffersAdminPermissionAsRequestable(): void
+    {
+        $property = (new ReflectionClass(AccountController::class))->getConstant('REQUESTABLE_PERMISSIONS');
+
+        self::assertIsArray($property);
+        $names = array_map(static fn ($permission) => $permission->name, $property);
+        self::assertContains('ROLE_ADMIN', $names);
+    }
+
+    public function testRequestAccessTemplateRendersCheckboxesWithCsrfProtection(): void
+    {
+        $template = file_get_contents(
+            dirname(__DIR__, 2).'/templates/account/request_access.html.twig'
+        );
+
+        self::assertIsString($template);
+        self::assertStringContainsString('Request Access', $template);
+        self::assertStringContainsString("csrf_token('request_access')", $template);
+        self::assertStringContainsString('name="permissions[]"', $template);
+        self::assertStringContainsString("path('app_account_request_access')", $template);
+    }
 }

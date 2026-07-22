@@ -136,6 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="msg error" id="error-box">
           <strong>Error:</strong> <?php echo e($error); ?>
         </div>
+      <?php elseif (isset($_GET['verified']) && $_GET['verified'] === '1'): ?>
+        <div class="msg success" id="verified-box">
+          <strong>Email verified!</strong> You can now sign in.
+        </div>
       <?php endif; ?>
 
       <form method="POST" action="/login" autocomplete="on">
@@ -160,6 +164,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <div style="margin-top: 15px;">
             <a href="/auth/forgot_password.php" style="margin-left: 0;">Forgot Password?</a>
+          </div>
+          <div style="margin-top: 15px;">
+            <a href="/resend-verification" style="margin-left: 0;">Didn't get a verification email?</a>
           </div>
         </div>
       </form>

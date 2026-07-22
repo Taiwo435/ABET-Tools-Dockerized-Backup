@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Permission Requests | {% endblock %}
+
+{% block body %}
+{% autoescape 'html' %}
+    <section class="hero">
+        <h1>Permission Requests</h1>
+        <p>Review and act on pending access requests from faculty accounts.</p>
+    </section>
+
+    <main class="main-container">
+        <div class="page-header">
+            <div class="page-title">
+                <h2>Pending Requests</h2>
+                <p>{{ requests|length }} request{{ requests|length == 1 ? '' : 's' }} awaiting review.</p>
+            </div>
+            <a href="{{ path('app_admin_panel') }}" class="btn btn-secondary">Back to Admin Panel</a>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Current Access</th>
+                        <th>Requested Access</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr>
+                            <td>{{ req.email }}</td>
+                            <td>{{ req.currentPermissions|join(', ')|replace({'_': ' '}) }}</td>
+                            <td>{{ req.requestedPermissions|join(', ')|replace({'_': ' '}) }}</td>
+                            <td>
+                                <form method="post" action="{{ path('app_admin_permission_queue_approve', {id: req.id}) }}" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token('admin_queue_action') }}">
+                                    <button type="submit" class="btn btn-secondary">Approve</button>
+                                </form>
+                                <form method="post" action="{{ path('app_admin_permission_queue_deny', {id: req.id}) }}" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token('admin_queue_action') }}">
+                                    <button type="submit" class="btn btn-secondary">Deny</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="empty-state">No pending requests.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <style>
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--asu-white);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 780px;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e6e6e6;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .admin-table th {
+            background: var(--asu-maroon);
+            color: var(--asu-white);
+            font-weight: 700;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-weight: 600;
+        }
+    </style>
+{% endautoescape %}
+{% endblock %}

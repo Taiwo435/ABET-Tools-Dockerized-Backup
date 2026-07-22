@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     permissions INT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     email_verification_token VARCHAR(64) NULL DEFAULT NULL,
+    requested_permissions INT NULL DEFAULT NULL,
     last_login TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -20,6 +20,11 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            custom_authenticators:
+                # Recognizes users already logged in via the legacy PHP-session
+                # /login page, so Symfony-routed pages (IsGranted) don't force
+                # a separate sign-in through /login2. See LegacySessionAuthenticator.
+                - App\Security\LegacySessionAuthenticator
             form_login:
                 login_path: app_login # redirect to this path if user not logged in
                 check_path: app_login

@@ -57,6 +57,11 @@ if (empty($_SESSION['user_id'])) {
         </div>
         <?php endif; ?>
 
+        <div class="checklist-item" onclick="window.location.href='/account/request-access';">
+            <label class="checklist-info">&#43;</label>
+            <label class="checklist-label">Request access to additional tools. &#x279E;</label>
+        </div>
+
     </div>
 
     <div class="tools-grid">
@@ -130,7 +135,7 @@ if (empty($_SESSION['user_id'])) {
             <div class="card-body">
                 <div class="card-body-inner">
                     <p>Manage destination course IDs, user permissions, and other admin settings.</p>
-                    <a href="/AssignmentsGrades/admin.php" class="action-link">Open Admin Panel &rarr;</a>
+                    <a href="/admin" class="action-link">Open Admin Panel &rarr;</a>
                 </div>
             </div>
         </div>

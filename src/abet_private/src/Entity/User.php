@@ -36,11 +36,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "is_active", type: "boolean", options: ["default" => true])]
     private bool $isActive = true;
 
+    /**
+     * @var int|null Pending permissions bitmask requested via the "Request Access" page.
+     * NULL means the user has no pending request. Cleared on approve/deny.
+     */
+    #[ORM\Column(name: 'requested_permissions', type: 'integer', nullable: true)]
+    private ?int $requestedPermissions = null;
+
     #[ORM\Column(name: "last_login", type: "datetime", nullable: true)]
     private ?\DateTimeInterface $lastLogin = null;
 
     #[ORM\Column(name: "created_at", type: "datetime", options: ["default" => "CURRENT_TIMESTAMP"])]
     private \DateTimeInterface $createdAt;
+
+    /**
+     * Without this, a plain `new User()` (e.g. in UserORMTest) leaves
+     * $createdAt uninitialized until something explicitly sets it, which
+     * surfaces as "must not be accessed before initialization" the moment
+     * anything calls getCreatedAt() on that row.
+     */
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -206,6 +224,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getPermissions() : int {
         return $this->permissions;
+    }
+
+    /**
+     * Overwrites the full permissions bitmask directly.
+     * @param int $permissions   The new permissions bitmask.
+     */
+    public function setPermissions(int $permissions) : void {
+        $this->permissions = $permissions;
+    }
+
+    /**
+     * The bitmask of permissions this user has requested but not yet been granted.
+     * NULL means there is no pending request.
+     */
+    public function getRequestedPermissions(): ?int {
+        return $this->requestedPermissions;
+    }
+
+    /**
+     * Sets the pending requested-permissions bitmask.
+     * Pass null to clear a pending request (e.g. after approve/deny).
+     */
+    public function setRequestedPermissions(?int $requestedPermissions): self {
+        $this->requestedPermissions = $requestedPermissions;
+        return $this;
+    }
+
+    /**
+     * Names of the currently-requested permissions, for display purposes.
+     * @return list<string>
+     */
+    public function getRequestedPermissionNames(): array {
+        if ($this->requestedPermissions === null) {
+            return [];
+        }
+        return $this->bitmaskToRoles($this->requestedPermissions);
     }
 
     // /**

@@ -113,8 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions, email_verification_token) VALUES (?, ?, 0, ?, ?)");
       $stmt->execute([$email, $hash, $permissions, $verificationToken]);
 
-      $verifyUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/verify-email?token=' . $verificationToken;
-      send_verification_email($email, $verifyUrl);
+      send_verification_email($email, build_verify_url($verificationToken));
 
       $success = true;
     }
@@ -155,6 +154,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <strong>Success!</strong> Account created. Please check your email to verify your account before signing in.
         </div>
         <a href="/login" class="btn-submit" style="display:block; text-align:center; text-decoration:none;">Go to Sign In</a>
+        <div class="footer-links" style="margin-top: 15px;">
+          <span>Didn't get the email?</span>
+          <a href="/resend-verification">Resend verification</a>
+        </div>
       <?php else: ?>
 
         <?php if ($errors): ?>
