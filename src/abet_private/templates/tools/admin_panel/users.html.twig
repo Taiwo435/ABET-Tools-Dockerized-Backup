@@ -39,7 +39,7 @@
                                     {{ user.active ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td>{{ user.permissions|join(', ') }}</td>
+                            <td>{{ user.permissions|permission_labels|join(', ') }}</td>
                             <td>{{ user.lastLogin ? user.lastLogin|date('Y-m-d H:i') : 'Never' }}</td>
                             <td>{{ user.createdAt ? user.createdAt|date('Y-m-d') : 'Unknown' }}</td>
                             <td>

@@ -2,7 +2,7 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 
-require_role('admin');
+require_role('ROLE_ADMIN');
 
 $csrfToken = csrf_token('syllabus_templates');
 

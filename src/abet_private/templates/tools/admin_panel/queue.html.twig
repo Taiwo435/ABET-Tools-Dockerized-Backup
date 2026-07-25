@@ -32,8 +32,8 @@
                     {% for req in requests %}
                         <tr>
                             <td>{{ req.email }}</td>
-                            <td>{{ req.currentPermissions|join(', ')|replace({'_': ' '}) }}</td>
-                            <td>{{ req.requestedPermissions|join(', ')|replace({'_': ' '}) }}</td>
+                            <td>{{ req.currentPermissions|permission_labels|join(', ') }}</td>
+                            <td>{{ req.requestedPermissions|permission_labels|join(', ') }}</td>
                             <td>
                                 <form method="post" action="{{ path('app_admin_permission_queue_approve', {id: req.id}) }}" style="display:inline;">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token('admin_queue_action') }}">

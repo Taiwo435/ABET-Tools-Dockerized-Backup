@@ -115,13 +115,31 @@ function require_login(string $redirectTo = '/login'): void {
   }
 }
 
+/**
+ * Requires the logged-in user to hold the given permission, identified by
+ * the Permissions enum case name (e.g. 'ROLE_FACULTY_FORM', 'ROLE_ADMIN').
+ * An admin always passes, mirroring User::hasPermission()'s short-circuit.
+ * Fails closed (403) on an unrecognized role name.
+ */
 function require_role(string $role): void {
   require_login();
 
   $permissions = (int)($_SESSION['user_permissions'] ?? 0);
   $isAdmin = ($permissions & \App\Entity\Permissions::ROLE_ADMIN->value) !== 0;
 
-  if ($role === 'admin' && !$isAdmin) {
+  if ($isAdmin) {
+    return;
+  }
+
+  $permission = null;
+  foreach (\App\Entity\Permissions::cases() as $case) {
+    if ($case->name === $role) {
+      $permission = $case;
+      break;
+    }
+  }
+
+  if ($permission === null || !($permissions & $permission->value)) {
     http_response_code(403);
     echo 'Forbidden';
     exit;

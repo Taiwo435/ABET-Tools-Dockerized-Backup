@@ -128,7 +128,7 @@
                 <div class="card-body">
                     <div class="card-body-inner">
                         {% if pendingPermissions|length > 0 %}
-                            <p>You have a pending request for: {{ pendingPermissions|join(', ')|replace({'_': ' '}) }}. An admin will review it shortly.</p>
+                            <p>You have a pending request for: {{ pendingPermissions|permission_labels|join(', ') }}. An admin will review it shortly.</p>
                         {% else %}
                             <p>Don't see a tool you need? Request access to it here — an admin will review and approve it.</p>
                         {% endif %}
@@ -138,7 +138,7 @@
             </div>
             {% endif %}
 
-            {% if app.debug %}
+            {% if app.debug and app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_ADMIN) %}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">DEBUG PANEL</div>

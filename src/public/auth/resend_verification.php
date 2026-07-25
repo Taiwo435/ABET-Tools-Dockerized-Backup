@@ -41,11 +41,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch();
 
     if ($user) {
-      $verificationToken = bin2hex(random_bytes(32));
-      db()->prepare('UPDATE users SET email_verification_token = ? WHERE id = ?')
-        ->execute([$verificationToken, $user['id']]);
+      $verificationCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+      $expiresAt = (new DateTime('+15 minutes'))->format('Y-m-d H:i:s');
 
-      send_verification_email($email, build_verify_url($verificationToken));
+      db()->prepare(
+        'UPDATE users SET email_verification_token = ?, email_verification_expires_at = ?,
+         email_verification_attempts = 0 WHERE id = ?'
+      )->execute([$verificationCode, $expiresAt, $user['id']]);
+
+      send_verification_email($email, $verificationCode);
     }
   }
 
@@ -81,9 +85,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?php if ($submitted): ?>
         <div class="msg success">
-          <strong>Check your email.</strong> If an account with that email is awaiting verification, a new link has been sent.
+          <strong>Check your email.</strong> If an account with that email is awaiting verification, a new code has been sent.
         </div>
-        <a href="/login" class="btn-submit" style="display:block; text-align:center; text-decoration:none;">Back to Sign In</a>
+        <a href="/verify-email?email=<?php echo urlencode($email); ?>" class="btn-submit" style="display:block; text-align:center; text-decoration:none;">Enter Verification Code</a>
       <?php else: ?>
 
         <form method="post" autocomplete="off">
@@ -100,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             />
           </div>
 
-          <button class="btn-submit" type="submit">Resend Verification Email</button>
+          <button class="btn-submit" type="submit">Resend Verification Code</button>
 
           <div class="footer-links">
             <span>Already verified?</span>

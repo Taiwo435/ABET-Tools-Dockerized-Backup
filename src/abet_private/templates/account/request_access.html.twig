@@ -78,7 +78,7 @@
 
         {% if pendingPermissions|length > 0 %}
             <div class="msg pending">
-                You have a pending request for: {{ pendingPermissions|join(', ')|replace({'_': ' '}) }}
+                You have a pending request for: {{ pendingPermissions|permission_labels|join(', ') }}
             </div>
         {% endif %}
 
@@ -89,7 +89,7 @@
                 <label class="permission-option">
                     <input type="checkbox" name="permissions[]" value="{{ permission.name }}"
                         {{ permission.name in pendingPermissions ? 'checked' : '' }}>
-                    {{ permission.name|replace({'_': ' '})|title }}
+                    {{ permission.label }}
                     {% if permission.name in currentPermissions %}
                         <em>(already granted)</em>
                     {% endif %}

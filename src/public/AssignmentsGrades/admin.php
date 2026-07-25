@@ -8,7 +8,7 @@ require_login();
 $csrfToken = csrf_token('tool1_proxy');
 
 // Redirect non-admins away
-require_role('admin');
+require_role('ROLE_ADMIN');
 
 $configPath = getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
 $config = require $configPath;

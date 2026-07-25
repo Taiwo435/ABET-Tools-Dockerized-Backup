@@ -180,8 +180,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getRoles(): array
     {
-        // $roles = $this->roles;
-        $roles = $this->bitmaskToRoles($this->permissions);
+        // Mirrors hasPermission()'s admin short-circuit: an admin implicitly
+        // has every permission. Without this, Symfony's access_control /
+        // #[IsGranted] checks (which read getRoles(), not hasPermission())
+        // would deny an admin who doesn't happen to also have the specific
+        // permission bit for a given tool.
+        if ($this->permissions & Permissions::ROLE_ADMIN->value) {
+            $roles = array_map(static fn (Permissions $permission): string => $permission->name, Permissions::cases());
+        } else {
+            $roles = $this->bitmaskToRoles($this->permissions);
+        }
 
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
@@ -322,4 +330,19 @@ enum Permissions : int {
     case ROLE_REPORTGEN = 1 << 3;
     case ROLE_FACULTY_FORM = 1 << 4;
     case ROLE_COORDINATOR_FORM = 1 << 5;
+
+    /**
+     * Human-readable display name — single source of truth for every screen
+     * that shows a user's permissions, so they never leak SHOUTY_ROLE_NAMEs.
+     */
+    public function label(): string {
+        return match ($this) {
+            self::ROLE_ADMIN => 'Admin',
+            self::ROLE_ASSIGNMENTS_GRADES => 'Assignments & Grades',
+            self::ROLE_CANVAS_FORMATTING => 'Canvas Formatting',
+            self::ROLE_REPORTGEN => 'Report Generation',
+            self::ROLE_FACULTY_FORM => 'Faculty Form',
+            self::ROLE_COORDINATOR_FORM => 'Coordinator Form',
+        };
+    }
 }
