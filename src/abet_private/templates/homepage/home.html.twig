@@ -87,6 +87,21 @@
                     </div>
                 </div>
             </div>
+            
+            {% if app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_COORDINATOR_FORM) %}
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">Syllabus Status Dashboard</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>Track syllabus completion status, review templates, check missing required fields, and approve drafts across all courses in a program.</p>
+                        <a href="{{ path('app_program_readiness', { programId: 1 }) }}" class="action-link">Launch Dashboard &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             {# <?php endif; ?> #}
 
             {# <?php if (hasPermission($permissions, PERM_REPORT_GEN_TOOL)): ?> #}

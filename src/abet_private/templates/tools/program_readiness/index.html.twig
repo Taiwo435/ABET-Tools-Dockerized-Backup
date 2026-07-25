@@ -1,0 +1,201 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Program Syllabus Status | {% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="/assets/css/readiness.css">
+{% endblock %}
+
+{% block body %}
+{% autoescape 'html' %}
+    <div class="site-header">
+        <div class="site-title">ABET Tools - Program Syllabus Status</div>
+    </div>
+
+    <div class="readiness-container">
+        <!-- Hero Section -->
+        <section class="readiness-hero">
+            <div class="hero-content">
+                <h1>Syllabus Status Dashboard</h1>
+                <p class="subtitle">
+                    Accreditation Syllabus Status Overview for Program: 
+                    <strong>
+                        {% if program is not null %}
+                            {{ program.program_name }} ({{ program.program_code }} - {{ program.program_year }})
+                        {% else %}
+                            {{ program_id }}
+                        {% endif %}
+                    </strong>
+                </p>
+            </div>
+            {% if programs is not empty %}
+                <div class="program-selector-container">
+                    <label for="program-selector" class="program-label">Select Program:</label>
+                    <select id="program-selector" class="program-select">
+                        {% for prog in programs %}
+                            <option value="{{ prog.program_id }}" {% if prog.program_id == program_id %}selected{% endif %}>
+                                {{ prog.program_name }} ({{ prog.program_code }} - {{ prog.program_year }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Summary Metrics / Tabs Row -->
+        <div class="metrics-grid">
+            {% set total_count = counts['Ready'] + counts['Blocked'] + counts['Awaiting review'] + counts['Missing'] %}
+            
+            <!-- All Card -->
+            <a href="{{ path('app_program_readiness', { programId: program_id }) }}" 
+               class="metric-card metric-all {% if active_filter is empty %}active{% endif %}">
+                <div class="metric-number">{{ total_count }}</div>
+                <div class="metric-label">All Courses</div>
+                <div class="metric-sub">Total mapped in curriculum</div>
+            </a>
+
+            <!-- Ready Card -->
+            <a href="{{ path('app_program_readiness', { programId: program_id, filter: 'Ready' }) }}" 
+               class="metric-card metric-ready {% if active_filter == 'Ready' %}active{% endif %}">
+                <div class="metric-number">{{ counts['Ready'] }}</div>
+                <div class="metric-label">Ready</div>
+                <div class="metric-sub">Approved & complete</div>
+            </a>
+
+            <!-- Awaiting Review Card -->
+            <a href="{{ path('app_program_readiness', { programId: program_id, filter: 'Awaiting review' }) }}" 
+               class="metric-card metric-awaiting {% if active_filter == 'Awaiting review' %}active{% endif %}">
+                <div class="metric-number">{{ counts['Awaiting review'] }}</div>
+                <div class="metric-label">Awaiting Review</div>
+                <div class="metric-sub">Pending validation</div>
+            </a>
+
+            <!-- Blocked Card -->
+            <a href="{{ path('app_program_readiness', { programId: program_id, filter: 'Blocked' }) }}" 
+               class="metric-card metric-blocked {% if active_filter == 'Blocked' %}active{% endif %}">
+                <div class="metric-number">{{ counts['Blocked'] }}</div>
+                <div class="metric-label">Blocked</div>
+                <div class="metric-sub">Action required</div>
+            </a>
+
+            <!-- Missing Card -->
+            <a href="{{ path('app_program_readiness', { programId: program_id, filter: 'Missing' }) }}" 
+               class="metric-card metric-missing {% if active_filter == 'Missing' %}active{% endif %}">
+                <div class="metric-number">{{ counts['Missing'] }}</div>
+                <div class="metric-label">Missing</div>
+                <div class="metric-sub">Not yet started / No template</div>
+            </a>
+        </div>
+
+        <!-- Detail Table Section -->
+        <div class="table-card">
+            <div class="table-header">
+                <h2>
+                    {% if active_filter is empty %}
+                        All Curriculum Courses
+                    {% else %}
+                        Filtered: {{ active_filter }}
+                    {% endif %}
+                    <span class="badge-count">{{ rows|length }}</span>
+                </h2>
+                <div class="table-actions">
+                    {% if active_filter is not empty %}
+                        <a href="{{ path('app_program_readiness', { programId: program_id }) }}" class="btn-clear">Clear Filter ×</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="readiness-table">
+                    <thead>
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Title</th>
+                            <th>Readiness Status</th>
+                            <th>Detailed State</th>
+                            <th>Missing Required Fields</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if rows is empty %}
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <div class="empty-state-content">
+                                        <div class="empty-icon-container">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-svg-icon">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-18 0v5.25A2.25 2.25 0 006 20.25h12A2.25 2.25 0 0020.25 18V12.75m-18 0A2.25 2.25 0 005.25 15h13.5A2.25 2.25 0 0021 12.75m-18 0V12a2.25 2.25 0 012.25-2.25h1.5a2.25 2.25 0 001.8-0.9l.9-1.2a2.25 2.25 0 011.8-0.9h3.6a2.25 2.25 0 011.8.9l.9 1.2a2.25 2.25 0 001.8.9h1.5A2.25 2.25 0 0121.75 12v.75" />
+                                            </svg>
+                                        </div>
+                                        <h3 class="empty-title">Currently Empty</h3>
+                                        <p class="empty-subtitle">No courses match the selected readiness filter.</p>
+                                        {% if active_filter is not empty %}
+                                            <div class="empty-actions">
+                                                <a href="{{ path('app_program_readiness', { programId: program_id }) }}" class="btn-clear-filter">Reset Filter</a>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            {% for row in rows %}
+                                {% set category = row.state.getCategory() %}
+                                <tr>
+                                    <td class="course-cell">
+                                        <span class="course-code">{{ row.courseCode }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="course-title-text">{{ row.courseTitle }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge badge-{{ category|lower|replace({' ': '-'}) }}">
+                                            {{ category }}
+                                        </span>
+                                    </td>
+                                    <td class="state-cell">
+                                        {{ row.state.value }}
+                                    </td>
+                                    <td>
+                                        {% if row.missingRequiredFields is not empty %}
+                                            <div class="tags-container">
+                                                {% for field in row.missingRequiredFields %}
+                                                    <span class="field-tag">{{ field }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="na-text">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="date-cell">
+                                        {% if row.updatedAt is not null %}
+                                            {{ row.updatedAt|date('Y-m-d H:i:s') }}
+                                        {% else %}
+                                            <span class="na-text">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selector = document.getElementById('program-selector');
+            if (selector) {
+                selector.addEventListener('change', function() {
+                    const selectedProgramId = this.value;
+                    if (selectedProgramId) {
+                        let url = "{{ path('app_program_readiness', { programId: 'PLACEHOLDER' }) }}";
+                        url = url.replace('PLACEHOLDER', selectedProgramId);
+                        window.location.href = url;
+                    }
+                });
+            }
+        });
+    </script>
+{% endautoescape %}
+{% endblock %}
