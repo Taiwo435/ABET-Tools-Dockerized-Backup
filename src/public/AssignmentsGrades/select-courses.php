@@ -22,7 +22,7 @@ $destIdCourses = $config['dest_courses']
     <div class="site-title">ABET Tools - Connect to Class</div>
     <div class="header-actions">
       <a href="jobs.php" class="nav-link">View Jobs</a>
-      <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
+      <a href="/home" class="nav-link">← Back to Dashboard</a>
     </div>
   </header>
 

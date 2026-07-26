@@ -4,11 +4,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ASU ABET Tools | Login</title>
   <link rel="stylesheet" href="/assets/css/auth.css" />
+  {% if clerkPublishableKey %}
+  <script defer crossorigin="anonymous"
+    src="https://{{ clerkFrontendApi }}/npm/@clerk/ui@1/dist/ui.browser.js"
+    type="text/javascript"></script>
+  <script defer crossorigin="anonymous"
+    data-clerk-publishable-key="{{ clerkPublishableKey }}"
+    src="https://{{ clerkFrontendApi }}/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+    type="text/javascript"></script>
+  {% endif %}
 </head>
 <body>
 
   <div class="login-container">
-    
+
     <div class="brand-section">
       <div class="brand-content">
         <h2>Arizona State University</h2>
@@ -25,64 +34,138 @@
         <p>Please sign in to access your dashboard.</p>
       </div>
 
-      {% if error %}
-        <div class="error-box">
-          <strong>Error:</strong> <?php echo e($error); ?>
+      {% if app.request.query.get('verified') == '1' %}
+        <div class="msg success">
+          <strong>Email verified!</strong> You can now sign in.
         </div>
       {% endif %}
 
-      {# <?php if ($error): ?>
-        <div class="error-box">
-          <strong>Error:</strong> <?php echo e($error); ?>
+      {% if app.user %}
+        <div class="msg success">
+          You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
         </div>
-      <?php endif; ?> #}
+      {% endif %}
 
-      <form method="POST" autocomplete="on">
-        {# <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>"> #}
-        {% if error %}
-            <div class="msg error">
-              <strong>Error:</strong>
-              {{ error.messageKey|trans(error.messageData, 'security') }}
-            </div>
-        {% elseif app.request.query.get('verified') == '1' %}
-            <div class="msg success">
-              <strong>Email verified!</strong> You can now sign in.
-            </div>
-        {% endif %}
-
-        {% if app.user %}
-            <div class="msg success">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
-            </div>
-        {% endif %}
-
+      {% if clerkPublishableKey %}
         <div class="form-group">
           <label for="email">Email Address</label>
-          {# _username is for symfony auth...  #}
-          <input type="email" value="{{ last_username }}" name="_username" id="email"  placeholder="asurite@asu.edu" autocomplete="email" required autofocus />
+          <input type="email" id="email" placeholder="asurite@asu.edu" autocomplete="email" autofocus />
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" name="_password" id="password" placeholder="••••••••" autocomplete="current-password" required />
-          <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
-        </div>
-
-        <button type="submit" class="btn-submit">Sign In</button>
+        <button id="clerk-login-btn" class="btn-submit" type="button" disabled>
+          Loading…
+        </button>
+        <p id="clerk-login-status" class="msg error" role="alert" aria-live="polite" hidden></p>
 
         <div class="footer-links">
           <div>
             <span>Don't have an account?</span>
-            <a href="/auth/register.php">Create Account</a>
-          </div>
-          <div style="margin-top: 15px;">
-            <a href="/auth/forgot_password.php" style="margin-left: 0;">Forgot Password?</a>
+            <a href="/register">Create Account</a>
           </div>
         </div>
-      </form>
+      {% else %}
+        <div class="msg error">Sign-in is temporarily unavailable. Please try again shortly.</div>
+      {% endif %}
     </div>
 
   </div>
+
+  {% if clerkPublishableKey %}
+  <script>
+  'use strict';
+  window.addEventListener('load', async function () {
+    const button = document.getElementById('clerk-login-btn');
+    const status = document.getElementById('clerk-login-status');
+    if (!button || !status) { return; }
+
+    function showError(message) {
+      status.textContent = message || 'Google sign-in could not be completed.';
+      status.hidden = false;
+      button.disabled = false;
+      button.textContent = 'Continue with Google';
+    }
+
+    let exchangeInProgress = false;
+
+    async function exchangeSession(session) {
+      if (exchangeInProgress || !session || session.status !== 'active') { return; }
+      exchangeInProgress = true;
+      status.hidden = true;
+      button.disabled = true;
+      button.textContent = 'Signing in…';
+
+      try {
+        const token = await session.getToken({ skipCache: true });
+        if (!token) { throw new Error('Google sign-in did not return a token.'); }
+
+        const response = await fetch('/auth/clerk_login.php', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          const err = new Error(data.error || 'Sign-in failed.');
+          err.status = response.status;
+          throw err;
+        }
+
+        try { await window.Clerk.signOut(); } catch (_) {}
+        window.location.replace(data.redirect || '/home');
+      } catch (exception) {
+        console.error('Clerk login failed:', exception);
+        if (exception && exception.status === 403) {
+          try { await window.Clerk.signOut(); } catch (_) {}
+        }
+        exchangeInProgress = false;
+        showError(exception instanceof Error ? exception.message : 'Google sign-in could not be completed.');
+      }
+    }
+
+    function openGoogleSignIn() {
+      status.hidden = true;
+      window.Clerk.openSignIn({
+        oauthFlow: 'redirect',
+        routing: 'hash',
+        withSignUp: true,
+        forceRedirectUrl: '/login',
+        fallbackRedirectUrl: '/login',
+        signUpForceRedirectUrl: '/login',
+        signUpFallbackRedirectUrl: '/login',
+        appearance: {
+          layout: { socialButtonsPlacement: 'top', socialButtonsVariant: 'blockButton' }
+        }
+      });
+    }
+
+    try {
+      if (!window.Clerk || typeof window.__internal_ClerkUICtor !== 'function') {
+        throw new Error('Clerk did not load.');
+      }
+      await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+
+      window.Clerk.addListener(function ({ session }) {
+        if (session && session.status === 'active') { void exchangeSession(session); }
+      });
+
+      if (window.Clerk.session && window.Clerk.session.status === 'active') {
+        await exchangeSession(window.Clerk.session);
+        return;
+      }
+
+      button.disabled = false;
+      button.textContent = 'Continue with Google';
+      button.addEventListener('click', openGoogleSignIn);
+    } catch (exception) {
+      console.error('Clerk initialization failed:', exception);
+      button.textContent = 'Google sign-in unavailable';
+      showError(exception instanceof Error ? exception.message : 'Google sign-in could not load.');
+    }
+  });
+  </script>
+  {% endif %}
 
 </body>
 </html>

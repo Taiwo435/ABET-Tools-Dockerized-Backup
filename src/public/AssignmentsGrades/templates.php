@@ -212,7 +212,7 @@ try {
 <header class="site-header">
   <div class="site-title">ABET Tools - Syllabus Templates</div>
   <a href="admin.php" class="nav-link">← Back to Admin</a>
-  <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
+  <a href="/home" class="nav-link">← Back to Dashboard</a>
 </header>
 
 <div class="template-container">

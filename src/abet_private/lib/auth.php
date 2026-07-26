@@ -105,14 +105,28 @@ function require_login(string $redirectTo = '/login'): void {
     safe_redirect($redirectTo);
   }
 
-  // Verify the user still exists in the database on every request
+  // Verify the user still exists AND refresh cached permissions/active
+  // status from the database on every request. $_SESSION['user_permissions']
+  // is only ever set at login time, so without this, any permission change
+  // made while a user is already logged in (very common while testing/
+  // administering) would silently go unrecognized by every legacy page
+  // gated with require_role() until that user logs out and back in again —
+  // even though Symfony-native pages (which load the User entity fresh
+  // each request) would immediately reflect the change.
   require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
-  $stmt = db()->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+  $stmt = db()->prepare('SELECT permissions, is_active FROM users WHERE id = :id LIMIT 1');
   $stmt->execute(['id' => (int)$_SESSION['user_id']]);
+  $row = $stmt->fetch();
 
-  if (!$stmt->fetch()) {
+  if (!$row) {
     logout('/login?reason=deleted');
   }
+
+  if ((int)$row['is_active'] !== 1) {
+    logout('/login?reason=deactivated');
+  }
+
+  $_SESSION['user_permissions'] = (int)$row['permissions'];
 }
 
 /**

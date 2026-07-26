@@ -38,7 +38,8 @@ class LegacyBridge
         // ----------------------------
 
         if ($requestPathInfo == '/') {
-            return "{$legacyRoot}/auth/login.php";
+            header('Location: /login', true, 302);
+            exit;
         }
 
         // this is a template...
@@ -62,6 +63,14 @@ class LegacyBridge
 
         if ($requestPathInfo == '/resend-verification') {
             return "{$legacyRoot}/auth/resend_verification.php";
+        }
+
+        if ($requestPathInfo == '/auth/clerk_verify_email.php') {
+            return "{$legacyRoot}/auth/clerk_verify_email.php";
+        }
+
+        if ($requestPathInfo == '/auth/clerk_login.php') {
+            return "{$legacyRoot}/auth/clerk_login.php";
         }
 
         // account profile stuff

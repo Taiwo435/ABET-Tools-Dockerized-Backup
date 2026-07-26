@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="links">
-      <a href="/auth/login.php">Back to Login</a>
+      <a href="/login">Back to Login</a>
     </div>
   </div>
 </body>

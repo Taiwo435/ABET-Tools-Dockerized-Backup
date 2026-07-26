@@ -1,124 +1,25 @@
 <?php
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
+declare(strict_types=1);
+
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
-require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/mailer.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/clerk.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 start_session();
 
-$errors = [];
-$success = false;
-
-function e(string $s): string {
-  return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-}
-
-function register_csrf_token(): string {
-  if (empty($_SESSION['csrf_token_register'])) {
-    $_SESSION['csrf_token_register'] = bin2hex(random_bytes(32));
-  }
-  return $_SESSION['csrf_token_register'];
-}
-
-function verify_register_csrf(?string $token): bool {
-  if (!isset($_SESSION['csrf_token_register']) || !is_string($token)) {
-    return false;
-  }
-
-  return hash_equals($_SESSION['csrf_token_register'], $token);
-}
-
 /**
- * Password policy:
- * - at least 10 chars
- * - at least 1 number
- * - at least 1 lowercase
- * - at least 1 uppercase
- * - at least 1 special (non-alphanumeric)
+ * Account creation is entirely Google/Clerk-driven now (see
+ * auth/clerk_login.php, which auto-creates an account the first time a new
+ * verified Google email signs in) — this page is just the "Create Account"
+ * landing screen with the same email + Continue with Google flow as
+ * /login, so there's no separate password form to fill out.
  */
-function password_policy_check(string $password): array {
-  $issues = [];
 
-  if (strlen($password) < 10) {
-    $issues[] = 'at least 10 characters';
-  }
-  if (!preg_match('/[0-9]/', $password)) {
-    $issues[] = 'at least 1 number';
-  }
-  if (!preg_match('/[a-z]/', $password)) {
-    $issues[] = 'at least 1 lowercase letter';
-  }
-  if (!preg_match('/[A-Z]/', $password)) {
-    $issues[] = 'at least 1 uppercase letter';
-  }
-  if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
-    $issues[] = 'at least 1 special character';
-  }
+$publishableKey = clerk_publishable_key();
+$frontendApi = clerk_frontend_api_domain();
 
-  return [
-    'ok' => count($issues) === 0,
-    'issues' => $issues
-  ];
-}
-
-$email = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (!verify_register_csrf($_POST['csrf_token'] ?? null)) {
-    $errors[] = 'Invalid or missing form token. Please refresh the page and try again.';
-  }
-
-  $email = strtolower(trim($_POST['email'] ?? ''));
-  $password = (string)($_POST['password'] ?? '');
-  $confirm = (string)($_POST['confirm_password'] ?? '');
-
-  if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $errors[] = 'Please enter a valid email address.';
-  }
-
-  // Optional: restrict to ASU emails
-  // if (!str_ends_with($email, '@asu.edu')) {
-  //   $errors[] = 'Use your ASU email address.';
-  // }
-
-  $policy = password_policy_check($password);
-  if (!$policy['ok']) {
-    $errors[] = 'Password is too weak. It must include: ' . implode(', ', $policy['issues']) . '.';
-  }
-
-  if ($password !== $confirm) {
-    $errors[] = 'Passwords do not match.';
-  }
-
-  if (!$errors) {
-    $pdo = db();
-
-    // Check if email exists
-    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
-    $stmt->execute([$email]);
-
-    if ($stmt->fetch()) {
-      $errors[] = 'An account with that email already exists.';
-    } else {
-      $hash = password_hash($password, PASSWORD_BCRYPT);
-
-      // New accounts always default to the lowest-privilege role (Faculty).
-      // Users can no longer self-select permissions at signup (#89).
-      $permissions = \App\Entity\Permissions::ROLE_FACULTY_FORM->value;
-
-      // Email verification is disabled for now (no production mail provider
-      // configured yet) — accounts activate immediately. The verification
-      // code infrastructure (mailer.php, verify_email.php, the DB columns)
-      // is left in place so this can be re-enabled later without rebuilding it.
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, is_active, permissions) VALUES (?, ?, 1, ?)");
-      $stmt->execute([$email, $hash, $permissions]);
-
-      $success = true;
-    }
-  }
-} 
+clerk_browser_csp();
+header('Cross-Origin-Opener-Policy: same-origin');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,6 +29,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>ASU ABET Tools | Create Account</title>
   <link rel="icon" type="image/svg" href="/assets/img/favicon.svg" />
   <link href="/assets/css/auth.css" rel="stylesheet">
+
+  <script defer crossorigin="anonymous"
+    src="https://<?= htmlspecialchars($frontendApi, ENT_QUOTES, 'UTF-8') ?>/npm/@clerk/ui@1/dist/ui.browser.js"
+    type="text/javascript"></script>
+  <script defer crossorigin="anonymous"
+    data-clerk-publishable-key="<?= htmlspecialchars($publishableKey, ENT_QUOTES, 'UTF-8') ?>"
+    src="https://<?= htmlspecialchars($frontendApi, ENT_QUOTES, 'UTF-8') ?>/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+    type="text/javascript"></script>
 </head>
 <body>
 
@@ -146,164 +55,117 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="form-header">
         <h1>Create Account</h1>
-        <p>Please fill in your details below.</p>
+        <p>Enter your email, then verify with Google.</p>
       </div>
 
-      <?php if ($success): ?>
-        <div class="msg success">
-          <strong>Success!</strong> Account created. You can now sign in.
-        </div>
-        <a href="/login" class="btn-submit" style="display:block; text-align:center; text-decoration:none;">Go to Sign In</a>
-      <?php else: ?>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input id="email" type="email" placeholder="asurite@asu.edu" autocomplete="email" autofocus />
+      </div>
 
-        <?php if ($errors): ?>
-          <div class="msg error" id="error-box">
-            <?php foreach ($errors as $err): ?>
-              <?php echo htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?><br>
-            <?php endforeach; ?>
-          </div>
-        <?php endif; ?>
+      <button id="clerk-register-btn" class="btn-submit" type="button" disabled>
+        Loading…
+      </button>
+      <p id="clerk-register-status" class="msg error" role="alert" aria-live="polite" hidden></p>
 
-        <form id="registerForm" method="post" autocomplete="off" novalidate>
-  <input type="hidden" name="csrf_token" value="<?php echo e(register_csrf_token()); ?>">
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="asurite@asu.edu"
-              required
-              value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="password">Password</label>
-            <div class="password-wrapper">
-              <input id="password" name="password" type="password" placeholder="At least 10 characters" required />
-              <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" aria-label="Show or hide password">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="confirm_password">Confirm Password</label>
-            <input id="confirm_password" name="confirm_password" type="password" placeholder="Re-enter password" required />
-          </div>
-
-          <div class="strength-meter-container" id="strengthContainer" style="display:none;">
-            <div class="strength-bar">
-              <div class="strength-fill" id="strengthFill"></div>
-            </div>
-
-            <div class="strength-title" id="strengthTitle">Weak password. Must contain:</div>
-
-            <ul class="strength-list">
-              <li id="req-length"><span class="icon"></span> At least 10 characters</li>
-              <li id="req-number"><span class="icon"></span> At least 1 number</li>
-              <li id="req-lower"><span class="icon"></span> At least 1 lowercase letter</li>
-              <li id="req-upper"><span class="icon"></span> At least 1 uppercase letter</li>
-              <li id="req-special"><span class="icon"></span> At least 1 special character</li>
-            </ul>
-          </div>
-
-          <button id="submitBtn" class="btn-submit" type="submit">Create Account</button>
-
-          <div class="footer-links">
-            <span>Already have an account?</span>
-            <a href="/login">Sign In</a>
-          </div>
-        </form>
-
-      <?php endif; ?>
+      <div class="footer-links">
+        <span>Already have an account?</span>
+        <a href="/login">Sign In</a>
+      </div>
     </div>
 
   </div>
 
 <script>
-  function togglePasswordVisibility() {
-    const passwordInput = document.getElementById('password');
-    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-    passwordInput.setAttribute('type', type);
+'use strict';
+window.addEventListener('load', async function () {
+  const button = document.getElementById('clerk-register-btn');
+  const status = document.getElementById('clerk-register-status');
+  if (!button || !status) { return; }
+
+  function showError(message) {
+    status.textContent = message || 'Google sign-in could not be completed.';
+    status.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Continue with Google';
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('registerForm');
-    const passwordInput = document.getElementById('password');
-    const container = document.getElementById('strengthContainer');
-    const fill = document.getElementById('strengthFill');
-    const title = document.getElementById('strengthTitle');
+  let exchangeInProgress = false;
 
-    if (!form || !passwordInput) return;
+  async function exchangeSession(session) {
+    if (exchangeInProgress || !session || session.status !== 'active') { return; }
+    exchangeInProgress = true;
+    status.hidden = true;
+    button.disabled = true;
+    button.textContent = 'Creating account…';
 
-    const reqs = {
-      length: document.getElementById('req-length'),
-      number: document.getElementById('req-number'),
-      lower: document.getElementById('req-lower'),
-      upper: document.getElementById('req-upper'),
-      special: document.getElementById('req-special')
-    };
+    try {
+      const token = await session.getToken({ skipCache: true });
+      if (!token) { throw new Error('Google sign-in did not return a token.'); }
 
-    function evaluatePassword(val) {
-      const checks = {
-        length: val.length >= 10,
-        number: /[0-9]/.test(val),
-        lower: /[a-z]/.test(val),
-        upper: /[A-Z]/.test(val),
-        special: /[^A-Za-z0-9]/.test(val)
-      };
+      const response = await fetch('/auth/clerk_login.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+      });
+      const data = await response.json();
 
-      let passedCount = 0;
-      for (const [key, element] of Object.entries(reqs)) {
-        if (checks[key]) {
-          element.classList.add('valid');
-          passedCount++;
-        } else {
-          element.classList.remove('valid');
-        }
+      if (!response.ok) {
+        const err = new Error(data.error || 'Sign-in failed.');
+        err.status = response.status;
+        throw err;
       }
 
-      const strengthPercent = (passedCount / 5) * 100;
-      fill.style.width = strengthPercent + '%';
+      try { await window.Clerk.signOut(); } catch (_) {}
+      window.location.replace(data.redirect || '/home');
+    } catch (exception) {
+      console.error('Clerk sign-up failed:', exception);
+      exchangeInProgress = false;
+      showError(exception instanceof Error ? exception.message : 'Google sign-in could not be completed.');
+    }
+  }
 
-      if (passedCount <= 2) {
-        fill.style.backgroundColor = '#d32f2f';
-        title.textContent = 'Weak password. Must contain:';
-      } else if (passedCount < 5) {
-        fill.style.backgroundColor = '#FFC627';
-        title.textContent = 'Medium password. Must contain:';
-      } else {
-        fill.style.backgroundColor = '#2e7d32';
-        title.textContent = 'Strong password.';
+  function openGoogleSignIn() {
+    status.hidden = true;
+    window.Clerk.openSignIn({
+      oauthFlow: 'redirect',
+      routing: 'hash',
+      withSignUp: true,
+      forceRedirectUrl: '/register',
+      fallbackRedirectUrl: '/register',
+      signUpForceRedirectUrl: '/register',
+      signUpFallbackRedirectUrl: '/register',
+      appearance: {
+        layout: { socialButtonsPlacement: 'top', socialButtonsVariant: 'blockButton' }
       }
+    });
+  }
 
-      return passedCount === 5;
+  try {
+    if (!window.Clerk || typeof window.__internal_ClerkUICtor !== 'function') {
+      throw new Error('Clerk did not load.');
+    }
+    await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+
+    window.Clerk.addListener(function ({ session }) {
+      if (session && session.status === 'active') { void exchangeSession(session); }
+    });
+
+    if (window.Clerk.session && window.Clerk.session.status === 'active') {
+      await exchangeSession(window.Clerk.session);
+      return;
     }
 
-    passwordInput.addEventListener('input', function() {
-      const val = passwordInput.value;
-      if (val.length > 0) {
-        container.style.display = 'block';
-      } else {
-        container.style.display = 'none';
-      }
-      evaluatePassword(val);
-    });
-
-    form.addEventListener('submit', function(e) {
-      const isStrong = evaluatePassword(passwordInput.value);
-      if (!isStrong) {
-        e.preventDefault();
-        container.style.display = 'block';
-        passwordInput.focus();
-      }
-    });
-  });
+    button.disabled = false;
+    button.textContent = 'Continue with Google';
+    button.addEventListener('click', openGoogleSignIn);
+  } catch (exception) {
+    console.error('Clerk initialization failed:', exception);
+    button.textContent = 'Google sign-in unavailable';
+    showError(exception instanceof Error ? exception.message : 'Google sign-in could not load.');
+  }
+});
 </script>
 
 </body>
