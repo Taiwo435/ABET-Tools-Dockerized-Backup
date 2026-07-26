@@ -15,11 +15,21 @@ start_session();
  * /login, so there's no separate password form to fill out.
  */
 
-$publishableKey = clerk_publishable_key();
-$frontendApi = clerk_frontend_api_domain();
+$publishableKey = null;
+$frontendApi = null;
 
-clerk_browser_csp();
-header('Cross-Origin-Opener-Policy: same-origin');
+try {
+    $key = trim((string) getenv('CLERK_PUBLISHABLE_KEY'));
+    if ($key !== '' && preg_match('/^pk_(test|live)_[A-Za-z0-9_-]+$/', $key)) {
+        $publishableKey = $key;
+        $frontendApi = clerk_frontend_api_domain();
+        clerk_browser_csp();
+        header('Cross-Origin-Opener-Policy: same-origin');
+    }
+} catch (\Throwable) {
+    $publishableKey = null;
+    $frontendApi = null;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,6 +40,7 @@ header('Cross-Origin-Opener-Policy: same-origin');
   <link rel="icon" type="image/svg" href="/assets/img/favicon.svg" />
   <link href="/assets/css/auth.css" rel="stylesheet">
 
+  <?php if ($publishableKey !== null): ?>
   <script defer crossorigin="anonymous"
     src="https://<?= htmlspecialchars($frontendApi, ENT_QUOTES, 'UTF-8') ?>/npm/@clerk/ui@1/dist/ui.browser.js"
     type="text/javascript"></script>
@@ -37,6 +48,7 @@ header('Cross-Origin-Opener-Policy: same-origin');
     data-clerk-publishable-key="<?= htmlspecialchars($publishableKey, ENT_QUOTES, 'UTF-8') ?>"
     src="https://<?= htmlspecialchars($frontendApi, ENT_QUOTES, 'UTF-8') ?>/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
     type="text/javascript"></script>
+  <?php endif; ?>
 </head>
 <body>
 
@@ -58,6 +70,7 @@ header('Cross-Origin-Opener-Policy: same-origin');
         <p>Enter your email, then verify with Google.</p>
       </div>
 
+      <?php if ($publishableKey !== null): ?>
       <div class="form-group">
         <label for="email">Email Address</label>
         <input id="email" type="email" placeholder="asurite@asu.edu" autocomplete="email" autofocus />
@@ -67,6 +80,9 @@ header('Cross-Origin-Opener-Policy: same-origin');
         Loading…
       </button>
       <p id="clerk-register-status" class="msg error" role="alert" aria-live="polite" hidden></p>
+      <?php else: ?>
+      <div class="msg error">Account creation is temporarily unavailable. Please try again shortly.</div>
+      <?php endif; ?>
 
       <div class="footer-links">
         <span>Already have an account?</span>
