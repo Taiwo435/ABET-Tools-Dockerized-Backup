@@ -73,7 +73,7 @@ function clerk_browser_csp(): void
         "Content-Security-Policy: "
         . "default-src 'self'; "
         . "script-src 'self' 'unsafe-inline' https://{$frontendApi} https://challenges.cloudflare.com https://*.protect.clerk.com; "
-        . "connect-src 'self' https://{$frontendApi} https://api.clerk.com https://clerk-telemetry.com https://*.clerk-telemetry.com https://*.protect.clerk.com; "
+        . "connect-src 'self' https://{$frontendApi} https://api.clerk.com https://clerk-telemetry.com https://*.clerk-telemetry.com https://*.protect.clerk.com https://challenges.cloudflare.com; "
         . "style-src 'self' 'unsafe-inline'; "
         . "img-src 'self' data: https://img.clerk.com https://cms.asuonline.asu.edu; "
         . "font-src 'self' data: https:; "
