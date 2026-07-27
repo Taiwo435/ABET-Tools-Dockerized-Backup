@@ -92,13 +92,40 @@ def test_long_report_generation(driver):
 
     driver.get(f"{WEBSITE_URL}/report-generator/index.php")
 
+    appendix_fixture_path = os.path.abspath(
+        os.path.join(
+            PROJECT_DIR,
+            "src",
+            "test",
+            "fixtures",
+            "appendix_a_courses_v1.json",
+        )
+    )
+
+    appendix_file_input = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (By.ID, "appendixContractFile")
+        )
+    )
+    appendix_file_input.send_keys(appendix_fixture_path)
+
+    WebDriverWait(driver, 10).until(
+        lambda current_driver: (
+            "1 contract selected"
+            in current_driver.find_element(
+                By.ID,
+                "appendixContractFileName",
+            ).text
+        )
+    )
+
     lr_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.ID, "LRbtn"))
     )
 
     lr_btn.click()
 
-    lr_status_el = WebDriverWait(driver, 60).until(
+    lr_status_el = WebDriverWait(driver, 120).until(
         EC.presence_of_element_located(
             (By.CSS_SELECTOR, "#lrStatus.ok")
         )
