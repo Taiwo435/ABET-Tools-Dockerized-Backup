@@ -20,6 +20,44 @@ use PHPUnit\Framework\TestCase;
 
 final class SyllabusReadinessRepositoryTest extends TestCase
 {
+    public function testProjectsBlankSubmittedOfferingAsAwaitingReview(): void
+    {
+        $program = new Program('Computer Science', 'BS', '2026');
+        $this->setId($program, 1);
+        $faculty = $this->user('faculty@example.edu');
+        $course = $this->course($program, 101, 'CS', '310', 'Data Structures');
+        $offering = new CourseOffering(
+            $course,
+            '2026-2027',
+            'Fall',
+            DeliveryType::InPerson,
+            $faculty,
+            '001',
+        );
+        $this->setId($offering, 401);
+        $submission = TemplateSubmission::forFacultyOffering($offering, $faculty);
+        $this->setId($submission, 501);
+        $revision = $submission->addRevision(
+            $faculty,
+            RevisionAuthorType::Faculty,
+            $this->transitionContent(),
+        );
+        $this->setId($revision, 601);
+        $submission->submit($revision);
+
+        $rows = SyllabusReadinessRepository::projectRows($program, [$course], [$submission]);
+
+        self::assertCount(1, $rows);
+        self::assertSame(SyllabusReadinessState::AwaitingCoordinatorReview, $rows[0]->getState());
+        self::assertSame(401, $rows[0]->getCourseOfferingId());
+        self::assertSame([
+            'Ready' => 0,
+            'Blocked' => 0,
+            'Awaiting review' => 1,
+            'Missing' => 0,
+        ], SyllabusReadinessRepository::countRowsByCategory($rows));
+    }
+
     public function testProjectsCanonicalSharedTemplatesAndEveryOffering(): void
     {
         $program = new Program('Computer Science', 'BS', '2026');

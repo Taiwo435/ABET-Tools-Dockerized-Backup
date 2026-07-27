@@ -42,7 +42,10 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('Publication readiness', $template);
         self::assertStringContainsString('Program syllabus status', $template);
         self::assertStringContainsString('class="metrics-grid"', $template);
-        self::assertStringContainsString("readinessCounts['Awaiting review']", $template);
+        self::assertStringContainsString(
+            '<span class="metric-number">{{ pendingReviewCount }}</span>',
+            $template,
+        );
         self::assertStringContainsString('name="program"', $template);
         self::assertStringNotContainsString("path('app_program_readiness'", $template);
         self::assertStringContainsString("view: 'appendix_a'", $template);

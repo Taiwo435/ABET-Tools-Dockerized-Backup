@@ -104,6 +104,14 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString("path('app_admin_syllabus_template_review', {id: submission.id})", $index);
         self::assertStringContainsString('Review submission', $index);
         self::assertStringContainsString('{{ pendingReviewCount }}', $index);
+        self::assertStringContainsString(
+            '<span class="metric-number">{{ pendingReviewCount }}</span>',
+            $index,
+        );
+        self::assertStringNotContainsString(
+            "<span class=\"metric-number\">{{ readinessCounts['Awaiting review'] }}</span>",
+            $index,
+        );
     }
 
     public function testControllerUsesProgramScopedReviewQueriesAndCompatibilityRedirects(): void
@@ -123,6 +131,10 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString("isCsrfTokenValid('approve-syllabus-submission-'", $source);
         self::assertStringContainsString('ReviewDecision::Approved', $source);
         self::assertStringContainsString('$submission->recordReview($review, $submittedRevision)', $source);
+        self::assertSame(
+            3,
+            substr_count($source, 'allowCoordinatorSelfReviewForDemonstration: true'),
+        );
         self::assertStringContainsString('$entityManager->persist($review)', $source);
         self::assertStringContainsString("isCsrfTokenValid('deny-syllabus-submission-'", $source);
         self::assertStringContainsString('ReviewDecision::Denied', $source);

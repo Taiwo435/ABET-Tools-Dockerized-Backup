@@ -235,7 +235,13 @@ final class AdminSyllabusTemplateController extends AbstractController
             ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
         }
 
-        $review = new TemplateReview($submission, $user, ReviewDecision::Denied, $feedback);
+        $review = new TemplateReview(
+            $submission,
+            $user,
+            ReviewDecision::Denied,
+            $feedback,
+            allowCoordinatorSelfReviewForDemonstration: true,
+        );
         $submission->recordDenial($review);
         $entityManager->persist($review);
         $entityManager->flush();
@@ -315,7 +321,12 @@ final class AdminSyllabusTemplateController extends AbstractController
                             $data->deliveryType,
                         );
                     }
-                    $review = new TemplateReview($submission, $user, ReviewDecision::ApprovedWithEdits);
+                    $review = new TemplateReview(
+                        $submission,
+                        $user,
+                        ReviewDecision::ApprovedWithEdits,
+                        allowCoordinatorSelfReviewForDemonstration: true,
+                    );
                     $submission->recordReview($review, $coordinatorRevision, courseDetailsChanged: $courseDetailsChanged);
                     $entityManager->persist($review);
                     $entityManager->flush();
@@ -372,7 +383,12 @@ final class AdminSyllabusTemplateController extends AbstractController
             throw new \LogicException('A pending faculty submission must have a frozen submitted revision.');
         }
 
-        $review = new TemplateReview($submission, $user, ReviewDecision::Approved);
+        $review = new TemplateReview(
+            $submission,
+            $user,
+            ReviewDecision::Approved,
+            allowCoordinatorSelfReviewForDemonstration: true,
+        );
         $submission->recordReview($review, $submittedRevision);
         $entityManager->persist($review);
         $entityManager->flush();

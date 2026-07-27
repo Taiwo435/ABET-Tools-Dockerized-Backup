@@ -250,20 +250,11 @@ class SyllabusReadiness
             ? new DateTimeImmutable($draftInfo['updated_at'])
             : null;
 
-        if ($templateInfo === null) {
-            $state = SyllabusReadinessState::NoSharedTemplate;
-            $blockingFields = [];
-        } elseif (!$templateInfo['is_published']) {
-            $state = $coordinatorPublishable
-                ? SyllabusReadinessState::SharedTemplateReadyToPublish
-                : SyllabusReadinessState::SharedTemplateNeedsPublicationFields;
-            $blockingFields = $coordinatorBlockingFields;
-        } elseif ($draftInfo === null) {
-            $state = SyllabusReadinessState::SharedTemplatePublishedNoOffering;
-            $blockingFields = [];
-        } elseif (!$workflowStatus instanceof SubmissionStatus) {
+        if ($draftInfo !== null && !$workflowStatus instanceof SubmissionStatus) {
             throw new \InvalidArgumentException('A faculty readiness projection requires a canonical workflow status.');
-        } else {
+        }
+
+        if ($draftInfo !== null) {
             [$state, $blockingFields] = match ($workflowStatus) {
                 SubmissionStatus::Draft => $facultySubmittable
                     ? [SyllabusReadinessState::FacultyDraftReadyToSubmit, []]
@@ -274,6 +265,17 @@ class SyllabusReadiness
                     : [SyllabusReadinessState::ApprovedAppendixAIncomplete, $appendixABlockingFields],
                 SubmissionStatus::Denied => [SyllabusReadinessState::DeniedNeedsRevision, $facultyBlockingFields],
             };
+        } elseif ($templateInfo === null) {
+            $state = SyllabusReadinessState::NoSharedTemplate;
+            $blockingFields = [];
+        } elseif (!$templateInfo['is_published']) {
+            $state = $coordinatorPublishable
+                ? SyllabusReadinessState::SharedTemplateReadyToPublish
+                : SyllabusReadinessState::SharedTemplateNeedsPublicationFields;
+            $blockingFields = $coordinatorBlockingFields;
+        } else {
+            $state = SyllabusReadinessState::SharedTemplatePublishedNoOffering;
+            $blockingFields = [];
         }
 
         return new self(

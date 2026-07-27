@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Entity\SyllabusTemplate\CommonCourse;
+use App\Entity\SyllabusTemplate\CourseOffering;
 use App\Entity\SyllabusTemplate\DeliveryType;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\ReviewDecision;
@@ -237,6 +238,51 @@ final class SyllabusTemplateLifecycleTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         new TemplateReview($submission, $faculty, ReviewDecision::Approved);
+    }
+
+    public function testFacultyCannotOptIntoCoordinatorSelfReviewException(): void
+    {
+        [, $submission, $faculty] = $this->fixture();
+        $revision = $this->completeFacultyRevision($submission, $faculty);
+        $submission->submit($revision);
+
+        $this->expectException(\InvalidArgumentException::class);
+        new TemplateReview(
+            $submission,
+            $faculty,
+            ReviewDecision::Approved,
+            allowCoordinatorSelfReviewForDemonstration: true,
+        );
+    }
+
+    public function testCoordinatorCanSelfReviewFacultySubmissionForDemonstration(): void
+    {
+        [$course, , $coordinator] = $this->fixture();
+        $coordinator->setRole('admin');
+        $offering = new CourseOffering(
+            $course,
+            '2026-2027',
+            'Fall',
+            DeliveryType::InPerson,
+            $coordinator,
+            '001',
+        );
+        $submission = TemplateSubmission::forFacultyOffering($offering, $coordinator);
+        $revision = $this->completeFacultyRevision($submission, $coordinator);
+        $submission->submit($revision);
+        $review = new TemplateReview(
+            $submission,
+            $coordinator,
+            ReviewDecision::Approved,
+            allowCoordinatorSelfReviewForDemonstration: true,
+        );
+
+        $submission->recordReview($review, $revision);
+
+        self::assertSame(SubmissionStatus::Approved, $submission->getStatus());
+        self::assertSame($coordinator, $review->getReviewer());
+        self::assertSame($revision, $offering->getCurrentApprovedRevision());
+        self::assertNull($course->getCurrentApprovedRevision());
     }
 
     public function testCoordinatorCanKeepAnIncompleteTemplateDraftAndPublishACompleteRevision(): void

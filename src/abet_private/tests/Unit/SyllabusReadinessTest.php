@@ -165,6 +165,34 @@ final class SyllabusReadinessTest extends TestCase
         $this->assertSame('Awaiting review', $readiness->getState()->getCategory());
     }
 
+    public function testBlankOfferingSubmissionTakesPrecedenceOverMissingSharedTemplate(): void
+    {
+        $draftInfo = [
+            'id' => 302,
+            'status' => SubmissionStatus::Submitted,
+            'denial_feedback' => null,
+            'updated_at' => '2026-07-27T21:09:29Z',
+            'faculty_submittable' => true,
+            'faculty_submission_blocking_fields' => [],
+            'appendix_a_ready' => false,
+            'appendix_a_blocking_fields' => ['contact_hours'],
+            'course_offering' => [
+                'id' => 401,
+                'academic_year' => '2026-2027',
+                'term' => 'Fall',
+                'section' => '001',
+                'delivery_type' => 'in_person',
+            ],
+        ];
+
+        $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, null, $draftInfo);
+
+        self::assertSame(SyllabusReadinessState::AwaitingCoordinatorReview, $readiness->getState());
+        self::assertSame('Awaiting review', $readiness->getState()->getCategory());
+        self::assertSame(SubmissionStatus::Submitted, $readiness->getWorkflowStatus());
+        self::assertSame(401, $readiness->getCourseOfferingId());
+    }
+
     public function testDeriveDeniedSubmissionNeedingRevision(): void
     {
         $templateInfo = $this->publishedTemplateInfo();

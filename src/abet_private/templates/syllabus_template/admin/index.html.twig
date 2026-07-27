@@ -107,7 +107,7 @@
                         <span class="metric-sub">Approved and Appendix A ready</span>
                     </a>
                     <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'offerings', _fragment: 'pending-review'}) }}" class="metric-card metric-awaiting">
-                        <span class="metric-number">{{ readinessCounts['Awaiting review'] }}</span>
+                        <span class="metric-number">{{ pendingReviewCount }}</span>
                         <span class="metric-label">Awaiting review</span>
                         <span class="metric-sub">Frozen faculty submissions</span>
                     </a>
