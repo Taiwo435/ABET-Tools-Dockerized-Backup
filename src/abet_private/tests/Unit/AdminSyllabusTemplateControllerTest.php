@@ -30,6 +30,8 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertIsString($template);
         self::assertStringContainsString('Shared Syllabus Templates', $template);
         self::assertStringContainsString('name="completeness"', $template);
+        self::assertStringContainsString('id="completeness" name="completeness" onchange="this.form.submit()"', $template);
+        self::assertStringNotContainsString('Apply filter', $template);
         self::assertStringContainsString("syllabus_template/_lifecycle_badges.html.twig", $template);
         self::assertStringContainsString('revision.coordinatorPublicationBlockingFields', $template);
         self::assertStringContainsString('template.status.value', $template);
@@ -45,10 +47,15 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringNotContainsString("path('app_program_readiness'", $template);
         self::assertStringContainsString("view: 'appendix_a'", $template);
         self::assertStringContainsString('metric-card--static metric-blocked', $template);
+        self::assertStringContainsString('Needs attention', $template);
+        self::assertStringNotContainsString('Action required', $template);
         self::assertStringContainsString('metric-card--static metric-missing', $template);
         self::assertStringContainsString('onchange="this.form.submit()"', $template);
         self::assertStringNotContainsString('Show summary', $template);
         self::assertStringContainsString('aria-label="Syllabus workspace views"', $template);
+        self::assertStringContainsString("view: 'shared', _fragment: 'syllabus-workspace'", $template);
+        self::assertStringContainsString("view: 'offerings', _fragment: 'syllabus-workspace'", $template);
+        self::assertStringContainsString("view: 'appendix_a', _fragment: 'syllabus-workspace'", $template);
         self::assertStringContainsString('Course offerings &amp; review', $template);
         self::assertStringContainsString('Appendix A readiness', $template);
         self::assertStringContainsString("activeView == 'shared'", $template);
@@ -59,6 +66,11 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('id="review-history"', $template);
         self::assertStringContainsString('offeringRows', $template);
         self::assertStringContainsString('appendixRows', $template);
+
+        $styles = file_get_contents(dirname(__DIR__, 3).'/public/assets/css/syllabus-lifecycle.css');
+        self::assertIsString($styles);
+        self::assertStringContainsString('scroll-margin-top: 5.5rem', $styles);
+        self::assertStringContainsString('scroll-margin-top: 9rem', $styles);
     }
 
     public function testAdminPanelLinksToSharedSyllabusTemplates(): void

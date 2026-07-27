@@ -40,7 +40,7 @@ final class SyllabusLifecycleUiTest extends TestCase
 
             self::assertIsString($template);
             self::assertStringContainsString(
-                '/assets/css/syllabus-lifecycle.css?v=20260727-3',
+                '/assets/css/syllabus-lifecycle.css?v=20260727-5',
                 $template,
             );
         }

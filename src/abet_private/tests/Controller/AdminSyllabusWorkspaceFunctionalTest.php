@@ -47,6 +47,7 @@ final class AdminSyllabusWorkspaceFunctionalTest extends TestCase
         self::assertStringContainsString('id="readiness-program"', $html);
         self::assertStringContainsString('onchange="this.form.submit()"', $html);
         self::assertStringContainsString('name="view" value="offerings"', $html);
+        self::assertStringContainsString('_fragment=syllabus-workspace', $html);
         self::assertStringNotContainsString('Show summary', $html);
     }
 
@@ -54,8 +55,12 @@ final class AdminSyllabusWorkspaceFunctionalTest extends TestCase
     {
         $html = $this->renderView('shared');
 
-        self::assertStringContainsString('aria-label="Syllabus workspace views"', $html);
+        self::assertStringContainsString('id="syllabus-workspace" class="syllabus-workspace-tabs"', $html);
+        self::assertStringContainsString('Needs attention', $html);
+        self::assertStringNotContainsString('Action required', $html);
         self::assertStringContainsString('id="shared-view-heading"', $html);
+        self::assertStringContainsString('id="completeness" name="completeness" onchange="this.form.submit()"', $html);
+        self::assertStringNotContainsString('Apply filter', $html);
         self::assertStringContainsString('No shared templates in this program', $html);
         self::assertStringNotContainsString('id="offerings-view-heading"', $html);
         self::assertStringNotContainsString('id="appendix-view-heading"', $html);

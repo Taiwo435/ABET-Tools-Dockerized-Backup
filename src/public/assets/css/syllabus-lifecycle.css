@@ -260,6 +260,7 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: .65rem;
     margin-bottom: 1.25rem;
+    scroll-margin-top: 5.5rem;
     padding: .45rem;
     border: 1px solid #d9d9d9;
     border-radius: 8px;
@@ -387,6 +388,12 @@
 
     .syllabus-workspace-tabs {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .syllabus-workspace-tabs {
+        scroll-margin-top: 9rem;
     }
 }
 

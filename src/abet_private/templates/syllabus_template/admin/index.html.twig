@@ -3,7 +3,7 @@
 {% block title %}Shared Syllabus Templates | {% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-3">
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-5">
     <style>
         .syllabus-page { width: 100%; max-width: 1400px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .syllabus-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
@@ -40,7 +40,7 @@
         @media (max-width: 700px) {
             .syllabus-toolbar, .syllabus-filter { align-items: stretch; }
             .syllabus-toolbar > *, .syllabus-filter label, .syllabus-filter select { width: 100%; }
-            .syllabus-toolbar__actions a, .syllabus-filter button { flex: 1; text-align: center; }
+            .syllabus-toolbar__actions a { flex: 1; text-align: center; }
         }
     </style>
 {% endblock %}
@@ -77,7 +77,7 @@
                     {% endif %}
                 </div>
                 {% if readinessPrograms is not empty %}
-                    <form method="get" action="{{ path('app_admin_syllabus_templates') }}" class="syllabus-summary__program">
+                    <form method="get" action="{{ path('app_admin_syllabus_templates', {_fragment: 'syllabus-workspace'}) }}" class="syllabus-summary__program">
                         <label for="readiness-program">Program</label>
                         <select id="readiness-program" name="program" onchange="this.form.submit()">
                             {% for program in readinessPrograms %}
@@ -102,20 +102,20 @@
                         <span class="metric-label">All targets</span>
                         <span class="metric-sub">Shared baselines and course offerings</span>
                     </div>
-                    <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'appendix_a'}) }}" class="metric-card metric-ready">
+                    <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'appendix_a', _fragment: 'syllabus-workspace'}) }}" class="metric-card metric-ready">
                         <span class="metric-number">{{ readinessCounts['Ready'] }}</span>
                         <span class="metric-label">Report ready</span>
                         <span class="metric-sub">Approved and Appendix A ready</span>
                     </a>
-                    <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'offerings'}) }}#pending-review" class="metric-card metric-awaiting">
+                    <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'offerings', _fragment: 'pending-review'}) }}" class="metric-card metric-awaiting">
                         <span class="metric-number">{{ readinessCounts['Awaiting review'] }}</span>
                         <span class="metric-label">Awaiting review</span>
                         <span class="metric-sub">Frozen faculty submissions</span>
                     </a>
                     <div class="metric-card metric-card--static metric-blocked">
                         <span class="metric-number">{{ readinessCounts['Blocked'] }}</span>
-                        <span class="metric-label">Action required</span>
-                        <span class="metric-sub">Draft, publication, denial, or report blockers</span>
+                        <span class="metric-label">Needs attention</span>
+                        <span class="metric-sub">Preparation, correction, publication, or report evidence needed</span>
                     </div>
                     <div class="metric-card metric-card--static metric-missing">
                         <span class="metric-number">{{ readinessCounts['Missing'] }}</span>
@@ -127,17 +127,17 @@
         </section>
 
         {% if readinessProgram %}
-            <nav class="syllabus-workspace-tabs" aria-label="Syllabus workspace views">
-                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'shared'}) }}"
+            <nav id="syllabus-workspace" class="syllabus-workspace-tabs" aria-label="Syllabus workspace views">
+                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'shared', _fragment: 'syllabus-workspace'}) }}"
                    class="{{ activeView == 'shared' ? 'active' : '' }}"
                    {% if activeView == 'shared' %}aria-current="page"{% endif %}>Shared templates</a>
-                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'offerings'}) }}"
+                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'offerings', _fragment: 'syllabus-workspace'}) }}"
                    class="{{ activeView == 'offerings' ? 'active' : '' }}"
                    {% if activeView == 'offerings' %}aria-current="page"{% endif %}>
                     Course offerings &amp; review
                     {% if pendingReviewCount > 0 %}<span class="review-count">{{ pendingReviewCount }}</span>{% endif %}
                 </a>
-                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'appendix_a'}) }}"
+                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'appendix_a', _fragment: 'syllabus-workspace'}) }}"
                    class="{{ activeView == 'appendix_a' ? 'active' : '' }}"
                    {% if activeView == 'appendix_a' %}aria-current="page"{% endif %}>Appendix A readiness</a>
             </nav>
@@ -150,17 +150,16 @@
                         <h2 id="shared-view-heading">Shared templates</h2>
                         <p>Manage the reusable baselines available to faculty in the selected program.</p>
                     </div>
-                    <form method="get" class="syllabus-filter">
+                    <form method="get" action="{{ path('app_admin_syllabus_templates', {_fragment: 'syllabus-workspace'}) }}" class="syllabus-filter">
                         {% if readinessProgram %}<input type="hidden" name="program" value="{{ readinessProgram.id }}">{% endif %}
                         <input type="hidden" name="view" value="shared">
                         <label for="completeness">Publication readiness
-                            <select id="completeness" name="completeness">
+                            <select id="completeness" name="completeness" onchange="this.form.submit()">
                                 <option value=""{% if completenessFilter == '' %} selected{% endif %}>All publication states</option>
                                 <option value="complete"{% if completenessFilter == 'complete' %} selected{% endif %}>Ready to publish</option>
                                 <option value="incomplete"{% if completenessFilter == 'incomplete' %} selected{% endif %}>Needs publication fields</option>
                             </select>
                         </label>
-                        <button type="submit" class="button-secondary">Apply filter</button>
                     </form>
                     <div class="syllabus-toolbar__actions">
                         <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
