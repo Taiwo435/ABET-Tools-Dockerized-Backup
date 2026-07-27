@@ -15,6 +15,7 @@ enum SyllabusReadinessState: string
     case FacultyDraftInProgress = 'Faculty draft in progress';
     case SubmittedForReview = 'Submitted for review';
     case ApprovedAndReadyForAppendixA = 'Approved and ready for Appendix A';
+    case ApprovedAppendixAIncomplete = 'Approved, Appendix A evidence incomplete';
     case DeniedWithFeedback = 'Denied with feedback';
 
     /**
@@ -27,7 +28,10 @@ enum SyllabusReadinessState: string
             self::ApprovedAndReadyForAppendixA => 'Ready',
             self::SubmittedForReview => 'Awaiting review',
             self::NoSharedTemplate, self::SharedTemplatePublished => 'Missing',
-            self::SharedTemplateIncomplete, self::FacultyDraftInProgress, self::DeniedWithFeedback => 'Blocked',
+            self::SharedTemplateIncomplete,
+            self::FacultyDraftInProgress,
+            self::ApprovedAppendixAIncomplete,
+            self::DeniedWithFeedback => 'Blocked',
         };
     }
 }

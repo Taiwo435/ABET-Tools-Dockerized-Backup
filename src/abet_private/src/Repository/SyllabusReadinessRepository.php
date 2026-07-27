@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Program;
+use App\Entity\SyllabusTemplate\CommonCourse;
+use App\Entity\SyllabusTemplate\ReviewDecision;
+use App\Entity\SyllabusTemplate\SubmissionKind;
+use App\Entity\SyllabusTemplate\SubmissionStatus;
+use App\Entity\SyllabusTemplate\TemplateRevision;
+use App\Entity\SyllabusTemplate\TemplateSubmission;
 use App\ReadModel\SyllabusReadiness;
-use App\ReadModel\SyllabusReadinessState;
-use Doctrine\DBAL\Connection;
-use DateTimeImmutable;
+use App\Repository\SyllabusTemplate\TemplateSubmissionRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class SyllabusReadinessRepository
+final class SyllabusReadinessRepository
 {
-    private Connection $connection;
-
-    public function __construct(Connection $connection)
-    {
-        $this->connection = $connection;
-    }
+    public function __construct(
+        private readonly ManagerRegistry $registry,
+        private readonly TemplateSubmissionRepository $submissions,
+    ) {}
 
     /**
      * Projects syllabus submissions and templates for a program into readiness rows.
@@ -27,85 +31,67 @@ class SyllabusReadinessRepository
      */
     public function getReadinessRowsForProgram(int|string $programId, ?string $filter = null): array
     {
-        // 1. Fetch all curriculum records for this program
-        $curriculumRows = $this->connection->fetchAllAssociative(
-            'SELECT curriculum_id, course FROM curriculum WHERE program_id = :program_id ORDER BY curriculum_id ASC',
-            ['program_id' => $programId]
-        );
-
-        // 2. Fetch all course syllabi for this program
-        $syllabusRows = $this->connection->fetchAllAssociative(
-            'SELECT * FROM course_syllabi WHERE program_id = :program_id',
-            ['program_id' => $programId]
-        );
-
-        // Group syllabus rows by course key (subject + number) and type (template vs draft)
-        $groupedSyllabi = [];
-        foreach ($syllabusRows as $row) {
-            $subject = trim((string)($row['course_subject'] ?? ''));
-            $number = trim((string)($row['course_number'] ?? ''));
-            $key = strtolower($subject . '_' . $number);
-
-            $isTemplate = (bool)($row['is_template'] ?? false);
-            
-            // Decode JSON fields if they are JSON strings
-            $row['specific_goals'] = $this->decodeJson($row['specific_goals'] ?? null);
-            $row['student_outcomes'] = $this->decodeJson($row['student_outcomes'] ?? null);
-            $row['topics_covered'] = $this->decodeJson($row['topics_covered'] ?? null);
-            $row['instructor_name'] = $this->decodeJson($row['instructor_name'] ?? null);
-            $row['textbook'] = $this->decodeJson($row['textbook'] ?? null);
-
-            // Structure to match SyllabusReadiness expected format
-            if ($isTemplate) {
-                $groupedSyllabi[$key]['template'] = [
-                    'id' => (int)$row['syllabus_id'],
-                    'is_published' => (bool)($row['is_published'] ?? false),
-                    'catalog_description' => $row['catalog_description'] ?? null,
-                    'course_type' => $row['course_type'] ?? null,
-                    'credits' => isset($row['credits']) ? (int)$row['credits'] : null,
-                    'contact_hours' => $row['contact_hours'] ?? null,
-                    'specific_goals' => $row['specific_goals'],
-                    'student_outcomes' => $row['student_outcomes'],
-                    'topics_covered' => $row['topics_covered'],
-                ];
-            } else {
-                $groupedSyllabi[$key]['draft'] = [
-                    'id' => (int)$row['syllabus_id'],
-                    'is_submitted' => (bool)($row['is_submitted'] ?? false),
-                    'is_approved' => (bool)($row['is_approved'] ?? false),
-                    'denial_feedback' => $row['denial_feedback'] ?? null,
-                    'updated_at' => $row['updated_at'] ?? null,
-                ];
-            }
+        $program = $this->registry->getRepository(Program::class)->find($programId);
+        if (!$program instanceof Program) {
+            return [];
         }
 
-        // 3. Project each curriculum course into a SyllabusReadiness read model
-        $readinessRows = [];
-        foreach ($curriculumRows as $curriculum) {
-            $courseField = trim($curriculum['course'] ?? '');
-            if ($courseField === '') {
+        /** @var list<CommonCourse> $commonCourses */
+        $commonCourses = $this->registry->getRepository(CommonCourse::class)->findBy(
+            ['program' => $program],
+            ['courseSubject' => 'ASC', 'courseNumber' => 'ASC', 'deliveryType' => 'ASC'],
+        );
+
+        /** @var array<int, array{shared: list<TemplateSubmission>, faculty_by_offering: array<int, TemplateSubmission>}> $submissionsByCourse */
+        $submissionsByCourse = [];
+        foreach ($this->submissions->findForProgramReadiness($program) as $submission) {
+            $courseId = $submission->getCommonCourse()->getId();
+            if ($courseId === null) {
                 continue;
             }
 
-            // Parse course code and title
-            $parsed = $this->parseCourse($courseField);
-            $subject = $parsed['subject'];
-            $number = $parsed['number'];
-            $title = $parsed['title'];
+            $submissionsByCourse[$courseId] ??= ['shared' => [], 'faculty_by_offering' => []];
+            if ($submission->getKind() === SubmissionKind::SharedTemplate) {
+                $submissionsByCourse[$courseId]['shared'][] = $submission;
+                continue;
+            }
 
-            $courseKey = strtolower($subject . '_' . $number);
+            $offeringId = $submission->getCourseOffering()?->getId();
+            if ($offeringId !== null
+                && !isset($submissionsByCourse[$courseId]['faculty_by_offering'][$offeringId])) {
+                $submissionsByCourse[$courseId]['faculty_by_offering'][$offeringId] = $submission;
+            }
+        }
+
+        $readinessRows = [];
+        foreach ($commonCourses as $commonCourse) {
+            $courseId = $commonCourse->getId();
+            $courseSubmissions = $courseId !== null
+                ? ($submissionsByCourse[$courseId] ?? ['shared' => [], 'faculty_by_offering' => []])
+                : ['shared' => [], 'faculty_by_offering' => []];
+            $sharedSubmission = $courseSubmissions['shared'][0] ?? null;
+            $publishedRevision = $commonCourse->getCurrentApprovedRevision();
+            $templateRevision = $publishedRevision ?? $this->selectRevision($sharedSubmission);
 
             $courseInfo = [
-                'program_id' => $programId,
-                'course_id' => $curriculum['curriculum_id'],
-                'course_code' => trim($subject . ' ' . $number),
-                'course_title' => $title,
+                'program_id' => (string)$program->getId(),
+                'course_id' => (string)$courseId,
+                'course_code' => trim($commonCourse->getCourseSubject().' '.$commonCourse->getCourseNumber()),
+                'course_title' => $commonCourse->getCourseName(),
             ];
 
-            $templateInfo = $groupedSyllabi[$courseKey]['template'] ?? null;
-            $draftInfo = $groupedSyllabi[$courseKey]['draft'] ?? null;
+            $facultySubmissions = array_values($courseSubmissions['faculty_by_offering']);
+            if ($facultySubmissions === []) {
+                $facultySubmissions = [null];
+            }
 
-            $readinessRows[] = SyllabusReadiness::fromDomainState($courseInfo, $templateInfo, $draftInfo);
+            foreach ($facultySubmissions as $facultySubmission) {
+                $readinessRows[] = SyllabusReadiness::fromDomainState(
+                    $courseInfo,
+                    $this->buildTemplateInfo($templateRevision, $publishedRevision !== null),
+                    $this->buildSubmissionInfo($facultySubmission),
+                );
+            }
         }
 
         if ($filter !== null && $filter !== '') {
@@ -121,6 +107,107 @@ class SyllabusReadinessRepository
         }
 
         return $readinessRows;
+    }
+
+    /**
+     * @return array{
+     *     id: int,
+     *     is_published: bool,
+     *     faculty_submittable: bool,
+     *     faculty_submission_blocking_fields: string[],
+     *     coordinator_publishable: bool,
+     *     coordinator_publication_blocking_fields: string[],
+     *     appendix_a_ready: bool,
+     *     appendix_a_blocking_fields: string[]
+     * }|null
+     */
+    private function buildTemplateInfo(?TemplateRevision $revision, bool $isPublished): ?array
+    {
+        if ($revision === null || $revision->getId() === null) {
+            return null;
+        }
+
+        return [
+            'id' => $revision->getId(),
+            'is_published' => $isPublished,
+            'faculty_submittable' => $revision->isFacultySubmittable(),
+            'faculty_submission_blocking_fields' => $revision->getFacultySubmissionBlockingFields(),
+            'coordinator_publishable' => $revision->isCoordinatorPublishable(),
+            'coordinator_publication_blocking_fields' => $revision->getCoordinatorPublicationBlockingFields(),
+            'appendix_a_ready' => $revision->isAppendixAReady(),
+            'appendix_a_blocking_fields' => $revision->getAppendixABlockingFields(),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     id: int,
+     *     is_submitted: bool,
+     *     is_approved: bool,
+     *     denial_feedback: ?string,
+     *     updated_at: string,
+     *     faculty_submittable: bool,
+     *     faculty_submission_blocking_fields: string[],
+     *     appendix_a_ready: bool,
+     *     appendix_a_blocking_fields: string[],
+     *     course_offering: array{
+     *         id: int,
+     *         academic_year: string,
+     *         term: string,
+     *         section: string,
+     *         delivery_type: string
+     *     }
+     * }|null
+     */
+    private function buildSubmissionInfo(?TemplateSubmission $submission): ?array
+    {
+        if ($submission === null || $submission->getId() === null) {
+            return null;
+        }
+
+        $status = $submission->getStatus();
+        $review = $submission->getReview();
+        $offering = $submission->getCourseOffering();
+        $revision = $this->selectRevision($submission);
+        if ($offering === null || $offering->getId() === null) {
+            throw new \LogicException('A faculty-offering submission must reference a persisted course offering.');
+        }
+        if ($revision === null) {
+            throw new \LogicException('A persisted faculty-offering submission must have a lifecycle revision.');
+        }
+
+        return [
+            'id' => $submission->getId(),
+            'is_submitted' => $status !== SubmissionStatus::Draft,
+            'is_approved' => in_array(
+                $status,
+                [SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits],
+                true,
+            ),
+            'denial_feedback' => $status === SubmissionStatus::Denied
+                && $review?->getDecision() === ReviewDecision::Denied
+                    ? $review->getComment()
+                    : null,
+            'updated_at' => $submission->getUpdatedAt()->format(\DateTimeInterface::ATOM),
+            'faculty_submittable' => $revision->isFacultySubmittable(),
+            'faculty_submission_blocking_fields' => $revision->getFacultySubmissionBlockingFields(),
+            'appendix_a_ready' => $revision->isAppendixAReady(),
+            'appendix_a_blocking_fields' => $revision->getAppendixABlockingFields(),
+            'course_offering' => [
+                'id' => $offering->getId(),
+                'academic_year' => $offering->getAcademicYear(),
+                'term' => $offering->getTerm(),
+                'section' => $offering->getSection(),
+                'delivery_type' => $offering->getDeliveryType()->value,
+            ],
+        ];
+    }
+
+    private function selectRevision(?TemplateSubmission $submission): ?TemplateRevision
+    {
+        return $submission?->getApprovedRevision()
+            ?? $submission?->getSubmittedRevision()
+            ?? $submission?->getWorkingRevision();
     }
 
     /**
@@ -159,25 +246,25 @@ class SyllabusReadinessRepository
         ];
     }
 
-    private function decodeJson(mixed $value): ?array
-    {
-        if (is_array($value)) {
-            return $value;
-        }
-        if (is_string($value) && $value !== '') {
-            $decoded = json_decode($value, true);
-            return is_array($decoded) ? $decoded : null;
-        }
-        return null;
-    }
-
     /**
      * @return array<array{program_id: int|string, program_name: string, program_code: string, program_year: string}>
      */
     public function getAllPrograms(): array
     {
-        return $this->connection->fetchAllAssociative(
-            'SELECT program_id, program_name, program_code, program_year FROM programs ORDER BY program_name ASC, program_year DESC'
+        /** @var list<Program> $programs */
+        $programs = $this->registry->getRepository(Program::class)->findBy(
+            [],
+            ['name' => 'ASC', 'year' => 'DESC'],
+        );
+
+        return array_map(
+            static fn (Program $program): array => [
+                'program_id' => $program->getId(),
+                'program_name' => $program->getName(),
+                'program_code' => $program->getCode(),
+                'program_year' => $program->getYear(),
+            ],
+            $programs,
         );
     }
 }

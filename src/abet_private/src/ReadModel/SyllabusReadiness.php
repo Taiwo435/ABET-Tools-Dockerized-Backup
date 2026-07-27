@@ -7,7 +7,7 @@ namespace App\ReadModel;
 use DateTimeImmutable;
 
 /**
- * Represents the syllabus readiness status for a single course in a program.
+ * Represents the syllabus readiness status for a common course or one of its offerings.
  */
 class SyllabusReadiness
 {
@@ -20,9 +20,24 @@ class SyllabusReadiness
     private array $missingRequiredFields;
     private ?int $syllabusId;
     private ?DateTimeImmutable $updatedAt;
+    /** @var array{id: int, academic_year: string, term: string, section: string, delivery_type: string}|null */
+    private ?array $courseOffering;
+    private bool $facultySubmittable;
+    /** @var string[] */
+    private array $facultySubmissionBlockingFields;
+    private bool $coordinatorPublishable;
+    /** @var string[] */
+    private array $coordinatorPublicationBlockingFields;
+    private bool $appendixAReady;
+    /** @var string[] */
+    private array $appendixABlockingFields;
 
     /**
      * @param string[] $missingRequiredFields
+     * @param array{id: int, academic_year: string, term: string, section: string, delivery_type: string}|null $courseOffering
+     * @param string[] $facultySubmissionBlockingFields
+     * @param string[] $coordinatorPublicationBlockingFields
+     * @param string[] $appendixABlockingFields
      */
     public function __construct(
         string $programId,
@@ -32,7 +47,14 @@ class SyllabusReadiness
         SyllabusReadinessState $state,
         array $missingRequiredFields = [],
         ?int $syllabusId = null,
-        ?DateTimeImmutable $updatedAt = null
+        ?DateTimeImmutable $updatedAt = null,
+        ?array $courseOffering = null,
+        bool $facultySubmittable = false,
+        array $facultySubmissionBlockingFields = [],
+        bool $coordinatorPublishable = false,
+        array $coordinatorPublicationBlockingFields = [],
+        bool $appendixAReady = false,
+        array $appendixABlockingFields = [],
     ) {
         $this->programId = $programId;
         $this->courseId = $courseId;
@@ -42,6 +64,13 @@ class SyllabusReadiness
         $this->missingRequiredFields = $missingRequiredFields;
         $this->syllabusId = $syllabusId;
         $this->updatedAt = $updatedAt;
+        $this->courseOffering = $courseOffering;
+        $this->facultySubmittable = $facultySubmittable;
+        $this->facultySubmissionBlockingFields = $facultySubmissionBlockingFields;
+        $this->coordinatorPublishable = $coordinatorPublishable;
+        $this->coordinatorPublicationBlockingFields = $coordinatorPublicationBlockingFields;
+        $this->appendixAReady = $appendixAReady;
+        $this->appendixABlockingFields = $appendixABlockingFields;
     }
 
     public function getProgramId(): string
@@ -87,10 +116,66 @@ class SyllabusReadiness
         return $this->updatedAt;
     }
 
+    public function getCourseOfferingId(): ?int
+    {
+        return $this->courseOffering['id'] ?? null;
+    }
+
+    public function getAcademicYear(): ?string
+    {
+        return $this->courseOffering['academic_year'] ?? null;
+    }
+
+    public function getTerm(): ?string
+    {
+        return $this->courseOffering['term'] ?? null;
+    }
+
+    public function getSection(): ?string
+    {
+        return $this->courseOffering['section'] ?? null;
+    }
+
+    public function getDeliveryType(): ?string
+    {
+        return $this->courseOffering['delivery_type'] ?? null;
+    }
+
+    public function isFacultySubmittable(): bool
+    {
+        return $this->facultySubmittable;
+    }
+
+    /** @return string[] */
+    public function getFacultySubmissionBlockingFields(): array
+    {
+        return $this->facultySubmissionBlockingFields;
+    }
+
+    public function isCoordinatorPublishable(): bool
+    {
+        return $this->coordinatorPublishable;
+    }
+
+    /** @return string[] */
+    public function getCoordinatorPublicationBlockingFields(): array
+    {
+        return $this->coordinatorPublicationBlockingFields;
+    }
+
+    public function isAppendixAReady(): bool
+    {
+        return $this->appendixAReady;
+    }
+
+    /** @return string[] */
+    public function getAppendixABlockingFields(): array
+    {
+        return $this->appendixABlockingFields;
+    }
+
     /**
-     * Factory method to derive the readiness state of a course from the given domain information.
-     * Since the actual domain model classes do not exist in the database yet, we define this method
-     * to take raw array inputs representing the hypothetical database rows or future entity states.
+     * Builds the presentation row from canonical lifecycle and completeness projections.
      *
      * @param array{
      *     program_id: string|int,
@@ -101,20 +186,30 @@ class SyllabusReadiness
      * @param array{
      *     id: int,
      *     is_published: bool,
-     *     catalog_description: ?string,
-     *     course_type: ?string,
-     *     credits: ?int,
-     *     contact_hours: ?string,
-     *     specific_goals: ?array,
-     *     student_outcomes: ?array,
-     *     topics_covered: ?array
+     *     faculty_submittable: bool,
+     *     faculty_submission_blocking_fields: string[],
+     *     coordinator_publishable: bool,
+     *     coordinator_publication_blocking_fields: string[],
+     *     appendix_a_ready: bool,
+     *     appendix_a_blocking_fields: string[]
      * }|null $templateInfo
      * @param array{
      *     id: int,
      *     is_submitted: bool,
      *     is_approved: bool,
      *     denial_feedback: ?string,
-     *     updated_at: string
+     *     updated_at: string,
+     *     faculty_submittable: bool,
+     *     faculty_submission_blocking_fields: string[],
+     *     appendix_a_ready: bool,
+     *     appendix_a_blocking_fields: string[],
+     *     course_offering?: array{
+     *         id: int,
+     *         academic_year: string,
+     *         term: string,
+     *         section: string,
+     *         delivery_type: string
+     *     }
      * }|null $draftInfo
      */
     public static function fromDomainState(
@@ -126,6 +221,21 @@ class SyllabusReadiness
         $courseId = (string) $courseInfo['course_id'];
         $courseCode = (string) $courseInfo['course_code'];
         $courseTitle = (string) $courseInfo['course_title'];
+        $courseOffering = $draftInfo['course_offering'] ?? null;
+        $facultySubmittable = $draftInfo['faculty_submittable']
+            ?? $templateInfo['faculty_submittable']
+            ?? false;
+        $facultyBlockingFields = $draftInfo['faculty_submission_blocking_fields']
+            ?? $templateInfo['faculty_submission_blocking_fields']
+            ?? [];
+        $coordinatorPublishable = $templateInfo['coordinator_publishable'] ?? false;
+        $coordinatorBlockingFields = $templateInfo['coordinator_publication_blocking_fields'] ?? [];
+        $appendixAReady = $draftInfo['appendix_a_ready']
+            ?? $templateInfo['appendix_a_ready']
+            ?? false;
+        $appendixABlockingFields = $draftInfo['appendix_a_blocking_fields']
+            ?? $templateInfo['appendix_a_blocking_fields']
+            ?? [];
 
         // 1. If there is no shared template
         if ($templateInfo === null) {
@@ -134,23 +244,38 @@ class SyllabusReadiness
                 $courseId,
                 $courseCode,
                 $courseTitle,
-                SyllabusReadinessState::NoSharedTemplate
+                SyllabusReadinessState::NoSharedTemplate,
+                [],
+                null,
+                null,
+                $courseOffering,
+                $facultySubmittable,
+                $facultyBlockingFields,
+                $coordinatorPublishable,
+                $coordinatorBlockingFields,
+                $appendixAReady,
+                $appendixABlockingFields,
             );
         }
 
-        // Identify missing required fields in the template
-        $missingRequiredFields = self::computeMissingFields($templateInfo);
-
         // 2. If the shared template is incomplete
-        if (!$templateInfo['is_published'] && !empty($missingRequiredFields)) {
+        if (!$templateInfo['is_published'] && !$coordinatorPublishable) {
             return new self(
                 $programId,
                 $courseId,
                 $courseCode,
                 $courseTitle,
                 SyllabusReadinessState::SharedTemplateIncomplete,
-                $missingRequiredFields,
-                $templateInfo['id']
+                $coordinatorBlockingFields,
+                $templateInfo['id'],
+                null,
+                $courseOffering,
+                $facultySubmittable,
+                $facultyBlockingFields,
+                $coordinatorPublishable,
+                $coordinatorBlockingFields,
+                $appendixAReady,
+                $appendixABlockingFields,
             );
         }
 
@@ -163,7 +288,15 @@ class SyllabusReadiness
                 $courseTitle,
                 SyllabusReadinessState::SharedTemplatePublished,
                 [],
-                $templateInfo['id']
+                $templateInfo['id'],
+                null,
+                $courseOffering,
+                $facultySubmittable,
+                $facultyBlockingFields,
+                $coordinatorPublishable,
+                $coordinatorBlockingFields,
+                $appendixAReady,
+                $appendixABlockingFields,
             );
         }
 
@@ -177,10 +310,19 @@ class SyllabusReadiness
                 $courseId,
                 $courseCode,
                 $courseTitle,
-                SyllabusReadinessState::ApprovedAndReadyForAppendixA,
-                [],
+                $appendixAReady
+                    ? SyllabusReadinessState::ApprovedAndReadyForAppendixA
+                    : SyllabusReadinessState::ApprovedAppendixAIncomplete,
+                $appendixAReady ? [] : $appendixABlockingFields,
                 $syllabusId,
-                $updatedAt
+                $updatedAt,
+                $courseOffering,
+                $facultySubmittable,
+                $facultyBlockingFields,
+                $coordinatorPublishable,
+                $coordinatorBlockingFields,
+                $appendixAReady,
+                $appendixABlockingFields,
             );
         }
 
@@ -192,9 +334,16 @@ class SyllabusReadiness
                 $courseCode,
                 $courseTitle,
                 SyllabusReadinessState::DeniedWithFeedback,
-                [],
+                $facultyBlockingFields,
                 $syllabusId,
-                $updatedAt
+                $updatedAt,
+                $courseOffering,
+                $facultySubmittable,
+                $facultyBlockingFields,
+                $coordinatorPublishable,
+                $coordinatorBlockingFields,
+                $appendixAReady,
+                $appendixABlockingFields,
             );
         }
 
@@ -206,9 +355,16 @@ class SyllabusReadiness
                 $courseCode,
                 $courseTitle,
                 SyllabusReadinessState::SubmittedForReview,
-                [],
+                $facultyBlockingFields,
                 $syllabusId,
-                $updatedAt
+                $updatedAt,
+                $courseOffering,
+                $facultySubmittable,
+                $facultyBlockingFields,
+                $coordinatorPublishable,
+                $coordinatorBlockingFields,
+                $appendixAReady,
+                $appendixABlockingFields,
             );
         }
 
@@ -219,52 +375,16 @@ class SyllabusReadiness
             $courseCode,
             $courseTitle,
             SyllabusReadinessState::FacultyDraftInProgress,
-            [],
+            $facultyBlockingFields,
             $syllabusId,
-            $updatedAt
+            $updatedAt,
+            $courseOffering,
+            $facultySubmittable,
+            $facultyBlockingFields,
+            $coordinatorPublishable,
+            $coordinatorBlockingFields,
+            $appendixAReady,
+            $appendixABlockingFields,
         );
-    }
-
-    /**
-     * Computes missing required fields from the template/syllabus info.
-     *
-     * @param array $info
-     * @return string[]
-     */
-    private static function computeMissingFields(array $info): array
-    {
-        $missing = [];
-        $requiredFields = [
-            'catalog_description' => 'Catalog Description',
-            'course_type' => 'Course Type',
-            'credits' => 'Credits',
-            'contact_hours' => 'Contact Hours',
-            'specific_goals' => 'Specific Goals',
-            'student_outcomes' => 'Student Outcomes',
-            'topics_covered' => 'Topics Covered',
-        ];
-
-        foreach ($requiredFields as $key => $label) {
-            $value = $info[$key] ?? null;
-            if (self::isEmpty($value)) {
-                $missing[] = $label;
-            }
-        }
-
-        return $missing;
-    }
-
-    private static function isEmpty(mixed $value): bool
-    {
-        if ($value === null) {
-            return true;
-        }
-        if (is_string($value) && trim($value) === '') {
-            return true;
-        }
-        if (is_array($value) && empty($value)) {
-            return true;
-        }
-        return false;
     }
 }

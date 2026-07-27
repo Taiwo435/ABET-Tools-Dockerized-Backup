@@ -43,13 +43,12 @@ final class SyllabusReadinessTest extends TestCase
         $templateInfo = [
             'id' => 201,
             'is_published' => false,
-            'catalog_description' => '', // missing
-            'course_type' => 'R',
-            'credits' => null, // missing
-            'contact_hours' => '3 hours',
-            'specific_goals' => [], // missing
-            'student_outcomes' => ['1', '2'],
-            'topics_covered' => null, // missing
+            'faculty_submittable' => false,
+            'faculty_submission_blocking_fields' => ['credits', 'course_coordinators'],
+            'coordinator_publishable' => false,
+            'coordinator_publication_blocking_fields' => ['credits', 'course_coordinators'],
+            'appendix_a_ready' => false,
+            'appendix_a_blocking_fields' => ['credits', 'contact_hours', 'instructors'],
         ];
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, null);
@@ -57,25 +56,20 @@ final class SyllabusReadinessTest extends TestCase
         $this->assertSame(SyllabusReadinessState::SharedTemplateIncomplete, $readiness->getState());
         $this->assertSame(201, $readiness->getSyllabusId());
         $this->assertEquals(
-            ['Catalog Description', 'Credits', 'Specific Goals', 'Topics Covered'],
+            ['credits', 'course_coordinators'],
             $readiness->getMissingRequiredFields()
+        );
+        $this->assertFalse($readiness->isCoordinatorPublishable());
+        $this->assertSame(
+            ['credits', 'course_coordinators'],
+            $readiness->getCoordinatorPublicationBlockingFields(),
         );
         $this->assertSame('Blocked', $readiness->getState()->getCategory());
     }
 
     public function testDeriveSharedTemplatePublished(): void
     {
-        $templateInfo = [
-            'id' => 201,
-            'is_published' => true,
-            'catalog_description' => 'A course on algs.',
-            'course_type' => 'R',
-            'credits' => 3,
-            'contact_hours' => '3 hours',
-            'specific_goals' => ['Goal 1'],
-            'student_outcomes' => ['1'],
-            'topics_covered' => ['Topic 1'],
-        ];
+        $templateInfo = $this->publishedTemplateInfo();
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, null);
 
@@ -86,17 +80,7 @@ final class SyllabusReadinessTest extends TestCase
 
     public function testDeriveFacultyDraftInProgress(): void
     {
-        $templateInfo = [
-            'id' => 201,
-            'is_published' => true,
-            'catalog_description' => 'A course on algs.',
-            'course_type' => 'R',
-            'credits' => 3,
-            'contact_hours' => '3 hours',
-            'specific_goals' => ['Goal 1'],
-            'student_outcomes' => ['1'],
-            'topics_covered' => ['Topic 1'],
-        ];
+        $templateInfo = $this->publishedTemplateInfo();
 
         $draftInfo = [
             'id' => 301,
@@ -104,6 +88,10 @@ final class SyllabusReadinessTest extends TestCase
             'is_approved' => false,
             'denial_feedback' => null,
             'updated_at' => '2026-07-18T12:00:00Z',
+            'faculty_submittable' => false,
+            'faculty_submission_blocking_fields' => ['credits'],
+            'appendix_a_ready' => false,
+            'appendix_a_blocking_fields' => ['credits', 'contact_hours'],
         ];
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, $draftInfo);
@@ -112,22 +100,14 @@ final class SyllabusReadinessTest extends TestCase
         $this->assertSame(301, $readiness->getSyllabusId());
         $this->assertNotNull($readiness->getUpdatedAt());
         $this->assertSame('2026-07-18T12:00:00+00:00', $readiness->getUpdatedAt()->format(\DateTimeInterface::ATOM));
+        $this->assertFalse($readiness->isFacultySubmittable());
+        $this->assertSame(['credits'], $readiness->getFacultySubmissionBlockingFields());
         $this->assertSame('Blocked', $readiness->getState()->getCategory());
     }
 
     public function testDeriveSubmittedForReview(): void
     {
-        $templateInfo = [
-            'id' => 201,
-            'is_published' => true,
-            'catalog_description' => 'A course on algs.',
-            'course_type' => 'R',
-            'credits' => 3,
-            'contact_hours' => '3 hours',
-            'specific_goals' => ['Goal 1'],
-            'student_outcomes' => ['1'],
-            'topics_covered' => ['Topic 1'],
-        ];
+        $templateInfo = $this->publishedTemplateInfo();
 
         $draftInfo = [
             'id' => 301,
@@ -145,17 +125,7 @@ final class SyllabusReadinessTest extends TestCase
 
     public function testDeriveDeniedWithFeedback(): void
     {
-        $templateInfo = [
-            'id' => 201,
-            'is_published' => true,
-            'catalog_description' => 'A course on algs.',
-            'course_type' => 'R',
-            'credits' => 3,
-            'contact_hours' => '3 hours',
-            'specific_goals' => ['Goal 1'],
-            'student_outcomes' => ['1'],
-            'topics_covered' => ['Topic 1'],
-        ];
+        $templateInfo = $this->publishedTemplateInfo();
 
         $draftInfo = [
             'id' => 301,
@@ -173,17 +143,7 @@ final class SyllabusReadinessTest extends TestCase
 
     public function testDeriveApprovedAndReady(): void
     {
-        $templateInfo = [
-            'id' => 201,
-            'is_published' => true,
-            'catalog_description' => 'A course on algs.',
-            'course_type' => 'R',
-            'credits' => 3,
-            'contact_hours' => '3 hours',
-            'specific_goals' => ['Goal 1'],
-            'student_outcomes' => ['1'],
-            'topics_covered' => ['Topic 1'],
-        ];
+        $templateInfo = $this->publishedTemplateInfo();
 
         $draftInfo = [
             'id' => 301,
@@ -191,11 +151,69 @@ final class SyllabusReadinessTest extends TestCase
             'is_approved' => true,
             'denial_feedback' => null,
             'updated_at' => '2026-07-18T15:00:00Z',
+            'faculty_submittable' => true,
+            'faculty_submission_blocking_fields' => [],
+            'appendix_a_ready' => true,
+            'appendix_a_blocking_fields' => [],
         ];
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, $draftInfo);
 
         $this->assertSame(SyllabusReadinessState::ApprovedAndReadyForAppendixA, $readiness->getState());
+        $this->assertTrue($readiness->isAppendixAReady());
         $this->assertSame('Ready', $readiness->getState()->getCategory());
+    }
+
+    public function testApprovedRevisionCanRemainAppendixAIncomplete(): void
+    {
+        $draftInfo = [
+            'id' => 301,
+            'is_submitted' => true,
+            'is_approved' => true,
+            'denial_feedback' => null,
+            'updated_at' => '2026-07-18T15:00:00Z',
+            'faculty_submittable' => true,
+            'faculty_submission_blocking_fields' => [],
+            'appendix_a_ready' => false,
+            'appendix_a_blocking_fields' => ['contact_hours', 'instructors'],
+        ];
+
+        $readiness = SyllabusReadiness::fromDomainState(
+            $this->courseInfo,
+            $this->publishedTemplateInfo(),
+            $draftInfo,
+        );
+
+        $this->assertSame(SyllabusReadinessState::ApprovedAppendixAIncomplete, $readiness->getState());
+        $this->assertFalse($readiness->isAppendixAReady());
+        $this->assertSame(['contact_hours', 'instructors'], $readiness->getAppendixABlockingFields());
+        $this->assertSame(['contact_hours', 'instructors'], $readiness->getMissingRequiredFields());
+        $this->assertSame('Blocked', $readiness->getState()->getCategory());
+    }
+
+    /**
+     * @return array{
+     *     id: int,
+     *     is_published: bool,
+     *     faculty_submittable: bool,
+     *     faculty_submission_blocking_fields: string[],
+     *     coordinator_publishable: bool,
+     *     coordinator_publication_blocking_fields: string[],
+     *     appendix_a_ready: bool,
+     *     appendix_a_blocking_fields: string[]
+     * }
+     */
+    private function publishedTemplateInfo(): array
+    {
+        return [
+            'id' => 201,
+            'is_published' => true,
+            'faculty_submittable' => true,
+            'faculty_submission_blocking_fields' => [],
+            'coordinator_publishable' => true,
+            'coordinator_publication_blocking_fields' => [],
+            'appendix_a_ready' => true,
+            'appendix_a_blocking_fields' => [],
+        ];
     }
 }

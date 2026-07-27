@@ -21,6 +21,38 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
     }
 
     /** @return list<TemplateSubmission> */
+    public function findForProgramReadiness(Program $program): array
+    {
+        return $this->createQueryBuilder('submission')
+            ->addSelect(
+                'course',
+                'program',
+                'currentApprovedRevision',
+                'workingRevision',
+                'submittedRevision',
+                'approvedRevision',
+                'offering',
+                'review',
+            )
+            ->innerJoin('submission.commonCourse', 'course')
+            ->innerJoin('course.program', 'program')
+            ->leftJoin('course.currentApprovedRevision', 'currentApprovedRevision')
+            ->leftJoin('submission.workingRevision', 'workingRevision')
+            ->leftJoin('submission.submittedRevision', 'submittedRevision')
+            ->leftJoin('submission.approvedRevision', 'approvedRevision')
+            ->leftJoin('submission.courseOffering', 'offering')
+            ->leftJoin('submission.review', 'review')
+            ->andWhere('course.program = :program')
+            ->setParameter('program', $program)
+            ->orderBy('course.courseSubject', 'ASC')
+            ->addOrderBy('course.courseNumber', 'ASC')
+            ->addOrderBy('submission.updatedAt', 'DESC')
+            ->addOrderBy('submission.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return list<TemplateSubmission> */
     public function findManagedTemplates(?CompletenessStatus $completeness = null): array
     {
         $builder = $this->createQueryBuilder('submission')
