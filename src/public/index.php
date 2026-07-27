@@ -21,6 +21,7 @@ use Symfony\Component\ErrorHandler\Debug;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 require_once rtrim(getenv('ABET_PRIVATE_DIR') ?: '/home/abet_private', '/') . '/vendor/autoload.php';
 
@@ -59,13 +60,30 @@ if (false === $response->isNotFound()) {
     // Symfony successfully handled the route.
     $response->send();
 } else {
-    // var_dump(phpinfo());
+    $security = $kernel->getContainer()->get(\Symfony\Bundle\SecurityBundle\Security::class);
     try {
-        LegacyBridge::handleRequest($request, $response, __DIR__);
+        LegacyBridge::handleRequest($request, $response, __DIR__, $security);
     }
     catch (NotFoundHttpException $e) {
+        // Symfony's kernel already rendered $response as a proper 404 page
+        // before falling through to LegacyBridge, so just send it.
+
         $response->send();
     }
-}
+    catch (HttpExceptionInterface $e) {
+        // #132: Exceptions thrown from LegacyBridge (e.g. AccessDeniedHttpException
+        // from doAuthorizationChecks()) happen outside Symfony's normal request
+        // lifecycle, so the kernel never gets a chance to render them. Render
+        // manually using the same branded error template used everywhere else.
 
+        $twig = $kernel->getContainer()->get(\Twig\Environment::class);
+        $statusCode = $e->getStatusCode();
+        $content = $twig->render('bundles/TwigBundle/Exception/error.html.twig', [
+            'status_code' => $statusCode,
+            'status_text' => \Symfony\Component\HttpFoundation\Response::$statusTexts[$statusCode] ?? 'Error',
+        ]);
+        $errorResponse = new Response($content, $statusCode, $e->getHeaders());
+        $errorResponse->send();
+    }
+}
 $kernel->terminate($request, $response);

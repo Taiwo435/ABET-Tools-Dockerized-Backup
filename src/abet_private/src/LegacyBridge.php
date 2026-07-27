@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Exception;
+use Symfony\Bundle\SecurityBundle\Security;
 
 class LegacyBridge
 {
@@ -21,17 +22,19 @@ class LegacyBridge
      * If your mapping is complicated, you may want to write unit tests
      * to verify your logic, so this method is public static.
      */
-    public static function getLegacyScript(Request $request): string
+    public static function getLegacyScript(Request $request, Security $security): string
     {
         $requestPathInfo = $request->getPathInfo();
+        LegacyBridge::doAuthorizationChecks($security, $requestPathInfo);
         // note that public files will now NOT be copied into the apache folder. only index and .htaccess will be synced now.
         $legacyRoot = getenv("ABET_PUBLIC_DIR");
+
         // $legacyRoot = __DIR__.'/../../public';
 
         // check if they are in legacyRoot. Else reject.
 
         //TODO: add pretty rewrites in .htaccess
-        
+
         // var_dump(get_loaded_extensions());
         // ----------------------------
         // .htaccess pretty paths but here
@@ -103,20 +106,20 @@ class LegacyBridge
         if ($requestPathInfo == '/account/privacy/consent/') {
             return "{$legacyRoot}/account/privacy/consent.php";
         }
-        
+
         if ($requestPathInfo == '/account/privacy/export-data/') {
             return "{$legacyRoot}/account/privacy/export-data.php";
         }
-        
+
         if ($requestPathInfo == '/account/privacy/delete-request/') {
             return "{$legacyRoot}/account/privacy/delete-request.php";
         }
-        
+
         // faq
         if ($requestPathInfo == '/account/help/faq/') {
             return "{$legacyRoot}/account/help/faq.php";
         }
-        
+
         // contact
         if ($requestPathInfo == '/account/help/contact/') {
             return "{$legacyRoot}/account/help/contact.php";
@@ -142,9 +145,7 @@ class LegacyBridge
         if ($requestPathInfo == '/coordinator-form/review/') {
             return "{$legacyRoot}/coordinator-form/review/index.php";
         }
-        
 
-        
         LegacyBridge::doSecurityChecks($legacyRoot, $requestPathInfo);
         // Resolve to absolute canonical path
         $resolvedPath = realpath("{$legacyRoot}{$requestPathInfo}");
@@ -176,6 +177,72 @@ class LegacyBridge
          * WARNING: DO NOT use $filepath! This is dangerous!
          * use $resolved path AFTER here!!
          */
+
+ /**
+     * #132: Symfony's native access_control cannot protect these paths —
+     * they have no matching #[Route], so the router throws
+     * NotFoundHttpException and the security firewall never runs. This is
+     * the equivalent enforcement point for legacy-bridged requests.
+     *
+     * Runs at the very top of getLegacyScript(), before any of the
+     * hardcoded path mappings below, so it applies uniformly regardless
+     * of whether the request resolves via a hardcoded mapping or the
+     * generic realpath() fallback.
+     *
+     * NOTE: This map does NOT yet cover every path under src/public — see
+     * #132 for remaining work (/tools/tool1, /tools/tool2,
+     * /tools/AdminPanel are intentionally not yet mapped here; they keep
+     * relying on their existing in-file require_login()/require_role()
+     * checks until their required roles are confirmed).
+     */
+    private static function doAuthorizationChecks(Security $security, string $requestPathInfo): void
+    {
+        $publicPrefixes = [
+            '/',
+            '/home', // /home is a native Symfony route already; harmless if ever hit here
+            '/login',
+            '/register',
+            '/logout',
+            '/auth/login.php',
+            '/auth/register.php',
+            '/auth/forgot_password.php',
+            '/auth/forgot_password_sent.php',
+            '/auth/reset_password.php',
+            '/auth/reset_password_success.php',
+        ];
+        foreach ($publicPrefixes as $prefix) {
+            if ($requestPathInfo === $prefix) {
+                return;
+            }
+            if ($prefix !== '/' && str_starts_with($requestPathInfo, $prefix)) {
+                return;
+            }
+        }
+
+        $roleMap = [
+            '/account/'            => null,
+            '/faculty-form/'       => 'ROLE_FACULTY_FORM',
+            '/coordinator-form/'   => 'ROLE_COORDINATOR_FORM',
+            '/AssignmentsGrades/'  => 'ROLE_ASSIGNMENTS_GRADES',
+            '/report-generator/'   => 'ROLE_REPORTGEN',
+        ];
+
+        foreach ($roleMap as $prefix => $role) {
+            if (!str_starts_with($requestPathInfo, $prefix)) {
+                continue;
+            }
+
+            if (!$security->getUser()) {
+                throw new AccessDeniedHttpException('Authentication required.');
+            }
+
+            if ($role !== null && !$security->isGranted($role)) {
+                throw new AccessDeniedHttpException("Missing required role: {$role}");
+            }
+
+            return;
+        }
+    }
 
     /**
      * SECURITY: Prevent domain traversal
@@ -210,9 +277,9 @@ class LegacyBridge
         }
     }
 
-    public static function handleRequest(Request $request, Response $response, string $publicDirectory): void
+    public static function handleRequest(Request $request, Response $response, string $publicDirectory, Security $security): void
     {
-        $legacyScriptFilename = LegacyBridge::getLegacyScript($request);
+        $legacyScriptFilename = LegacyBridge::getLegacyScript($request, $security);
 
         // Possibly (re-)set some env vars (e.g. to handle forms
         // posting to PHP_SELF):

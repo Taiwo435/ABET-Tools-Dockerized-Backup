@@ -21,3 +21,23 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # LegacyBridge.php runs outside normal DI (called statically from
+    # index.php's front controller), so it needs the Security service
+    # made public to be fetched directly from the container. #132
+    #
+    # This is an alias to the bundle's existing "security.helper" service —
+    # NOT a new service definition. Declaring it without `alias:` here
+    # tells the container to autowire+construct Security from scratch,
+    # which fails because its constructor takes an internal container
+    # argument that autowiring can't resolve.
+    Symfony\Bundle\SecurityBundle\Security:
+        alias: security.helper
+        public: true
+
+    # Needed so index.php can render the branded error template for
+    # exceptions thrown outside the normal Symfony request lifecycle
+    # (e.g. from LegacyBridge's authorization checks). #51
+    Twig\Environment:
+        alias: twig
+        public: true
