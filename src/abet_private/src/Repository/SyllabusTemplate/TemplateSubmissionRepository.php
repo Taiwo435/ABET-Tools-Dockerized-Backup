@@ -53,7 +53,10 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
     }
 
     /** @return list<TemplateSubmission> */
-    public function findManagedTemplates(?CompletenessStatus $completeness = null): array
+    public function findManagedTemplates(
+        ?CompletenessStatus $completeness = null,
+        ?Program $program = null,
+    ): array
     {
         $builder = $this->createQueryBuilder('submission')
             ->addSelect('course', 'program', 'revision', 'currentApprovedRevision')
@@ -70,6 +73,12 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
             ->addOrderBy('course.courseNumber', 'ASC')
             ->addOrderBy('submission.updatedAt', 'DESC')
             ->addOrderBy('submission.id', 'DESC');
+
+        if ($program !== null) {
+            $builder
+                ->andWhere('course.program = :programFilter')
+                ->setParameter('programFilter', $program);
+        }
 
         $managedByCourse = [];
         foreach ($builder->getQuery()->getResult() as $submission) {

@@ -41,37 +41,53 @@ final class SyllabusReadinessRepository
             ['program' => $program],
             ['courseSubject' => 'ASC', 'courseNumber' => 'ASC', 'deliveryType' => 'ASC'],
         );
+        $readinessRows = self::projectRows(
+            $program,
+            $commonCourses,
+            $this->submissions->findForProgramReadiness($program),
+        );
 
+        return $filter !== null && $filter !== ''
+            ? self::filterRows($readinessRows, category: $filter)
+            : $readinessRows;
+    }
+
+    /**
+     * @param list<CommonCourse> $commonCourses
+     * @param list<TemplateSubmission> $submissions Latest submissions must appear first for each target.
+     * @return list<SyllabusReadiness>
+     */
+    public static function projectRows(
+        Program $program,
+        array $commonCourses,
+        array $submissions,
+    ): array {
         /** @var array<int, array{shared: list<TemplateSubmission>, faculty_by_offering: array<int, TemplateSubmission>}> $submissionsByCourse */
         $submissionsByCourse = [];
-        foreach ($this->submissions->findForProgramReadiness($program) as $submission) {
-            $courseId = $submission->getCommonCourse()->getId();
-            if ($courseId === null) {
-                continue;
-            }
+        foreach ($submissions as $submission) {
+            $courseKey = spl_object_id($submission->getCommonCourse());
 
-            $submissionsByCourse[$courseId] ??= ['shared' => [], 'faculty_by_offering' => []];
+            $submissionsByCourse[$courseKey] ??= ['shared' => [], 'faculty_by_offering' => []];
             if ($submission->getKind() === SubmissionKind::SharedTemplate) {
-                $submissionsByCourse[$courseId]['shared'][] = $submission;
+                $submissionsByCourse[$courseKey]['shared'][] = $submission;
                 continue;
             }
 
-            $offeringId = $submission->getCourseOffering()?->getId();
-            if ($offeringId !== null
-                && !isset($submissionsByCourse[$courseId]['faculty_by_offering'][$offeringId])) {
-                $submissionsByCourse[$courseId]['faculty_by_offering'][$offeringId] = $submission;
+            $offering = $submission->getCourseOffering();
+            if ($offering !== null) {
+                $offeringKey = spl_object_id($offering);
+                $submissionsByCourse[$courseKey]['faculty_by_offering'][$offeringKey] ??= $submission;
             }
         }
 
         $readinessRows = [];
         foreach ($commonCourses as $commonCourse) {
             $courseId = $commonCourse->getId();
-            $courseSubmissions = $courseId !== null
-                ? ($submissionsByCourse[$courseId] ?? ['shared' => [], 'faculty_by_offering' => []])
-                : ['shared' => [], 'faculty_by_offering' => []];
+            $courseSubmissions = $submissionsByCourse[spl_object_id($commonCourse)]
+                ?? ['shared' => [], 'faculty_by_offering' => []];
             $sharedSubmission = $courseSubmissions['shared'][0] ?? null;
             $publishedRevision = $commonCourse->getCurrentApprovedRevision();
-            $templateRevision = $publishedRevision ?? $this->selectRevision($sharedSubmission);
+            $templateRevision = $publishedRevision ?? self::selectRevision($sharedSubmission);
 
             $courseInfo = [
                 'program_id' => (string)$program->getId(),
@@ -88,15 +104,13 @@ final class SyllabusReadinessRepository
             foreach ($facultySubmissions as $facultySubmission) {
                 $readinessRows[] = SyllabusReadiness::fromDomainState(
                     $courseInfo,
-                    $this->buildTemplateInfo($templateRevision, $publishedRevision !== null),
-                    $this->buildSubmissionInfo($facultySubmission),
+                    self::buildTemplateInfo($templateRevision, $publishedRevision !== null),
+                    self::buildSubmissionInfo($facultySubmission),
                 );
             }
         }
 
-        return $filter !== null && $filter !== ''
-            ? $this->filterRows($readinessRows, category: $filter)
-            : $readinessRows;
+        return $readinessRows;
     }
 
     public function findProgram(int|string $programId): ?Program
@@ -160,6 +174,29 @@ final class SyllabusReadinessRepository
     }
 
     /**
+     * @param list<SyllabusReadiness> $rows
+     * @return array{Ready: int, Blocked: int, Awaiting review: int, Missing: int}
+     */
+    public static function countRowsByCategory(array $rows): array
+    {
+        $counts = [
+            'Ready' => 0,
+            'Blocked' => 0,
+            'Awaiting review' => 0,
+            'Missing' => 0,
+        ];
+
+        foreach ($rows as $row) {
+            $category = $row->getState()->getCategory();
+            if (isset($counts[$category])) {
+                $counts[$category]++;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
      * @return array{
      *     id: int,
      *     is_published: bool,
@@ -171,7 +208,7 @@ final class SyllabusReadinessRepository
      *     appendix_a_blocking_fields: string[]
      * }|null
      */
-    private function buildTemplateInfo(?TemplateRevision $revision, bool $isPublished): ?array
+    private static function buildTemplateInfo(?TemplateRevision $revision, bool $isPublished): ?array
     {
         if ($revision === null || $revision->getId() === null) {
             return null;
@@ -208,7 +245,7 @@ final class SyllabusReadinessRepository
      *     }
      * }|null
      */
-    private function buildSubmissionInfo(?TemplateSubmission $submission): ?array
+    private static function buildSubmissionInfo(?TemplateSubmission $submission): ?array
     {
         if ($submission === null || $submission->getId() === null) {
             return null;
@@ -217,7 +254,7 @@ final class SyllabusReadinessRepository
         $status = $submission->getStatus();
         $review = $submission->getReview();
         $offering = $submission->getCourseOffering();
-        $revision = $this->selectRevision($submission);
+        $revision = self::selectRevision($submission);
         if ($offering === null || $offering->getId() === null) {
             throw new \LogicException('A faculty-offering submission must reference a persisted course offering.');
         }
@@ -247,7 +284,7 @@ final class SyllabusReadinessRepository
         ];
     }
 
-    private function selectRevision(?TemplateSubmission $submission): ?TemplateRevision
+    private static function selectRevision(?TemplateSubmission $submission): ?TemplateRevision
     {
         return $submission?->getApprovedRevision()
             ?? $submission?->getSubmittedRevision()

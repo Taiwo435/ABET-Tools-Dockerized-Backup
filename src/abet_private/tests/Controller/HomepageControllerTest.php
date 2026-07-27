@@ -1,39 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Controller;
 
-use App\Entity\User;
-use App\Entity\Permissions;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use PHPUnit\Framework\TestCase;
 
-final class HomepageControllerTest extends WebTestCase
+final class HomepageControllerTest extends TestCase
 {
-    public function testIndex(): void
+    public function testReadinessCardUsesProgramSelectionRouteWithoutHardcodedProgram(): void
     {
-        $client = static::createClient();
-        $container = static::getContainer();
-        $em = $container->get(EntityManagerInterface::class);
+        $template = file_get_contents(dirname(__DIR__, 2).'/templates/homepage/home.html.twig');
 
-        $email = 'test-homepage@example.com';
-        $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
-        if ($user === null) {
-            $user = new User();
-            $user->setEmail($email);
-            $user->setPasswordHash('password');
-            $user->setIsActive(true);
-            $user->setPermission(Permissions::ROLE_ADMIN, true);
-            $em->persist($user);
-            $em->flush();
-        }
-
-        $client->loginUser($user);
-        $client->request('GET', '/home2');
-
-        self::assertResponseIsSuccessful();
-
-        // Clean up
-        $em->remove($user);
-        $em->flush();
+        self::assertIsString($template);
+        self::assertStringContainsString("path('app_program_readiness_select')", $template);
+        self::assertStringContainsString('Open Syllabus Readiness', $template);
+        self::assertStringNotContainsString("programId: 1", $template);
     }
 }

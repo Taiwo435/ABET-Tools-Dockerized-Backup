@@ -119,17 +119,19 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('All programs', $queue);
         self::assertStringContainsString('selectedProgramId == program.id', $queue);
         self::assertStringContainsString('program.initials', $queue);
-        self::assertStringContainsString("path('app_admin_syllabus_template_reviews')", $index);
+        self::assertStringContainsString("path('app_admin_syllabus_template_reviews', {program: readinessProgram.id})", $index);
         self::assertStringContainsString('{{ pendingReviewCount }}', $index);
     }
 
-    public function testControllerUsesPendingQueryAndCountOnBothAdminPages(): void
+    public function testControllerUsesProgramScopedPendingQueryAcrossCoordinatorViews(): void
     {
         $source = file_get_contents((new ReflectionClass(AdminSyllabusTemplateController::class))->getFileName());
 
         self::assertIsString($source);
-        self::assertSame(2, substr_count($source, 'countPendingFacultyReviews('));
+        self::assertSame(1, substr_count($source, 'countPendingFacultyReviews('));
+        self::assertSame(2, substr_count($source, 'findPendingFacultyReviews('));
         self::assertStringContainsString("getInt('program')", $source);
+        self::assertStringContainsString('$submissions->findPendingFacultyReviews($selectedProgram)', $source);
         self::assertStringContainsString("'pendingSubmissions' => \$submissions->findPendingFacultyReviews(\$selectedProgram)", $source);
         self::assertStringContainsString("'pendingReviewCount' => \$submissions->countPendingFacultyReviews(\$selectedProgram)", $source);
         self::assertStringContainsString("'programs' => \$submissions->findPendingFacultyReviewPrograms()", $source);

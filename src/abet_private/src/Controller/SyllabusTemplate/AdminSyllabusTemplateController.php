@@ -16,6 +16,8 @@ use App\Entity\SyllabusTemplate\TemplateReview;
 use App\Entity\User;
 use App\Form\Model\CoordinatorTemplateData;
 use App\Form\SyllabusTemplate\CoordinatorTemplateType;
+use App\ReadModel\SyllabusReadiness;
+use App\Repository\SyllabusReadinessRepository;
 use App\Repository\SyllabusTemplate\TemplateSubmissionRepository;
 use App\Service\Report\AppendixAReportExportBoundary;
 use App\Service\SyllabusTemplate\SyllabusPrefillService;
@@ -70,14 +72,61 @@ final class AdminSyllabusTemplateController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/syllabus-templates', name: 'app_admin_syllabus_templates', methods: ['GET'])]
-    public function index(Request $request, TemplateSubmissionRepository $submissions): Response
-    {
+    public function index(
+        Request $request,
+        TemplateSubmissionRepository $submissions,
+        SyllabusReadinessRepository $readiness,
+    ): Response {
         $filter = CompletenessStatus::tryFrom($request->query->getString('completeness'));
+        $activeView = match ($request->query->getString('view')) {
+            'offerings', 'appendix_a' => $request->query->getString('view'),
+            default => 'shared',
+        };
+        $programs = $readiness->getAllPrograms();
+        $requestedProgramId = $request->query->getInt('program');
+        $selectedProgramId = $requestedProgramId > 0
+            ? $requestedProgramId
+            : ($programs[0]['program_id'] ?? null);
+        $selectedProgram = $selectedProgramId !== null
+            ? $readiness->findProgram($selectedProgramId)
+            : null;
+
+        if ($requestedProgramId > 0 && $selectedProgram === null) {
+            throw $this->createNotFoundException('The requested program was not found.');
+        }
+
+        $readinessRows = $selectedProgram !== null
+            ? $readiness->getReadinessRowsForProgram($selectedProgram->getId())
+            : [];
+        $offeringRows = SyllabusReadinessRepository::filterRows(
+            $readinessRows,
+            target: 'course_offering',
+        );
+        $appendixRows = array_values(array_filter(
+            $offeringRows,
+            static fn (SyllabusReadiness $row): bool => in_array(
+                $row->getWorkflowStatus(),
+                [SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits],
+                true,
+            ),
+        ));
+        $pendingSubmissions = $selectedProgram !== null
+            ? $submissions->findPendingFacultyReviews($selectedProgram)
+            : [];
 
         return $this->render('syllabus_template/admin/index.html.twig', [
-            'templates' => $submissions->findManagedTemplates($filter),
+            'templates' => $selectedProgram !== null
+                ? $submissions->findManagedTemplates($filter, $selectedProgram)
+                : [],
             'completenessFilter' => $filter?->value ?? '',
-            'pendingReviewCount' => $submissions->countPendingFacultyReviews(),
+            'pendingSubmissions' => $pendingSubmissions,
+            'pendingReviewCount' => count($pendingSubmissions),
+            'readinessCounts' => SyllabusReadinessRepository::countRowsByCategory($readinessRows),
+            'readinessProgram' => $selectedProgram,
+            'readinessPrograms' => $programs,
+            'activeView' => $activeView,
+            'offeringRows' => $offeringRows,
+            'appendixRows' => $appendixRows,
         ]);
     }
 

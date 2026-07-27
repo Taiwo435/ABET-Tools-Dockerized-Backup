@@ -62,23 +62,9 @@ final class ProgramReadinessController extends AbstractController
         }
 
         $allRows = $this->readinessRepository->getReadinessRowsForProgram($programId);
-        $counts = [
-            'Ready' => 0,
-            'Blocked' => 0,
-            'Awaiting review' => 0,
-            'Missing' => 0,
-        ];
-
-        foreach ($allRows as $row) {
-            $category = $row->getState()->getCategory();
-            if (isset($counts[$category])) {
-                $counts[$category]++;
-            }
-        }
-
         $category = $this->normalizeCategory(
             $request->query->getString('category', $request->query->getString('filter')),
-            array_keys($counts),
+            ['Ready', 'Blocked', 'Awaiting review', 'Missing'],
         );
         $target = match ($request->query->getString('target')) {
             'shared_template', 'course_offering' => $request->query->getString('target'),
@@ -108,7 +94,6 @@ final class ProgramReadinessController extends AbstractController
                 'program_year' => $program->getYear(),
             ],
             'rows' => $filteredRows,
-            'counts' => $counts,
             'active_filter' => $category,
             'active_filters' => [
                 'category' => $category,

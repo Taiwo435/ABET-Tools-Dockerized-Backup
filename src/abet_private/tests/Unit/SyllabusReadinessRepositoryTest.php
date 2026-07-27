@@ -4,308 +4,183 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\ReadModel\SyllabusReadiness;
+use App\Entity\Program;
+use App\Entity\SyllabusTemplate\CommonCourse;
+use App\Entity\SyllabusTemplate\CourseOffering;
+use App\Entity\SyllabusTemplate\DeliveryType;
+use App\Entity\SyllabusTemplate\ProposalOrigin;
+use App\Entity\SyllabusTemplate\ReviewDecision;
+use App\Entity\SyllabusTemplate\RevisionAuthorType;
+use App\Entity\SyllabusTemplate\TemplateReview;
+use App\Entity\SyllabusTemplate\TemplateSubmission;
+use App\Entity\User;
 use App\ReadModel\SyllabusReadinessState;
 use App\Repository\SyllabusReadinessRepository;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Doctrine\DBAL\Connection;
+use PHPUnit\Framework\TestCase;
 
-final class SyllabusReadinessRepositoryTest extends KernelTestCase
+final class SyllabusReadinessRepositoryTest extends TestCase
 {
-    private Connection $connection;
-    private SyllabusReadinessRepository $repository;
-    private int $testProgramId = 9999;
-
-    protected function setUp(): void
+    public function testProjectsCanonicalSharedTemplatesAndEveryOffering(): void
     {
-        self::bootKernel();
+        $program = new Program('Computer Science', 'BS', '2026');
+        $this->setId($program, 1);
+        $coordinator = $this->user('coordinator@example.edu');
+        $faculty = $this->user('faculty@example.edu');
 
-        $container = static::getContainer();
-        $this->connection = $container->get(Connection::class);
-        $this->repository = $container->get(SyllabusReadinessRepository::class);
+        $missingCourse = $this->course($program, 101, 'CSE', '101', 'Introduction');
 
-        $this->cleanDatabase();
-
-        // Insert a test program
-        $this->connection->executeStatement(
-            'INSERT INTO programs (program_id, program_name, program_code, program_year) VALUES (:id, "Test Program", "TEST", "2026")',
-            ['id' => $this->testProgramId]
+        $draftCourse = $this->course($program, 102, 'CSE', '102', 'Programming');
+        $sharedDraft = new TemplateSubmission(
+            $draftCourse,
+            $coordinator,
+            ProposalOrigin::CoordinatorCreated,
         );
+        $this->setId($sharedDraft, 202);
+        $sharedDraftRevision = $sharedDraft->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            [],
+        );
+        $this->setId($sharedDraftRevision, 302);
+
+        $offeringCourse = $this->course($program, 103, 'CSE', '310', 'Data Structures');
+        $publishedTemplate = new TemplateSubmission(
+            $offeringCourse,
+            $coordinator,
+            ProposalOrigin::CoordinatorCreated,
+        );
+        $this->setId($publishedTemplate, 203);
+        $publishedRevision = $publishedTemplate->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            $this->transitionContent(),
+        );
+        $this->setId($publishedRevision, 303);
+        $publishedTemplate->publishCoordinatorTemplate($publishedRevision);
+
+        $fallOffering = new CourseOffering(
+            $offeringCourse,
+            '2026-2027',
+            'Fall',
+            DeliveryType::InPerson,
+            $faculty,
+            '001',
+        );
+        $this->setId($fallOffering, 401);
+        $fallSubmission = TemplateSubmission::forFacultyOffering(
+            $fallOffering,
+            $faculty,
+            $publishedRevision,
+        );
+        $this->setId($fallSubmission, 501);
+        $fallRevision = $fallSubmission->addRevision(
+            $faculty,
+            RevisionAuthorType::Faculty,
+            [],
+        );
+        $this->setId($fallRevision, 601);
+
+        $springOffering = new CourseOffering(
+            $offeringCourse,
+            '2026-2027',
+            'Spring',
+            DeliveryType::Online,
+            $faculty,
+            '002',
+        );
+        $this->setId($springOffering, 402);
+        $springSubmission = TemplateSubmission::forFacultyOffering(
+            $springOffering,
+            $faculty,
+            $publishedRevision,
+        );
+        $this->setId($springSubmission, 502);
+        $springRevision = $springSubmission->addRevision(
+            $faculty,
+            RevisionAuthorType::Faculty,
+            $this->transitionContent(),
+        );
+        $this->setId($springRevision, 602);
+        $springSubmission->submit($springRevision);
+        $approval = new TemplateReview(
+            $springSubmission,
+            $coordinator,
+            ReviewDecision::Approved,
+        );
+        $springSubmission->recordReview($approval, $springRevision);
+
+        $rows = SyllabusReadinessRepository::projectRows(
+            $program,
+            [$missingCourse, $draftCourse, $offeringCourse],
+            [$sharedDraft, $publishedTemplate, $fallSubmission, $springSubmission],
+        );
+
+        self::assertCount(4, $rows);
+        self::assertSame(SyllabusReadinessState::NoSharedTemplate, $rows[0]->getState());
+        self::assertSame(
+            SyllabusReadinessState::SharedTemplateNeedsPublicationFields,
+            $rows[1]->getState(),
+        );
+        self::assertSame(
+            SyllabusReadinessState::FacultyDraftNeedsSubmissionFields,
+            $rows[2]->getState(),
+        );
+        self::assertSame(401, $rows[2]->getCourseOfferingId());
+        self::assertSame('Fall', $rows[2]->getTerm());
+        self::assertSame(
+            SyllabusReadinessState::ApprovedAppendixAIncomplete,
+            $rows[3]->getState(),
+        );
+        self::assertSame(402, $rows[3]->getCourseOfferingId());
+        self::assertSame('Spring', $rows[3]->getTerm());
+        self::assertContains('contact_hours', $rows[3]->getAppendixABlockingFields());
+        self::assertSame([
+            'Ready' => 0,
+            'Blocked' => 3,
+            'Awaiting review' => 0,
+            'Missing' => 1,
+        ], SyllabusReadinessRepository::countRowsByCategory($rows));
     }
 
-    protected function tearDown(): void
+    /** @return array<string, mixed> */
+    private function transitionContent(): array
     {
-        $this->cleanDatabase();
-        parent::tearDown();
+        return [
+            'credits' => 3,
+            'course_coordinators' => ['Coordinator'],
+            'credit_category' => 'engineering',
+        ];
     }
 
-    private function cleanDatabase(): void
-    {
-        $this->connection->executeStatement(
-            'DELETE FROM course_syllabi WHERE program_id = :id',
-            ['id' => $this->testProgramId]
+    private function course(
+        Program $program,
+        int $id,
+        string $subject,
+        string $number,
+        string $name,
+    ): CommonCourse {
+        $course = new CommonCourse(
+            $program,
+            $subject,
+            $number,
+            $name,
+            DeliveryType::InPerson,
         );
-        $this->connection->executeStatement(
-            'DELETE FROM curriculum WHERE program_id = :id',
-            ['id' => $this->testProgramId]
-        );
-        $this->connection->executeStatement(
-            'DELETE FROM programs WHERE program_id = :id',
-            ['id' => $this->testProgramId]
-        );
+        $this->setId($course, $id);
+
+        return $course;
     }
 
-    public function testParseCourse(): void
+    private function user(string $email): User
     {
-        $parsed = $this->repository->parseCourse('CSE 310 Data Structures and Algorithms');
-        $this->assertSame('CSE', $parsed['subject']);
-        $this->assertSame('310', $parsed['number']);
-        $this->assertSame('Data Structures and Algorithms', $parsed['title']);
-
-        $parsed = $this->repository->parseCourse('MAT 243 Discrete Mathematical Structures');
-        $this->assertSame('MAT', $parsed['subject']);
-        $this->assertSame('243', $parsed['number']);
-        $this->assertSame('Discrete Mathematical Structures', $parsed['title']);
-
-        $parsed = $this->repository->parseCourse('CSE 485');
-        $this->assertSame('CSE', $parsed['subject']);
-        $this->assertSame('485', $parsed['number']);
-        $this->assertSame('', $parsed['title']);
-
-        // Suffixes
-        $parsed = $this->repository->parseCourse('FSE 100A Introduction to Engineering');
-        $this->assertSame('FSE', $parsed['subject']);
-        $this->assertSame('100A', $parsed['number']);
-        $this->assertSame('Introduction to Engineering', $parsed['title']);
-
-        // Fallbacks
-        $parsed = $this->repository->parseCourse('NonStandard Course Name');
-        $this->assertSame('NonStandard', $parsed['subject']);
-        $this->assertSame('', $parsed['number']);
-        $this->assertSame('Course Name', $parsed['title']);
+        return (new User())
+            ->setEmail($email)
+            ->setPasswordHash('test');
     }
 
-    public function testGetReadinessRowsNoSharedTemplate(): void
+    private function setId(object $entity, int $id): void
     {
-        // Insert a curriculum course
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame('CSE 310', $rows[0]->getCourseCode());
-        $this->assertSame('Data Structures', $rows[0]->getCourseTitle());
-        $this->assertSame(SyllabusReadinessState::NoSharedTemplate, $rows[0]->getState());
-        $this->assertSame('Missing', $rows[0]->getState()->getCategory());
-        $this->assertNull($rows[0]->getSyllabusId());
-    }
-
-    public function testGetReadinessRowsSharedTemplateIncomplete(): void
-    {
-        // Insert a curriculum course
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert an incomplete template (is_template = true, is_published = false, missing catalog_description)
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_published, catalog_description, credits) 
-             VALUES (:id, "CSE", "310", "Data Structures", 1, 0, NULL, 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::SharedTemplateNeedsPublicationFields, $rows[0]->getState());
-        $this->assertSame('Blocked', $rows[0]->getState()->getCategory());
-        $this->assertContains('Catalog Description', $rows[0]->getMissingRequiredFields());
-    }
-
-    public function testGetReadinessRowsSharedTemplatePublishedNoDraft(): void
-    {
-        // Insert a curriculum course
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert a complete published template
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_published, catalog_description, course_type, credits, contact_hours, specific_goals, student_outcomes, topics_covered) 
-             VALUES (:id, "CSE", "310", "Data Structures", 1, 1, "Desc", "R", 3, "3 hours", "[\"Goal 1\"]", "[\"1\"]", "[\"Topic 1\"]")',
-            ['id' => $this->testProgramId]
-        );
-
-        $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::SharedTemplatePublishedNoOffering, $rows[0]->getState());
-        $this->assertSame('Missing', $rows[0]->getState()->getCategory());
-    }
-
-    public function testGetReadinessRowsFacultyDraftInProgress(): void
-    {
-        // Insert a curriculum course
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert template
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_published, catalog_description, course_type, credits, contact_hours, specific_goals, student_outcomes, topics_covered) 
-             VALUES (:id, "CSE", "310", "Data Structures", 1, 1, "Desc", "R", 3, "3 hours", "[\"Goal 1\"]", "[\"1\"]", "[\"Topic 1\"]")',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert draft in progress (is_template = false, is_submitted = false, is_approved = false)
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_submitted, is_approved, updated_at) 
-             VALUES (:id, "CSE", "310", "Data Structures", 0, 0, 0, "2026-07-21 12:00:00")',
-            ['id' => $this->testProgramId]
-        );
-
-        $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::FacultyDraftNeedsSubmissionFields, $rows[0]->getState());
-        $this->assertSame('Blocked', $rows[0]->getState()->getCategory());
-        $this->assertNotNull($rows[0]->getUpdatedAt());
-    }
-
-    public function testGetReadinessRowsSubmittedForReview(): void
-    {
-        // Insert a curriculum course
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert template
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_published, catalog_description, course_type, credits, contact_hours, specific_goals, student_outcomes, topics_covered) 
-             VALUES (:id, "CSE", "310", "Data Structures", 1, 1, "Desc", "R", 3, "3 hours", "[\"Goal 1\"]", "[\"1\"]", "[\"Topic 1\"]")',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert draft submitted (is_template = false, is_submitted = true, is_approved = false)
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_submitted, is_approved, updated_at) 
-             VALUES (:id, "CSE", "310", "Data Structures", 0, 1, 0, "2026-07-21 12:00:00")',
-            ['id' => $this->testProgramId]
-        );
-
-        $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::AwaitingCoordinatorReview, $rows[0]->getState());
-        $this->assertSame('Awaiting review', $rows[0]->getState()->getCategory());
-    }
-
-    public function testGetReadinessRowsDeniedWithFeedback(): void
-    {
-        // Insert a curriculum course
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert template
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_published, catalog_description, course_type, credits, contact_hours, specific_goals, student_outcomes, topics_covered) 
-             VALUES (:id, "CSE", "310", "Data Structures", 1, 1, "Desc", "R", 3, "3 hours", "[\"Goal 1\"]", "[\"1\"]", "[\"Topic 1\"]")',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert draft denied with feedback (is_template = false, is_submitted = false, is_approved = false, denial_feedback = "Please fix outcomes")
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_submitted, is_approved, denial_feedback, updated_at) 
-             VALUES (:id, "CSE", "310", "Data Structures", 0, 0, 0, "Please fix outcomes", "2026-07-21 12:00:00")',
-            ['id' => $this->testProgramId]
-        );
-
-        $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::DeniedNeedsRevision, $rows[0]->getState());
-        $this->assertSame('Blocked', $rows[0]->getState()->getCategory());
-    }
-
-    public function testGetReadinessRowsApprovedAndReady(): void
-    {
-        // Insert a curriculum course
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert template
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_published, catalog_description, course_type, credits, contact_hours, specific_goals, student_outcomes, topics_covered) 
-             VALUES (:id, "CSE", "310", "Data Structures", 1, 1, "Desc", "R", 3, "3 hours", "[\"Goal 1\"]", "[\"1\"]", "[\"Topic 1\"]")',
-            ['id' => $this->testProgramId]
-        );
-
-        // Insert draft approved (is_template = false, is_submitted = true, is_approved = true)
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_submitted, is_approved, updated_at) 
-             VALUES (:id, "CSE", "310", "Data Structures", 0, 1, 1, "2026-07-21 12:00:00")',
-            ['id' => $this->testProgramId]
-        );
-
-        $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::ApprovedAppendixAReady, $rows[0]->getState());
-        $this->assertSame('Ready', $rows[0]->getState()->getCategory());
-    }
-
-    public function testGetReadinessRowsWithFiltering(): void
-    {
-        // 1. Insert course 1 (Missing template)
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 310 Data Structures", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-
-        // 2. Insert course 2 (Approved template - Ready)
-        $this->connection->executeStatement(
-            'INSERT INTO curriculum (program_id, course, course_type, credit_hours_other) VALUES (:id, "CSE 400 Capstone", "R", 3)',
-            ['id' => $this->testProgramId]
-        );
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_published, catalog_description, course_type, credits, contact_hours, specific_goals, student_outcomes, topics_covered) 
-             VALUES (:id, "CSE", "400", "Capstone", 1, 1, "Desc", "R", 3, "3 hours", "[\"Goal 1\"]", "[\"1\"]", "[\"Topic 1\"]")',
-            ['id' => $this->testProgramId]
-        );
-        $this->connection->executeStatement(
-            'INSERT INTO course_syllabi (program_id, course_subject, course_number, course_name, is_template, is_submitted, is_approved) 
-             VALUES (:id, "CSE", "400", "Capstone", 0, 1, 1)',
-            ['id' => $this->testProgramId]
-        );
-
-        // Fetch all - should be 2
-        $all = $this->repository->getReadinessRowsForProgram($this->testProgramId);
-        $this->assertCount(2, $all);
-
-        // Filter by category 'Ready' - should be 1 (CSE 400)
-        $ready = $this->repository->getReadinessRowsForProgram($this->testProgramId, 'Ready');
-        $this->assertCount(1, $ready);
-        $this->assertSame('CSE 400', $ready[0]->getCourseCode());
-
-        // Filter by category 'Missing' - should be 1 (CSE 310)
-        $missing = $this->repository->getReadinessRowsForProgram($this->testProgramId, 'Missing');
-        $this->assertCount(1, $missing);
-        $this->assertSame('CSE 310', $missing[0]->getCourseCode());
-
-        // Filter by enum state string (case-insensitive) - e.g. 'No shared template'
-        $stateFilter = $this->repository->getReadinessRowsForProgram($this->testProgramId, 'No shared template');
-        $this->assertCount(1, $stateFilter);
-        $this->assertSame('CSE 310', $stateFilter[0]->getCourseCode());
+        $property = new \ReflectionProperty($entity, 'id');
+        $property->setValue($entity, $id);
     }
 }

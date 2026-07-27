@@ -21,5 +21,30 @@ final class SyllabusLifecycleUiTest extends TestCase
         self::assertStringContainsString('PDF extraction', $partial);
         self::assertStringContainsString('.syllabus-badge--offering', $styles);
         self::assertStringContainsString('.syllabus-lifecycle', $styles);
+        self::assertStringContainsString('.metric-card', $styles);
+    }
+
+    public function testLifecyclePagesUseVersionedStylesheetUrls(): void
+    {
+        $templates = [
+            'syllabus_template/admin/index.html.twig',
+            'syllabus_template/admin/form.html.twig',
+            'syllabus_template/admin/review_queue.html.twig',
+            'syllabus_template/admin/review_detail.html.twig',
+            'syllabus_template/admin/review_edit.html.twig',
+            'syllabus_template/admin/review_history.html.twig',
+            'syllabus_template/faculty/index.html.twig',
+            'syllabus_template/faculty/form.html.twig',
+        ];
+
+        foreach ($templates as $templatePath) {
+            $template = file_get_contents(dirname(__DIR__, 2).'/templates/'.$templatePath);
+
+            self::assertIsString($template);
+            self::assertStringContainsString(
+                '/assets/css/syllabus-lifecycle.css?v=20260727-2',
+                $template,
+            );
+        }
     }
 }

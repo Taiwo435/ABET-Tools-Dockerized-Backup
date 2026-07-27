@@ -3,9 +3,9 @@
 {% block title %}Shared Syllabus Templates | {% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-2">
     <style>
-        .syllabus-page { width: 100%; max-width: 1180px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
+        .syllabus-page { width: 100%; max-width: 1400px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .syllabus-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
         .syllabus-toolbar__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
         .review-queue-link { display: inline-flex; align-items: center; gap: .5rem; }
@@ -62,76 +62,275 @@
             <div class="syllabus-lifecycle__step"><strong>3. Faculty offering</strong><span>Faculty create term-specific copies without changing the baseline.</span></div>
             <div class="syllabus-lifecycle__step"><strong>4. Report evidence</strong><span>Appendix A-ready revisions can cross the export boundary.</span></div>
         </div>
-        <div class="syllabus-toolbar">
-            <form method="get" class="syllabus-filter">
-                <label for="completeness">Publication readiness
-                    <select id="completeness" name="completeness">
-                        <option value=""{% if completenessFilter == '' %} selected{% endif %}>All publication states</option>
-                        <option value="complete"{% if completenessFilter == 'complete' %} selected{% endif %}>Ready to publish</option>
-                        <option value="incomplete"{% if completenessFilter == 'incomplete' %} selected{% endif %}>Needs publication fields</option>
-                    </select>
-                </label>
-                <button type="submit" class="button-secondary">Apply filter</button>
-            </form>
-            <div class="syllabus-toolbar__actions">
-                <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
-                <a href="{{ path('app_admin_syllabus_template_reviews') }}" class="button-secondary review-queue-link">
-                    Review faculty submissions
-                    <span class="review-count" aria-label="{{ pendingReviewCount }} pending faculty {{ pendingReviewCount == 1 ? 'submission' : 'submissions' }}">{{ pendingReviewCount }}</span>
-                </a>
-                <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create Shared Template</a>
+        <section class="syllabus-summary" aria-labelledby="syllabus-summary-title">
+            <div class="syllabus-summary__header">
+                <div>
+                    <h2 id="syllabus-summary-title">Program syllabus status</h2>
+                    {% if readinessProgram %}
+                        <p>
+                            Shared baselines, course offerings, and report readiness for
+                            <strong>{{ readinessProgram.name }} ({{ readinessProgram.code }} — {{ readinessProgram.year }})</strong>.
+                            Select a box to open its filtered lifecycle detail.
+                        </p>
+                    {% else %}
+                        <p>No programs are available for syllabus status reporting.</p>
+                    {% endif %}
+                </div>
+                {% if readinessPrograms is not empty %}
+                    <form method="get" action="{{ path('app_admin_syllabus_templates') }}" class="syllabus-summary__program">
+                        <label for="readiness-program">Program</label>
+                        <select id="readiness-program" name="program" onchange="this.form.submit()">
+                            {% for program in readinessPrograms %}
+                                <option value="{{ program.program_id }}"{% if readinessProgram and program.program_id == readinessProgram.id %} selected{% endif %}>
+                                    {{ program.program_name }} ({{ program.program_code }} — {{ program.program_year }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="view" value="{{ activeView }}">
+                        {% if completenessFilter is not empty %}
+                            <input type="hidden" name="completeness" value="{{ completenessFilter }}">
+                        {% endif %}
+                    </form>
+                {% endif %}
             </div>
-        </div>
 
-        {% if templates is empty %}
-            <div class="empty-state">
-                <h2>No matching templates</h2>
-                <p>No templates match the selected filter.</p>
-                <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create the first template</a>
-            </div>
+            {% if readinessProgram %}
+                {% set totalCount = readinessCounts['Ready'] + readinessCounts['Blocked'] + readinessCounts['Awaiting review'] + readinessCounts['Missing'] %}
+                <div class="metrics-grid">
+                    <a href="{{ path('app_program_readiness', {programId: readinessProgram.id}) }}" class="metric-card metric-all">
+                        <span class="metric-number">{{ totalCount }}</span>
+                        <span class="metric-label">All targets</span>
+                        <span class="metric-sub">Shared baselines and course offerings</span>
+                    </a>
+                    <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'appendix_a'}) }}" class="metric-card metric-ready">
+                        <span class="metric-number">{{ readinessCounts['Ready'] }}</span>
+                        <span class="metric-label">Report ready</span>
+                        <span class="metric-sub">Approved and Appendix A ready</span>
+                    </a>
+                    <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'offerings'}) }}#pending-review" class="metric-card metric-awaiting">
+                        <span class="metric-number">{{ readinessCounts['Awaiting review'] }}</span>
+                        <span class="metric-label">Awaiting review</span>
+                        <span class="metric-sub">Frozen faculty submissions</span>
+                    </a>
+                    <a href="{{ path('app_program_readiness', {programId: readinessProgram.id, category: 'Blocked'}) }}" class="metric-card metric-blocked">
+                        <span class="metric-number">{{ readinessCounts['Blocked'] }}</span>
+                        <span class="metric-label">Action required</span>
+                        <span class="metric-sub">Draft, publication, denial, or report blockers</span>
+                    </a>
+                    <a href="{{ path('app_program_readiness', {programId: readinessProgram.id, category: 'Missing'}) }}" class="metric-card metric-missing">
+                        <span class="metric-number">{{ readinessCounts['Missing'] }}</span>
+                        <span class="metric-label">Missing target</span>
+                        <span class="metric-sub">No shared template or no offering submission</span>
+                    </a>
+                </div>
+            {% endif %}
+        </section>
+
+        {% if readinessProgram %}
+            <nav class="syllabus-workspace-tabs" aria-label="Syllabus workspace views">
+                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'shared'}) }}"
+                   class="{{ activeView == 'shared' ? 'active' : '' }}"
+                   {% if activeView == 'shared' %}aria-current="page"{% endif %}>Shared templates</a>
+                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'offerings'}) }}"
+                   class="{{ activeView == 'offerings' ? 'active' : '' }}"
+                   {% if activeView == 'offerings' %}aria-current="page"{% endif %}>
+                    Course offerings &amp; review
+                    {% if pendingReviewCount > 0 %}<span class="review-count">{{ pendingReviewCount }}</span>{% endif %}
+                </a>
+                <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'appendix_a'}) }}"
+                   class="{{ activeView == 'appendix_a' ? 'active' : '' }}"
+                   {% if activeView == 'appendix_a' %}aria-current="page"{% endif %}>Appendix A readiness</a>
+            </nav>
+        {% endif %}
+
+        {% if activeView == 'shared' %}
+            <section class="workspace-panel" aria-labelledby="shared-view-heading">
+                <div class="syllabus-toolbar">
+                    <div>
+                        <h2 id="shared-view-heading">Shared templates</h2>
+                        <p>Manage the reusable baselines available to faculty in the selected program.</p>
+                    </div>
+                    <form method="get" class="syllabus-filter">
+                        {% if readinessProgram %}<input type="hidden" name="program" value="{{ readinessProgram.id }}">{% endif %}
+                        <input type="hidden" name="view" value="shared">
+                        <label for="completeness">Publication readiness
+                            <select id="completeness" name="completeness">
+                                <option value=""{% if completenessFilter == '' %} selected{% endif %}>All publication states</option>
+                                <option value="complete"{% if completenessFilter == 'complete' %} selected{% endif %}>Ready to publish</option>
+                                <option value="incomplete"{% if completenessFilter == 'incomplete' %} selected{% endif %}>Needs publication fields</option>
+                            </select>
+                        </label>
+                        <button type="submit" class="button-secondary">Apply filter</button>
+                    </form>
+                    <div class="syllabus-toolbar__actions">
+                        <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
+                        <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create Shared Template</a>
+                    </div>
+                </div>
+
+                {% if templates is empty %}
+                    <div class="empty-state">
+                        <h2>No matching templates</h2>
+                        <p>No shared templates in this program match the selected publication filter.</p>
+                        <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create a shared template</a>
+                    </div>
+                {% else %}
+                    <div class="syllabus-table-wrap">
+                        <table class="syllabus-table">
+                            <thead>
+                                <tr><th>Course</th><th>Template state</th><th>Revision</th><th>Required before publishing</th><th>Updated</th><th>Action</th></tr>
+                            </thead>
+                            <tbody>
+                            {% for template in templates %}
+                                {% set revision = template.workingRevision %}
+                                <tr>
+                                    <td><strong class="course-code">{{ template.commonCourse.courseSubject }} {{ template.commonCourse.courseNumber }}</strong><div class="course-name">{{ template.commonCourse.courseName }}</div></td>
+                                    <td>{% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: template, revision: revision, readinessMode: 'coordinator'} only %}</td>
+                                    <td><strong>Rev. {{ revision.revisionNumber }}</strong></td>
+                                    <td class="publish-cell">
+                                        {% if revision.coordinatorPublicationBlockingFields is empty %}
+                                            {% if template.status.value == 'draft' %}
+                                                <form method="post" action="{{ path('app_admin_syllabus_templates_publish', {id: template.id}) }}" class="table-form">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('publish-syllabus-template-' ~ template.id) }}">
+                                                    <button type="submit" class="button-primary table-button">Publish now</button>
+                                                </form>
+                                            {% else %}
+                                                <span class="missing-none">Published{{ template.origin.value == 'faculty_submission' ? ' from faculty proposal' : '' }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <ul class="missing-list">
+                                                {% for field in revision.coordinatorPublicationBlockingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ template.updatedAt|date('M j, Y') }}</td>
+                                    <td class="action-cell">
+                                        {% if template.status.value == 'draft' %}
+                                            <a class="button-primary table-button" href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}">Edit draft</a>
+                                        {% else %}
+                                            <a href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}" class="button-primary table-button">Create new revision</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+        {% elseif activeView == 'offerings' %}
+            <section class="workspace-panel" aria-labelledby="offerings-view-heading">
+                <div class="workspace-panel__header">
+                    <div><h2 id="offerings-view-heading">Course offerings &amp; review</h2><p>Review frozen faculty submissions and monitor every term-specific offering in this program.</p></div>
+                    <div class="syllabus-toolbar__actions">
+                        <a href="{{ path('app_admin_syllabus_template_reviews', {program: readinessProgram.id}) }}" class="button-secondary">Open review queue</a>
+                        <a href="{{ path('app_admin_syllabus_template_review_history', {program: readinessProgram.id}) }}" class="button-secondary">Review history</a>
+                    </div>
+                </div>
+
+                <div id="pending-review" class="workspace-subsection">
+                    <h3>Awaiting coordinator review <span class="review-count">{{ pendingReviewCount }}</span></h3>
+                    {% if pendingSubmissions is empty %}
+                        <p class="workspace-empty">No faculty submissions are waiting for review in this program.</p>
+                    {% else %}
+                        <div class="syllabus-table-wrap">
+                            <table class="syllabus-table">
+                                <thead><tr><th>Course</th><th>Target</th><th>Submitted by</th><th>Submitted</th><th>Action</th></tr></thead>
+                                <tbody>
+                                {% for submission in pendingSubmissions %}
+                                    <tr>
+                                        <td><strong class="course-code">{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong><div class="course-name">{{ submission.commonCourse.courseName }}</div></td>
+                                        <td>
+                                            <strong>{{ submission.kind.value == 'faculty_offering' ? 'Course offering' : 'Legacy shared-template proposal' }}</strong>
+                                            {% if submission.courseOffering %}
+                                                <div class="cell-detail">{{ submission.courseOffering.term }} {{ submission.courseOffering.academicYear }}{% if submission.courseOffering.section %}, section {{ submission.courseOffering.section }}{% endif %}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td><strong>{{ submission.submittedBy.asurite }}</strong><div class="cell-detail">{{ submission.submittedBy.email }}</div></td>
+                                        <td>{{ submission.submittedAt|date('M j, Y g:i A') }}</td>
+                                        <td><a href="{{ path('app_admin_syllabus_template_review', {id: submission.id}) }}" class="button-primary table-button">Review submission</a></td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="workspace-subsection">
+                    <h3>All course offerings</h3>
+                    {% if offeringRows is empty %}
+                        <p class="workspace-empty">No term-specific faculty offerings exist for this program yet.</p>
+                    {% else %}
+                        <div class="syllabus-table-wrap">
+                            <table class="syllabus-table">
+                                <thead><tr><th>Course</th><th>Offering</th><th>Workflow</th><th>Submission readiness</th><th>Appendix A</th><th>Updated</th><th>Action</th></tr></thead>
+                                <tbody>
+                                {% for row in offeringRows %}
+                                    <tr>
+                                        <td><strong class="course-code">{{ row.courseCode }}</strong><div class="course-name">{{ row.courseTitle }}</div></td>
+                                        <td><strong>{{ row.term }} {{ row.academicYear }}</strong><div class="cell-detail">Section {{ row.section is not empty ? row.section : '—' }} · {{ row.deliveryType|replace({'_': ' '})|title }}</div></td>
+                                        <td><span class="syllabus-badge syllabus-badge--{{ row.workflowStatus.value }}">{{ row.workflowStatus.value|replace({'_': ' '})|title }}</span></td>
+                                        <td>{{ row.facultySubmittable ? 'Ready to submit' : 'Submission fields missing' }}</td>
+                                        <td>{{ row.appendixAReady ? 'Ready' : 'Evidence incomplete' }}</td>
+                                        <td>{{ row.updatedAt ? row.updatedAt|date('M j, Y') : '—' }}</td>
+                                        <td>
+                                            {% if row.workflowStatus.value == 'submitted' %}
+                                                <a href="{{ path('app_admin_syllabus_template_review', {id: row.syllabusId}) }}" class="button-primary table-button">Review</a>
+                                            {% elseif row.workflowStatus.value in ['approved', 'approved_with_edits', 'denied'] %}
+                                                <a href="{{ path('app_admin_syllabus_template_review', {id: row.syllabusId}) }}" class="button-secondary table-button">View record</a>
+                                            {% else %}
+                                                <span class="cell-detail">Faculty draft</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
         {% else %}
-            <div class="syllabus-table-wrap">
-                <table class="syllabus-table">
-                    <thead>
-                        <tr><th>Course</th><th>Program</th><th>Template state</th><th>Revision</th><th>Required before publishing</th><th>Updated</th><th>Action</th></tr>
-                    </thead>
-                    <tbody>
-                    {% for template in templates %}
-                        {% set revision = template.workingRevision %}
-                        <tr>
-                            <td><strong class="course-code">{{ template.commonCourse.courseSubject }} {{ template.commonCourse.courseNumber }}</strong><div class="course-name">{{ template.commonCourse.courseName }}</div></td>
-                            <td><strong>{{ template.commonCourse.program.initials }}</strong> <span class="cell-detail">{{ template.commonCourse.program.year }}</span></td>
-                            <td>{% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: template, revision: revision, readinessMode: 'coordinator'} only %}</td>
-                            <td><strong>Rev. {{ revision.revisionNumber }}</strong></td>
-                            <td class="publish-cell">
-                                {% if revision.coordinatorPublicationBlockingFields is empty %}
-                                    {% if template.status.value == 'draft' %}
-                                        <form method="post" action="{{ path('app_admin_syllabus_templates_publish', {id: template.id}) }}" class="table-form">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('publish-syllabus-template-' ~ template.id) }}">
-                                            <button type="submit" class="button-primary table-button">Publish now</button>
-                                        </form>
-                                    {% else %}
-                                        <span class="missing-none">Published{{ template.origin.value == 'faculty_submission' ? ' from faculty proposal' : '' }}</span>
-                                    {% endif %}
-                                {% else %}
-                                    <ul class="missing-list">
-                                        {% for field in revision.coordinatorPublicationBlockingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}
-                                    </ul>
-                                {% endif %}
-                            </td>
-                            <td>{{ template.updatedAt|date('M j, Y') }}</td>
-                            <td class="action-cell">
-                                {% if template.status.value == 'draft' %}
-                                    <a class="button-primary table-button" href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}">Edit draft</a>
-                                {% else %}
-                                    <a href="{{ path('app_admin_syllabus_templates_edit', {id: template.id}) }}" class="button-primary table-button">Create new revision</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <section class="workspace-panel" aria-labelledby="appendix-view-heading">
+                <div class="workspace-panel__header">
+                    <div><h2 id="appendix-view-heading">Appendix A readiness</h2><p>Approved offering-specific syllabi and the remaining evidence required before report export.</p></div>
+                </div>
+
+                {% if appendixRows is empty %}
+                    <p class="workspace-empty">No approved course-offering syllabi are available for Appendix A reporting in this program.</p>
+                {% else %}
+                    <div class="syllabus-table-wrap">
+                        <table class="syllabus-table">
+                            <thead><tr><th>Course</th><th>Offering</th><th>Approval</th><th>Report readiness</th><th>Required evidence</th><th>Action</th></tr></thead>
+                            <tbody>
+                            {% for row in appendixRows %}
+                                <tr>
+                                    <td><strong class="course-code">{{ row.courseCode }}</strong><div class="course-name">{{ row.courseTitle }}</div></td>
+                                    <td><strong>{{ row.term }} {{ row.academicYear }}</strong><div class="cell-detail">Section {{ row.section is not empty ? row.section : '—' }} · {{ row.deliveryType|replace({'_': ' '})|title }}</div></td>
+                                    <td><span class="syllabus-badge syllabus-badge--{{ row.workflowStatus.value }}">{{ row.workflowStatus.value|replace({'_': ' '})|title }}</span></td>
+                                    <td><span class="syllabus-badge syllabus-badge--{{ row.appendixAReady ? 'ready' : 'attention' }}">{{ row.appendixAReady ? 'Appendix A ready' : 'Evidence incomplete' }}</span></td>
+                                    <td>
+                                        {% if row.appendixABlockingFields is empty %}
+                                            <span class="missing-none">No blocking fields</span>
+                                        {% else %}
+                                            <ul class="missing-list">{% for field in row.appendixABlockingFields %}<li>{{ field|replace({'_': ' '})|title }}</li>{% endfor %}</ul>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if row.appendixAReady %}
+                                            <a href="{{ path('app_admin_syllabus_template_appendix_a_export', {id: row.syllabusId}) }}" class="button-primary table-button">Download report-ready JSON</a>
+                                        {% else %}
+                                            <a href="{{ path('app_admin_syllabus_template_review', {id: row.syllabusId}) }}" class="button-secondary table-button">View record</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
         {% endif %}
     </main>
 {% endblock %}

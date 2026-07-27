@@ -33,11 +33,30 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("syllabus_template/_lifecycle_badges.html.twig", $template);
         self::assertStringContainsString('revision.coordinatorPublicationBlockingFields', $template);
         self::assertStringContainsString('template.status.value', $template);
-        self::assertStringContainsString('template.commonCourse.program.initials', $template);
-        self::assertStringContainsString("path('app_admin_syllabus_template_reviews')", $template);
+        self::assertStringNotContainsString('template.commonCourse.program.initials', $template);
+        self::assertStringContainsString("path('app_admin_syllabus_template_reviews', {program: readinessProgram.id})", $template);
         self::assertStringContainsString('{{ pendingReviewCount }}', $template);
         self::assertStringContainsString('Shared templates are reusable baselines', $template);
         self::assertStringContainsString('Publication readiness', $template);
+        self::assertStringContainsString('Program syllabus status', $template);
+        self::assertStringContainsString('class="metrics-grid"', $template);
+        self::assertStringContainsString("readinessCounts['Awaiting review']", $template);
+        self::assertStringContainsString('name="program"', $template);
+        self::assertStringContainsString("path('app_program_readiness'", $template);
+        self::assertStringContainsString("view: 'appendix_a'", $template);
+        self::assertStringContainsString("category: 'Blocked'", $template);
+        self::assertStringContainsString("category: 'Missing'", $template);
+        self::assertStringContainsString('onchange="this.form.submit()"', $template);
+        self::assertStringNotContainsString('Show summary', $template);
+        self::assertStringContainsString('aria-label="Syllabus workspace views"', $template);
+        self::assertStringContainsString('Course offerings &amp; review', $template);
+        self::assertStringContainsString('Appendix A readiness', $template);
+        self::assertStringContainsString("activeView == 'shared'", $template);
+        self::assertStringContainsString("activeView == 'offerings'", $template);
+        self::assertStringContainsString("activeView == 'appendix_a'", $template);
+        self::assertStringContainsString('pendingSubmissions', $template);
+        self::assertStringContainsString('offeringRows', $template);
+        self::assertStringContainsString('appendixRows', $template);
     }
 
     public function testAdminPanelLinksToSharedSyllabusTemplates(): void
@@ -128,7 +147,15 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('ProposalOrigin::CoordinatorCreated', $repository);
         self::assertStringContainsString('SubmissionStatus::Draft', $repository);
         self::assertStringContainsString('SubmissionKind::SharedTemplate', $repository);
-        self::assertStringContainsString('$submissions->findManagedTemplates($filter)', $controller);
+        self::assertStringContainsString('$submissions->findManagedTemplates($filter, $selectedProgram)', $controller);
+        self::assertStringContainsString('$submissions->findPendingFacultyReviews($selectedProgram)', $controller);
+        self::assertStringContainsString("'activeView' => \$activeView", $controller);
+        self::assertStringContainsString("'offeringRows' => \$offeringRows", $controller);
+        self::assertStringContainsString("'appendixRows' => \$appendixRows", $controller);
+        self::assertStringContainsString('$readiness->getReadinessRowsForProgram($selectedProgram->getId())', $controller);
+        self::assertStringContainsString('SyllabusReadinessRepository::countRowsByCategory($readinessRows)', $controller);
+        self::assertStringContainsString("'readinessProgram' => \$selectedProgram", $controller);
+        self::assertStringContainsString("'readinessPrograms' => \$programs", $controller);
         self::assertStringContainsString('$this->revisions->saveCoordinatorRevision($submission, $user, $data)', $controller);
     }
 }
