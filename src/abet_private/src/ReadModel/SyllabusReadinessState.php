@@ -10,13 +10,15 @@ namespace App\ReadModel;
 enum SyllabusReadinessState: string
 {
     case NoSharedTemplate = 'No shared template';
-    case SharedTemplateIncomplete = 'Shared template incomplete';
-    case SharedTemplatePublished = 'Shared template published';
-    case FacultyDraftInProgress = 'Faculty draft in progress';
-    case SubmittedForReview = 'Submitted for review';
-    case ApprovedAndReadyForAppendixA = 'Approved and ready for Appendix A';
+    case SharedTemplateNeedsPublicationFields = 'Shared template needs publication fields';
+    case SharedTemplateReadyToPublish = 'Shared template ready to publish';
+    case SharedTemplatePublishedNoOffering = 'Shared template published; no offering submission';
+    case FacultyDraftNeedsSubmissionFields = 'Faculty draft needs submission fields';
+    case FacultyDraftReadyToSubmit = 'Faculty draft ready to submit';
+    case AwaitingCoordinatorReview = 'Awaiting coordinator review';
+    case ApprovedAppendixAReady = 'Approved and Appendix A ready';
     case ApprovedAppendixAIncomplete = 'Approved, Appendix A evidence incomplete';
-    case DeniedWithFeedback = 'Denied with feedback';
+    case DeniedNeedsRevision = 'Denied; faculty revision required';
 
     /**
      * Maps the state to its corresponding high-level category.
@@ -25,13 +27,15 @@ enum SyllabusReadinessState: string
     public function getCategory(): string
     {
         return match ($this) {
-            self::ApprovedAndReadyForAppendixA => 'Ready',
-            self::SubmittedForReview => 'Awaiting review',
-            self::NoSharedTemplate, self::SharedTemplatePublished => 'Missing',
-            self::SharedTemplateIncomplete,
-            self::FacultyDraftInProgress,
+            self::ApprovedAppendixAReady => 'Ready',
+            self::AwaitingCoordinatorReview => 'Awaiting review',
+            self::NoSharedTemplate, self::SharedTemplatePublishedNoOffering => 'Missing',
+            self::SharedTemplateNeedsPublicationFields,
+            self::SharedTemplateReadyToPublish,
+            self::FacultyDraftNeedsSubmissionFields,
+            self::FacultyDraftReadyToSubmit,
             self::ApprovedAppendixAIncomplete,
-            self::DeniedWithFeedback => 'Blocked',
+            self::DeniedNeedsRevision => 'Blocked',
         };
     }
 }

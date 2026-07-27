@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use App\Entity\SyllabusTemplate\SubmissionStatus;
 use App\ReadModel\SyllabusReadiness;
 use App\ReadModel\SyllabusReadinessState;
 use PHPUnit\Framework\TestCase;
@@ -38,7 +39,7 @@ final class SyllabusReadinessTest extends TestCase
         $this->assertSame('Missing', $readiness->getState()->getCategory());
     }
 
-    public function testDeriveSharedTemplateIncomplete(): void
+    public function testDeriveSharedTemplateNeedingPublicationFields(): void
     {
         $templateInfo = [
             'id' => 201,
@@ -53,7 +54,7 @@ final class SyllabusReadinessTest extends TestCase
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, null);
 
-        $this->assertSame(SyllabusReadinessState::SharedTemplateIncomplete, $readiness->getState());
+        $this->assertSame(SyllabusReadinessState::SharedTemplateNeedsPublicationFields, $readiness->getState());
         $this->assertSame(201, $readiness->getSyllabusId());
         $this->assertEquals(
             ['credits', 'course_coordinators'],
@@ -67,25 +68,36 @@ final class SyllabusReadinessTest extends TestCase
         $this->assertSame('Blocked', $readiness->getState()->getCategory());
     }
 
-    public function testDeriveSharedTemplatePublished(): void
+    public function testDeriveSharedTemplateReadyToPublish(): void
+    {
+        $templateInfo = $this->publishedTemplateInfo();
+        $templateInfo['is_published'] = false;
+
+        $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, null);
+
+        $this->assertSame(SyllabusReadinessState::SharedTemplateReadyToPublish, $readiness->getState());
+        $this->assertTrue($readiness->isCoordinatorPublishable());
+        $this->assertSame('Blocked', $readiness->getState()->getCategory());
+    }
+
+    public function testDerivePublishedSharedTemplateWithoutOffering(): void
     {
         $templateInfo = $this->publishedTemplateInfo();
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, null);
 
-        $this->assertSame(SyllabusReadinessState::SharedTemplatePublished, $readiness->getState());
+        $this->assertSame(SyllabusReadinessState::SharedTemplatePublishedNoOffering, $readiness->getState());
         $this->assertEmpty($readiness->getMissingRequiredFields());
         $this->assertSame('Missing', $readiness->getState()->getCategory());
     }
 
-    public function testDeriveFacultyDraftInProgress(): void
+    public function testDeriveFacultyDraftNeedingSubmissionFields(): void
     {
         $templateInfo = $this->publishedTemplateInfo();
 
         $draftInfo = [
             'id' => 301,
-            'is_submitted' => false,
-            'is_approved' => false,
+            'status' => SubmissionStatus::Draft,
             'denial_feedback' => null,
             'updated_at' => '2026-07-18T12:00:00Z',
             'faculty_submittable' => false,
@@ -96,7 +108,8 @@ final class SyllabusReadinessTest extends TestCase
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, $draftInfo);
 
-        $this->assertSame(SyllabusReadinessState::FacultyDraftInProgress, $readiness->getState());
+        $this->assertSame(SyllabusReadinessState::FacultyDraftNeedsSubmissionFields, $readiness->getState());
+        $this->assertSame(SubmissionStatus::Draft, $readiness->getWorkflowStatus());
         $this->assertSame(301, $readiness->getSyllabusId());
         $this->assertNotNull($readiness->getUpdatedAt());
         $this->assertSame('2026-07-18T12:00:00+00:00', $readiness->getUpdatedAt()->format(\DateTimeInterface::ATOM));
@@ -105,39 +118,72 @@ final class SyllabusReadinessTest extends TestCase
         $this->assertSame('Blocked', $readiness->getState()->getCategory());
     }
 
-    public function testDeriveSubmittedForReview(): void
+    public function testDeriveFacultyDraftReadyToSubmit(): void
+    {
+        $draftInfo = [
+            'id' => 301,
+            'status' => SubmissionStatus::Draft,
+            'denial_feedback' => null,
+            'updated_at' => '2026-07-18T12:00:00Z',
+            'faculty_submittable' => true,
+            'faculty_submission_blocking_fields' => [],
+            'appendix_a_ready' => false,
+            'appendix_a_blocking_fields' => ['contact_hours'],
+        ];
+
+        $readiness = SyllabusReadiness::fromDomainState(
+            $this->courseInfo,
+            $this->publishedTemplateInfo(),
+            $draftInfo,
+        );
+
+        $this->assertSame(SyllabusReadinessState::FacultyDraftReadyToSubmit, $readiness->getState());
+        $this->assertTrue($readiness->isFacultySubmittable());
+        $this->assertSame('Blocked', $readiness->getState()->getCategory());
+    }
+
+    public function testDeriveAwaitingCoordinatorReview(): void
     {
         $templateInfo = $this->publishedTemplateInfo();
 
         $draftInfo = [
             'id' => 301,
-            'is_submitted' => true,
-            'is_approved' => false,
+            'status' => SubmissionStatus::Submitted,
             'denial_feedback' => null,
             'updated_at' => '2026-07-18T13:00:00Z',
+            'faculty_submittable' => true,
+            'faculty_submission_blocking_fields' => [],
+            'appendix_a_ready' => false,
+            'appendix_a_blocking_fields' => ['contact_hours'],
         ];
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, $draftInfo);
 
-        $this->assertSame(SyllabusReadinessState::SubmittedForReview, $readiness->getState());
+        $this->assertSame(SyllabusReadinessState::AwaitingCoordinatorReview, $readiness->getState());
+        $this->assertSame(SubmissionStatus::Submitted, $readiness->getWorkflowStatus());
         $this->assertSame('Awaiting review', $readiness->getState()->getCategory());
     }
 
-    public function testDeriveDeniedWithFeedback(): void
+    public function testDeriveDeniedSubmissionNeedingRevision(): void
     {
         $templateInfo = $this->publishedTemplateInfo();
 
         $draftInfo = [
             'id' => 301,
-            'is_submitted' => true,
-            'is_approved' => false,
+            'status' => SubmissionStatus::Denied,
             'denial_feedback' => 'Please update specific goals mapping.',
             'updated_at' => '2026-07-18T14:00:00Z',
+            'faculty_submittable' => false,
+            'faculty_submission_blocking_fields' => ['specific_goals'],
+            'appendix_a_ready' => false,
+            'appendix_a_blocking_fields' => ['specific_goals'],
         ];
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, $draftInfo);
 
-        $this->assertSame(SyllabusReadinessState::DeniedWithFeedback, $readiness->getState());
+        $this->assertSame(SyllabusReadinessState::DeniedNeedsRevision, $readiness->getState());
+        $this->assertSame(SubmissionStatus::Denied, $readiness->getWorkflowStatus());
+        $this->assertSame(['specific_goals'], $readiness->getMissingRequiredFields());
         $this->assertSame('Blocked', $readiness->getState()->getCategory());
     }
 
@@ -147,8 +193,7 @@ final class SyllabusReadinessTest extends TestCase
 
         $draftInfo = [
             'id' => 301,
-            'is_submitted' => true,
-            'is_approved' => true,
+            'status' => SubmissionStatus::Approved,
             'denial_feedback' => null,
             'updated_at' => '2026-07-18T15:00:00Z',
             'faculty_submittable' => true,
@@ -159,7 +204,8 @@ final class SyllabusReadinessTest extends TestCase
 
         $readiness = SyllabusReadiness::fromDomainState($this->courseInfo, $templateInfo, $draftInfo);
 
-        $this->assertSame(SyllabusReadinessState::ApprovedAndReadyForAppendixA, $readiness->getState());
+        $this->assertSame(SyllabusReadinessState::ApprovedAppendixAReady, $readiness->getState());
+        $this->assertSame(SubmissionStatus::Approved, $readiness->getWorkflowStatus());
         $this->assertTrue($readiness->isAppendixAReady());
         $this->assertSame('Ready', $readiness->getState()->getCategory());
     }
@@ -168,8 +214,7 @@ final class SyllabusReadinessTest extends TestCase
     {
         $draftInfo = [
             'id' => 301,
-            'is_submitted' => true,
-            'is_approved' => true,
+            'status' => SubmissionStatus::ApprovedWithEdits,
             'denial_feedback' => null,
             'updated_at' => '2026-07-18T15:00:00Z',
             'faculty_submittable' => true,
@@ -185,6 +230,7 @@ final class SyllabusReadinessTest extends TestCase
         );
 
         $this->assertSame(SyllabusReadinessState::ApprovedAppendixAIncomplete, $readiness->getState());
+        $this->assertSame(SubmissionStatus::ApprovedWithEdits, $readiness->getWorkflowStatus());
         $this->assertFalse($readiness->isAppendixAReady());
         $this->assertSame(['contact_hours', 'instructors'], $readiness->getAppendixABlockingFields());
         $this->assertSame(['contact_hours', 'instructors'], $readiness->getMissingRequiredFields());

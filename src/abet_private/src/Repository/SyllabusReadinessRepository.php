@@ -142,8 +142,7 @@ final class SyllabusReadinessRepository
     /**
      * @return array{
      *     id: int,
-     *     is_submitted: bool,
-     *     is_approved: bool,
+     *     status: SubmissionStatus,
      *     denial_feedback: ?string,
      *     updated_at: string,
      *     faculty_submittable: bool,
@@ -178,12 +177,7 @@ final class SyllabusReadinessRepository
 
         return [
             'id' => $submission->getId(),
-            'is_submitted' => $status !== SubmissionStatus::Draft,
-            'is_approved' => in_array(
-                $status,
-                [SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits],
-                true,
-            ),
+            'status' => $status,
             'denial_feedback' => $status === SubmissionStatus::Denied
                 && $review?->getDecision() === ReviewDecision::Denied
                     ? $review->getComment()

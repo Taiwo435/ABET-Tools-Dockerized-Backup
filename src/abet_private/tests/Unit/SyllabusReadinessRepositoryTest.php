@@ -121,7 +121,7 @@ final class SyllabusReadinessRepositoryTest extends KernelTestCase
         $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
 
         $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::SharedTemplateIncomplete, $rows[0]->getState());
+        $this->assertSame(SyllabusReadinessState::SharedTemplateNeedsPublicationFields, $rows[0]->getState());
         $this->assertSame('Blocked', $rows[0]->getState()->getCategory());
         $this->assertContains('Catalog Description', $rows[0]->getMissingRequiredFields());
     }
@@ -144,7 +144,7 @@ final class SyllabusReadinessRepositoryTest extends KernelTestCase
         $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
 
         $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::SharedTemplatePublished, $rows[0]->getState());
+        $this->assertSame(SyllabusReadinessState::SharedTemplatePublishedNoOffering, $rows[0]->getState());
         $this->assertSame('Missing', $rows[0]->getState()->getCategory());
     }
 
@@ -173,7 +173,7 @@ final class SyllabusReadinessRepositoryTest extends KernelTestCase
         $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
 
         $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::FacultyDraftInProgress, $rows[0]->getState());
+        $this->assertSame(SyllabusReadinessState::FacultyDraftNeedsSubmissionFields, $rows[0]->getState());
         $this->assertSame('Blocked', $rows[0]->getState()->getCategory());
         $this->assertNotNull($rows[0]->getUpdatedAt());
     }
@@ -203,7 +203,7 @@ final class SyllabusReadinessRepositoryTest extends KernelTestCase
         $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
 
         $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::SubmittedForReview, $rows[0]->getState());
+        $this->assertSame(SyllabusReadinessState::AwaitingCoordinatorReview, $rows[0]->getState());
         $this->assertSame('Awaiting review', $rows[0]->getState()->getCategory());
     }
 
@@ -232,7 +232,7 @@ final class SyllabusReadinessRepositoryTest extends KernelTestCase
         $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
 
         $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::DeniedWithFeedback, $rows[0]->getState());
+        $this->assertSame(SyllabusReadinessState::DeniedNeedsRevision, $rows[0]->getState());
         $this->assertSame('Blocked', $rows[0]->getState()->getCategory());
     }
 
@@ -261,7 +261,7 @@ final class SyllabusReadinessRepositoryTest extends KernelTestCase
         $rows = $this->repository->getReadinessRowsForProgram($this->testProgramId);
 
         $this->assertCount(1, $rows);
-        $this->assertSame(SyllabusReadinessState::ApprovedAndReadyForAppendixA, $rows[0]->getState());
+        $this->assertSame(SyllabusReadinessState::ApprovedAppendixAReady, $rows[0]->getState());
         $this->assertSame('Ready', $rows[0]->getState()->getCategory());
     }
 

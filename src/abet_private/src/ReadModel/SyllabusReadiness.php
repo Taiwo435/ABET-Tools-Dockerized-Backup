@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\ReadModel;
 
+use App\Entity\SyllabusTemplate\SubmissionStatus;
 use DateTimeImmutable;
 
 /**
@@ -31,6 +32,7 @@ class SyllabusReadiness
     private bool $appendixAReady;
     /** @var string[] */
     private array $appendixABlockingFields;
+    private ?SubmissionStatus $workflowStatus;
 
     /**
      * @param string[] $missingRequiredFields
@@ -55,6 +57,7 @@ class SyllabusReadiness
         array $coordinatorPublicationBlockingFields = [],
         bool $appendixAReady = false,
         array $appendixABlockingFields = [],
+        ?SubmissionStatus $workflowStatus = null,
     ) {
         $this->programId = $programId;
         $this->courseId = $courseId;
@@ -71,6 +74,7 @@ class SyllabusReadiness
         $this->coordinatorPublicationBlockingFields = $coordinatorPublicationBlockingFields;
         $this->appendixAReady = $appendixAReady;
         $this->appendixABlockingFields = $appendixABlockingFields;
+        $this->workflowStatus = $workflowStatus;
     }
 
     public function getProgramId(): string
@@ -174,6 +178,11 @@ class SyllabusReadiness
         return $this->appendixABlockingFields;
     }
 
+    public function getWorkflowStatus(): ?SubmissionStatus
+    {
+        return $this->workflowStatus;
+    }
+
     /**
      * Builds the presentation row from canonical lifecycle and completeness projections.
      *
@@ -195,8 +204,7 @@ class SyllabusReadiness
      * }|null $templateInfo
      * @param array{
      *     id: int,
-     *     is_submitted: bool,
-     *     is_approved: bool,
+     *     status: SubmissionStatus,
      *     denial_feedback: ?string,
      *     updated_at: string,
      *     faculty_submittable: bool,
@@ -236,146 +244,45 @@ class SyllabusReadiness
         $appendixABlockingFields = $draftInfo['appendix_a_blocking_fields']
             ?? $templateInfo['appendix_a_blocking_fields']
             ?? [];
+        $workflowStatus = $draftInfo['status'] ?? null;
+        $syllabusId = $draftInfo['id'] ?? $templateInfo['id'] ?? null;
+        $updatedAt = isset($draftInfo['updated_at'])
+            ? new DateTimeImmutable($draftInfo['updated_at'])
+            : null;
 
-        // 1. If there is no shared template
         if ($templateInfo === null) {
-            return new self(
-                $programId,
-                $courseId,
-                $courseCode,
-                $courseTitle,
-                SyllabusReadinessState::NoSharedTemplate,
-                [],
-                null,
-                null,
-                $courseOffering,
-                $facultySubmittable,
-                $facultyBlockingFields,
-                $coordinatorPublishable,
-                $coordinatorBlockingFields,
-                $appendixAReady,
-                $appendixABlockingFields,
-            );
+            $state = SyllabusReadinessState::NoSharedTemplate;
+            $blockingFields = [];
+        } elseif (!$templateInfo['is_published']) {
+            $state = $coordinatorPublishable
+                ? SyllabusReadinessState::SharedTemplateReadyToPublish
+                : SyllabusReadinessState::SharedTemplateNeedsPublicationFields;
+            $blockingFields = $coordinatorBlockingFields;
+        } elseif ($draftInfo === null) {
+            $state = SyllabusReadinessState::SharedTemplatePublishedNoOffering;
+            $blockingFields = [];
+        } elseif (!$workflowStatus instanceof SubmissionStatus) {
+            throw new \InvalidArgumentException('A faculty readiness projection requires a canonical workflow status.');
+        } else {
+            [$state, $blockingFields] = match ($workflowStatus) {
+                SubmissionStatus::Draft => $facultySubmittable
+                    ? [SyllabusReadinessState::FacultyDraftReadyToSubmit, []]
+                    : [SyllabusReadinessState::FacultyDraftNeedsSubmissionFields, $facultyBlockingFields],
+                SubmissionStatus::Submitted => [SyllabusReadinessState::AwaitingCoordinatorReview, []],
+                SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits => $appendixAReady
+                    ? [SyllabusReadinessState::ApprovedAppendixAReady, []]
+                    : [SyllabusReadinessState::ApprovedAppendixAIncomplete, $appendixABlockingFields],
+                SubmissionStatus::Denied => [SyllabusReadinessState::DeniedNeedsRevision, $facultyBlockingFields],
+            };
         }
 
-        // 2. If the shared template is incomplete
-        if (!$templateInfo['is_published'] && !$coordinatorPublishable) {
-            return new self(
-                $programId,
-                $courseId,
-                $courseCode,
-                $courseTitle,
-                SyllabusReadinessState::SharedTemplateIncomplete,
-                $coordinatorBlockingFields,
-                $templateInfo['id'],
-                null,
-                $courseOffering,
-                $facultySubmittable,
-                $facultyBlockingFields,
-                $coordinatorPublishable,
-                $coordinatorBlockingFields,
-                $appendixAReady,
-                $appendixABlockingFields,
-            );
-        }
-
-        // 3. If there is a template, but no faculty draft has been started
-        if ($draftInfo === null) {
-            return new self(
-                $programId,
-                $courseId,
-                $courseCode,
-                $courseTitle,
-                SyllabusReadinessState::SharedTemplatePublished,
-                [],
-                $templateInfo['id'],
-                null,
-                $courseOffering,
-                $facultySubmittable,
-                $facultyBlockingFields,
-                $coordinatorPublishable,
-                $coordinatorBlockingFields,
-                $appendixAReady,
-                $appendixABlockingFields,
-            );
-        }
-
-        $syllabusId = $draftInfo['id'];
-        $updatedAt = isset($draftInfo['updated_at']) ? new DateTimeImmutable($draftInfo['updated_at']) : null;
-
-        // 4. If faculty draft is approved
-        if ($draftInfo['is_approved']) {
-            return new self(
-                $programId,
-                $courseId,
-                $courseCode,
-                $courseTitle,
-                $appendixAReady
-                    ? SyllabusReadinessState::ApprovedAndReadyForAppendixA
-                    : SyllabusReadinessState::ApprovedAppendixAIncomplete,
-                $appendixAReady ? [] : $appendixABlockingFields,
-                $syllabusId,
-                $updatedAt,
-                $courseOffering,
-                $facultySubmittable,
-                $facultyBlockingFields,
-                $coordinatorPublishable,
-                $coordinatorBlockingFields,
-                $appendixAReady,
-                $appendixABlockingFields,
-            );
-        }
-
-        // 5. If faculty draft is denied with feedback
-        if (!$draftInfo['is_approved'] && !empty($draftInfo['denial_feedback'])) {
-            return new self(
-                $programId,
-                $courseId,
-                $courseCode,
-                $courseTitle,
-                SyllabusReadinessState::DeniedWithFeedback,
-                $facultyBlockingFields,
-                $syllabusId,
-                $updatedAt,
-                $courseOffering,
-                $facultySubmittable,
-                $facultyBlockingFields,
-                $coordinatorPublishable,
-                $coordinatorBlockingFields,
-                $appendixAReady,
-                $appendixABlockingFields,
-            );
-        }
-
-        // 6. If faculty draft is submitted for review
-        if ($draftInfo['is_submitted']) {
-            return new self(
-                $programId,
-                $courseId,
-                $courseCode,
-                $courseTitle,
-                SyllabusReadinessState::SubmittedForReview,
-                $facultyBlockingFields,
-                $syllabusId,
-                $updatedAt,
-                $courseOffering,
-                $facultySubmittable,
-                $facultyBlockingFields,
-                $coordinatorPublishable,
-                $coordinatorBlockingFields,
-                $appendixAReady,
-                $appendixABlockingFields,
-            );
-        }
-
-        // 7. Otherwise, faculty draft is in progress
         return new self(
             $programId,
             $courseId,
             $courseCode,
             $courseTitle,
-            SyllabusReadinessState::FacultyDraftInProgress,
-            $facultyBlockingFields,
+            $state,
+            $blockingFields,
             $syllabusId,
             $updatedAt,
             $courseOffering,
@@ -385,6 +292,7 @@ class SyllabusReadiness
             $coordinatorBlockingFields,
             $appendixAReady,
             $appendixABlockingFields,
+            $workflowStatus,
         );
     }
 }

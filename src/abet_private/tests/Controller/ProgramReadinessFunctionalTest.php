@@ -203,12 +203,12 @@ final class ProgramReadinessFunctionalTest extends WebTestCase
         $tableText = $crawler->filter('.readiness-table')->text();
 
         self::assertStringContainsString(SyllabusReadinessState::NoSharedTemplate->value, $tableText);
-        self::assertStringContainsString(SyllabusReadinessState::SharedTemplateIncomplete->value, $tableText);
-        self::assertStringContainsString(SyllabusReadinessState::SharedTemplatePublished->value, $tableText);
-        self::assertStringContainsString(SyllabusReadinessState::FacultyDraftInProgress->value, $tableText);
-        self::assertStringContainsString(SyllabusReadinessState::SubmittedForReview->value, $tableText);
-        self::assertStringContainsString(SyllabusReadinessState::ApprovedAndReadyForAppendixA->value, $tableText);
-        self::assertStringContainsString(SyllabusReadinessState::DeniedWithFeedback->value, $tableText);
+        self::assertStringContainsString(SyllabusReadinessState::SharedTemplateNeedsPublicationFields->value, $tableText);
+        self::assertStringContainsString(SyllabusReadinessState::SharedTemplatePublishedNoOffering->value, $tableText);
+        self::assertStringContainsString(SyllabusReadinessState::FacultyDraftNeedsSubmissionFields->value, $tableText);
+        self::assertStringContainsString(SyllabusReadinessState::AwaitingCoordinatorReview->value, $tableText);
+        self::assertStringContainsString(SyllabusReadinessState::ApprovedAppendixAReady->value, $tableText);
+        self::assertStringContainsString(SyllabusReadinessState::DeniedNeedsRevision->value, $tableText);
 
         $row102 = $crawler->filter('tr:contains("CSE 102")');
         self::assertCount(1, $row102);
