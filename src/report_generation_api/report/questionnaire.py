@@ -2,7 +2,15 @@ from docxtpl import DocxTemplate
 
 
 class Questionnaire:
-    def __init__(self, template_path, db, year, department, degree_type):
+    def __init__(
+        self,
+        template_path,
+        db,
+        year,
+        department,
+        degree_type,
+        appendix_a_contract=None,
+    ):
         # Load the Word template
         self.document = DocxTemplate(template_path)
 
@@ -13,6 +21,7 @@ class Questionnaire:
         self.year = year
         self.department = department
         self.degree_type = degree_type
+        self.appendix_a_contract = appendix_a_contract
 
         # Optional cache for reused query results
         self.cache = {}

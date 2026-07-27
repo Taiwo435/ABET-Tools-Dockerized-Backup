@@ -12,7 +12,6 @@ from report.appendices import appendix_a
 from report.contracts.appendix_a import (
     AppendixAContractError,
     build_context,
-    normalize_database_row,
 )
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "appendix_a_courses_v1.json"
@@ -46,9 +45,11 @@ def test_schema_is_versioned_and_classifies_every_course_field():
     }
     assert all(
         field_schema.get("x-field-status")
-        in {"Required", "Optional", "Derived", "Missing from workflow"}
+        in {"Required", "Optional", "Derived"}
         for field_schema in course_schema["properties"].values()
     )
+    assert course_schema["properties"]["delivery_type"]["x-field-status"] == "Required"
+    assert "unspecified" not in course_schema["properties"]["delivery_type"]["enum"]
 
 
 def test_representative_fixture_builds_multiple_courses_and_delivery_types():
@@ -83,106 +84,47 @@ def test_incorrect_field_type_has_actionable_path():
     assert "courses[1].credits must be a positive number" in str(error.value)
 
 
-def test_database_row_normalization_derives_code_and_decodes_json_columns():
-    row = {
-        "course_subject": "CSE",
-        "course_number": "423",
-        "course_name": "Systems Capstone Project I",
-        "credits": 3,
-        "contact_hours": "Three hours per week",
-        "credit_categorization": "Engineering topics",
-        "instructor_name": '["Alex Rivera"]',
-        "textbook": "[]",
-        "catalog_description": "Team-based engineering capstone.",
-        "prerequisites": "Senior standing",
-        "course_type": "R",
-        "specific_goals": '["Apply an iterative process"]',
-        "student_outcomes": '["Communicate effectively"]',
-        "topics_covered": '["Requirements", "Testing"]',
-    }
+def test_duplicate_course_selection_is_rejected_after_contracts_are_combined():
+    payload = load_fixture()
+    payload["courses"].append(json.loads(json.dumps(payload["courses"][0])))
 
-    course = normalize_database_row(row)
+    with pytest.raises(AppendixAContractError) as error:
+        build_context(payload)
 
-    assert course["course_code"] == "CSE 423"
-    assert course["delivery_type"] == "unspecified"
-    assert course["instructors"] == ["Alex Rivera"]
-    assert course["topics_covered"] == ["Requirements", "Testing"]
+    assert "course_code duplicates CSE 423" in str(error.value)
 
 
-class FakeCursor:
-    def __init__(self, rows):
-        self.rows = rows
-        self.sql = None
-        self.params = None
+def test_delivery_type_must_come_from_the_selected_lifecycle_target():
+    payload = load_fixture()
+    payload["courses"][0]["delivery_type"] = "unspecified"
 
-    def execute(self, sql, params):
-        self.sql = sql
-        self.params = params
+    with pytest.raises(AppendixAContractError) as error:
+        build_context(payload)
 
-    def fetchall(self):
-        return self.rows
+    assert "delivery_type must be one of: hybrid, in_person, online" in str(error.value)
 
 
-class FakeDatabase:
-    def __init__(self, rows):
-        self.cursor_instance = FakeCursor(rows)
-
+class DatabaseMustNotBeUsed:
     def cursor(self):
-        return self.cursor_instance
+        raise AssertionError("Appendix A must not query syllabus storage")
 
 
 class FakeQuestionnaire:
-    def __init__(self, rows):
-        self.db = FakeDatabase(rows)
-        self.year = 2026
-        self.department = "Computer Systems Engineering"
-        self.degree_type = "BSE"
-
-
-def test_appendix_builder_consumes_database_rows_without_symfony_entities():
-    row = {
-        "course_subject": "CSE",
-        "course_number": "423",
-        "course_name": "Systems Capstone Project I",
-        "credits": 3,
-        "contact_hours": "Three hours per week",
-        "credit_categorization": "Engineering topics",
-        "instructor_name": ["Alex Rivera"],
-        "textbook": [],
-        "catalog_description": "Team-based engineering capstone.",
-        "prerequisites": "Senior standing",
-        "course_type": "R",
-        "specific_goals": ["Apply an iterative process"],
-        "student_outcomes": ["Communicate effectively"],
-        "topics_covered": ["Requirements", "Testing"],
-    }
-    questionnaire = FakeQuestionnaire([row])
-
-    context = appendix_a.build(questionnaire)
-
-    assert context["course_syllabi"][0]["course_code"] == "CSE 423"
-    assert "JOIN programs" in questionnaire.db.cursor_instance.sql
-    assert questionnaire.db.cursor_instance.params == (
-        2026,
-        "Computer Systems Engineering",
-        "BSE",
-    )
+    def __init__(self, contract):
+        self.db = DatabaseMustNotBeUsed()
+        self.appendix_a_contract = contract
 
 
 def test_appendix_builder_accepts_contract_payload_without_querying_database():
-    questionnaire = FakeQuestionnaire([])
-    questionnaire.appendix_a_contract = load_fixture()
+    questionnaire = FakeQuestionnaire(load_fixture())
 
     context = appendix_a.build(questionnaire)
 
     assert len(context["course_syllabi"]) == 3
-    assert questionnaire.db.cursor_instance.sql is None
 
 
-def test_appendix_builder_allows_reports_with_no_syllabus_rows_yet():
-    context = appendix_a.build(FakeQuestionnaire([]))
+def test_appendix_builder_rejects_missing_contract_instead_of_querying_database():
+    with pytest.raises(AppendixAContractError) as error:
+        appendix_a.build(FakeQuestionnaire(None))
 
-    assert context["schema_version"] == "1.0"
-    assert context["course_syllabi"] == []
-    assert context["courses_by_type"] == {}
-    assert context["courses_by_delivery"] == {}
+    assert "root must be an object" in str(error.value)

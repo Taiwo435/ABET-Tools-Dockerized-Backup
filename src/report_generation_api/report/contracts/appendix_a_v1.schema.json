@@ -58,8 +58,8 @@
           },
           "delivery_type": {
             "type": "string",
-            "enum": ["in_person", "online", "hybrid", "unspecified"],
-            "x-field-status": "Missing from workflow"
+            "enum": ["in_person", "online", "hybrid"],
+            "x-field-status": "Required"
           },
           "instructors": {
             "type": "array",

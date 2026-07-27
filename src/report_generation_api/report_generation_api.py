@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 import getProfessorWorkload
 import getElectiveCourses
@@ -11,6 +11,7 @@ import tempfile
 from docx import Document as DocxDocument
 
 from report.report_builder import ReportBuilder as ReportBuilderClass
+from report.contracts.appendix_a import AppendixAContractError, validate_contract
 from pathlib import Path
 
 app = FastAPI()
@@ -32,6 +33,7 @@ class ReportBuilder(BaseModel):
     year: Optional[int] = 2026  # Default to 2026 if not provided
     department: str
     degree_type: str
+    appendix_a_contract: Dict[str, Any]
 
 
 
@@ -58,6 +60,7 @@ def elective_courses(request: ElectiveCoursesRequest):
 @app.post("/generate-report")
 def generate_report(request: ReportBuilder):
     try:
+        appendix_a_contract = validate_contract(request.appendix_a_contract)
         template_path = str(TEMPLATE_PATH)
         #if template is missing, create a minimal temporary DOCX so report building can proceed prevents crashing inceidents error messages when creating report
         if not os.path.isfile(template_path):
@@ -70,7 +73,8 @@ def generate_report(request: ReportBuilder):
             db= getdatabaseConnection.get_database_connection(),
             year=request.year,
             department=request.department,
-            degree_type=request.degree_type
+            degree_type=request.degree_type,
+            appendix_a_contract=appendix_a_contract,
         )
 
         OUTPUT_PATH = BASE_DIR / "output"/ "Long_report.docx"
@@ -81,6 +85,8 @@ def generate_report(request: ReportBuilder):
         return FileResponse(path=OUTPUT_PATH, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document', filename="Long_report.docx")
         #return {"message": "Report generated successfully", "output_path": str(OUTPUT_PATH)}
     
+    except AppendixAContractError as e:
+        raise HTTPException(status_code=422, detail=e.errors)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

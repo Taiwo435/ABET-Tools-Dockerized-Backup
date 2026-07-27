@@ -1,5 +1,4 @@
 import copy
-import json
 from collections.abc import Mapping
 from typing import Any
 
@@ -37,7 +36,7 @@ REQUIRED_LIST_FIELDS = {
     "topics_covered",
 }
 
-DELIVERY_TYPES = {"in_person", "online", "hybrid", "unspecified"}
+DELIVERY_TYPES = {"in_person", "online", "hybrid"}
 COURSE_TYPES = {"R", "E", "SE"}
 
 COURSE_TYPE_LABELS = {
@@ -50,7 +49,6 @@ DELIVERY_TYPE_LABELS = {
     "in_person": "In person",
     "online": "Online",
     "hybrid": "Hybrid",
-    "unspecified": "Unspecified",
 }
 
 
@@ -60,52 +58,6 @@ class AppendixAContractError(ValueError):
     def __init__(self, errors: list[str]):
         self.errors = errors
         super().__init__("Appendix A contract validation failed: " + "; ".join(errors))
-
-
-def _decode_string_list(value: Any) -> list[str]:
-    if value is None:
-        return []
-
-    if isinstance(value, (list, tuple, set)):
-        return [str(item).strip() for item in value if str(item).strip()]
-
-    if isinstance(value, str):
-        text = value.strip()
-        if not text:
-            return []
-        try:
-            decoded = json.loads(text)
-        except (TypeError, ValueError):
-            return [text]
-        if isinstance(decoded, list):
-            return [str(item).strip() for item in decoded if str(item).strip()]
-        return [str(decoded).strip()] if str(decoded).strip() else []
-
-    text = str(value).strip()
-    return [text] if text else []
-
-
-def normalize_database_row(row: Mapping[str, Any]) -> dict[str, Any]:
-    """Convert one database row to the Appendix A v1 course shape."""
-    subject = str(row.get("course_subject") or "").strip()
-    number = str(row.get("course_number") or "").strip()
-
-    return {
-        "course_code": " ".join(part for part in (subject, number) if part),
-        "course_name": str(row.get("course_name") or "").strip(),
-        "credits": row.get("credits"),
-        "contact_hours": str(row.get("contact_hours") or "").strip(),
-        "credit_category": str(row.get("credit_categorization") or "").strip(),
-        "delivery_type": str(row.get("delivery_type") or "unspecified").strip(),
-        "instructors": _decode_string_list(row.get("instructor_name")),
-        "textbooks": _decode_string_list(row.get("textbook")),
-        "catalog_description": str(row.get("catalog_description") or "").strip(),
-        "prerequisites": str(row.get("prerequisites") or "").strip(),
-        "course_type": str(row.get("course_type") or "").strip(),
-        "specific_goals": _decode_string_list(row.get("specific_goals")),
-        "student_outcomes": _decode_string_list(row.get("student_outcomes")),
-        "topics_covered": _decode_string_list(row.get("topics_covered")),
-    }
 
 
 def validate_contract(payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -264,15 +216,6 @@ def _group_courses(
     for course in courses:
         grouped.setdefault(course[field], []).append(course)
     return grouped
-
-
-def empty_context() -> dict[str, Any]:
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "course_syllabi": [],
-        "courses_by_type": {},
-        "courses_by_delivery": {},
-    }
 
 
 def build_context(payload: Mapping[str, Any]) -> dict[str, Any]:
