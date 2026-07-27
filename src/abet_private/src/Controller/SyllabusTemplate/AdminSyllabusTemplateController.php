@@ -110,6 +110,36 @@ final class AdminSyllabusTemplateController extends AbstractController
                 true,
             ),
         ));
+        $allManagedTemplates = $selectedProgram !== null
+            ? $submissions->findManagedTemplates(null, $selectedProgram)
+            : [];
+        $managedTemplates = $filter === null
+            ? $allManagedTemplates
+            : ($selectedProgram !== null
+                ? $submissions->findManagedTemplates($filter, $selectedProgram)
+                : []);
+        $sharedAppendixTemplates = array_values(array_filter(
+            $allManagedTemplates,
+            static fn (TemplateSubmission $submission): bool =>
+                $submission->getApprovedRevision() !== null
+                && in_array(
+                    $submission->getStatus(),
+                    [SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits],
+                    true,
+                ),
+        ));
+        $reportReadyCount = count(array_filter(
+            $sharedAppendixTemplates,
+            static fn (TemplateSubmission $submission): bool =>
+                $submission->getApprovedRevision()?->isAppendixAReady() === true,
+        )) + count(array_filter(
+            $appendixRows,
+            static fn (SyllabusReadiness $row): bool => $row->isAppendixAReady(),
+        ));
+        $coursesWithOfferings = [];
+        foreach ($offeringRows as $row) {
+            $coursesWithOfferings[$row->getCourseId()] = true;
+        }
         $pendingSubmissions = $selectedProgram !== null
             ? $submissions->findPendingFacultyReviews($selectedProgram)
             : [];
@@ -118,19 +148,20 @@ final class AdminSyllabusTemplateController extends AbstractController
             : [];
 
         return $this->render('syllabus_template/admin/index.html.twig', [
-            'templates' => $selectedProgram !== null
-                ? $submissions->findManagedTemplates($filter, $selectedProgram)
-                : [],
+            'templates' => $managedTemplates,
             'completenessFilter' => $filter?->value ?? '',
             'pendingSubmissions' => $pendingSubmissions,
             'pendingReviewCount' => count($pendingSubmissions),
             'reviewedSubmissions' => $reviewedSubmissions,
             'readinessCounts' => SyllabusReadinessRepository::countRowsByCategory($readinessRows),
+            'allTargetCount' => count($readinessRows) + count($coursesWithOfferings),
+            'reportReadyCount' => $reportReadyCount,
             'readinessProgram' => $selectedProgram,
             'readinessPrograms' => $programs,
             'activeView' => $activeView,
             'offeringRows' => $offeringRows,
             'appendixRows' => $appendixRows,
+            'sharedAppendixTemplates' => $sharedAppendixTemplates,
         ]);
     }
 

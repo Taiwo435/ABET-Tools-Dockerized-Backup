@@ -79,12 +79,15 @@ final class AdminSyllabusWorkspaceFunctionalTest extends TestCase
         self::assertStringNotContainsString('id="shared-view-heading"', $html);
     }
 
-    public function testAppendixAViewShowsOnlyApprovedOfferingReportingContext(): void
+    public function testAppendixAViewShowsSharedBaselineAndOfferingReportingContexts(): void
     {
         $html = $this->renderView('appendix_a');
 
         self::assertStringContainsString('id="appendix-view-heading"', $html);
-        self::assertStringContainsString('Approved offering-specific syllabi', $html);
+        self::assertStringContainsString('Published shared baselines and approved course-offering syllabi', $html);
+        self::assertStringContainsString('<h3>Shared baselines</h3>', $html);
+        self::assertStringContainsString('No published shared baselines', $html);
+        self::assertStringContainsString('<h3>Course offerings</h3>', $html);
         self::assertStringContainsString('No approved course-offering syllabi', $html);
         self::assertStringNotContainsString('id="offerings-view-heading"', $html);
     }
@@ -103,6 +106,8 @@ final class AdminSyllabusWorkspaceFunctionalTest extends TestCase
                 'Awaiting review' => 0,
                 'Missing' => 0,
             ],
+            'allTargetCount' => 0,
+            'reportReadyCount' => 0,
             'readinessProgram' => $this->program,
             'readinessPrograms' => [[
                 'program_id' => 1,
@@ -113,6 +118,7 @@ final class AdminSyllabusWorkspaceFunctionalTest extends TestCase
             'activeView' => $activeView,
             'offeringRows' => [],
             'appendixRows' => [],
+            'sharedAppendixTemplates' => [],
         ]);
     }
 }

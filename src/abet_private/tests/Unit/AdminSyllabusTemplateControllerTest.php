@@ -66,6 +66,11 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('id="review-history"', $template);
         self::assertStringContainsString('offeringRows', $template);
         self::assertStringContainsString('appendixRows', $template);
+        self::assertStringContainsString('sharedAppendixTemplates', $template);
+        self::assertStringContainsString('{{ reportReadyCount }}', $template);
+        self::assertStringContainsString('{{ allTargetCount }}', $template);
+        self::assertStringContainsString('Published shared baseline', $template);
+        self::assertStringContainsString('class="button-primary table-button">Create revision</a>', $template);
 
         $styles = file_get_contents(dirname(__DIR__, 3).'/public/assets/css/syllabus-lifecycle.css');
         self::assertIsString($styles);
@@ -166,6 +171,9 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("'activeView' => \$activeView", $controller);
         self::assertStringContainsString("'offeringRows' => \$offeringRows", $controller);
         self::assertStringContainsString("'appendixRows' => \$appendixRows", $controller);
+        self::assertStringContainsString("'sharedAppendixTemplates' => \$sharedAppendixTemplates", $controller);
+        self::assertStringContainsString("'reportReadyCount' => \$reportReadyCount", $controller);
+        self::assertStringContainsString("'allTargetCount' => count(\$readinessRows) + count(\$coursesWithOfferings)", $controller);
         self::assertStringContainsString("'reviewedSubmissions' => \$reviewedSubmissions", $controller);
         self::assertStringContainsString('$readiness->getReadinessRowsForProgram($selectedProgram->getId())', $controller);
         self::assertStringContainsString('SyllabusReadinessRepository::countRowsByCategory($readinessRows)', $controller);

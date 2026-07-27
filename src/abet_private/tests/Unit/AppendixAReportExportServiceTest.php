@@ -6,6 +6,7 @@ use App\Entity\Program;
 use App\Entity\SyllabusTemplate\CommonCourse;
 use App\Entity\SyllabusTemplate\CourseOffering;
 use App\Entity\SyllabusTemplate\DeliveryType;
+use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\ReviewDecision;
 use App\Entity\SyllabusTemplate\RevisionAuthorType;
 use App\Entity\SyllabusTemplate\TemplateReview;
@@ -16,6 +17,28 @@ use PHPUnit\Framework\TestCase;
 
 final class AppendixAReportExportServiceTest extends TestCase
 {
+    public function testPublishedSharedBaselineCrossesTheReportBoundary(): void
+    {
+        $coordinator = (new User())->setEmail('coordinator@example.edu');
+        $submission = new TemplateSubmission(
+            $this->course(),
+            $coordinator,
+            ProposalOrigin::CoordinatorCreated,
+        );
+        $revision = $submission->addRevision(
+            $coordinator,
+            RevisionAuthorType::Coordinator,
+            $this->appendixContent(),
+        );
+        $submission->publishCoordinatorTemplate($revision);
+
+        $payload = (new AppendixAReportExportService())->export([$revision])->toArray();
+
+        self::assertCount(1, $payload['courses']);
+        self::assertSame('CSE 360', $payload['courses'][0]['course_code']);
+        self::assertSame('in_person', $payload['courses'][0]['delivery_type']);
+    }
+
     public function testApprovedOfferingRevisionExportsTheVersionedAppendixContract(): void
     {
         [$revision] = $this->approvedOfferingRevision();

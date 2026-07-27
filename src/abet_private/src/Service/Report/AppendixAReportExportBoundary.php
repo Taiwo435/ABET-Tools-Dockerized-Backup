@@ -7,8 +7,9 @@ use App\Entity\SyllabusTemplate\TemplateRevision;
 interface AppendixAReportExportBoundary
 {
     /**
-     * The caller explicitly selects one approved revision per course. This
-     * avoids silently preferring one offering over another.
+     * The caller explicitly selects one approved shared-baseline or
+     * course-offering revision per course. This avoids silently preferring a
+     * shared baseline or one offering over another.
      *
      * @param iterable<TemplateRevision> $revisions
      */
