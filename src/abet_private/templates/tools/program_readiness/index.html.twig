@@ -189,9 +189,8 @@
                 selector.addEventListener('change', function() {
                     const selectedProgramId = this.value;
                     if (selectedProgramId) {
-                        let url = "{{ path('app_program_readiness', { programId: 'PLACEHOLDER' }) }}";
-                        url = url.replace('PLACEHOLDER', selectedProgramId);
-                        window.location.href = url;
+                        const selectionUrl = "{{ path('app_program_readiness_select') }}";
+                        window.location.href = selectionUrl + '?program=' + encodeURIComponent(selectedProgramId);
                     }
                 });
             }

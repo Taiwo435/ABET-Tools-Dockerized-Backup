@@ -34,6 +34,19 @@ final class ProgramReadinessControllerTest extends WebTestCase
         $route = $routeAttributes[0]->newInstance();
         self::assertSame('/program/{programId}/readiness', $route->path);
         self::assertSame('app_program_readiness', $route->name);
+        self::assertSame(['programId' => '\d+'], $route->requirements);
+        self::assertSame(['GET'], $route->methods);
+    }
+
+    public function testProgramSelectionRouteAttributes(): void
+    {
+        $reflection = new ReflectionClass(ProgramReadinessController::class);
+        $routeAttributes = $reflection->getMethod('selectProgram')->getAttributes(Route::class);
+
+        self::assertCount(1, $routeAttributes);
+        $route = $routeAttributes[0]->newInstance();
+        self::assertSame('/program/readiness', $route->path);
+        self::assertSame('app_program_readiness_select', $route->name);
         self::assertSame(['GET'], $route->methods);
     }
 

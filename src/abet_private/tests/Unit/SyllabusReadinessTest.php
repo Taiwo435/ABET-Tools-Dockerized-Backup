@@ -7,6 +7,7 @@ namespace Tests\Unit;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
 use App\ReadModel\SyllabusReadiness;
 use App\ReadModel\SyllabusReadinessState;
+use App\Repository\SyllabusReadinessRepository;
 use PHPUnit\Framework\TestCase;
 
 final class SyllabusReadinessTest extends TestCase
@@ -235,6 +236,55 @@ final class SyllabusReadinessTest extends TestCase
         $this->assertSame(['contact_hours', 'instructors'], $readiness->getAppendixABlockingFields());
         $this->assertSame(['contact_hours', 'instructors'], $readiness->getMissingRequiredFields());
         $this->assertSame('Blocked', $readiness->getState()->getCategory());
+    }
+
+    public function testCanonicalReadinessFiltersCanBeCombined(): void
+    {
+        $sharedTemplate = new SyllabusReadiness(
+            '1',
+            '101',
+            'CSE 310',
+            'Data Structures',
+            SyllabusReadinessState::SharedTemplateReadyToPublish,
+            coordinatorPublishable: true,
+        );
+        $offering = new SyllabusReadiness(
+            '1',
+            '101',
+            'CSE 310',
+            'Data Structures',
+            SyllabusReadinessState::ApprovedAppendixAReady,
+            courseOffering: [
+                'id' => 501,
+                'academic_year' => '2026-2027',
+                'term' => 'Fall',
+                'section' => '001',
+                'delivery_type' => 'in_person',
+            ],
+            facultySubmittable: true,
+            coordinatorPublishable: true,
+            appendixAReady: true,
+            workflowStatus: SubmissionStatus::Approved,
+        );
+
+        self::assertSame(
+            [$offering],
+            SyllabusReadinessRepository::filterRows(
+                [$sharedTemplate, $offering],
+                target: 'course_offering',
+                workflow: SubmissionStatus::Approved,
+                facultySubmittable: true,
+                appendixAReady: true,
+            ),
+        );
+        self::assertSame(
+            [$sharedTemplate],
+            SyllabusReadinessRepository::filterRows(
+                [$sharedTemplate, $offering],
+                target: 'shared_template',
+                coordinatorPublishable: true,
+            ),
+        );
     }
 
     /**

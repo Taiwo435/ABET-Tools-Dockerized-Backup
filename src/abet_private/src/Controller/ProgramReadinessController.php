@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Entity\Permissions;
+use App\Entity\SyllabusTemplate\SubmissionStatus;
+use App\Entity\User;
 use App\Repository\SyllabusReadinessRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,28 +18,50 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 final class ProgramReadinessController extends AbstractController
 {
-    private SyllabusReadinessRepository $readinessRepository;
+    public function __construct(private readonly SyllabusReadinessRepository $readinessRepository) {}
 
-    public function __construct(SyllabusReadinessRepository $readinessRepository)
+    #[Route('/program/readiness', name: 'app_program_readiness_select', methods: ['GET'])]
+    public function selectProgram(Request $request, #[CurrentUser] User $user): Response
     {
-        $this->readinessRepository = $readinessRepository;
-    }
+        $this->assertCoordinatorAccess($user);
 
-    #[Route('/program/{programId}/readiness', name: 'app_program_readiness', methods: ['GET'])]
-    public function index(
-        string|int $programId,
-        Request $request,
-        #[CurrentUser] User $user
-    ): Response {
-        // Enforce authorization using existing project permission mechanism
-        if (!$user->hasPermission(Permissions::ROLE_COORDINATOR_FORM)) {
-            throw $this->createAccessDeniedException('Access Denied.');
+        $requestedProgramId = $request->query->getInt('program');
+        if ($requestedProgramId > 0) {
+            if ($this->readinessRepository->findProgram($requestedProgramId) === null) {
+                throw $this->createNotFoundException('The requested program was not found.');
+            }
+
+            return $this->redirectToRoute('app_program_readiness', ['programId' => $requestedProgramId]);
         }
 
-        // 1. Fetch all readiness rows for the program to compute overall counts
-        $allRows = $this->readinessRepository->getReadinessRowsForProgram($programId);
+        $programs = $this->readinessRepository->getAllPrograms();
+        $firstProgramId = $programs[0]['program_id'] ?? null;
+        if (!is_int($firstProgramId)) {
+            throw $this->createNotFoundException('No programs are available for syllabus readiness.');
+        }
 
-        // 2. Compute summary counts using existing read-model categories
+        return $this->redirectToRoute('app_program_readiness', ['programId' => $firstProgramId]);
+    }
+
+    #[Route(
+        '/program/{programId}/readiness',
+        name: 'app_program_readiness',
+        requirements: ['programId' => '\d+'],
+        methods: ['GET'],
+    )]
+    public function index(
+        int $programId,
+        Request $request,
+        #[CurrentUser] User $user,
+    ): Response {
+        $this->assertCoordinatorAccess($user);
+
+        $program = $this->readinessRepository->findProgram($programId);
+        if ($program === null) {
+            throw $this->createNotFoundException('The requested program was not found.');
+        }
+
+        $allRows = $this->readinessRepository->getReadinessRowsForProgram($programId);
         $counts = [
             'Ready' => 0,
             'Blocked' => 0,
@@ -53,35 +76,91 @@ final class ProgramReadinessController extends AbstractController
             }
         }
 
-        // 3. Delegate filtering to the repository/query service if requested
-        $filter = $request->query->get('filter');
-        if ($filter !== null) {
-            foreach (array_keys($counts) as $key) {
-                if (strcasecmp((string)$filter, $key) === 0) {
-                    $filter = $key;
-                    break;
-                }
-            }
-        }
-        $filteredRows = $this->readinessRepository->getReadinessRowsForProgram($programId, $filter);
-
+        $category = $this->normalizeCategory(
+            $request->query->getString('category', $request->query->getString('filter')),
+            array_keys($counts),
+        );
+        $target = match ($request->query->getString('target')) {
+            'shared_template', 'course_offering' => $request->query->getString('target'),
+            default => null,
+        };
+        $workflow = SubmissionStatus::tryFrom($request->query->getString('workflow'));
+        $facultyReadiness = $this->parseReadiness($request, 'faculty');
+        $coordinatorReadiness = $this->parseReadiness($request, 'coordinator');
+        $appendixAReadiness = $this->parseReadiness($request, 'appendix_a');
+        $filteredRows = SyllabusReadinessRepository::filterRows(
+            $allRows,
+            $category,
+            $target,
+            $workflow,
+            $facultyReadiness,
+            $coordinatorReadiness,
+            $appendixAReadiness,
+        );
         $programs = $this->readinessRepository->getAllPrograms();
-
-        $currentProgram = null;
-        foreach ($programs as $prog) {
-            if ((string)$prog['program_id'] === (string)$programId) {
-                $currentProgram = $prog;
-                break;
-            }
-        }
 
         return $this->render('tools/program_readiness/index.html.twig', [
             'program_id' => $programId,
-            'program' => $currentProgram,
+            'program' => [
+                'program_id' => $program->getId(),
+                'program_name' => $program->getName(),
+                'program_code' => $program->getCode(),
+                'program_year' => $program->getYear(),
+            ],
             'rows' => $filteredRows,
             'counts' => $counts,
-            'active_filter' => $filter,
+            'active_filter' => $category,
+            'active_filters' => [
+                'category' => $category,
+                'target' => $target,
+                'workflow' => $workflow?->value,
+                'faculty' => $this->readinessValue($facultyReadiness),
+                'coordinator' => $this->readinessValue($coordinatorReadiness),
+                'appendix_a' => $this->readinessValue($appendixAReadiness),
+            ],
+            'workflow_statuses' => SubmissionStatus::cases(),
             'programs' => $programs,
         ]);
+    }
+
+    /** @param list<string> $categories */
+    private function normalizeCategory(string $requested, array $categories): ?string
+    {
+        if ($requested === '') {
+            return null;
+        }
+
+        foreach ($categories as $category) {
+            if (strcasecmp($requested, $category) === 0) {
+                return $category;
+            }
+        }
+
+        return $requested;
+    }
+
+    private function parseReadiness(Request $request, string $parameter): ?bool
+    {
+        return match (strtolower($request->query->getString($parameter))) {
+            'ready' => true,
+            'blocked', 'not_ready' => false,
+            default => null,
+        };
+    }
+
+    private function readinessValue(?bool $readiness): string
+    {
+        return match ($readiness) {
+            true => 'ready',
+            false => 'blocked',
+            null => '',
+        };
+    }
+
+    private function assertCoordinatorAccess(User $user): void
+    {
+        if (!$user->hasPermission(Permissions::ROLE_COORDINATOR_FORM)) {
+            throw $this->createAccessDeniedException('Access Denied.');
+        }
     }
 }

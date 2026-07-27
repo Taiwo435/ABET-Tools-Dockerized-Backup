@@ -31,8 +31,8 @@ final class SyllabusReadinessRepository
      */
     public function getReadinessRowsForProgram(int|string $programId, ?string $filter = null): array
     {
-        $program = $this->registry->getRepository(Program::class)->find($programId);
-        if (!$program instanceof Program) {
+        $program = $this->findProgram($programId);
+        if ($program === null) {
             return [];
         }
 
@@ -94,19 +94,69 @@ final class SyllabusReadinessRepository
             }
         }
 
-        if ($filter !== null && $filter !== '') {
-            $readinessRows = array_values(array_filter($readinessRows, function (SyllabusReadiness $row) use ($filter) {
-                if (strcasecmp($row->getState()->getCategory(), $filter) === 0) {
-                    return true;
-                }
-                if (strcasecmp($row->getState()->value, $filter) === 0) {
-                    return true;
-                }
-                return false;
-            }));
-        }
+        return $filter !== null && $filter !== ''
+            ? $this->filterRows($readinessRows, category: $filter)
+            : $readinessRows;
+    }
 
-        return $readinessRows;
+    public function findProgram(int|string $programId): ?Program
+    {
+        $program = $this->registry->getRepository(Program::class)->find($programId);
+
+        return $program instanceof Program ? $program : null;
+    }
+
+    /**
+     * @param list<SyllabusReadiness> $rows
+     * @return list<SyllabusReadiness>
+     */
+    public static function filterRows(
+        array $rows,
+        ?string $category = null,
+        ?string $target = null,
+        ?SubmissionStatus $workflow = null,
+        ?bool $facultySubmittable = null,
+        ?bool $coordinatorPublishable = null,
+        ?bool $appendixAReady = null,
+    ): array {
+        return array_values(array_filter(
+            $rows,
+            static function (SyllabusReadiness $row) use (
+                $category,
+                $target,
+                $workflow,
+                $facultySubmittable,
+                $coordinatorPublishable,
+                $appendixAReady,
+            ): bool {
+                if ($category !== null
+                    && strcasecmp($row->getState()->getCategory(), $category) !== 0
+                    && strcasecmp($row->getState()->value, $category) !== 0) {
+                    return false;
+                }
+
+                if ($target === 'shared_template' && $row->getCourseOfferingId() !== null) {
+                    return false;
+                }
+                if ($target === 'course_offering' && $row->getCourseOfferingId() === null) {
+                    return false;
+                }
+                if ($workflow !== null && $row->getWorkflowStatus() !== $workflow) {
+                    return false;
+                }
+                if ($facultySubmittable !== null && $row->isFacultySubmittable() !== $facultySubmittable) {
+                    return false;
+                }
+                if ($coordinatorPublishable !== null && $row->isCoordinatorPublishable() !== $coordinatorPublishable) {
+                    return false;
+                }
+                if ($appendixAReady !== null && $row->isAppendixAReady() !== $appendixAReady) {
+                    return false;
+                }
+
+                return true;
+            },
+        ));
     }
 
     /**
