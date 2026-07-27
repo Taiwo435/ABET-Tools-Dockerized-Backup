@@ -2,6 +2,8 @@
 
 {% block title %}Review with Edits | {% endblock %}
 
+{% block styles %}<link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">{% endblock %}
+
 {% block body %}
     <style>
         .review-edit { width: min(900px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
@@ -28,6 +30,7 @@
             <h1>{{ submission.commonCourse.courseName }}</h1>
             <p>Seeded from faculty revision {{ submission.submittedRevision.revisionNumber }} submitted by {{ submission.submittedBy.asurite }}.</p>
         </div>
+        {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: submission, revision: submission.submittedRevision, readinessMode: 'faculty'} only %}
 
         <div class="review-edit__notice">Opening this page does not create a revision. A new immutable coordinator revision is saved only after meaningful, complete edits are submitted.</div>
         {% if sharedTemplateChanged %}<div class="review-edit__notice review-edit__notice--error" role="alert">This proposal is based on an older shared template. Approval is blocked until a separate reconciliation workflow is available.</div>{% endif %}

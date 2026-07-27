@@ -2,6 +2,8 @@
 
 {% block title %}Faculty Syllabus Templates | {% endblock %}
 
+{% block styles %}<link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">{% endblock %}
+
 {% block body %}
     <style>
         .faculty-syllabus { width: min(1050px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
@@ -37,10 +39,21 @@
     <main class="faculty-syllabus">
         <div class="faculty-syllabus__toolbar">
             <div>
-                <h1>Faculty Syllabus Templates</h1>
+                <h1>Faculty Course Syllabi</h1>
                 <p>Create a syllabus for a specific course offering, starting blank or from an approved shared template.</p>
             </div>
-            <a href="{{ path('app_faculty_syllabus_templates_new') }}" class="button-primary">Create blank draft</a>
+            <a href="{{ path('app_faculty_syllabus_templates_new') }}" class="button-primary">Create blank offering</a>
+        </div>
+
+        <div class="syllabus-lifecycle" aria-label="Faculty syllabus lifecycle">
+            <div class="syllabus-lifecycle__step"><strong>1. Identify offering</strong><span>Choose the academic year, term, section, and delivery type.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>2. Complete syllabus</strong><span>Start from a shared template or enter the content manually.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>3. Submit for review</strong><span>The submitted revision is frozen for the audit trail.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>4. Use for accreditation</strong><span>Approved, Appendix A-ready evidence becomes exportable.</span></div>
+        </div>
+        <div class="syllabus-context-card">
+            <h2>Submission and report readiness are separate</h2>
+            <p>You can submit after the coordinator-review fields are complete. Appendix A readiness tracks the additional accreditation evidence needed before report export.</p>
         </div>
 
         {% for type, messages in app.flashes %}
@@ -60,6 +73,7 @@
                         <li class="faculty-draft-row">
                             <div class="faculty-draft-row__title">
                                 <span><strong>{{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }}</strong> — {{ draft.commonCourse.courseName }}{% if draft.courseOffering %}<br><small>{{ draft.courseOffering.term }} {{ draft.courseOffering.academicYear }}{% if draft.courseOffering.section %}, section {{ draft.courseOffering.section }}{% endif %} · {{ draft.courseOffering.deliveryType.value|replace({'_': ' '})|title }}</small>{% endif %}</span>
+                                {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: draft, revision: draft.workingRevision, readinessMode: 'faculty'} only %}
                                 <span
                                     class="completeness-icon completeness-icon--{{ draft.workingRevision.facultySubmittable ? 'complete' : 'incomplete' }}"
                                     role="img"
@@ -101,6 +115,7 @@
                                 <span><strong>{{ proposal.commonCourse.courseSubject }} {{ proposal.commonCourse.courseNumber }}</strong> — {{ proposal.commonCourse.courseName }}{% if proposal.courseOffering %}<br><small>{{ proposal.courseOffering.term }} {{ proposal.courseOffering.academicYear }}{% if proposal.courseOffering.section %}, section {{ proposal.courseOffering.section }}{% endif %}</small>{% endif %}</span>
                                 <span>{{ proposal.status.value|replace({'_': ' '})|title }}</span>
                             </div>
+                            {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: proposal, revision: proposal.approvedRevision ?: proposal.submittedRevision, readinessMode: 'faculty'} only %}
                             {% if proposal.review and proposal.review.comment %}
                                 <p class="faculty-proposal__feedback"><strong>Coordinator feedback:</strong> {{ proposal.review.comment }}</p>
                             {% endif %}

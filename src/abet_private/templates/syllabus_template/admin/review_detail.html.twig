@@ -3,6 +3,7 @@
 {% block title %}Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }} | {% endblock %}
 
 {% block styles %}
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">
     <style>
         .review-detail { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .review-detail__topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
@@ -59,6 +60,7 @@
 {% block body %}
     {% set revision = submission.submittedRevision %}
     {% set content = revision.content %}
+    {% set provenance = revision.sourceProvenance.toArray %}
     {% set publicationTarget = submission.kind.value == 'faculty_offering' ? 'course offering' : 'shared template' %}
     <section class="hero hero-small">
         <h1>Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</h1>
@@ -83,6 +85,7 @@
             <div class="context-item"><dt>Submitted revision</dt><dd>Rev. {{ revision.revisionNumber }}</dd></div>
             <div class="context-item"><dt>Content source</dt><dd>{{ revision.sourceType.value|replace({'_': ' '})|title }}{% if revision.sourceProvenance.sourceDocument %}<br>{{ revision.sourceProvenance.sourceDocument.original_filename }}{% endif %}</dd></div>
         </dl>
+        {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: submission, revision: submission.approvedRevision ?: revision, readinessMode: 'faculty'} only %}
 
         {% if sharedTemplateChanged and not submission.review %}
             <div class="stale-warning" role="alert">
@@ -153,6 +156,27 @@
                     <div class="read-field read-field--wide"><span class="read-field__label">Topics covered</span>{% if content.topics_covered|default([]) is not empty %}<ul class="read-list">{% for topic in content.topics_covered %}<li>{{ topic }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}</div>
                 </div>
             </section>
+
+            {% if provenance.source_type == 'pdf_extraction' %}
+                <section class="review-section">
+                    <div class="review-section__heading"><h2>PDF extraction provenance</h2><p>Traceability metadata retained with this immutable revision.</p></div>
+                    <div class="read-grid">
+                        <div class="read-field"><span class="read-field__label">Source document</span><div class="read-field__value">{{ provenance.source_document.original_filename }}</div></div>
+                        <div class="read-field"><span class="read-field__label">Document SHA-256</span><div class="read-field__value">{{ provenance.source_document.sha256 }}</div></div>
+                        <div class="read-field"><span class="read-field__label">Extractor</span><div class="read-field__value">{{ provenance.extraction.extractor|default('Not recorded') }}{% if provenance.extraction.extractor_version|default(null) %} {{ provenance.extraction.extractor_version }}{% endif %}</div></div>
+                        <div class="read-field"><span class="read-field__label">Extracted</span><div class="read-field__value">{{ provenance.extraction.extracted_at|date('M j, Y g:i A') }}</div></div>
+                        <div class="read-field read-field--wide"><span class="read-field__label">Fields with trace data</span><div class="read-field__value">{{ provenance.fields|length }}</div></div>
+                    </div>
+                </section>
+            {% elseif provenance.source_revision %}
+                <section class="review-section">
+                    <div class="review-section__heading"><h2>Revision provenance</h2><p>This content was derived from an earlier immutable syllabus revision.</p></div>
+                    <div class="read-grid">
+                        <div class="read-field"><span class="read-field__label">Source revision</span><div class="read-field__value">Rev. {{ provenance.source_revision.revision_number }}</div></div>
+                        <div class="read-field"><span class="read-field__label">Source schema</span><div class="read-field__value">{{ provenance.source_revision.schema_version }}</div></div>
+                    </div>
+                </section>
+            {% endif %}
         </article>
 
         <div class="review-note">The submitted faculty revision is frozen and remains read-only for the full audit history.</div>
@@ -168,7 +192,7 @@
                 </dl>
                 {% if submission.review.comment %}<p class="review-outcome__feedback"><strong>Feedback:</strong> {{ submission.review.comment }}</p>{% endif %}
                 {% if submission.approvedRevision and submission.approvedRevision.appendixAReady %}
-                    <p><a class="button-secondary" href="{{ path('app_admin_syllabus_template_appendix_a_export', {id: submission.id}) }}">Download Appendix A JSON</a></p>
+                    <p><a class="button-secondary" href="{{ path('app_admin_syllabus_template_appendix_a_export', {id: submission.id}) }}">Download report-ready JSON</a></p>
                 {% endif %}
             </section>
         {% else %}

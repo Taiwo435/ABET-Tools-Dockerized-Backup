@@ -2,6 +2,8 @@
 
 {% block title %}Syllabus Review History | {% endblock %}
 
+{% block styles %}<link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">{% endblock %}
+
 {% block body %}
     <style>
         .review-history { width: min(1180px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
@@ -51,7 +53,7 @@
                     <tbody>
                     {% for submission in reviewedSubmissions %}
                         <tr>
-                            <td><strong>{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong><br>{{ submission.commonCourse.program.initials }} {{ submission.commonCourse.program.year }}</td>
+                            <td><strong>{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong><br>{{ submission.commonCourse.program.initials }} {{ submission.commonCourse.program.year }}{% if submission.courseOffering %}<br><span class="cell-detail">{{ submission.courseOffering.term }} {{ submission.courseOffering.academicYear }}{% if submission.courseOffering.section %}, section {{ submission.courseOffering.section }}{% endif %}</span>{% endif %}{% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: submission, revision: submission.approvedRevision ?: submission.submittedRevision, readinessMode: 'faculty'} only %}</td>
                             <td>{{ submission.submittedBy.asurite }}</td>
                             <td>{{ submission.review.decision.value|replace({'_': ' '})|title }}</td>
                             <td>{{ submission.review.reviewer.asurite }}</td>

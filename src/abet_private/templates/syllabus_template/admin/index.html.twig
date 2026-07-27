@@ -3,6 +3,7 @@
 {% block title %}Shared Syllabus Templates | {% endblock %}
 
 {% block styles %}
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">
     <style>
         .syllabus-page { width: 100%; max-width: 1180px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .syllabus-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
@@ -51,13 +52,23 @@
     </section>
 
     <main class="syllabus-page">
+        <div class="syllabus-context-card">
+            <h2>Shared templates are reusable baselines</h2>
+            <p>Publishing here updates the common-course template faculty can use. Faculty offering syllabi are reviewed separately and never replace this baseline.</p>
+        </div>
+        <div class="syllabus-lifecycle" aria-label="Shared template lifecycle">
+            <div class="syllabus-lifecycle__step"><strong>1. Build baseline</strong><span>Enter reusable course and ABET content.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>2. Publish</strong><span>Make the approved revision available to faculty.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>3. Faculty offering</strong><span>Faculty create term-specific copies without changing the baseline.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>4. Report evidence</strong><span>Appendix A-ready revisions can cross the export boundary.</span></div>
+        </div>
         <div class="syllabus-toolbar">
             <form method="get" class="syllabus-filter">
-                <label for="completeness">Show templates
+                <label for="completeness">Publication readiness
                     <select id="completeness" name="completeness">
-                        <option value=""{% if completenessFilter == '' %} selected{% endif %}>All completeness states</option>
-                        <option value="complete"{% if completenessFilter == 'complete' %} selected{% endif %}>Complete</option>
-                        <option value="incomplete"{% if completenessFilter == 'incomplete' %} selected{% endif %}>Incomplete</option>
+                        <option value=""{% if completenessFilter == '' %} selected{% endif %}>All publication states</option>
+                        <option value="complete"{% if completenessFilter == 'complete' %} selected{% endif %}>Ready to publish</option>
+                        <option value="incomplete"{% if completenessFilter == 'incomplete' %} selected{% endif %}>Needs publication fields</option>
                     </select>
                 </label>
                 <button type="submit" class="button-secondary">Apply filter</button>
@@ -90,17 +101,7 @@
                         <tr>
                             <td><strong class="course-code">{{ template.commonCourse.courseSubject }} {{ template.commonCourse.courseNumber }}</strong><div class="course-name">{{ template.commonCourse.courseName }}</div></td>
                             <td><strong>{{ template.commonCourse.program.initials }}</strong> <span class="cell-detail">{{ template.commonCourse.program.year }}</span></td>
-                            <td>
-                                <span class="template-state">
-                                    {{ template.status.value|replace({'_': ' '})|title }}
-                                    <span
-                                        class="completeness-icon completeness-icon--{{ revision.coordinatorPublishable ? 'complete' : 'incomplete' }}"
-                                        role="img"
-                                        aria-label="{{ revision.coordinatorPublishable ? 'Ready to publish' : 'Not ready to publish' }}"
-                                        title="{{ revision.coordinatorPublishable ? 'Ready to publish' : 'Not ready to publish' }}"
-                                    >{{ revision.coordinatorPublishable ? '✓' : '×' }}</span>
-                                </span>
-                            </td>
+                            <td>{% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: template, revision: revision, readinessMode: 'coordinator'} only %}</td>
                             <td><strong>Rev. {{ revision.revisionNumber }}</strong></td>
                             <td class="publish-cell">
                                 {% if revision.coordinatorPublicationBlockingFields is empty %}

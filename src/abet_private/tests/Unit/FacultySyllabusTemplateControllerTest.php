@@ -107,6 +107,9 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertIsString($controller);
         self::assertStringContainsString('TemplateSubmission::forFacultyOffering', $controller);
         self::assertStringContainsString("'include_offering_identity' => true", $controller);
+        self::assertStringContainsString('Faculty Course Syllabi', $index);
+        self::assertStringContainsString('Submission and report readiness are separate', $index);
+        self::assertStringContainsString("syllabus_template/_lifecycle_badges.html.twig", $index);
     }
 
     public function testDeletingDraftSubmissionAlsoRemovesItsOwnedRevisions(): void

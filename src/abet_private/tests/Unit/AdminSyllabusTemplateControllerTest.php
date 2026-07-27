@@ -30,12 +30,14 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertIsString($template);
         self::assertStringContainsString('Shared Syllabus Templates', $template);
         self::assertStringContainsString('name="completeness"', $template);
-        self::assertStringContainsString('revision.coordinatorPublishable', $template);
+        self::assertStringContainsString("syllabus_template/_lifecycle_badges.html.twig", $template);
         self::assertStringContainsString('revision.coordinatorPublicationBlockingFields', $template);
         self::assertStringContainsString('template.status.value', $template);
         self::assertStringContainsString('template.commonCourse.program.initials', $template);
         self::assertStringContainsString("path('app_admin_syllabus_template_reviews')", $template);
         self::assertStringContainsString('{{ pendingReviewCount }}', $template);
+        self::assertStringContainsString('Shared templates are reusable baselines', $template);
+        self::assertStringContainsString('Publication readiness', $template);
     }
 
     public function testAdminPanelLinksToSharedSyllabusTemplates(): void

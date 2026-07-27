@@ -3,6 +3,7 @@
 {% block title %}{{ pageTitle }} | {% endblock %}
 
 {% block styles %}
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">
     <style>
         .template-editor { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .editor-topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
@@ -76,6 +77,7 @@
             </div>
             <a href="{{ path('app_faculty_syllabus_templates') }}" class="button-secondary">Back to Templates</a>
         </div>
+        {% if submission %}{% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: submission, revision: submission.workingRevision, readinessMode: 'faculty'} only %}{% endif %}
 
         {% for message in app.flashes('success') %}<div class="flash flash--success">{{ message }}</div>{% endfor %}
         {% for message in app.flashes('error') %}<div class="flash flash--error">{{ message }}</div>{% endfor %}

@@ -3,6 +3,7 @@
 {% block title %}Faculty Syllabus Review Queue | {% endblock %}
 
 {% block styles %}
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css">
     <style>
         .review-page { width: 100%; max-width: 1180px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .review-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
@@ -41,7 +42,7 @@
 {% block body %}
     <section class="hero hero-small">
         <h1>Faculty Syllabus Review Queue</h1>
-        <p>Review complete faculty proposals in the order they were submitted.</p>
+        <p>Review frozen faculty revisions and publish each decision to its stated target: a course offering or a legacy shared-template proposal.</p>
     </section>
 
     <main class="review-page">
@@ -89,6 +90,7 @@
                             <td>
                                 <strong class="course-code">{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong>
                                 <div class="course-name">{{ submission.commonCourse.courseName }}</div>
+                                {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: submission, revision: submission.submittedRevision, readinessMode: 'faculty'} only %}
                             </td>
                             <td>
                                 <strong>{{ submission.commonCourse.program.initials }}</strong>

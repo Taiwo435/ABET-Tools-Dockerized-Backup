@@ -184,6 +184,9 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('.denial-disclosure > summary { list-style: none; cursor: pointer; }', $detail);
         self::assertStringContainsString('.review-approval-action { display: inline-flex;', $detail);
         self::assertStringContainsString('{% if submission.review %}', $detail);
+        self::assertStringContainsString('PDF extraction provenance', $detail);
+        self::assertStringContainsString('revision.sourceProvenance.toArray', $detail);
+        self::assertStringContainsString("syllabus_template/_lifecycle_badges.html.twig", $detail);
     }
 
     public function testReviewEditAndHistoryTemplatesPreserveAuditContext(): void
