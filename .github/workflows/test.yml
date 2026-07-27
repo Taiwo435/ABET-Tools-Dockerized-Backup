@@ -79,6 +79,10 @@ jobs:
           cp ./demo.env ./.env
           echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'firefox' }}" >> ./.env
           echo -e "\nUID=$(id -u)" >> ./.env
+          # Enables /auth/test_login.php (see src/public/auth/test_login.php),
+          # used only by the Selenium suite to log in without driving the
+          # Google/email(Clerk) UI, which can't be scripted end-to-end.
+          echo -e "\nENABLE_TEST_LOGIN_ENDPOINT=1" >> ./.env
 
       - name: run docker compose to start the application 
         working-directory: ./docker
@@ -132,6 +136,14 @@ jobs:
           path: response.html
 
       - name: Run Selenium tests
+        env:
+          # Selenium's browser runs inside the selenium container, on the
+          # same Docker network as php_apache, so WEBSERVER_HOSTNAME
+          # (default 'php_apache') resolves fine there. pytest itself runs
+          # natively on this runner though, outside that network — its own
+          # direct HTTP calls (see src/test/utils/backend_login.py) need
+          # the host-mapped port instead.
+          BACKEND_URL: http://localhost:8080
         run: |
           # Run your Selenium tests here, for example:
           pytest src/test/
