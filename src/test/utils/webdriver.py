@@ -55,3 +55,27 @@ def init_webdriver():
         print(f"An error occurred while initializing WebDriver: {e}")
         print_exc()
         exit(1)
+
+
+def login_via_backend(driver, email: str, password: str) -> None:
+    """
+    Logs the Selenium session in via the test-only /auth/test_login.php
+    endpoint (see utils/backend_login.py) and injecting the resulting
+    session cookie into the browser, instead of driving the UI — /login is
+    now Google/email(Clerk)-driven, which can't be scripted end-to-end.
+    """
+    from utils.backend_login import login_and_get_session_cookie
+
+    # The raw HTTP request below runs from wherever pytest itself is
+    # executing, which may not share Selenium's Docker network (e.g. a
+    # local run outside CI) — BACKEND_URL lets that request target a
+    # different reachable address than the browser's WEBSITE_URL when
+    # needed. Defaults to WEBSITE_URL, matching CI's normal setup.
+    backend_url = os.getenv("BACKEND_URL", WEBSITE_URL)
+    session_id = login_and_get_session_cookie(backend_url, email, password)
+
+    # A cookie can only be set for a domain the browser has already
+    # navigated to at least once.
+    driver.get(WEBSITE_URL)
+    driver.delete_cookie("PHPSESSID")
+    driver.add_cookie({"name": "PHPSESSID", "value": session_id, "path": "/"})
