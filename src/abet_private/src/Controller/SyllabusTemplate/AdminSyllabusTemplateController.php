@@ -113,6 +113,9 @@ final class AdminSyllabusTemplateController extends AbstractController
         $pendingSubmissions = $selectedProgram !== null
             ? $submissions->findPendingFacultyReviews($selectedProgram)
             : [];
+        $reviewedSubmissions = $selectedProgram !== null
+            ? $submissions->findReviewedFacultySubmissions($selectedProgram)
+            : [];
 
         return $this->render('syllabus_template/admin/index.html.twig', [
             'templates' => $selectedProgram !== null
@@ -121,6 +124,7 @@ final class AdminSyllabusTemplateController extends AbstractController
             'completenessFilter' => $filter?->value ?? '',
             'pendingSubmissions' => $pendingSubmissions,
             'pendingReviewCount' => count($pendingSubmissions),
+            'reviewedSubmissions' => $reviewedSubmissions,
             'readinessCounts' => SyllabusReadinessRepository::countRowsByCategory($readinessRows),
             'readinessProgram' => $selectedProgram,
             'readinessPrograms' => $programs,
@@ -132,48 +136,28 @@ final class AdminSyllabusTemplateController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/syllabus-template-reviews', name: 'app_admin_syllabus_template_reviews', methods: ['GET'])]
-    public function reviewQueue(
-        Request $request,
-        TemplateSubmissionRepository $submissions,
-        EntityManagerInterface $entityManager,
-    ): Response
+    public function reviewQueue(Request $request): Response
     {
         $programId = $request->query->getInt('program');
-        $selectedProgram = $programId > 0
-            ? $entityManager->getRepository(Program::class)->find($programId)
-            : null;
 
-        return $this->render('syllabus_template/admin/review_queue.html.twig', [
-            'pendingSubmissions' => $submissions->findPendingFacultyReviews($selectedProgram),
-            'pendingReviewCount' => $submissions->countPendingFacultyReviews($selectedProgram),
-            'programs' => $submissions->findPendingFacultyReviewPrograms(),
-            'selectedProgram' => $selectedProgram,
-            'selectedProgramId' => $selectedProgram?->getId() ?? 0,
-        ]);
+        return $this->redirectToRoute('app_admin_syllabus_templates', array_filter([
+            'program' => $programId > 0 ? $programId : null,
+            'view' => 'offerings',
+            '_fragment' => 'pending-review',
+        ]));
     }
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/syllabus-template-reviews/history', name: 'app_admin_syllabus_template_review_history', methods: ['GET'], priority: 10)]
-    public function reviewHistory(
-        Request $request,
-        TemplateSubmissionRepository $submissions,
-        EntityManagerInterface $entityManager,
-    ): Response
+    public function reviewHistory(Request $request): Response
     {
         $programId = $request->query->getInt('program');
-        $selectedProgram = $programId > 0
-            ? $entityManager->getRepository(Program::class)->find($programId)
-            : null;
-        $selectedDecision = ReviewDecision::tryFrom($request->query->getString('decision'));
 
-        return $this->render('syllabus_template/admin/review_history.html.twig', [
-            'reviewedSubmissions' => $submissions->findReviewedFacultySubmissions($selectedProgram, $selectedDecision),
-            'programs' => $submissions->findReviewedFacultyReviewPrograms(),
-            'decisions' => ReviewDecision::cases(),
-            'selectedProgram' => $selectedProgram,
-            'selectedProgramId' => $selectedProgram?->getId() ?? 0,
-            'selectedDecision' => $selectedDecision?->value ?? '',
-        ]);
+        return $this->redirectToRoute('app_admin_syllabus_templates', array_filter([
+            'program' => $programId > 0 ? $programId : null,
+            'view' => 'offerings',
+            '_fragment' => 'review-history',
+        ]));
     }
 
     #[IsGranted('ROLE_ADMIN')]
@@ -231,7 +215,10 @@ final class AdminSyllabusTemplateController extends AbstractController
             $submission->getCommonCourse()->getCourseNumber(),
         ));
 
-        return $this->redirectToRoute('app_admin_syllabus_template_reviews');
+        return $this->redirectToRoute(
+            'app_admin_syllabus_templates',
+            $this->workspaceParameters($submission, 'offerings', 'review-history'),
+        );
     }
 
     #[IsGranted('ROLE_ADMIN')]
@@ -309,7 +296,10 @@ final class AdminSyllabusTemplateController extends AbstractController
                         $this->approvalTargetLabel($submission),
                     ));
 
-                    return $this->redirectToRoute('app_admin_syllabus_template_reviews');
+                    return $this->redirectToRoute(
+                        'app_admin_syllabus_templates',
+                        $this->workspaceParameters($submission, 'offerings', 'review-history'),
+                    );
                 }
             }
         }
@@ -363,7 +353,10 @@ final class AdminSyllabusTemplateController extends AbstractController
             $this->approvalTargetLabel($submission),
         ));
 
-        return $this->redirectToRoute('app_admin_syllabus_template_reviews');
+        return $this->redirectToRoute(
+            'app_admin_syllabus_templates',
+            $this->workspaceParameters($submission, 'offerings', 'review-history'),
+        );
     }
 
     #[IsGranted('ROLE_ADMIN')]
@@ -371,6 +364,13 @@ final class AdminSyllabusTemplateController extends AbstractController
     public function create(Request $request, #[CurrentUser] User $user, EntityManagerInterface $entityManager): Response
     {
         $data = new CoordinatorTemplateData();
+        $requestedProgramId = $request->query->getInt('program');
+        if ($requestedProgramId > 0) {
+            $program = $entityManager->getRepository(Program::class)->find($requestedProgramId);
+            if ($program instanceof Program) {
+                $data->program = $program;
+            }
+        }
         $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => true]);
         $form->handleRequest($request);
 
@@ -406,6 +406,7 @@ final class AdminSyllabusTemplateController extends AbstractController
             'form' => $form,
             'submission' => null,
             'pageTitle' => 'Create Shared Syllabus Template',
+            'workspaceProgramId' => $data->program?->getId() ?? $requestedProgramId,
         ]);
     }
 
@@ -454,6 +455,7 @@ final class AdminSyllabusTemplateController extends AbstractController
             'form' => $form,
             'submission' => $submission,
             'pageTitle' => sprintf('Edit %s %s', $submission->getCommonCourse()->getCourseSubject(), $submission->getCommonCourse()->getCourseNumber()),
+            'workspaceProgramId' => $submission->getCommonCourse()->getProgram()->getId(),
         ]);
     }
 
@@ -478,7 +480,10 @@ final class AdminSyllabusTemplateController extends AbstractController
         $entityManager->flush();
         $this->addFlash('success', 'Shared syllabus template published.');
 
-        return $this->redirectToRoute('app_admin_syllabus_templates');
+        return $this->redirectToRoute(
+            'app_admin_syllabus_templates',
+            $this->workspaceParameters($submission, 'shared'),
+        );
     }
 
     private function assertAdminTemplateEditable(TemplateSubmission $submission): void
@@ -510,6 +515,25 @@ final class AdminSyllabusTemplateController extends AbstractController
         return $submission->getKind() === SubmissionKind::FacultyOffering
             ? 'the course offering'
             : 'the shared template';
+    }
+
+    /**
+     * @return array{program: int|null, view: string, _fragment?: string}
+     */
+    private function workspaceParameters(
+        TemplateSubmission $submission,
+        string $view,
+        ?string $fragment = null,
+    ): array {
+        $parameters = [
+            'program' => $submission->getCommonCourse()->getProgram()->getId(),
+            'view' => $view,
+        ];
+        if ($fragment !== null) {
+            $parameters['_fragment'] = $fragment;
+        }
+
+        return $parameters;
     }
 
     private function courseIdentityExists(

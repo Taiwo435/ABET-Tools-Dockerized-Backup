@@ -67,8 +67,10 @@ final class AdminSyllabusWorkspaceFunctionalTest extends TestCase
 
         self::assertStringContainsString('id="offerings-view-heading"', $html);
         self::assertStringContainsString('id="pending-review"', $html);
+        self::assertStringContainsString('id="review-history"', $html);
         self::assertStringContainsString('No faculty submissions are waiting', $html);
         self::assertStringContainsString('No term-specific faculty offerings exist', $html);
+        self::assertStringContainsString('No completed faculty reviews exist', $html);
         self::assertStringNotContainsString('id="shared-view-heading"', $html);
     }
 
@@ -88,6 +90,7 @@ final class AdminSyllabusWorkspaceFunctionalTest extends TestCase
             'templates' => [],
             'completenessFilter' => '',
             'pendingSubmissions' => [],
+            'reviewedSubmissions' => [],
             'pendingReviewCount' => 0,
             'readinessCounts' => [
                 'Ready' => 0,

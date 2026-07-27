@@ -3,7 +3,7 @@
 {% block title %}Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }} | {% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-2">
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-3">
     <style>
         .review-detail { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .review-detail__topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
@@ -73,7 +73,11 @@
                 <strong>{{ submission.commonCourse.courseName }}</strong>
                 &middot; Submitted {{ submission.submittedAt|date('M j, Y \a\t g:i A') }}
             </div>
-            <a href="{{ path(submission.review ? 'app_admin_syllabus_template_review_history' : 'app_admin_syllabus_template_reviews') }}" class="button-secondary">Back to {{ submission.review ? 'Review History' : 'Review Queue' }}</a>
+            <a href="{{ path('app_admin_syllabus_templates', {
+                program: submission.commonCourse.program.id,
+                view: 'offerings',
+                _fragment: submission.review ? 'review-history' : 'pending-review'
+            }) }}" class="button-secondary">Back to Course Offerings &amp; Review</a>
         </div>
 
         {% for message in app.flashes('error') %}<div class="flash flash--error" role="alert">{{ message }}</div>{% endfor %}

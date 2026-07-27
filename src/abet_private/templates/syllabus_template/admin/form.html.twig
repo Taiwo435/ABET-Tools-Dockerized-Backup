@@ -3,7 +3,7 @@
 {% block title %}{{ pageTitle }} | {% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-2">
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-3">
     <style>
         .template-editor { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .editor-topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
@@ -64,7 +64,7 @@
                     Coordinator-created shared template
                 {% endif %}
             </div>
-            <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Back to Templates</a>
+            <a href="{{ path('app_admin_syllabus_templates', {program: workspaceProgramId, view: 'shared'}) }}" class="button-secondary">Back to Shared Templates</a>
         </div>
         {% if submission %}{% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: submission, revision: submission.workingRevision, readinessMode: 'coordinator'} only %}{% endif %}
 
@@ -139,7 +139,7 @@
             <div class="editor-actions">
                 <span class="editor-meta">{% if submission and submission.origin.value == 'faculty_submission' %}Saving creates a coordinator draft based on this approved faculty revision; the faculty submission remains unchanged.{% elseif submission %}Saving creates revision {{ submission.workingRevision.revisionNumber + 1 }}; earlier revisions remain unchanged.{% else %}You can complete the required fields now or return to this draft later.{% endif %}</span>
                 <div class="editor-actions__group">
-                    <a href="{{ path('app_admin_syllabus_templates') }}" class="button-secondary">Cancel</a>
+                    <a href="{{ path('app_admin_syllabus_templates', {program: workspaceProgramId, view: 'shared'}) }}" class="button-secondary">Cancel</a>
                     <button type="submit" class="button-primary">{{ submission ? (submission.status.value == 'approved' ? 'Save as New Revision' : 'Save New Revision') : 'Create Draft' }}</button>
                 </div>
             </div>

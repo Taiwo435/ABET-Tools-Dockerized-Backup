@@ -34,7 +34,7 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('revision.coordinatorPublicationBlockingFields', $template);
         self::assertStringContainsString('template.status.value', $template);
         self::assertStringNotContainsString('template.commonCourse.program.initials', $template);
-        self::assertStringContainsString("path('app_admin_syllabus_template_reviews', {program: readinessProgram.id})", $template);
+        self::assertStringContainsString('id="pending-review"', $template);
         self::assertStringContainsString('{{ pendingReviewCount }}', $template);
         self::assertStringContainsString('Shared templates are reusable baselines', $template);
         self::assertStringContainsString('Publication readiness', $template);
@@ -42,10 +42,10 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('class="metrics-grid"', $template);
         self::assertStringContainsString("readinessCounts['Awaiting review']", $template);
         self::assertStringContainsString('name="program"', $template);
-        self::assertStringContainsString("path('app_program_readiness'", $template);
+        self::assertStringNotContainsString("path('app_program_readiness'", $template);
         self::assertStringContainsString("view: 'appendix_a'", $template);
-        self::assertStringContainsString("category: 'Blocked'", $template);
-        self::assertStringContainsString("category: 'Missing'", $template);
+        self::assertStringContainsString('metric-card--static metric-blocked', $template);
+        self::assertStringContainsString('metric-card--static metric-missing', $template);
         self::assertStringContainsString('onchange="this.form.submit()"', $template);
         self::assertStringNotContainsString('Show summary', $template);
         self::assertStringContainsString('aria-label="Syllabus workspace views"', $template);
@@ -55,6 +55,8 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("activeView == 'offerings'", $template);
         self::assertStringContainsString("activeView == 'appendix_a'", $template);
         self::assertStringContainsString('pendingSubmissions', $template);
+        self::assertStringContainsString('reviewedSubmissions', $template);
+        self::assertStringContainsString('id="review-history"', $template);
         self::assertStringContainsString('offeringRows', $template);
         self::assertStringContainsString('appendixRows', $template);
     }
@@ -113,7 +115,7 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
 
         self::assertIsString($index);
         self::assertIsString($form);
-        self::assertStringContainsString("path('app_admin_syllabus_templates_new')", $index);
+        self::assertStringContainsString("path('app_admin_syllabus_templates_new', {program: readinessProgram.id})", $index);
         self::assertStringContainsString("path('app_admin_syllabus_templates_edit'", $index);
         self::assertStringContainsString("path('app_admin_syllabus_templates_publish'", $form);
         self::assertStringContainsString("path('app_admin_syllabus_templates_publish'", $index);
@@ -152,6 +154,7 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("'activeView' => \$activeView", $controller);
         self::assertStringContainsString("'offeringRows' => \$offeringRows", $controller);
         self::assertStringContainsString("'appendixRows' => \$appendixRows", $controller);
+        self::assertStringContainsString("'reviewedSubmissions' => \$reviewedSubmissions", $controller);
         self::assertStringContainsString('$readiness->getReadinessRowsForProgram($selectedProgram->getId())', $controller);
         self::assertStringContainsString('SyllabusReadinessRepository::countRowsByCategory($readinessRows)', $controller);
         self::assertStringContainsString("'readinessProgram' => \$selectedProgram", $controller);

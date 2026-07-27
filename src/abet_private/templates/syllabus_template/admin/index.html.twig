@@ -3,7 +3,7 @@
 {% block title %}Shared Syllabus Templates | {% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-2">
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-3">
     <style>
         .syllabus-page { width: 100%; max-width: 1400px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
         .syllabus-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.25rem; padding: 1.25rem; background: var(--asu-white); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, .07); }
@@ -70,7 +70,7 @@
                         <p>
                             Shared baselines, course offerings, and report readiness for
                             <strong>{{ readinessProgram.name }} ({{ readinessProgram.code }} — {{ readinessProgram.year }})</strong>.
-                            Select a box to open its filtered lifecycle detail.
+                            Use the focused views below to act on this program.
                         </p>
                     {% else %}
                         <p>No programs are available for syllabus status reporting.</p>
@@ -97,11 +97,11 @@
             {% if readinessProgram %}
                 {% set totalCount = readinessCounts['Ready'] + readinessCounts['Blocked'] + readinessCounts['Awaiting review'] + readinessCounts['Missing'] %}
                 <div class="metrics-grid">
-                    <a href="{{ path('app_program_readiness', {programId: readinessProgram.id}) }}" class="metric-card metric-all">
+                    <div class="metric-card metric-card--static metric-all">
                         <span class="metric-number">{{ totalCount }}</span>
                         <span class="metric-label">All targets</span>
                         <span class="metric-sub">Shared baselines and course offerings</span>
-                    </a>
+                    </div>
                     <a href="{{ path('app_admin_syllabus_templates', {program: readinessProgram.id, view: 'appendix_a'}) }}" class="metric-card metric-ready">
                         <span class="metric-number">{{ readinessCounts['Ready'] }}</span>
                         <span class="metric-label">Report ready</span>
@@ -112,16 +112,16 @@
                         <span class="metric-label">Awaiting review</span>
                         <span class="metric-sub">Frozen faculty submissions</span>
                     </a>
-                    <a href="{{ path('app_program_readiness', {programId: readinessProgram.id, category: 'Blocked'}) }}" class="metric-card metric-blocked">
+                    <div class="metric-card metric-card--static metric-blocked">
                         <span class="metric-number">{{ readinessCounts['Blocked'] }}</span>
                         <span class="metric-label">Action required</span>
                         <span class="metric-sub">Draft, publication, denial, or report blockers</span>
-                    </a>
-                    <a href="{{ path('app_program_readiness', {programId: readinessProgram.id, category: 'Missing'}) }}" class="metric-card metric-missing">
+                    </div>
+                    <div class="metric-card metric-card--static metric-missing">
                         <span class="metric-number">{{ readinessCounts['Missing'] }}</span>
                         <span class="metric-label">Missing target</span>
                         <span class="metric-sub">No shared template or no offering submission</span>
-                    </a>
+                    </div>
                 </div>
             {% endif %}
         </section>
@@ -164,7 +164,7 @@
                     </form>
                     <div class="syllabus-toolbar__actions">
                         <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
-                        <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create Shared Template</a>
+                        <a href="{{ path('app_admin_syllabus_templates_new', {program: readinessProgram.id}) }}" class="button-primary">Create Shared Template</a>
                     </div>
                 </div>
 
@@ -172,7 +172,7 @@
                     <div class="empty-state">
                         <h2>No matching templates</h2>
                         <p>No shared templates in this program match the selected publication filter.</p>
-                        <a href="{{ path('app_admin_syllabus_templates_new') }}" class="button-primary">Create a shared template</a>
+                        <a href="{{ path('app_admin_syllabus_templates_new', {program: readinessProgram.id}) }}" class="button-primary">Create a shared template</a>
                     </div>
                 {% else %}
                     <div class="syllabus-table-wrap">
@@ -223,8 +223,7 @@
                 <div class="workspace-panel__header">
                     <div><h2 id="offerings-view-heading">Course offerings &amp; review</h2><p>Review frozen faculty submissions and monitor every term-specific offering in this program.</p></div>
                     <div class="syllabus-toolbar__actions">
-                        <a href="{{ path('app_admin_syllabus_template_reviews', {program: readinessProgram.id}) }}" class="button-secondary">Open review queue</a>
-                        <a href="{{ path('app_admin_syllabus_template_review_history', {program: readinessProgram.id}) }}" class="button-secondary">Review history</a>
+                        <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
                     </div>
                 </div>
 
@@ -283,6 +282,35 @@
                                                 <span class="cell-detail">Faculty draft</span>
                                             {% endif %}
                                         </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div id="review-history" class="workspace-subsection">
+                    <h3>Completed reviews</h3>
+                    {% if reviewedSubmissions is empty %}
+                        <p class="workspace-empty">No completed faculty reviews exist for this program yet.</p>
+                    {% else %}
+                        <div class="syllabus-table-wrap">
+                            <table class="syllabus-table">
+                                <thead><tr><th>Course</th><th>Target</th><th>Decision</th><th>Reviewer</th><th>Decided</th><th>Feedback</th><th>Action</th></tr></thead>
+                                <tbody>
+                                {% for submission in reviewedSubmissions %}
+                                    <tr>
+                                        <td><strong class="course-code">{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong><div class="course-name">{{ submission.commonCourse.courseName }}</div></td>
+                                        <td>
+                                            <strong>{{ submission.kind.value == 'faculty_offering' ? 'Course offering' : 'Legacy shared-template proposal' }}</strong>
+                                            {% if submission.courseOffering %}<div class="cell-detail">{{ submission.courseOffering.term }} {{ submission.courseOffering.academicYear }}{% if submission.courseOffering.section %}, section {{ submission.courseOffering.section }}{% endif %}</div>{% endif %}
+                                        </td>
+                                        <td><span class="syllabus-badge syllabus-badge--{{ submission.status.value }}">{{ submission.review.decision.value|replace({'_': ' '})|title }}</span></td>
+                                        <td>{{ submission.review.reviewer.asurite }}</td>
+                                        <td>{{ submission.decidedAt|date('M j, Y g:i A') }}</td>
+                                        <td class="review-feedback">{{ submission.review.comment ?? '—' }}</td>
+                                        <td><a href="{{ path('app_admin_syllabus_template_review', {id: submission.id}) }}" class="button-secondary table-button">View record</a></td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>

@@ -29,10 +29,8 @@ final class SyllabusLifecycleUiTest extends TestCase
         $templates = [
             'syllabus_template/admin/index.html.twig',
             'syllabus_template/admin/form.html.twig',
-            'syllabus_template/admin/review_queue.html.twig',
             'syllabus_template/admin/review_detail.html.twig',
             'syllabus_template/admin/review_edit.html.twig',
-            'syllabus_template/admin/review_history.html.twig',
             'syllabus_template/faculty/index.html.twig',
             'syllabus_template/faculty/form.html.twig',
         ];
@@ -42,7 +40,7 @@ final class SyllabusLifecycleUiTest extends TestCase
 
             self::assertIsString($template);
             self::assertStringContainsString(
-                '/assets/css/syllabus-lifecycle.css?v=20260727-2',
+                '/assets/css/syllabus-lifecycle.css?v=20260727-3',
                 $template,
             );
         }

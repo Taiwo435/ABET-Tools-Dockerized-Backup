@@ -68,73 +68,56 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         }
     }
 
-    public function testRepositoryDefinesPendingFacultyReviewQueryAndCount(): void
+    public function testRepositoryDefinesProgramScopedWorkspaceReviewQueries(): void
     {
         $reflection = new ReflectionClass(TemplateSubmissionRepository::class);
         $source = file_get_contents($reflection->getFileName());
 
         self::assertIsString($source);
         self::assertTrue($reflection->hasMethod('findPendingFacultyReviews'));
-        self::assertTrue($reflection->hasMethod('countPendingFacultyReviews'));
         self::assertTrue($reflection->hasMethod('findPendingFacultyReview'));
-        self::assertTrue($reflection->hasMethod('findPendingFacultyReviewPrograms'));
         self::assertTrue($reflection->hasMethod('findFacultyReview'));
         self::assertTrue($reflection->hasMethod('findReviewedFacultySubmissions'));
-        self::assertTrue($reflection->hasMethod('findReviewedFacultyReviewPrograms'));
         self::assertStringContainsString('ProposalOrigin::FacultySubmission->value', $source);
         self::assertStringContainsString('SubmissionStatus::Submitted->value', $source);
         self::assertStringContainsString("submission.submittedAt IS NOT NULL", $source);
         self::assertStringContainsString("review.id IS NULL", $source);
         self::assertStringContainsString("orderBy('submission.submittedAt', 'ASC')", $source);
-        self::assertStringContainsString('COUNT(DISTINCT submission.id)', $source);
         self::assertStringContainsString('course.program = :programFilter', $source);
-        self::assertStringContainsString("addSelect('course', 'program')", $source);
-        self::assertStringContainsString('$programs[$program->getId()] = $program;', $source);
-        self::assertStringNotContainsString("select('DISTINCT program')", $source);
         self::assertStringContainsString("submission.id = :id", $source);
         self::assertStringContainsString("submission.basedOnRevision", $source);
         self::assertStringContainsString("course.currentApprovedRevision", $source);
     }
 
-    public function testQueuePageShowsCountSubmissionContextAndEmptyState(): void
+    public function testWorkspaceShowsPendingAndCompletedReviews(): void
     {
-        $queue = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/review_queue.html.twig');
         $index = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/index.html.twig');
 
-        self::assertIsString($queue);
         self::assertIsString($index);
-        self::assertStringContainsString('Faculty Syllabus Review Queue', $queue);
-        self::assertStringContainsString('{{ pendingReviewCount }} pending', $queue);
-        self::assertStringContainsString('submission.submittedBy.asurite', $queue);
-        self::assertStringContainsString('submission.commonCourse.program.initials', $queue);
-        self::assertStringContainsString('submission.submittedRevision.revisionNumber', $queue);
-        self::assertStringContainsString('submission.submittedAt', $queue);
-        self::assertStringNotContainsString('<th>Source</th>', $queue);
-        self::assertStringNotContainsString('source-badge', $queue);
-        self::assertStringContainsString('No faculty submissions are waiting', $queue);
-        self::assertStringContainsString("path('app_admin_syllabus_template_review', {id: submission.id})", $queue);
-        self::assertStringContainsString('Review submission', $queue);
-        self::assertStringContainsString('name="program"', $queue);
-        self::assertStringContainsString('Filter by program', $queue);
-        self::assertStringContainsString('All programs', $queue);
-        self::assertStringContainsString('selectedProgramId == program.id', $queue);
-        self::assertStringContainsString('program.initials', $queue);
-        self::assertStringContainsString("path('app_admin_syllabus_template_reviews', {program: readinessProgram.id})", $index);
+        self::assertStringContainsString('id="pending-review"', $index);
+        self::assertStringContainsString('id="review-history"', $index);
+        self::assertStringContainsString('submission.submittedBy.asurite', $index);
+        self::assertStringContainsString('submission.submittedAt', $index);
+        self::assertStringContainsString('submission.review.decision.value', $index);
+        self::assertStringContainsString('submission.review.reviewer.asurite', $index);
+        self::assertStringContainsString('submission.review.comment', $index);
+        self::assertStringContainsString("path('app_admin_syllabus_template_review', {id: submission.id})", $index);
+        self::assertStringContainsString('Review submission', $index);
         self::assertStringContainsString('{{ pendingReviewCount }}', $index);
     }
 
-    public function testControllerUsesProgramScopedPendingQueryAcrossCoordinatorViews(): void
+    public function testControllerUsesProgramScopedReviewQueriesAndCompatibilityRedirects(): void
     {
         $source = file_get_contents((new ReflectionClass(AdminSyllabusTemplateController::class))->getFileName());
 
         self::assertIsString($source);
-        self::assertSame(1, substr_count($source, 'countPendingFacultyReviews('));
-        self::assertSame(2, substr_count($source, 'findPendingFacultyReviews('));
+        self::assertSame(1, substr_count($source, 'findPendingFacultyReviews('));
         self::assertStringContainsString("getInt('program')", $source);
         self::assertStringContainsString('$submissions->findPendingFacultyReviews($selectedProgram)', $source);
-        self::assertStringContainsString("'pendingSubmissions' => \$submissions->findPendingFacultyReviews(\$selectedProgram)", $source);
-        self::assertStringContainsString("'pendingReviewCount' => \$submissions->countPendingFacultyReviews(\$selectedProgram)", $source);
-        self::assertStringContainsString("'programs' => \$submissions->findPendingFacultyReviewPrograms()", $source);
+        self::assertStringContainsString('$submissions->findReviewedFacultySubmissions($selectedProgram)', $source);
+        self::assertStringContainsString("'pendingReviewCount' => count(\$pendingSubmissions)", $source);
+        self::assertStringContainsString("'_fragment' => 'pending-review'", $source);
+        self::assertStringContainsString("'_fragment' => 'review-history'", $source);
         self::assertStringContainsString('$submissions->findFacultyReview($id)', $source);
         self::assertStringContainsString("'sharedTemplateChanged' => \$submission->hasSharedTemplateChanged()", $source);
         self::assertStringContainsString("isCsrfTokenValid('approve-syllabus-submission-'", $source);
@@ -191,13 +174,13 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString("syllabus_template/_lifecycle_badges.html.twig", $detail);
     }
 
-    public function testReviewEditAndHistoryTemplatesPreserveAuditContext(): void
+    public function testReviewEditAndWorkspaceHistoryPreserveAuditContext(): void
     {
         $edit = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/review_edit.html.twig');
-        $history = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/review_history.html.twig');
+        $workspace = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/admin/index.html.twig');
 
         self::assertIsString($edit);
-        self::assertIsString($history);
+        self::assertIsString($workspace);
         self::assertStringContainsString('Opening this page does not create a revision', $edit);
         self::assertStringContainsString('Approve with edits', $edit);
         self::assertStringContainsString("csrf_token('approve-with-edits-syllabus-submission-'", $edit);
@@ -207,13 +190,11 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('form_row(form.courseNumber)', $edit);
         self::assertStringContainsString('form_row(form.courseName)', $edit);
         self::assertStringContainsString('form_row(form.deliveryType)', $edit);
-        self::assertStringContainsString('Completed Syllabus Reviews', $history);
-        self::assertStringContainsString('submission.review.decision.value', $history);
-        self::assertStringContainsString('submission.review.reviewer.asurite', $history);
-        self::assertStringContainsString('submission.decidedAt', $history);
-        self::assertStringContainsString('submission.submittedRevision.revisionNumber', $history);
-        self::assertStringContainsString('submission.approvedRevision', $history);
-        self::assertStringContainsString('submission.review.comment', $history);
-        self::assertStringContainsString("path('app_admin_syllabus_template_review'", $history);
+        self::assertStringContainsString('Completed reviews', $workspace);
+        self::assertStringContainsString('submission.review.decision.value', $workspace);
+        self::assertStringContainsString('submission.review.reviewer.asurite', $workspace);
+        self::assertStringContainsString('submission.decidedAt', $workspace);
+        self::assertStringContainsString('submission.review.comment', $workspace);
+        self::assertStringContainsString("path('app_admin_syllabus_template_review'", $workspace);
     }
 }

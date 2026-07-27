@@ -21,13 +21,11 @@ final class ProgramReadinessControllerTest extends WebTestCase
 
         $reflection = new ReflectionClass(ProgramReadinessController::class);
         
-        // Check IsGranted attribute on class
         $classGrantAttributes = $reflection->getAttributes(IsGranted::class);
         self::assertCount(1, $classGrantAttributes);
         self::assertSame('IS_AUTHENTICATED_FULLY', $classGrantAttributes[0]->newInstance()->attribute);
 
-        // Check Route attribute on index method
-        $method = $reflection->getMethod('index');
+        $method = $reflection->getMethod('program');
         $routeAttributes = $method->getAttributes(Route::class);
         self::assertCount(1, $routeAttributes);
 
@@ -36,6 +34,18 @@ final class ProgramReadinessControllerTest extends WebTestCase
         self::assertSame('app_program_readiness', $route->name);
         self::assertSame(['programId' => '\d+'], $route->requirements);
         self::assertSame(['GET'], $route->methods);
+    }
+
+    public function testLegacyRoutesRedirectIntoTheCoordinatorWorkspace(): void
+    {
+        $source = file_get_contents((new ReflectionClass(ProgramReadinessController::class))->getFileName());
+
+        self::assertIsString($source);
+        self::assertStringContainsString("redirectToRoute('app_admin_syllabus_templates'", $source);
+        self::assertStringContainsString("'ready' => 'appendix_a'", $source);
+        self::assertStringContainsString("'awaiting review' => 'offerings'", $source);
+        self::assertStringContainsString("? 'offerings'", $source);
+        self::assertStringNotContainsString("render('tools/program_readiness/index.html.twig'", $source);
     }
 
     public function testProgramSelectionRouteAttributes(): void
@@ -55,7 +65,6 @@ final class ProgramReadinessControllerTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/program/9999/readiness');
 
-        // Since IS_AUTHENTICATED_FULLY is required, anonymous user is redirected to login path
         self::assertResponseRedirects('/login2');
     }
 }

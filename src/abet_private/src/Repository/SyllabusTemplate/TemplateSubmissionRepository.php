@@ -135,56 +135,6 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
         return $builder->getQuery()->getResult();
     }
 
-    public function countPendingFacultyReviews(?Program $program = null): int
-    {
-        $builder = $this->createQueryBuilder('submission')
-            ->select('COUNT(DISTINCT submission.id)')
-            ->leftJoin('submission.review', 'review')
-            ->andWhere('submission.origin = :origin')
-            ->andWhere('submission.status = :status')
-            ->andWhere('submission.submittedAt IS NOT NULL')
-            ->andWhere('review.id IS NULL')
-            ->setParameter('origin', ProposalOrigin::FacultySubmission->value)
-            ->setParameter('status', SubmissionStatus::Submitted->value);
-
-        if ($program !== null) {
-            $builder
-                ->innerJoin('submission.commonCourse', 'course')
-                ->andWhere('course.program = :programFilter')
-                ->setParameter('programFilter', $program);
-        }
-
-        return (int) $builder->getQuery()->getSingleScalarResult();
-    }
-
-    /** @return list<Program> */
-    public function findPendingFacultyReviewPrograms(): array
-    {
-        $pendingSubmissions = $this->createQueryBuilder('submission')
-            ->addSelect('course', 'program')
-            ->innerJoin('submission.commonCourse', 'course')
-            ->innerJoin('course.program', 'program')
-            ->leftJoin('submission.review', 'review')
-            ->andWhere('submission.origin = :origin')
-            ->andWhere('submission.status = :status')
-            ->andWhere('submission.submittedAt IS NOT NULL')
-            ->andWhere('review.id IS NULL')
-            ->setParameter('origin', ProposalOrigin::FacultySubmission->value)
-            ->setParameter('status', SubmissionStatus::Submitted->value)
-            ->orderBy('program.name', 'ASC')
-            ->addOrderBy('program.year', 'DESC')
-            ->getQuery()
-            ->getResult();
-
-        $programs = [];
-        foreach ($pendingSubmissions as $submission) {
-            $program = $submission->getCommonCourse()->getProgram();
-            $programs[$program->getId()] = $program;
-        }
-
-        return array_values($programs);
-    }
-
     public function findPendingFacultyReview(int $id): ?TemplateSubmission
     {
         return $this->createQueryBuilder('submission')
@@ -278,20 +228,4 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
         return $builder->getQuery()->getResult();
     }
 
-    /** @return list<Program> */
-    public function findReviewedFacultyReviewPrograms(): array
-    {
-        $reviewedSubmissions = $this->findReviewedFacultySubmissions();
-        $programs = [];
-        foreach ($reviewedSubmissions as $submission) {
-            $program = $submission->getCommonCourse()->getProgram();
-            $programs[$program->getId()] = $program;
-        }
-
-        usort($programs, static fn (Program $left, Program $right): int =>
-            ($left->getName() <=> $right->getName()) ?: ($right->getYear() <=> $left->getYear())
-        );
-
-        return array_values($programs);
-    }
 }
