@@ -56,7 +56,7 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("path('app_faculty_syllabus_templates_use'", $index);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_new')", $index);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_edit'", $index);
-        self::assertStringContainsString('Use template', $index);
+        self::assertStringContainsString('Create offering syllabus', $index);
         self::assertStringContainsString('Save working copy', $form);
         self::assertStringContainsString('Create my draft', $form);
         self::assertStringContainsString('Create blank draft', $form);
@@ -98,6 +98,15 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('form.studentOutcomes', $form);
         self::assertStringContainsString('form.topicsCovered', $form);
         self::assertStringContainsString('submission.workingRevision.appendixABlockingFields', $form);
+        self::assertStringContainsString('form.academicYear', $form);
+        self::assertStringContainsString('form.term', $form);
+        self::assertStringContainsString('form.section', $form);
+        self::assertStringContainsString('draft.courseOffering.term', $index);
+
+        $controller = file_get_contents(dirname(__DIR__, 2).'/src/Controller/SyllabusTemplate/FacultySyllabusTemplateController.php');
+        self::assertIsString($controller);
+        self::assertStringContainsString('TemplateSubmission::forFacultyOffering', $controller);
+        self::assertStringContainsString("'include_offering_identity' => true", $controller);
     }
 
     public function testDeletingDraftSubmissionAlsoRemovesItsOwnedRevisions(): void

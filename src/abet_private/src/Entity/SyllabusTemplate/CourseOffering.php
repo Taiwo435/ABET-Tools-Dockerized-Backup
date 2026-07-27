@@ -86,6 +86,33 @@ class CourseOffering
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    public function updateDraftDetails(
+        TemplateSubmission $submission,
+        string $academicYear,
+        string $term,
+        string $section,
+        DeliveryType $deliveryType,
+    ): void {
+        if ($submission->getCourseOffering() !== $this
+            || $submission->getKind() !== SubmissionKind::FacultyOffering
+            || $submission->getStatus() !== SubmissionStatus::Draft) {
+            throw new \DomainException('Offering details can only be changed through their faculty draft.');
+        }
+
+        $academicYear = trim($academicYear);
+        $term = trim($term);
+        $section = trim($section);
+        if ($academicYear === '' || $term === '') {
+            throw new \InvalidArgumentException('Academic year and term are required for a course offering.');
+        }
+
+        $this->academicYear = $academicYear;
+        $this->term = $term;
+        $this->section = $section;
+        $this->deliveryType = $deliveryType;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function publish(TemplateRevision $revision): void
     {
         $submission = $revision->getSubmission();

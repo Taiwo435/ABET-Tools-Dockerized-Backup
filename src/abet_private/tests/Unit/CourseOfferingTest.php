@@ -173,6 +173,33 @@ final class CourseOfferingTest extends TestCase
         $course->publish($revision);
     }
 
+    public function testFacultyCanCorrectOfferingIdentityWhileDraftRemainsEditable(): void
+    {
+        $faculty = (new User())->setEmail('faculty@example.edu');
+        $offering = new CourseOffering(
+            $this->course(),
+            '2026-2027',
+            'Fall',
+            DeliveryType::InPerson,
+            $faculty,
+            '001',
+        );
+        $submission = TemplateSubmission::forFacultyOffering($offering, $faculty);
+
+        $offering->updateDraftDetails(
+            $submission,
+            '2027-2028',
+            'Spring',
+            '002',
+            DeliveryType::Hybrid,
+        );
+
+        self::assertSame('2027-2028', $offering->getAcademicYear());
+        self::assertSame('Spring', $offering->getTerm());
+        self::assertSame('002', $offering->getSection());
+        self::assertSame(DeliveryType::Hybrid, $offering->getDeliveryType());
+    }
+
     private function course(): CommonCourse
     {
         return new CommonCourse(

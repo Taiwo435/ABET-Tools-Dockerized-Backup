@@ -42,6 +42,9 @@ class TemplateRevision
     #[ORM\Column(name: 'schema_version', length: 16, options: ['default' => SyllabusContentV1::VERSION])]
     private string $schemaVersion = SyllabusContentV1::VERSION;
 
+    #[ORM\Column(name: 'source_provenance', type: 'json')]
+    private array $sourceProvenance;
+
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -53,6 +56,7 @@ class TemplateRevision
         array $content,
         CompletenessStatus $completenessStatus,
         array $missingFields = [],
+        ?SyllabusProvenanceV1 $sourceProvenance = null,
     )
     {
         if ($revisionNumber <= 0) {
@@ -74,6 +78,7 @@ class TemplateRevision
         $this->schemaVersion = (string)$this->content['schema_version'];
         $this->completenessStatus = $completenessStatus;
         $this->missingFields = $missingFields;
+        $this->sourceProvenance = ($sourceProvenance ?? SyllabusProvenanceV1::manualEntry())->toArray();
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -87,6 +92,8 @@ class TemplateRevision
     public function getMissingFields(): array { return SyllabusContentV1::normalizeFieldNames($this->missingFields); }
     public function isComplete(): bool { return $this->completenessStatus === CompletenessStatus::Complete; }
     public function getSchemaVersion(): string { return $this->schemaVersion; }
+    public function getSourceProvenance(): SyllabusProvenanceV1 { return SyllabusProvenanceV1::fromArray($this->sourceProvenance); }
+    public function getSourceType(): SyllabusRevisionSource { return $this->getSourceProvenance()->getSourceType(); }
 
     /**
      * @return array{

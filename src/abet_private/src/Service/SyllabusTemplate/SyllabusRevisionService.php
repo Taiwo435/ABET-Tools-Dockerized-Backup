@@ -5,6 +5,7 @@ namespace App\Service\SyllabusTemplate;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\RevisionAuthorType;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
+use App\Entity\SyllabusTemplate\SyllabusProvenanceV1;
 use App\Entity\SyllabusTemplate\TemplateRevision;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
 use App\Entity\User;
@@ -20,11 +21,13 @@ final class SyllabusRevisionService
         TemplateSubmission $submission,
         User $author,
         CoordinatorTemplateData $data,
+        ?SyllabusProvenanceV1 $provenance = null,
     ): TemplateRevision {
         return $submission->addRevision(
             $author,
             RevisionAuthorType::Coordinator,
             $data->toContent(),
+            $provenance ?? $this->defaultProvenance($submission),
         );
     }
 
@@ -33,11 +36,14 @@ final class SyllabusRevisionService
         User $author,
         CoordinatorTemplateData $data,
         bool $updateBlankCourseIdentity = false,
+        bool $updateOfferingIdentity = false,
+        ?SyllabusProvenanceV1 $provenance = null,
     ): TemplateRevision {
         $revision = $submission->addRevision(
             $author,
             RevisionAuthorType::Faculty,
             $data->toContent(),
+            $provenance ?? $this->defaultProvenance($submission),
         );
 
         if ($updateBlankCourseIdentity) {
@@ -55,6 +61,20 @@ final class SyllabusRevisionService
             );
         }
 
+        if ($updateOfferingIdentity) {
+            $offering = $submission->getCourseOffering();
+            if ($offering === null) {
+                throw new \InvalidArgumentException('An offering target is required to update offering identity.');
+            }
+            $offering->updateDraftDetails(
+                $submission,
+                $data->academicYear,
+                $data->term,
+                $data->section,
+                $data->deliveryType,
+            );
+        }
+
         return $revision;
     }
 
@@ -67,13 +87,14 @@ final class SyllabusRevisionService
             throw new \InvalidArgumentException('A program is required to update shared course identity.');
         }
 
+        $provenance = $this->defaultProvenance($submission);
         $editableSubmission = $submission;
         if ($submission->getOrigin() === ProposalOrigin::FacultySubmission) {
-            $editableSubmission = $submission->createCoordinatorRevisionDraft($author, $data->toContent());
+            $editableSubmission = $submission->createCoordinatorRevisionDraft($author, $data->toContent(), $provenance);
         } elseif ($submission->getStatus() === SubmissionStatus::Approved) {
-            $submission->beginCoordinatorRevision($author, $data->toContent());
+            $submission->beginCoordinatorRevision($author, $data->toContent(), $provenance);
         } else {
-            $submission->addRevision($author, RevisionAuthorType::Coordinator, $data->toContent());
+            $submission->addRevision($author, RevisionAuthorType::Coordinator, $data->toContent(), $provenance);
         }
 
         $editableSubmission->getCommonCourse()->updateDraftDetails(
@@ -86,5 +107,20 @@ final class SyllabusRevisionService
         );
 
         return $editableSubmission;
+    }
+
+    private function defaultProvenance(TemplateSubmission $submission): SyllabusProvenanceV1
+    {
+        $workingRevision = $submission->getWorkingRevision();
+        if ($workingRevision !== null) {
+            return SyllabusProvenanceV1::manualEdit($workingRevision);
+        }
+
+        $basedOnRevision = $submission->getBasedOnRevision();
+        if ($basedOnRevision !== null) {
+            return SyllabusProvenanceV1::sharedTemplatePrefill($basedOnRevision);
+        }
+
+        return SyllabusProvenanceV1::manualEntry();
     }
 }

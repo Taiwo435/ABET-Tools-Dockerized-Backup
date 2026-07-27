@@ -17,12 +17,14 @@ use App\Entity\User;
 use App\Form\Model\CoordinatorTemplateData;
 use App\Form\SyllabusTemplate\CoordinatorTemplateType;
 use App\Repository\SyllabusTemplate\TemplateSubmissionRepository;
+use App\Service\Report\AppendixAReportExportBoundary;
 use App\Service\SyllabusTemplate\SyllabusPrefillService;
 use App\Service\SyllabusTemplate\SyllabusRevisionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -34,6 +36,36 @@ final class AdminSyllabusTemplateController extends AbstractController
         private readonly SyllabusPrefillService $prefill,
         private readonly SyllabusRevisionService $revisions,
     ) {
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/admin/syllabus-templates/{id}/appendix-a.json', name: 'app_admin_syllabus_template_appendix_a_export', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function exportAppendixA(
+        TemplateSubmission $submission,
+        AppendixAReportExportBoundary $exporter,
+    ): JsonResponse {
+        $revision = $submission->getApprovedRevision();
+        if ($revision === null) {
+            throw $this->createNotFoundException('An approved syllabus revision was not found.');
+        }
+        if (!$revision->isAppendixAReady()) {
+            return $this->json([
+                'error' => 'The approved revision is not Appendix A ready.',
+                'blocking_fields' => $revision->getAppendixABlockingFields(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $response = $this->json($exporter->export([$revision])->toArray());
+        $response->headers->set(
+            'Content-Disposition',
+            sprintf(
+                'attachment; filename="%s-%s-appendix-a.json"',
+                strtolower($submission->getCommonCourse()->getCourseSubject()),
+                strtolower($submission->getCommonCourse()->getCourseNumber()),
+            ),
+        );
+
+        return $response;
     }
 
     #[IsGranted('ROLE_ADMIN')]

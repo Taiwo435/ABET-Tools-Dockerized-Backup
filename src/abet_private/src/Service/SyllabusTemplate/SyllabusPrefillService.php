@@ -38,6 +38,13 @@ final class SyllabusPrefillService
             ? new CoordinatorTemplateData()
             : $this->fromRevision($revision);
         $this->applyCourseIdentity($data, $submission->getCommonCourse());
+        $offering = $submission->getCourseOffering();
+        if ($offering !== null) {
+            $data->academicYear = $offering->getAcademicYear();
+            $data->term = $offering->getTerm();
+            $data->section = $offering->getSection();
+            $data->deliveryType = $offering->getDeliveryType();
+        }
 
         return $data;
     }

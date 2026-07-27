@@ -161,6 +161,7 @@ class TemplateSubmission
         User $author,
         RevisionAuthorType $authorType,
         array $content,
+        ?SyllabusProvenanceV1 $sourceProvenance = null,
     ): TemplateRevision
     {
         if ($this->origin === ProposalOrigin::FacultySubmission
@@ -191,6 +192,7 @@ class TemplateSubmission
             $content,
             $completeness['status'],
             $completeness['blockingFields'],
+            $sourceProvenance,
         );
         $this->revisions->add($revision);
         $this->workingRevision = $revision;
@@ -238,7 +240,11 @@ class TemplateSubmission
         $this->commonCourse->publish($revision);
     }
 
-    public function beginCoordinatorRevision(User $author, array $content): TemplateRevision
+    public function beginCoordinatorRevision(
+        User $author,
+        array $content,
+        ?SyllabusProvenanceV1 $sourceProvenance = null,
+    ): TemplateRevision
     {
         if ($this->kind !== SubmissionKind::SharedTemplate
             || $this->origin !== ProposalOrigin::CoordinatorCreated
@@ -249,10 +255,14 @@ class TemplateSubmission
 
         $this->status = SubmissionStatus::Draft;
 
-        return $this->addRevision($author, RevisionAuthorType::Coordinator, $content);
+        return $this->addRevision($author, RevisionAuthorType::Coordinator, $content, $sourceProvenance);
     }
 
-    public function createCoordinatorRevisionDraft(User $author, array $content): self
+    public function createCoordinatorRevisionDraft(
+        User $author,
+        array $content,
+        ?SyllabusProvenanceV1 $sourceProvenance = null,
+    ): self
     {
         if ($this->kind !== SubmissionKind::SharedTemplate
             || $this->origin !== ProposalOrigin::FacultySubmission
@@ -268,7 +278,7 @@ class TemplateSubmission
             ProposalOrigin::CoordinatorCreated,
             $this->approvedRevision,
         );
-        $draft->addRevision($author, RevisionAuthorType::Coordinator, $content);
+        $draft->addRevision($author, RevisionAuthorType::Coordinator, $content, $sourceProvenance);
 
         return $draft;
     }

@@ -8,6 +8,7 @@ use App\Entity\SyllabusTemplate\DeliveryType;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\RevisionAuthorType;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
+use App\Entity\SyllabusTemplate\SyllabusRevisionSource;
 use App\Entity\User;
 use App\Form\Model\CoordinatorTemplateData;
 use App\Service\SyllabusTemplate\SyllabusPrefillService;
@@ -63,6 +64,7 @@ final class SyllabusApplicationServicesTest extends TestCase
         self::assertSame(['Faculty One'], $revision->getContent()['instructors']);
         self::assertSame(['Requirements', 'Design'], $revision->getContent()['topics_covered']);
         self::assertTrue($revision->isAppendixAReady());
+        self::assertSame(SyllabusRevisionSource::ManualEntry, $revision->getSourceType());
     }
 
     public function testCoordinatorRevisionServiceCreatesIndependentDraftFromApprovedFacultyTemplate(): void
@@ -98,6 +100,7 @@ final class SyllabusApplicationServicesTest extends TestCase
         self::assertSame(ProposalOrigin::CoordinatorCreated, $draft->getOrigin());
         self::assertSame('Coordinator-owned revision.', $draft->getWorkingRevision()?->getContent()['catalog_description']);
         self::assertSame($facultyRevision, $submission->getApprovedRevision());
+        self::assertSame(SyllabusRevisionSource::ManualEdit, $draft->getWorkingRevision()?->getSourceType());
     }
 
     private function course(): CommonCourse

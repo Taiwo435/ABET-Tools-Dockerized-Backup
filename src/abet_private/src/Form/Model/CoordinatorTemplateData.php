@@ -20,6 +20,10 @@ final class CoordinatorTemplateData
 
     public DeliveryType $deliveryType = DeliveryType::InPerson;
 
+    public string $academicYear = '';
+    public string $term = '';
+    public string $section = '';
+
     public ?float $creditHours = null;
 
     public string $contactHours = '';

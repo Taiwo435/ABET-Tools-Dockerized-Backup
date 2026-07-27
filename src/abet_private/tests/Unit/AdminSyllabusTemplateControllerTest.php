@@ -47,6 +47,22 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('Shared Syllabus Templates', $template);
     }
 
+    public function testAppendixAExportRouteIsAdminOnlyAndVersionedByFilename(): void
+    {
+        $method = (new ReflectionClass(AdminSyllabusTemplateController::class))->getMethod('exportAppendixA');
+        $route = $method->getAttributes(Route::class)[0]->newInstance();
+        $grant = $method->getAttributes(IsGranted::class)[0]->newInstance();
+        $source = file_get_contents(dirname(__DIR__, 2).'/src/Controller/SyllabusTemplate/AdminSyllabusTemplateController.php');
+
+        self::assertSame('/admin/syllabus-templates/{id}/appendix-a.json', $route->path);
+        self::assertSame('app_admin_syllabus_template_appendix_a_export', $route->name);
+        self::assertSame(['GET'], $route->methods);
+        self::assertSame('ROLE_ADMIN', $grant->attribute);
+        self::assertIsString($source);
+        self::assertStringContainsString('AppendixAReportExportBoundary $exporter', $source);
+        self::assertStringContainsString("'blocking_fields'", $source);
+    }
+
     #[DataProvider('coordinatorWriteRoutes')]
     public function testCoordinatorWriteRoutesAreAdminOnly(string $methodName, string $path, string $routeName, array $methods): void
     {

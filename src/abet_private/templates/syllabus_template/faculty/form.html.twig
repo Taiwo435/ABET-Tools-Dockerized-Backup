@@ -56,7 +56,7 @@
 {% block body %}
     <section class="hero hero-small">
         <h1>{{ pageTitle }}</h1>
-        <p>{{ submission ? 'Save changes as a new revision, then submit when all required information is complete.' : (basedOnRevision ? 'Adjust the shared template before creating your independent faculty draft.' : 'Start with the course details. You can save an incomplete draft and finish it later.') }}</p>
+        <p>{{ submission ? 'Save changes as a new revision, then submit when all required information is complete.' : (basedOnRevision ? 'Use the shared template to create a syllabus for a specific course offering.' : 'Start with the course and offering details. You can save an incomplete draft and finish it later.') }}</p>
     </section>
 
     <main class="template-editor">
@@ -65,10 +65,11 @@
                 {% if submission %}
                     <strong>{{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</strong>
                     &middot; {{ submission.commonCourse.courseName }} &middot; Working revision {{ submission.workingRevision.revisionNumber }}
+                    {% if submission.courseOffering %}&middot; {{ submission.courseOffering.term }} {{ submission.courseOffering.academicYear }}{% if submission.courseOffering.section %}, section {{ submission.courseOffering.section }}{% endif %}{% endif %}
                     {% if basedOnRevision %}&middot; Based on shared revision {{ basedOnRevision.revisionNumber }}{% endif %}
                 {% elseif course %}
                     <strong>{{ course.courseSubject }} {{ course.courseNumber }}</strong>
-                    &middot; {{ course.courseName }} &middot; Shared template preview
+                    &middot; {{ course.courseName }} &middot; Create course offering
                 {% else %}
                     Faculty-created blank proposal
                 {% endif %}
@@ -101,8 +102,20 @@
                         <div class="editor-field editor-field--wide">{{ form_label(form.program) }}{{ form_widget(form.program) }}{{ form_errors(form.program) }}</div>
                         <div class="editor-field">{{ form_label(form.courseSubject) }}{{ form_widget(form.courseSubject) }}{{ form_errors(form.courseSubject) }}</div>
                         <div class="editor-field">{{ form_label(form.courseNumber) }}{{ form_widget(form.courseNumber) }}{{ form_errors(form.courseNumber) }}</div>
-                        <div class="editor-field">{{ form_label(form.deliveryType) }}{{ form_widget(form.deliveryType) }}{{ form_errors(form.deliveryType) }}</div>
+                        {% if form.academicYear is not defined %}<div class="editor-field">{{ form_label(form.deliveryType) }}{{ form_widget(form.deliveryType) }}{{ form_errors(form.deliveryType) }}</div>{% endif %}
                         <div class="editor-field editor-field--wide">{{ form_label(form.courseName) }}{{ form_widget(form.courseName) }}{{ form_errors(form.courseName) }}</div>
+                    </div>
+                </section>
+            {% endif %}
+
+            {% if form.academicYear is defined %}
+                <section class="editor-section">
+                    <div class="editor-section__heading"><h2>Course offering</h2><p>Identify the specific term and section represented by this syllabus.</p></div>
+                    <div class="editor-grid editor-grid--three">
+                        <div class="editor-field">{{ form_label(form.academicYear) }}{{ form_widget(form.academicYear) }}<div class="editor-help">{{ form_help(form.academicYear) }}</div>{{ form_errors(form.academicYear) }}</div>
+                        <div class="editor-field">{{ form_label(form.term) }}{{ form_widget(form.term) }}<div class="editor-help">{{ form_help(form.term) }}</div>{{ form_errors(form.term) }}</div>
+                        <div class="editor-field">{{ form_label(form.section) }}{{ form_widget(form.section) }}{{ form_errors(form.section) }}</div>
+                        <div class="editor-field">{{ form_label(form.deliveryType) }}{{ form_widget(form.deliveryType) }}{{ form_errors(form.deliveryType) }}</div>
                     </div>
                 </section>
             {% endif %}

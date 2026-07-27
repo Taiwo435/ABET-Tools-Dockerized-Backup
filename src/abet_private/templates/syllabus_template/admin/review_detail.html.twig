@@ -81,6 +81,7 @@
             <div class="context-item"><dt>Program</dt><dd>{{ submission.commonCourse.program.initials }} {{ submission.commonCourse.program.year }}</dd></div>
             <div class="context-item"><dt>Delivery</dt><dd>{{ (submission.courseOffering ? submission.courseOffering.deliveryType.value : submission.commonCourse.deliveryType.value)|replace({'_': ' '})|title }}</dd></div>
             <div class="context-item"><dt>Submitted revision</dt><dd>Rev. {{ revision.revisionNumber }}</dd></div>
+            <div class="context-item"><dt>Content source</dt><dd>{{ revision.sourceType.value|replace({'_': ' '})|title }}{% if revision.sourceProvenance.sourceDocument %}<br>{{ revision.sourceProvenance.sourceDocument.original_filename }}{% endif %}</dd></div>
         </dl>
 
         {% if sharedTemplateChanged and not submission.review %}
@@ -166,6 +167,9 @@
                     <div class="context-item"><dt>Published revision</dt><dd>{{ submission.approvedRevision ? 'Rev. ' ~ submission.approvedRevision.revisionNumber : 'None' }}</dd></div>
                 </dl>
                 {% if submission.review.comment %}<p class="review-outcome__feedback"><strong>Feedback:</strong> {{ submission.review.comment }}</p>{% endif %}
+                {% if submission.approvedRevision and submission.approvedRevision.appendixAReady %}
+                    <p><a class="button-secondary" href="{{ path('app_admin_syllabus_template_appendix_a_export', {id: submission.id}) }}">Download Appendix A JSON</a></p>
+                {% endif %}
             </section>
         {% else %}
             <div class="decision-grid">

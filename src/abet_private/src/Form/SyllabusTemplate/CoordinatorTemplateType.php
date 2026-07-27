@@ -43,7 +43,11 @@ final class CoordinatorTemplateType extends AbstractType
                     'label' => 'Course name',
                     'empty_data' => '',
                     'constraints' => [new NotBlank()],
-                ])
+                ]);
+        }
+
+        if ($options['include_course_identity'] || $options['include_offering_identity']) {
+            $builder
                 ->add('deliveryType', EnumType::class, [
                     'class' => DeliveryType::class,
                     'choice_label' => static fn (DeliveryType $type): string => match ($type) {
@@ -51,6 +55,27 @@ final class CoordinatorTemplateType extends AbstractType
                         DeliveryType::Hybrid => 'Hybrid',
                         DeliveryType::Online => 'Online',
                     },
+                ]);
+        }
+
+        if ($options['include_offering_identity']) {
+            $builder
+                ->add('academicYear', TextType::class, [
+                    'label' => 'Academic year',
+                    'help' => 'For example: 2026-2027.',
+                    'empty_data' => '',
+                    'constraints' => [new NotBlank()],
+                ])
+                ->add('term', TextType::class, [
+                    'label' => 'Term',
+                    'help' => 'For example: Fall, Spring, or Summer.',
+                    'empty_data' => '',
+                    'constraints' => [new NotBlank()],
+                ])
+                ->add('section', TextType::class, [
+                    'required' => false,
+                    'label' => 'Section',
+                    'empty_data' => '',
                 ]);
         }
 
@@ -140,7 +165,9 @@ final class CoordinatorTemplateType extends AbstractType
         $resolver->setDefaults([
             'data_class' => CoordinatorTemplateData::class,
             'include_course_identity' => false,
+            'include_offering_identity' => false,
         ]);
         $resolver->setAllowedTypes('include_course_identity', 'bool');
+        $resolver->setAllowedTypes('include_offering_identity', 'bool');
     }
 }

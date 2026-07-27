@@ -3,6 +3,7 @@
 namespace App\Controller\SyllabusTemplate;
 
 use App\Entity\SyllabusTemplate\CommonCourse;
+use App\Entity\SyllabusTemplate\CourseOffering;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\SubmissionKind;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
@@ -53,13 +54,11 @@ final class FacultySyllabusTemplateController extends AbstractController
             'drafts' => $submissions->findBy([
                 'submittedBy' => $user,
                 'origin' => ProposalOrigin::FacultySubmission,
-                'kind' => SubmissionKind::SharedTemplate,
                 'status' => SubmissionStatus::Draft,
             ], ['updatedAt' => 'DESC']),
             'proposals' => $submissions->findBy([
                 'submittedBy' => $user,
                 'origin' => ProposalOrigin::FacultySubmission,
-                'kind' => SubmissionKind::SharedTemplate,
                 'status' => [
                     SubmissionStatus::Submitted,
                     SubmissionStatus::Approved,
@@ -79,7 +78,10 @@ final class FacultySyllabusTemplateController extends AbstractController
     ): Response
     {
         $data = new CoordinatorTemplateData();
-        $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => true]);
+        $form = $this->createForm(CoordinatorTemplateType::class, $data, [
+            'include_course_identity' => true,
+            'include_offering_identity' => true,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -97,10 +99,19 @@ final class FacultySyllabusTemplateController extends AbstractController
                     $data->courseName,
                     $data->deliveryType,
                 );
-                $submission = new TemplateSubmission($course, $user, ProposalOrigin::FacultySubmission);
+                $offering = new CourseOffering(
+                    $course,
+                    $data->academicYear,
+                    $data->term,
+                    $data->deliveryType,
+                    $user,
+                    $data->section,
+                );
+                $submission = TemplateSubmission::forFacultyOffering($offering, $user);
                 $this->revisions->addFacultyRevision($submission, $user, $data);
 
                 $entityManager->persist($course);
+                $entityManager->persist($offering);
                 $entityManager->persist($submission);
                 $entityManager->flush();
 
@@ -129,37 +140,39 @@ final class FacultySyllabusTemplateController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response
     {
-        $existingDraft = $submissions->findOneBy([
-            'commonCourse' => $course,
-            'submittedBy' => $user,
-            'origin' => ProposalOrigin::FacultySubmission,
-            'kind' => SubmissionKind::SharedTemplate,
-            'status' => SubmissionStatus::Draft,
-        ]);
-        if ($existingDraft !== null) {
-            $this->addFlash('info', 'Your existing draft for this course was opened.');
-
-            return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $existingDraft->getId()]);
-        }
-
         $approvedRevision = $course->getCurrentApprovedRevision();
         if ($approvedRevision === null) {
             throw $this->createNotFoundException('An approved shared template was not found for this course.');
         }
 
         $data = $this->prefill->fromRevision($approvedRevision, $course);
-        $form = $this->createForm(CoordinatorTemplateType::class, $data);
+        $form = $this->createForm(CoordinatorTemplateType::class, $data, [
+            'include_offering_identity' => true,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $submission = new TemplateSubmission($course, $user, ProposalOrigin::FacultySubmission, $approvedRevision);
-            $this->revisions->addFacultyRevision($submission, $user, $data);
-            $entityManager->persist($submission);
-            $entityManager->flush();
+            if ($this->offeringIdentityExists($entityManager, $course, $data)) {
+                $form->addError(new FormError('This course offering already exists. Use a different academic year, term, or section.'));
+            } else {
+                $offering = new CourseOffering(
+                    $course,
+                    $data->academicYear,
+                    $data->term,
+                    $data->deliveryType,
+                    $user,
+                    $data->section,
+                );
+                $submission = TemplateSubmission::forFacultyOffering($offering, $user, $approvedRevision);
+                $this->revisions->addFacultyRevision($submission, $user, $data);
+                $entityManager->persist($offering);
+                $entityManager->persist($submission);
+                $entityManager->flush();
 
-            $this->addFlash('success', 'Your independent faculty draft was created.');
+                $this->addFlash('success', 'Your course-offering syllabus draft was created.');
 
-            return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);
+                return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);
+            }
         }
 
         return $this->render('syllabus_template/faculty/form.html.twig', [
@@ -190,7 +203,11 @@ final class FacultySyllabusTemplateController extends AbstractController
         $originalData = $this->prefill->fromSubmission($submission);
         $data = $this->prefill->fromSubmission($submission);
         $isBlankDraft = $submission->getBasedOnRevision() === null;
-        $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => $isBlankDraft]);
+        $isOfferingDraft = $submission->getKind() === SubmissionKind::FacultyOffering;
+        $form = $this->createForm(CoordinatorTemplateType::class, $data, [
+            'include_course_identity' => $isBlankDraft,
+            'include_offering_identity' => $isOfferingDraft,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -203,12 +220,20 @@ final class FacultySyllabusTemplateController extends AbstractController
 
                 if ($isBlankDraft && $this->courseIdentityExists($entityManager, $data, $submission->getCommonCourse())) {
                     $form->addError(new FormError('This common course already exists. Choose a different identity or use its shared template.'));
+                } elseif ($isOfferingDraft && $this->offeringIdentityExists(
+                    $entityManager,
+                    $submission->getCommonCourse(),
+                    $data,
+                    $submission->getCourseOffering(),
+                )) {
+                    $form->addError(new FormError('Another offering already uses this academic year, term, and section.'));
                 } else {
                     $this->revisions->addFacultyRevision(
                         $submission,
                         $user,
                         $data,
                         updateBlankCourseIdentity: $isBlankDraft,
+                        updateOfferingIdentity: $isOfferingDraft,
                     );
                     $entityManager->flush();
                     $this->addFlash('success', 'Your faculty working copy was saved.');
@@ -271,6 +296,7 @@ final class FacultySyllabusTemplateController extends AbstractController
     {
         $this->assertFacultyDraftOwner($submission, $user);
         $course = $submission->getCommonCourse();
+        $offering = $submission->getCourseOffering();
         $deleteBlankCourse = $submission->getBasedOnRevision() === null
             && $course->getCurrentApprovedRevision() === null;
 
@@ -282,6 +308,10 @@ final class FacultySyllabusTemplateController extends AbstractController
         $entityManager->flush();
         $entityManager->remove($submission);
         $entityManager->flush();
+        if ($offering !== null) {
+            $entityManager->remove($offering);
+            $entityManager->flush();
+        }
         if ($deleteBlankCourse) {
             $entityManager->remove($course);
             $entityManager->flush();
@@ -315,5 +345,21 @@ final class FacultySyllabusTemplateController extends AbstractController
         ]);
 
         return $existing !== null && $existing !== $currentCourse;
+    }
+
+    private function offeringIdentityExists(
+        EntityManagerInterface $entityManager,
+        CommonCourse $course,
+        CoordinatorTemplateData $data,
+        ?CourseOffering $currentOffering = null,
+    ): bool {
+        $existing = $entityManager->getRepository(CourseOffering::class)->findOneBy([
+            'commonCourse' => $course,
+            'academicYear' => trim($data->academicYear),
+            'term' => trim($data->term),
+            'section' => trim($data->section),
+        ]);
+
+        return $existing !== null && $existing !== $currentOffering;
     }
 }

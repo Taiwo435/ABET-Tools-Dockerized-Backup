@@ -162,5 +162,12 @@
                 </form>
             </section>
         {% endif %}
+        {% if submission and submission.approvedRevision and submission.approvedRevision.appendixAReady %}
+            <section class="publish-panel">
+                <h2>Report export</h2>
+                <p>Download the versioned Appendix A JSON payload for this approved syllabus.</p>
+                <a class="button-secondary" href="{{ path('app_admin_syllabus_template_appendix_a_export', {id: submission.id}) }}">Download Appendix A JSON</a>
+            </section>
+        {% endif %}
     </main>
 {% endblock %}
