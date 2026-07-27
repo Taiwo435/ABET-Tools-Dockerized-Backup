@@ -35,8 +35,10 @@ final class CoordinatorTemplateDataTest extends TestCase
         $data->courseOutcomes = "Outcome one\n\nOutcome two";
         $content = $data->toContent();
 
-        self::assertSame(['First Coordinator', 'Second Coordinator'], $content['courseCoordinators']);
-        self::assertSame(['Outcome one', 'Outcome two'], $content['courseOutcomes']);
+        self::assertSame(['First Coordinator', 'Second Coordinator'], $content['course_coordinators']);
+        self::assertSame(['Outcome one', 'Outcome two'], $content['course_outcomes']);
+        self::assertSame('1.0', $content['schema_version']);
+        self::assertArrayNotHasKey('courseCoordinators', $content);
         self::assertSame(['preserve-me'], $content['customSchemaField']);
     }
 
@@ -83,7 +85,7 @@ final class CoordinatorTemplateDataTest extends TestCase
         self::assertTrue($form->isValid());
         self::assertSame('', $data->catalogDescription);
         self::assertSame('', $data->courseOutcomes);
-        self::assertSame([], $data->toContent()['courseOutcomes']);
+        self::assertSame([], $data->toContent()['course_outcomes']);
     }
 
     public function testBlankOptionalFieldsDoNotBlockPublicationCompleteness(): void
@@ -99,8 +101,8 @@ final class CoordinatorTemplateDataTest extends TestCase
         $revision = $submission->addRevision($user, RevisionAuthorType::Coordinator, $data->toContent());
 
         self::assertTrue($revision->isComplete());
-        self::assertSame('', $revision->getContent()['catalogDescription']);
-        self::assertSame([], $revision->getContent()['courseOutcomes']);
+        self::assertSame('', $revision->getContent()['catalog_description']);
+        self::assertSame([], $revision->getContent()['course_outcomes']);
     }
 
     public function testEquivalentDraftDataIgnoresHarmlessWhitespaceAndCase(): void

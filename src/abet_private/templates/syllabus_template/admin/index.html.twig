@@ -114,7 +114,7 @@
                                     {% endif %}
                                 {% else %}
                                     <ul class="missing-list">
-                                        {% for field in revision.missingFields %}<li>{{ field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'}) }}</li>{% endfor %}
+                                        {% for field in revision.missingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}
                                     </ul>
                                 {% endif %}
                             </td>

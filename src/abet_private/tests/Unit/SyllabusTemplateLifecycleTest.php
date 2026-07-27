@@ -43,7 +43,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $facultyProposal->submit($facultyRevision);
 
         $newSharedRevision = $sharedTemplate->beginCoordinatorRevision($coordinator, $this->completeContent([
-            'catalogDescription' => 'Newer shared content',
+            'catalog_description' => 'Newer shared content',
         ]));
         $sharedTemplate->publishCoordinatorTemplate($newSharedRevision);
 
@@ -65,10 +65,10 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     public function testApprovalWithEditsPreservesFacultyRevisionAndPublishesCoordinatorRevision(): void
     {
         [$course, $submission, $faculty, $coordinator] = $this->fixture();
-        $facultyRevision = $this->completeFacultyRevision($submission, $faculty, ['catalogDescription' => 'Original']);
+        $facultyRevision = $this->completeFacultyRevision($submission, $faculty, ['catalog_description' => 'Original']);
         $submission->submit($facultyRevision);
         $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent([
-            'catalogDescription' => 'Edited',
+            'catalog_description' => 'Edited',
         ]));
 
         $review = new TemplateReview($submission, $coordinator, ReviewDecision::ApprovedWithEdits, 'Standardized the catalog description.');
@@ -115,7 +115,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         [$course, $submission, $faculty, $coordinator] = $this->fixture();
         $facultyRevision = $this->completeFacultyRevision($submission, $faculty);
         $submission->submit($facultyRevision);
-        $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent(['catalogDescription' => 'Edited']));
+        $coordinatorRevision = $submission->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent(['catalog_description' => 'Edited']));
         $submission->recordReview(
             new TemplateReview($submission, $coordinator, ReviewDecision::ApprovedWithEdits),
             $coordinatorRevision,
@@ -144,9 +144,9 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $facultyRevision = $this->completeFacultyRevision($facultyProposal, $faculty, $firstSharedRevision->getContent());
         $facultyProposal->submit($facultyRevision);
 
-        $newSharedRevision = $sharedTemplate->beginCoordinatorRevision($coordinator, $this->completeContent(['catalogDescription' => 'New shared baseline']));
+        $newSharedRevision = $sharedTemplate->beginCoordinatorRevision($coordinator, $this->completeContent(['catalog_description' => 'New shared baseline']));
         $sharedTemplate->publishCoordinatorTemplate($newSharedRevision);
-        $coordinatorRevision = $facultyProposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent(['catalogDescription' => 'Review edit']));
+        $coordinatorRevision = $facultyProposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent(['catalog_description' => 'Review edit']));
         $review = new TemplateReview($facultyProposal, $coordinator, ReviewDecision::ApprovedWithEdits);
 
         $this->expectException(\DomainException::class);
@@ -246,17 +246,17 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $incomplete = $proposal->addRevision(
             $coordinator,
             RevisionAuthorType::Coordinator,
-            ['catalogDescription' => 'Draft'],
+            ['catalog_description' => 'Draft'],
         );
 
         self::assertSame(SubmissionStatus::Draft, $proposal->getStatus());
-        self::assertSame(['creditHours', 'courseCoordinators', 'creditCategorization'], $incomplete->getMissingFields());
+        self::assertSame(['credits', 'course_coordinators', 'credit_category'], $incomplete->getMissingFields());
         self::assertSame($incomplete, $proposal->getWorkingRevision());
 
         $complete = $proposal->addRevision(
             $coordinator,
             RevisionAuthorType::Coordinator,
-            $this->completeContent(['catalogDescription' => 'Complete template', 'courseOutcomes' => ['Outcome']]),
+            $this->completeContent(['catalog_description' => 'Complete template', 'course_outcomes' => ['Outcome']]),
         );
         $proposal->publishCoordinatorTemplate($complete);
 
@@ -312,7 +312,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         [$course, , , $coordinator] = $this->fixture();
         $proposal = new TemplateSubmission($course, $coordinator, ProposalOrigin::CoordinatorCreated);
         $firstRevision = $proposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent([
-            'catalogDescription' => 'Original description',
+            'catalog_description' => 'Original description',
         ]));
         $proposal->publishCoordinatorTemplate($firstRevision);
 
@@ -325,7 +325,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         self::assertSame($firstRevision, $course->getCurrentApprovedRevision());
 
         $updated = $proposal->addRevision($coordinator, RevisionAuthorType::Coordinator, $this->completeContent([
-            'catalogDescription' => 'Updated description',
+            'catalog_description' => 'Updated description',
         ]));
         $proposal->publishCoordinatorTemplate($updated);
 
@@ -339,7 +339,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     {
         [$course, $facultyProposal, $faculty, $coordinator] = $this->fixture();
         $facultyRevision = $this->completeFacultyRevision($facultyProposal, $faculty, [
-            'catalogDescription' => 'Approved faculty content',
+            'catalog_description' => 'Approved faculty content',
         ]);
         $facultyProposal->submit($facultyRevision);
         $facultyProposal->recordReview(
@@ -349,15 +349,15 @@ final class SyllabusTemplateLifecycleTest extends TestCase
 
         $coordinatorDraft = $facultyProposal->createCoordinatorRevisionDraft($coordinator, array_replace(
             $facultyRevision->getContent(),
-            ['catalogDescription' => 'Coordinator revision draft'],
+            ['catalog_description' => 'Coordinator revision draft'],
         ));
 
         self::assertSame(ProposalOrigin::CoordinatorCreated, $coordinatorDraft->getOrigin());
         self::assertSame(SubmissionStatus::Draft, $coordinatorDraft->getStatus());
         self::assertSame($facultyRevision, $coordinatorDraft->getBasedOnRevision());
-        self::assertSame('Coordinator revision draft', $coordinatorDraft->getWorkingRevision()?->getContent()['catalogDescription']);
+        self::assertSame('Coordinator revision draft', $coordinatorDraft->getWorkingRevision()?->getContent()['catalog_description']);
         self::assertSame(SubmissionStatus::Approved, $facultyProposal->getStatus());
-        self::assertSame('Approved faculty content', $facultyRevision->getContent()['catalogDescription']);
+        self::assertSame('Approved faculty content', $facultyRevision->getContent()['catalog_description']);
         self::assertSame($facultyRevision, $course->getCurrentApprovedRevision());
     }
 
@@ -386,7 +386,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $approvedRevision = $sharedTemplate->addRevision(
             $coordinator,
             RevisionAuthorType::Coordinator,
-            $this->completeContent(['catalogDescription' => 'Approved shared description']),
+            $this->completeContent(['catalog_description' => 'Approved shared description']),
         );
         $sharedTemplate->publishCoordinatorTemplate($approvedRevision);
 
@@ -395,13 +395,13 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $editedCopy = $facultyProposal->addRevision(
             $faculty,
             RevisionAuthorType::Faculty,
-            array_replace($initialCopy->getContent(), ['catalogDescription' => 'Faculty-specific description']),
+            array_replace($initialCopy->getContent(), ['catalog_description' => 'Faculty-specific description']),
         );
 
         self::assertSame($approvedRevision, $facultyProposal->getBasedOnRevision());
-        self::assertSame('Approved shared description', $approvedRevision->getContent()['catalogDescription']);
-        self::assertSame('Approved shared description', $initialCopy->getContent()['catalogDescription']);
-        self::assertSame('Faculty-specific description', $editedCopy->getContent()['catalogDescription']);
+        self::assertSame('Approved shared description', $approvedRevision->getContent()['catalog_description']);
+        self::assertSame('Approved shared description', $initialCopy->getContent()['catalog_description']);
+        self::assertSame('Faculty-specific description', $editedCopy->getContent()['catalog_description']);
         self::assertSame($editedCopy, $facultyProposal->getWorkingRevision());
     }
 
@@ -485,7 +485,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
         $revision = $submission->addRevision(
             $faculty,
             RevisionAuthorType::Faculty,
-            ['creditHours' => 3],
+            ['credits' => 3],
         );
 
         $this->expectException(\DomainException::class);
@@ -520,9 +520,9 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     private function completeContent(array $overrides = []): array
     {
         return $overrides + [
-            'creditHours' => 3,
-            'courseCoordinators' => ['Coordinator Name'],
-            'creditCategorization' => 'engineering',
+            'credits' => 3,
+            'course_coordinators' => ['Coordinator Name'],
+            'credit_category' => 'engineering',
         ];
     }
 }

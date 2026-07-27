@@ -106,11 +106,11 @@
             <section class="review-section">
                 <div class="review-section__heading"><h2>Required syllabus information</h2><p>Fields required when the faculty member submitted this revision.</p></div>
                 <div class="read-grid read-grid--three">
-                    <div class="read-field"><span class="read-field__label">Credit hours</span><div class="read-field__value">{{ content.creditHours }}</div></div>
-                    <div class="read-field"><span class="read-field__label">Credit categorization</span><div class="read-field__value">{{ content.creditCategorization }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Credit hours</span><div class="read-field__value">{{ content.credits }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Credit categorization</span><div class="read-field__value">{{ content.credit_category }}</div></div>
                     <div class="read-field read-field--wide">
                         <span class="read-field__label">Course coordinators</span>
-                        <ul class="read-list">{% for coordinator in content.courseCoordinators %}<li>{{ coordinator }}</li>{% endfor %}</ul>
+                        <ul class="read-list">{% for coordinator in content.course_coordinators %}<li>{{ coordinator }}</li>{% endfor %}</ul>
                     </div>
                 </div>
             </section>
@@ -120,11 +120,11 @@
                 <div class="read-grid">
                     <div class="read-field read-field--wide">
                         <span class="read-field__label">Catalog description</span>
-                        <div class="read-field__value">{% if content.catalogDescription is not empty %}{{ content.catalogDescription }}{% else %}<span class="not-provided">Not provided</span>{% endif %}</div>
+                        <div class="read-field__value">{% if content.catalog_description is not empty %}{{ content.catalog_description }}{% else %}<span class="not-provided">Not provided</span>{% endif %}</div>
                     </div>
                     <div class="read-field read-field--wide">
                         <span class="read-field__label">Course outcomes</span>
-                        {% if content.courseOutcomes is not empty %}<ul class="read-list">{% for outcome in content.courseOutcomes %}<li>{{ outcome }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
+                        {% if content.course_outcomes is not empty %}<ul class="read-list">{% for outcome in content.course_outcomes %}<li>{{ outcome }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
                     </div>
                 </div>
             </section>

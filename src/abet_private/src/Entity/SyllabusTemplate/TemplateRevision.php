@@ -39,8 +39,8 @@ class TemplateRevision
     #[ORM\Column(name: 'missing_fields', type: 'json')]
     private array $missingFields;
 
-    #[ORM\Column(name: 'schema_version', options: ['default' => 1])]
-    private int $schemaVersion = 1;
+    #[ORM\Column(name: 'schema_version', length: 16, options: ['default' => SyllabusContentV1::VERSION])]
+    private string $schemaVersion = SyllabusContentV1::VERSION;
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
@@ -70,7 +70,8 @@ class TemplateRevision
         $this->author = $author;
         $this->authorType = $authorType;
         $this->revisionNumber = $revisionNumber;
-        $this->content = $content;
+        $this->content = SyllabusContentV1::normalize($content);
+        $this->schemaVersion = (string)$this->content['schema_version'];
         $this->completenessStatus = $completenessStatus;
         $this->missingFields = $missingFields;
         $this->createdAt = new \DateTimeImmutable();
@@ -81,9 +82,9 @@ class TemplateRevision
     public function getAuthor(): User { return $this->author; }
     public function getAuthorType(): RevisionAuthorType { return $this->authorType; }
     public function getRevisionNumber(): int { return $this->revisionNumber; }
-    public function getContent(): array { return $this->content; }
+    public function getContent(): array { return SyllabusContentV1::normalize($this->content); }
     public function getCompletenessStatus(): CompletenessStatus { return $this->completenessStatus; }
-    public function getMissingFields(): array { return $this->missingFields; }
+    public function getMissingFields(): array { return SyllabusContentV1::normalizeFieldNames($this->missingFields); }
     public function isComplete(): bool { return $this->completenessStatus === CompletenessStatus::Complete; }
-    public function getSchemaVersion(): int { return $this->schemaVersion; }
+    public function getSchemaVersion(): string { return $this->schemaVersion; }
 }

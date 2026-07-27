@@ -158,11 +158,11 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString('submission.submittedRevision', $detail);
         self::assertStringContainsString('submission.submittedBy.asurite', $detail);
         self::assertStringContainsString('submission.commonCourse.program.initials', $detail);
-        self::assertStringContainsString('content.creditHours', $detail);
-        self::assertStringContainsString('content.courseCoordinators', $detail);
-        self::assertStringContainsString('content.creditCategorization', $detail);
-        self::assertStringContainsString('content.catalogDescription', $detail);
-        self::assertStringContainsString('content.courseOutcomes', $detail);
+        self::assertStringContainsString('content.credits', $detail);
+        self::assertStringContainsString('content.course_coordinators', $detail);
+        self::assertStringContainsString('content.credit_category', $detail);
+        self::assertStringContainsString('content.catalog_description', $detail);
+        self::assertStringContainsString('content.course_outcomes', $detail);
         self::assertStringContainsString('Shared template changed since this proposal began.', $detail);
         self::assertStringContainsString('The proposal must be reconciled before approval.', $detail);
         self::assertStringContainsString('submitted faculty revision is frozen and remains read-only', $detail);

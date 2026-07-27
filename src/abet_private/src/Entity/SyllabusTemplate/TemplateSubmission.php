@@ -30,6 +30,13 @@ class TemplateSubmission
     #[ORM\Column(length: 32, enumType: ProposalOrigin::class)]
     private ProposalOrigin $origin;
 
+    #[ORM\Column(name: 'submission_kind', length: 32, enumType: SubmissionKind::class, options: ['default' => 'shared_template'])]
+    private SubmissionKind $kind;
+
+    #[ORM\ManyToOne(targetEntity: CourseOffering::class)]
+    #[ORM\JoinColumn(name: 'course_offering_id', nullable: true, onDelete: 'RESTRICT')]
+    private ?CourseOffering $courseOffering;
+
     #[ORM\Column(length: 32, enumType: SubmissionStatus::class)]
     private SubmissionStatus $status = SubmissionStatus::Draft;
 
@@ -73,15 +80,31 @@ class TemplateSubmission
         User $submittedBy,
         ProposalOrigin $origin,
         ?TemplateRevision $basedOnRevision = null,
+        SubmissionKind $kind = SubmissionKind::SharedTemplate,
+        ?CourseOffering $courseOffering = null,
     )
     {
         if ($basedOnRevision !== null && $basedOnRevision->getSubmission()->getCommonCourse() !== $commonCourse) {
             throw new \InvalidArgumentException('The source template revision belongs to a different common course.');
         }
+        if ($kind === SubmissionKind::FacultyOffering && $courseOffering === null) {
+            throw new \InvalidArgumentException('A faculty-offering submission requires a course offering.');
+        }
+        if ($kind === SubmissionKind::SharedTemplate && $courseOffering !== null) {
+            throw new \InvalidArgumentException('A shared-template submission cannot target a course offering.');
+        }
+        if ($courseOffering !== null && $courseOffering->getCommonCourse() !== $commonCourse) {
+            throw new \InvalidArgumentException('The course offering belongs to a different common course.');
+        }
+        if ($kind === SubmissionKind::FacultyOffering && $origin !== ProposalOrigin::FacultySubmission) {
+            throw new \InvalidArgumentException('A faculty-offering submission must originate from faculty.');
+        }
 
         $this->commonCourse = $commonCourse;
         $this->submittedBy = $submittedBy;
         $this->origin = $origin;
+        $this->kind = $kind;
+        $this->courseOffering = $courseOffering;
         $this->basedOnRevision = $basedOnRevision;
         $this->revisions = new ArrayCollection();
         $this->createdAt = $this->updatedAt = new \DateTimeImmutable();
@@ -91,6 +114,8 @@ class TemplateSubmission
     public function getCommonCourse(): CommonCourse { return $this->commonCourse; }
     public function getSubmittedBy(): User { return $this->submittedBy; }
     public function getOrigin(): ProposalOrigin { return $this->origin; }
+    public function getKind(): SubmissionKind { return $this->kind; }
+    public function getCourseOffering(): ?CourseOffering { return $this->courseOffering; }
     public function getStatus(): SubmissionStatus { return $this->status; }
     public function getWorkingRevision(): ?TemplateRevision { return $this->workingRevision; }
     public function getBasedOnRevision(): ?TemplateRevision { return $this->basedOnRevision; }
@@ -112,6 +137,21 @@ class TemplateSubmission
 
     /** @return Collection<int, TemplateRevision> */
     public function getRevisions(): Collection { return $this->revisions; }
+
+    public static function forFacultyOffering(
+        CourseOffering $courseOffering,
+        User $submittedBy,
+        ?TemplateRevision $basedOnRevision = null,
+    ): self {
+        return new self(
+            $courseOffering->getCommonCourse(),
+            $submittedBy,
+            ProposalOrigin::FacultySubmission,
+            $basedOnRevision,
+            SubmissionKind::FacultyOffering,
+            $courseOffering,
+        );
+    }
 
     public function addRevision(
         User $author,
@@ -137,6 +177,7 @@ class TemplateSubmission
             throw new \DomainException('Only the proposal owner can create a faculty revision.');
         }
 
+        $content = SyllabusContentV1::normalize($content);
         $completeness = TemplateContentCompleteness::assess($content);
         $revision = new TemplateRevision(
             $this,

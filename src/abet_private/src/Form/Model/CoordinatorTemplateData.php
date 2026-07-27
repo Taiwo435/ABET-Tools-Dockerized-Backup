@@ -4,6 +4,7 @@ namespace App\Form\Model;
 
 use App\Entity\Program;
 use App\Entity\SyllabusTemplate\DeliveryType;
+use App\Entity\SyllabusTemplate\SyllabusContentV1;
 use App\Entity\SyllabusTemplate\TemplateRevision;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
 
@@ -32,15 +33,15 @@ final class CoordinatorTemplateData
     public static function fromRevision(TemplateRevision $revision): self
     {
         $data = new self();
-        $content = $revision->getContent();
+        $content = SyllabusContentV1::normalize($revision->getContent());
         $data->preservedContent = $content;
-        $data->creditHours = isset($content['creditHours']) && is_numeric($content['creditHours'])
-            ? (float)$content['creditHours']
+        $data->creditHours = isset($content['credits']) && is_numeric($content['credits'])
+            ? (float)$content['credits']
             : null;
-        $data->courseCoordinators = self::listToLines($content['courseCoordinators'] ?? []);
-        $data->creditCategorization = (string)($content['creditCategorization'] ?? '');
-        $data->catalogDescription = (string)($content['catalogDescription'] ?? '');
-        $data->courseOutcomes = self::listToLines($content['courseOutcomes'] ?? []);
+        $data->courseCoordinators = self::listToLines($content['course_coordinators'] ?? []);
+        $data->creditCategorization = (string)($content['credit_category'] ?? '');
+        $data->catalogDescription = (string)($content['catalog_description'] ?? '');
+        $data->courseOutcomes = self::listToLines($content['course_outcomes'] ?? []);
 
         return $data;
     }
@@ -62,13 +63,13 @@ final class CoordinatorTemplateData
     /** @return array<string, mixed> */
     public function toContent(): array
     {
-        return array_replace($this->preservedContent, [
-            'creditHours' => $this->creditHours,
-            'courseCoordinators' => self::linesToList($this->courseCoordinators),
-            'creditCategorization' => trim($this->creditCategorization),
-            'catalogDescription' => trim($this->catalogDescription),
-            'courseOutcomes' => self::linesToList($this->courseOutcomes),
-        ]);
+        return SyllabusContentV1::normalize(array_replace($this->preservedContent, [
+            'credits' => $this->creditHours,
+            'course_coordinators' => self::linesToList($this->courseCoordinators),
+            'credit_category' => trim($this->creditCategorization),
+            'catalog_description' => trim($this->catalogDescription),
+            'course_outcomes' => self::linesToList($this->courseOutcomes),
+        ]));
     }
 
     public function isEquivalentTo(self $other): bool

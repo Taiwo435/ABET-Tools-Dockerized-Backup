@@ -54,7 +54,7 @@
                     {% for draft in drafts %}
                         {% set missingLabels = [] %}
                         {% for field in draft.workingRevision.missingFields %}
-                            {% set missingLabels = missingLabels|merge([field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'})]) %}
+                            {% set missingLabels = missingLabels|merge([field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'})]) %}
                         {% endfor %}
                         {% set completenessLabel = draft.workingRevision.complete ? 'Complete' : 'Incomplete — Missing: ' ~ missingLabels|join(', ') %}
                         <li class="faculty-draft-row">

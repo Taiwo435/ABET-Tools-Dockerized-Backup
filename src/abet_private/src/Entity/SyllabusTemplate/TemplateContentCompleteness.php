@@ -6,9 +6,9 @@ final class TemplateContentCompleteness
 {
     /** @var list<string> */
     public const REQUIRED_FIELDS = [
-        'creditHours',
-        'courseCoordinators',
-        'creditCategorization',
+        'credits',
+        'course_coordinators',
+        'credit_category',
     ];
 
     /**
@@ -21,7 +21,7 @@ final class TemplateContentCompleteness
         foreach (self::REQUIRED_FIELDS as $field) {
             $value = $content[$field] ?? null;
             $isMissing = match ($field) {
-                'courseCoordinators' => !is_array($value) || array_filter(
+                'course_coordinators' => !is_array($value) || array_filter(
                     $value,
                     static fn (mixed $coordinator): bool => trim((string)$coordinator) !== '',
                 ) === [],

@@ -86,7 +86,7 @@
                 <div>
                     <strong>This draft is not ready to submit.</strong>
                     <div>Complete the following required information:</div>
-                    <ul>{% for field in submission.workingRevision.missingFields %}<li>{{ field|replace({'creditHours': 'Credit hours', 'courseCoordinators': 'Course coordinator', 'creditCategorization': 'Credit categorization'}) }}</li>{% endfor %}</ul>
+                    <ul>{% for field in submission.workingRevision.missingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}</ul>
                 </div>
             </div>
         {% endif %}
