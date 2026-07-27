@@ -142,10 +142,10 @@ final class CoordinatorSyllabusReviewQueueTest extends TestCase
         self::assertStringContainsString("isCsrfTokenValid('deny-syllabus-submission-'", $source);
         self::assertStringContainsString('ReviewDecision::Denied', $source);
         self::assertStringContainsString('$submission->recordDenial($review)', $source);
-        self::assertStringContainsString('CoordinatorTemplateData::fromSubmission($submission)', $source);
+        self::assertStringContainsString('$this->prefill->fromSubmission($submission)', $source);
         self::assertStringContainsString("['include_course_identity' => true]", $source);
         self::assertStringContainsString('ReviewDecision::ApprovedWithEdits', $source);
-        self::assertStringContainsString('$submission->addRevision($user, RevisionAuthorType::Coordinator, $content)', $source);
+        self::assertStringContainsString('$this->revisions->addCoordinatorRevision($submission, $user, $data)', $source);
         self::assertStringContainsString('$submission->getCommonCourse()->updateDuringFacultyReview(', $source);
         self::assertStringContainsString('courseDetailsChanged: $courseDetailsChanged', $source);
     }

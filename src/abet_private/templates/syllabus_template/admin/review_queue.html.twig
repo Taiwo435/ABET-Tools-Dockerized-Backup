@@ -93,7 +93,8 @@
                             <td>
                                 <strong>{{ submission.commonCourse.program.initials }}</strong>
                                 <span class="cell-detail">{{ submission.commonCourse.program.year }}</span>
-                                <div class="cell-detail">{{ submission.commonCourse.deliveryType.value|replace({'_': ' '})|title }}</div>
+                                <div class="cell-detail">{{ (submission.courseOffering ? submission.courseOffering.deliveryType.value : submission.commonCourse.deliveryType.value)|replace({'_': ' '})|title }}</div>
+                                <div class="cell-detail">{{ submission.kind.value == 'faculty_offering' ? submission.courseOffering.term ~ ' ' ~ submission.courseOffering.academicYear ~ ' offering' : 'Shared template proposal' }}</div>
                             </td>
                             <td>
                                 <strong>{{ submission.submittedBy.asurite }}</strong>

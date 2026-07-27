@@ -94,16 +94,16 @@
                                 <span class="template-state">
                                     {{ template.status.value|replace({'_': ' '})|title }}
                                     <span
-                                        class="completeness-icon completeness-icon--{{ revision.completenessStatus.value }}"
+                                        class="completeness-icon completeness-icon--{{ revision.coordinatorPublishable ? 'complete' : 'incomplete' }}"
                                         role="img"
-                                        aria-label="{{ revision.completenessStatus.value|title }}"
-                                        title="{{ revision.completenessStatus.value|title }}"
-                                    >{{ revision.completenessStatus.value == 'complete' ? '✓' : '×' }}</span>
+                                        aria-label="{{ revision.coordinatorPublishable ? 'Ready to publish' : 'Not ready to publish' }}"
+                                        title="{{ revision.coordinatorPublishable ? 'Ready to publish' : 'Not ready to publish' }}"
+                                    >{{ revision.coordinatorPublishable ? '✓' : '×' }}</span>
                                 </span>
                             </td>
                             <td><strong>Rev. {{ revision.revisionNumber }}</strong></td>
                             <td class="publish-cell">
-                                {% if revision.missingFields is empty %}
+                                {% if revision.coordinatorPublicationBlockingFields is empty %}
                                     {% if template.status.value == 'draft' %}
                                         <form method="post" action="{{ path('app_admin_syllabus_templates_publish', {id: template.id}) }}" class="table-form">
                                             <input type="hidden" name="_token" value="{{ csrf_token('publish-syllabus-template-' ~ template.id) }}">
@@ -114,7 +114,7 @@
                                     {% endif %}
                                 {% else %}
                                     <ul class="missing-list">
-                                        {% for field in revision.missingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}
+                                        {% for field in revision.coordinatorPublicationBlockingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}
                                     </ul>
                                 {% endif %}
                             </td>

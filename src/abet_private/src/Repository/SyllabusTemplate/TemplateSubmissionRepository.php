@@ -6,6 +6,7 @@ use App\Entity\Program;
 use App\Entity\SyllabusTemplate\CompletenessStatus;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
 use App\Entity\SyllabusTemplate\ReviewDecision;
+use App\Entity\SyllabusTemplate\SubmissionKind;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -28,7 +29,9 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
             ->innerJoin('course.program', 'program')
             ->innerJoin('submission.workingRevision', 'revision')
             ->leftJoin('course.currentApprovedRevision', 'currentApprovedRevision')
+            ->andWhere('submission.kind = :sharedTemplateKind')
             ->andWhere('(submission.origin = :coordinatorOrigin AND submission.status = :draftStatus) OR submission.approvedRevision = currentApprovedRevision')
+            ->setParameter('sharedTemplateKind', SubmissionKind::SharedTemplate->value)
             ->setParameter('coordinatorOrigin', ProposalOrigin::CoordinatorCreated->value)
             ->setParameter('draftStatus', SubmissionStatus::Draft->value)
             ->orderBy('course.courseSubject', 'ASC')
@@ -66,11 +69,12 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
     public function findPendingFacultyReviews(?Program $program = null): array
     {
         $builder = $this->createQueryBuilder('submission')
-            ->addSelect('course', 'program', 'submitter', 'submittedRevision')
+            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'offering')
             ->innerJoin('submission.commonCourse', 'course')
             ->innerJoin('course.program', 'program')
             ->innerJoin('submission.submittedBy', 'submitter')
             ->innerJoin('submission.submittedRevision', 'submittedRevision')
+            ->leftJoin('submission.courseOffering', 'offering')
             ->leftJoin('submission.review', 'review')
             ->andWhere('submission.origin = :origin')
             ->andWhere('submission.status = :status')
@@ -143,12 +147,13 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
     public function findPendingFacultyReview(int $id): ?TemplateSubmission
     {
         return $this->createQueryBuilder('submission')
-            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'basedOnRevision', 'currentApprovedRevision')
+            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'basedOnRevision', 'currentApprovedRevision', 'offering')
             ->innerJoin('submission.commonCourse', 'course')
             ->innerJoin('course.program', 'program')
             ->innerJoin('submission.submittedBy', 'submitter')
             ->innerJoin('submission.submittedRevision', 'submittedRevision')
             ->leftJoin('submission.basedOnRevision', 'basedOnRevision')
+            ->leftJoin('submission.courseOffering', 'offering')
             ->leftJoin('course.currentApprovedRevision', 'currentApprovedRevision')
             ->leftJoin('submission.review', 'review')
             ->andWhere('submission.id = :id')
@@ -166,13 +171,14 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
     public function findFacultyReview(int $id): ?TemplateSubmission
     {
         return $this->createQueryBuilder('submission')
-            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'approvedRevision', 'basedOnRevision', 'currentApprovedRevision', 'review', 'reviewer')
+            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'approvedRevision', 'basedOnRevision', 'currentApprovedRevision', 'offering', 'review', 'reviewer')
             ->innerJoin('submission.commonCourse', 'course')
             ->innerJoin('course.program', 'program')
             ->innerJoin('submission.submittedBy', 'submitter')
             ->innerJoin('submission.submittedRevision', 'submittedRevision')
             ->leftJoin('submission.approvedRevision', 'approvedRevision')
             ->leftJoin('submission.basedOnRevision', 'basedOnRevision')
+            ->leftJoin('submission.courseOffering', 'offering')
             ->leftJoin('course.currentApprovedRevision', 'currentApprovedRevision')
             ->leftJoin('submission.review', 'review')
             ->leftJoin('review.reviewer', 'reviewer')
@@ -196,12 +202,13 @@ final class TemplateSubmissionRepository extends ServiceEntityRepository
     public function findReviewedFacultySubmissions(?Program $program = null, ?ReviewDecision $decision = null): array
     {
         $builder = $this->createQueryBuilder('submission')
-            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'approvedRevision', 'review', 'reviewer')
+            ->addSelect('course', 'program', 'submitter', 'submittedRevision', 'approvedRevision', 'offering', 'review', 'reviewer')
             ->innerJoin('submission.commonCourse', 'course')
             ->innerJoin('course.program', 'program')
             ->innerJoin('submission.submittedBy', 'submitter')
             ->innerJoin('submission.submittedRevision', 'submittedRevision')
             ->leftJoin('submission.approvedRevision', 'approvedRevision')
+            ->leftJoin('submission.courseOffering', 'offering')
             ->innerJoin('submission.review', 'review')
             ->innerJoin('review.reviewer', 'reviewer')
             ->andWhere('submission.origin = :origin')

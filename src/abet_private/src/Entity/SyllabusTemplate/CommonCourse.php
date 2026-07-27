@@ -136,6 +136,7 @@ class CommonCourse
     {
         if ($submission->getCommonCourse() !== $this
             || $submission->getOrigin() !== ProposalOrigin::FacultySubmission
+            || $submission->getKind() !== SubmissionKind::SharedTemplate
             || $submission->getStatus() !== SubmissionStatus::Submitted
             || $submission->getReview() !== null) {
             throw new \DomainException('Course details can only be corrected while a faculty submission is pending review.');
@@ -158,8 +159,9 @@ class CommonCourse
 
     public function publish(TemplateRevision $revision): void
     {
-        if ($revision->getSubmission()->getCommonCourse() !== $this) {
-            throw new \DomainException('The approved revision belongs to a different common course.');
+        if ($revision->getSubmission()->getCommonCourse() !== $this
+            || $revision->getSubmission()->getKind() !== SubmissionKind::SharedTemplate) {
+            throw new \DomainException('Only a shared-template revision for this common course can be published.');
         }
 
         $this->currentApprovedRevision = $revision;

@@ -32,11 +32,27 @@ final class CoordinatorTemplateDataTest extends TestCase
 
         $data = CoordinatorTemplateData::fromRevision($revision);
         $data->courseCoordinators = "First Coordinator\nSecond Coordinator\nFirst Coordinator";
+        $data->instructors = "Faculty One\nFaculty Two";
+        $data->textbooks = "Book One\nBook Two";
+        $data->contactHours = '3 lecture hours per week';
+        $data->prerequisites = 'CSE 205';
+        $data->courseType = 'R';
+        $data->specificGoals = "Goal one\nGoal two";
         $data->courseOutcomes = "Outcome one\n\nOutcome two";
+        $data->studentOutcomes = "SO 1\nSO 2";
+        $data->topicsCovered = "Requirements\nDesign";
         $content = $data->toContent();
 
         self::assertSame(['First Coordinator', 'Second Coordinator'], $content['course_coordinators']);
+        self::assertSame(['Faculty One', 'Faculty Two'], $content['instructors']);
+        self::assertSame(['Book One', 'Book Two'], $content['textbooks']);
+        self::assertSame('3 lecture hours per week', $content['contact_hours']);
+        self::assertSame('CSE 205', $content['prerequisites']);
+        self::assertSame('R', $content['course_type']);
+        self::assertSame(['Goal one', 'Goal two'], $content['specific_goals']);
         self::assertSame(['Outcome one', 'Outcome two'], $content['course_outcomes']);
+        self::assertSame(['SO 1', 'SO 2'], $content['student_outcomes']);
+        self::assertSame(['Requirements', 'Design'], $content['topics_covered']);
         self::assertSame('1.0', $content['schema_version']);
         self::assertArrayNotHasKey('courseCoordinators', $content);
         self::assertSame(['preserve-me'], $content['customSchemaField']);
@@ -78,7 +94,15 @@ final class CoordinatorTemplateDataTest extends TestCase
             'courseCoordinators' => 'Bazzi',
             'creditCategorization' => 'engineering',
             'catalogDescription' => '',
+            'contactHours' => '',
+            'instructors' => '',
+            'textbooks' => '',
+            'prerequisites' => '',
+            'courseType' => '',
+            'specificGoals' => '',
             'courseOutcomes' => '',
+            'studentOutcomes' => '',
+            'topicsCovered' => '',
         ]);
 
         self::assertTrue($form->isSubmitted());
@@ -86,6 +110,7 @@ final class CoordinatorTemplateDataTest extends TestCase
         self::assertSame('', $data->catalogDescription);
         self::assertSame('', $data->courseOutcomes);
         self::assertSame([], $data->toContent()['course_outcomes']);
+        self::assertSame([], $data->toContent()['topics_covered']);
     }
 
     public function testBlankOptionalFieldsDoNotBlockPublicationCompleteness(): void

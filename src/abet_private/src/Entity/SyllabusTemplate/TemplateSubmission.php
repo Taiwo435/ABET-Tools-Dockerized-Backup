@@ -129,6 +129,10 @@ class TemplateSubmission
 
     public function hasSharedTemplateChanged(): bool
     {
+        if ($this->kind !== SubmissionKind::SharedTemplate) {
+            return false;
+        }
+
         $currentApprovedRevision = $this->commonCourse->getCurrentApprovedRevision();
 
         return $currentApprovedRevision !== null
@@ -186,7 +190,7 @@ class TemplateSubmission
             $this->revisions->count() + 1,
             $content,
             $completeness['status'],
-            $completeness['missingFields'],
+            $completeness['blockingFields'],
         );
         $this->revisions->add($revision);
         $this->workingRevision = $revision;
@@ -206,7 +210,7 @@ class TemplateSubmission
         if (!$this->revisions->contains($revision) || $revision->getAuthorType() !== RevisionAuthorType::Faculty) {
             throw new \DomainException('A submission must use one of its faculty-authored revisions.');
         }
-        if (!$revision->isComplete()) {
+        if (!$revision->isFacultySubmittable()) {
             throw new \DomainException('An incomplete faculty template cannot be submitted for review.');
         }
 
@@ -217,12 +221,14 @@ class TemplateSubmission
 
     public function publishCoordinatorTemplate(TemplateRevision $revision, ?\DateTimeImmutable $at = null): void
     {
-        if ($this->origin !== ProposalOrigin::CoordinatorCreated || $this->status !== SubmissionStatus::Draft) {
+        if ($this->kind !== SubmissionKind::SharedTemplate
+            || $this->origin !== ProposalOrigin::CoordinatorCreated
+            || $this->status !== SubmissionStatus::Draft) {
             throw new \DomainException('Only a coordinator-created draft can be published directly.');
         }
         if (!$this->revisions->contains($revision)
             || $revision->getAuthorType() !== RevisionAuthorType::Coordinator
-            || !$revision->isComplete()) {
+            || !$revision->isCoordinatorPublishable()) {
             throw new \DomainException('Direct publication requires a complete coordinator-authored revision.');
         }
 
@@ -234,7 +240,8 @@ class TemplateSubmission
 
     public function beginCoordinatorRevision(User $author, array $content): TemplateRevision
     {
-        if ($this->origin !== ProposalOrigin::CoordinatorCreated
+        if ($this->kind !== SubmissionKind::SharedTemplate
+            || $this->origin !== ProposalOrigin::CoordinatorCreated
             || $this->status !== SubmissionStatus::Approved
             || $this->approvedRevision === null) {
             throw new \DomainException('Only a published coordinator template can begin a new revision.');
@@ -247,7 +254,8 @@ class TemplateSubmission
 
     public function createCoordinatorRevisionDraft(User $author, array $content): self
     {
-        if ($this->origin !== ProposalOrigin::FacultySubmission
+        if ($this->kind !== SubmissionKind::SharedTemplate
+            || $this->origin !== ProposalOrigin::FacultySubmission
             || !in_array($this->status, [SubmissionStatus::Approved, SubmissionStatus::ApprovedWithEdits], true)
             || $this->approvedRevision === null
             || $this->commonCourse->getCurrentApprovedRevision() !== $this->approvedRevision) {
@@ -311,10 +319,16 @@ class TemplateSubmission
             && !$courseDetailsChanged) {
             throw new \DomainException('Approval with edits requires a meaningful content change.');
         }
+        if ($this->kind === SubmissionKind::FacultyOffering && $courseDetailsChanged) {
+            throw new \DomainException('A faculty-offering review cannot change shared course identity.');
+        }
         if ($review->getDecision() === ReviewDecision::ApprovedWithEdits && $this->hasSharedTemplateChanged()) {
             throw new \DomainException('Approval with edits cannot replace a newer shared template revision without reconciliation.');
         }
-        if (!$approvedRevision->isComplete()) {
+        $approvalPurpose = $this->kind === SubmissionKind::SharedTemplate
+            ? SyllabusCompletenessPurpose::CoordinatorPublishable
+            : SyllabusCompletenessPurpose::FacultySubmittable;
+        if (!$approvedRevision->isCompleteFor($approvalPurpose)) {
             throw new \DomainException('An incomplete revision cannot be approved.');
         }
 
@@ -326,7 +340,14 @@ class TemplateSubmission
             ReviewDecision::Denied => throw new \DomainException('A denied submission cannot have an approved revision.'),
         };
         $this->decidedAt = $this->updatedAt = $at ?? new \DateTimeImmutable();
-        $this->commonCourse->publish($approvedRevision);
+        if ($this->kind === SubmissionKind::SharedTemplate) {
+            $this->commonCourse->publish($approvedRevision);
+        } else {
+            if ($this->courseOffering === null) {
+                throw new \LogicException('A faculty-offering submission lost its offering target.');
+            }
+            $this->courseOffering->publish($approvedRevision);
+        }
     }
 
     public function recordDenial(TemplateReview $review, ?\DateTimeImmutable $at = null): void

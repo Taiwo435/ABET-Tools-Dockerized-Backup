@@ -65,7 +65,7 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('Submit for approval', $form);
         self::assertStringContainsString("path('app_faculty_syllabus_templates_submit', {id: draft.id})", $index);
         self::assertStringContainsString("csrf_token('submit-faculty-syllabus-' ~ draft.id)", $index);
-        self::assertStringContainsString('{% if draft.workingRevision.complete %}', $index);
+        self::assertStringContainsString('{% if draft.workingRevision.facultySubmittable %}', $index);
         self::assertStringContainsString('faculty-draft-submit-form', $index);
         self::assertStringContainsString('Your submitted proposals', $index);
         self::assertStringContainsString('Coordinator feedback:', $index);
@@ -77,18 +77,27 @@ final class FacultySyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('Hold to delete', $form);
         self::assertStringContainsString('Deletions are permanent.', $index);
         self::assertStringContainsString('Deletions are permanent.', $form);
-        self::assertStringContainsString('draft.workingRevision.completenessStatus.value', $index);
-        self::assertStringContainsString('draft.workingRevision.missingFields', $index);
+        self::assertStringContainsString('draft.workingRevision.facultySubmittable', $index);
+        self::assertStringContainsString('draft.workingRevision.facultySubmissionBlockingFields', $index);
         self::assertStringContainsString('data-tooltip="{{ completenessLabel }}"', $index);
-        self::assertStringContainsString('Incomplete — Missing:', $index);
+        self::assertStringContainsString('Not ready to submit — Required:', $index);
         self::assertStringContainsString('.completeness-icon:hover::after', $index);
-        self::assertStringContainsString("draft.workingRevision.complete ? '✓' : '×'", $index);
+        self::assertStringContainsString("draft.workingRevision.facultySubmittable ? '✓' : '×'", $index);
         self::assertStringNotContainsString('confirm(', $form);
         self::assertStringContainsString('const holdDuration = 2000', $holdDelete);
         self::assertStringContainsString("button.addEventListener('pointerdown', begin)", $holdDelete);
         self::assertStringContainsString("button.addEventListener('keydown', begin)", $holdDelete);
         self::assertStringContainsString('requestSubmit()', $holdDelete);
         self::assertStringContainsString("path('app_faculty_syllabus_templates')", $homepage);
+        self::assertStringContainsString('form.contactHours', $form);
+        self::assertStringContainsString('form.instructors', $form);
+        self::assertStringContainsString('form.textbooks', $form);
+        self::assertStringContainsString('form.prerequisites', $form);
+        self::assertStringContainsString('form.courseType', $form);
+        self::assertStringContainsString('form.specificGoals', $form);
+        self::assertStringContainsString('form.studentOutcomes', $form);
+        self::assertStringContainsString('form.topicsCovered', $form);
+        self::assertStringContainsString('submission.workingRevision.appendixABlockingFields', $form);
     }
 
     public function testDeletingDraftSubmissionAlsoRemovesItsOwnedRevisions(): void

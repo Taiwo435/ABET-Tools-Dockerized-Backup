@@ -59,6 +59,7 @@
 {% block body %}
     {% set revision = submission.submittedRevision %}
     {% set content = revision.content %}
+    {% set publicationTarget = submission.kind.value == 'faculty_offering' ? 'course offering' : 'shared template' %}
     <section class="hero hero-small">
         <h1>Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</h1>
         <p>{{ submission.review ? 'Read-only record of the frozen submission and completed review.' : "Read the faculty member's frozen submitted revision before making a decision." }}</p>
@@ -78,7 +79,7 @@
         <dl class="context-grid">
             <div class="context-item"><dt>Faculty</dt><dd>{{ submission.submittedBy.asurite }}</dd></div>
             <div class="context-item"><dt>Program</dt><dd>{{ submission.commonCourse.program.initials }} {{ submission.commonCourse.program.year }}</dd></div>
-            <div class="context-item"><dt>Delivery</dt><dd>{{ submission.commonCourse.deliveryType.value|replace({'_': ' '})|title }}</dd></div>
+            <div class="context-item"><dt>Delivery</dt><dd>{{ (submission.courseOffering ? submission.courseOffering.deliveryType.value : submission.commonCourse.deliveryType.value)|replace({'_': ' '})|title }}</dd></div>
             <div class="context-item"><dt>Submitted revision</dt><dd>Rev. {{ revision.revisionNumber }}</dd></div>
         </dl>
 
@@ -98,7 +99,10 @@
                 <div class="read-grid read-grid--three">
                     <div class="read-field"><span class="read-field__label">Course subject</span><div class="read-field__value">{{ submission.commonCourse.courseSubject }}</div></div>
                     <div class="read-field"><span class="read-field__label">Course number</span><div class="read-field__value">{{ submission.commonCourse.courseNumber }}</div></div>
-                    <div class="read-field"><span class="read-field__label">Delivery type</span><div class="read-field__value">{{ submission.commonCourse.deliveryType.value|replace({'_': ' '})|title }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Delivery type</span><div class="read-field__value">{{ (submission.courseOffering ? submission.courseOffering.deliveryType.value : submission.commonCourse.deliveryType.value)|replace({'_': ' '})|title }}</div></div>
+                    {% if submission.courseOffering %}
+                        <div class="read-field"><span class="read-field__label">Offering</span><div class="read-field__value">{{ submission.courseOffering.term }} {{ submission.courseOffering.academicYear }}{% if submission.courseOffering.section %}, section {{ submission.courseOffering.section }}{% endif %}</div></div>
+                    {% endif %}
                     <div class="read-field read-field--wide"><span class="read-field__label">Course name</span><div class="read-field__value">{{ submission.commonCourse.courseName }}</div></div>
                 </div>
             </section>
@@ -116,8 +120,18 @@
             </section>
 
             <section class="review-section">
-                <div class="review-section__heading"><h2>Additional syllabus information</h2><p>Optional catalog description and course outcomes included in the proposal.</p></div>
+                <div class="review-section__heading"><h2>Instruction and materials</h2><p>Scheduling, instructional responsibility, and source materials included in the proposal.</p></div>
                 <div class="read-grid">
+                    <div class="read-field"><span class="read-field__label">Contact hours</span><div class="read-field__value">{{ content.contact_hours|default('') ?: 'Not provided' }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Prerequisites</span><div class="read-field__value">{{ content.prerequisites|default('') ?: 'Not provided' }}</div></div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Instructors</span>
+                        {% if content.instructors|default([]) is not empty %}<ul class="read-list">{% for instructor in content.instructors %}<li>{{ instructor }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
+                    </div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Textbooks and required materials</span>
+                        {% if content.textbooks|default([]) is not empty %}<ul class="read-list">{% for textbook in content.textbooks %}<li>{{ textbook }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
+                    </div>
                     <div class="read-field read-field--wide">
                         <span class="read-field__label">Catalog description</span>
                         <div class="read-field__value">{% if content.catalog_description is not empty %}{{ content.catalog_description }}{% else %}<span class="not-provided">Not provided</span>{% endif %}</div>
@@ -126,6 +140,16 @@
                         <span class="read-field__label">Course outcomes</span>
                         {% if content.course_outcomes is not empty %}<ul class="read-list">{% for outcome in content.course_outcomes %}<li>{{ outcome }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
                     </div>
+                </div>
+            </section>
+
+            <section class="review-section">
+                <div class="review-section__heading"><h2>ABET alignment</h2><p>Evidence used to determine Appendix A readiness.</p></div>
+                <div class="read-grid">
+                    <div class="read-field"><span class="read-field__label">Course type</span><div class="read-field__value">{{ content.course_type|default('') ?: 'Not provided' }}</div></div>
+                    <div class="read-field read-field--wide"><span class="read-field__label">Specific goals</span>{% if content.specific_goals|default([]) is not empty %}<ul class="read-list">{% for goal in content.specific_goals %}<li>{{ goal }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}</div>
+                    <div class="read-field read-field--wide"><span class="read-field__label">Student outcomes</span>{% if content.student_outcomes|default([]) is not empty %}<ul class="read-list">{% for outcome in content.student_outcomes %}<li>{{ outcome }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}</div>
+                    <div class="read-field read-field--wide"><span class="read-field__label">Topics covered</span>{% if content.topics_covered|default([]) is not empty %}<ul class="read-list">{% for topic in content.topics_covered %}<li>{{ topic }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}</div>
                 </div>
             </section>
         </article>
@@ -147,7 +171,7 @@
             <div class="decision-grid">
                 <section class="decision-panel">
                     <h2>Approve submission</h2>
-                    <p>Publish the frozen faculty revision exactly as submitted.</p>
+                    <p>Publish the frozen faculty revision exactly as submitted to the {{ publicationTarget }}.</p>
                     {% if sharedTemplateChanged %}<p class="decision-panel__warning">Unavailable because the shared template changed after this faculty copy was created.</p>{% endif %}
                     <form method="post" action="{{ path('app_admin_syllabus_template_review_approve', {id: submission.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('approve-syllabus-submission-' ~ submission.id) }}">

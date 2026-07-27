@@ -8,6 +8,7 @@ use App\Form\Model\CoordinatorTemplateData;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -65,6 +66,24 @@ final class CoordinatorTemplateType extends AbstractType
                 'help' => 'Enter one coordinator per line.',
                 'empty_data' => '',
             ])
+            ->add('contactHours', TextType::class, [
+                'required' => false,
+                'label' => 'Contact hours',
+                'help' => 'For example: 3 hours lecture and 1 hour laboratory per week.',
+                'empty_data' => '',
+            ])
+            ->add('instructors', TextareaType::class, [
+                'required' => false,
+                'label' => 'Instructors',
+                'help' => 'Enter one instructor per line.',
+                'empty_data' => '',
+            ])
+            ->add('textbooks', TextareaType::class, [
+                'required' => false,
+                'label' => 'Textbooks and other required materials',
+                'help' => 'Enter one item per line.',
+                'empty_data' => '',
+            ])
             ->add('creditCategorization', TextType::class, [
                 'required' => false,
                 'label' => 'Credit categorization',
@@ -75,10 +94,43 @@ final class CoordinatorTemplateType extends AbstractType
                 'label' => 'Catalog description',
                 'empty_data' => '',
             ])
+            ->add('prerequisites', TextareaType::class, [
+                'required' => false,
+                'label' => 'Prerequisites and co-requisites',
+                'empty_data' => '',
+            ])
+            ->add('courseType', ChoiceType::class, [
+                'required' => false,
+                'label' => 'Course type',
+                'placeholder' => 'Select a course type',
+                'choices' => [
+                    'Required' => 'R',
+                    'Elective' => 'E',
+                    'Selected elective' => 'SE',
+                ],
+            ])
+            ->add('specificGoals', TextareaType::class, [
+                'required' => false,
+                'label' => 'Specific course goals',
+                'help' => 'Enter one goal per line.',
+                'empty_data' => '',
+            ])
             ->add('courseOutcomes', TextareaType::class, [
                 'required' => false,
                 'label' => 'Course outcomes',
                 'help' => 'Enter one outcome per line.',
+                'empty_data' => '',
+            ])
+            ->add('studentOutcomes', TextareaType::class, [
+                'required' => false,
+                'label' => 'ABET student outcomes addressed',
+                'help' => 'Enter one student outcome per line.',
+                'empty_data' => '',
+            ])
+            ->add('topicsCovered', TextareaType::class, [
+                'required' => false,
+                'label' => 'Topics covered',
+                'help' => 'Enter one topic per line.',
                 'empty_data' => '',
             ]);
     }

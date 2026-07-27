@@ -4,13 +4,15 @@ namespace App\Controller\SyllabusTemplate;
 
 use App\Entity\SyllabusTemplate\CommonCourse;
 use App\Entity\SyllabusTemplate\ProposalOrigin;
-use App\Entity\SyllabusTemplate\RevisionAuthorType;
+use App\Entity\SyllabusTemplate\SubmissionKind;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
 use App\Entity\User;
 use App\Form\Model\CoordinatorTemplateData;
 use App\Form\SyllabusTemplate\CoordinatorTemplateType;
 use App\Repository\SyllabusTemplate\TemplateSubmissionRepository;
+use App\Service\SyllabusTemplate\SyllabusPrefillService;
+use App\Service\SyllabusTemplate\SyllabusRevisionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +24,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class FacultySyllabusTemplateController extends AbstractController
 {
+    public function __construct(
+        private readonly SyllabusPrefillService $prefill,
+        private readonly SyllabusRevisionService $revisions,
+    ) {
+    }
+
     #[IsGranted('ROLE_USER')]
     #[Route('/syllabus-templates', name: 'app_faculty_syllabus_templates', methods: ['GET'])]
     public function index(
@@ -45,11 +53,13 @@ final class FacultySyllabusTemplateController extends AbstractController
             'drafts' => $submissions->findBy([
                 'submittedBy' => $user,
                 'origin' => ProposalOrigin::FacultySubmission,
+                'kind' => SubmissionKind::SharedTemplate,
                 'status' => SubmissionStatus::Draft,
             ], ['updatedAt' => 'DESC']),
             'proposals' => $submissions->findBy([
                 'submittedBy' => $user,
                 'origin' => ProposalOrigin::FacultySubmission,
+                'kind' => SubmissionKind::SharedTemplate,
                 'status' => [
                     SubmissionStatus::Submitted,
                     SubmissionStatus::Approved,
@@ -88,7 +98,7 @@ final class FacultySyllabusTemplateController extends AbstractController
                     $data->deliveryType,
                 );
                 $submission = new TemplateSubmission($course, $user, ProposalOrigin::FacultySubmission);
-                $submission->addRevision($user, RevisionAuthorType::Faculty, $data->toContent());
+                $this->revisions->addFacultyRevision($submission, $user, $data);
 
                 $entityManager->persist($course);
                 $entityManager->persist($submission);
@@ -123,6 +133,7 @@ final class FacultySyllabusTemplateController extends AbstractController
             'commonCourse' => $course,
             'submittedBy' => $user,
             'origin' => ProposalOrigin::FacultySubmission,
+            'kind' => SubmissionKind::SharedTemplate,
             'status' => SubmissionStatus::Draft,
         ]);
         if ($existingDraft !== null) {
@@ -136,13 +147,13 @@ final class FacultySyllabusTemplateController extends AbstractController
             throw $this->createNotFoundException('An approved shared template was not found for this course.');
         }
 
-        $data = CoordinatorTemplateData::fromRevision($approvedRevision);
+        $data = $this->prefill->fromRevision($approvedRevision, $course);
         $form = $this->createForm(CoordinatorTemplateType::class, $data);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $submission = new TemplateSubmission($course, $user, ProposalOrigin::FacultySubmission, $approvedRevision);
-            $submission->addRevision($user, RevisionAuthorType::Faculty, $data->toContent());
+            $this->revisions->addFacultyRevision($submission, $user, $data);
             $entityManager->persist($submission);
             $entityManager->flush();
 
@@ -176,8 +187,8 @@ final class FacultySyllabusTemplateController extends AbstractController
             throw $this->createNotFoundException('A faculty working revision was not found.');
         }
 
-        $originalData = CoordinatorTemplateData::fromSubmission($submission);
-        $data = CoordinatorTemplateData::fromSubmission($submission);
+        $originalData = $this->prefill->fromSubmission($submission);
+        $data = $this->prefill->fromSubmission($submission);
         $isBlankDraft = $submission->getBasedOnRevision() === null;
         $form = $this->createForm(CoordinatorTemplateType::class, $data, ['include_course_identity' => $isBlankDraft]);
         $form->handleRequest($request);
@@ -193,17 +204,12 @@ final class FacultySyllabusTemplateController extends AbstractController
                 if ($isBlankDraft && $this->courseIdentityExists($entityManager, $data, $submission->getCommonCourse())) {
                     $form->addError(new FormError('This common course already exists. Choose a different identity or use its shared template.'));
                 } else {
-                    $submission->addRevision($user, RevisionAuthorType::Faculty, $data->toContent());
-                    if ($isBlankDraft) {
-                        $submission->getCommonCourse()->updateBlankFacultyDraftDetails(
-                            $submission,
-                            $data->program,
-                            $data->courseSubject,
-                            $data->courseNumber,
-                            $data->courseName,
-                            $data->deliveryType,
-                        );
-                    }
+                    $this->revisions->addFacultyRevision(
+                        $submission,
+                        $user,
+                        $data,
+                        updateBlankCourseIdentity: $isBlankDraft,
+                    );
                     $entityManager->flush();
                     $this->addFlash('success', 'Your faculty working copy was saved.');
 
@@ -241,7 +247,7 @@ final class FacultySyllabusTemplateController extends AbstractController
         }
 
         $revision = $submission->getWorkingRevision();
-        if ($revision === null || !$revision->isComplete()) {
+        if ($revision === null || !$revision->isFacultySubmittable()) {
             $this->addFlash('error', 'Complete all required fields before submitting this draft for approval.');
 
             return $this->redirectToRoute('app_faculty_syllabus_templates_edit', ['id' => $submission->getId()]);

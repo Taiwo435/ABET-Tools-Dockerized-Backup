@@ -30,8 +30,8 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertIsString($template);
         self::assertStringContainsString('Shared Syllabus Templates', $template);
         self::assertStringContainsString('name="completeness"', $template);
-        self::assertStringContainsString('revision.completenessStatus.value', $template);
-        self::assertStringContainsString('revision.missingFields', $template);
+        self::assertStringContainsString('revision.coordinatorPublishable', $template);
+        self::assertStringContainsString('revision.coordinatorPublicationBlockingFields', $template);
         self::assertStringContainsString('template.status.value', $template);
         self::assertStringContainsString('template.commonCourse.program.initials', $template);
         self::assertStringContainsString("path('app_admin_syllabus_template_reviews')", $template);
@@ -81,13 +81,21 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString("path('app_admin_syllabus_templates_publish'", $form);
         self::assertStringContainsString("path('app_admin_syllabus_templates_publish'", $index);
         self::assertStringContainsString("path('app_admin_syllabus_templates_edit'", $index);
-        self::assertStringContainsString('submission.workingRevision.missingFields', $form);
+        self::assertStringContainsString('submission.workingRevision.coordinatorPublicationBlockingFields', $form);
         self::assertStringContainsString('Publish Current Revision', $form);
         self::assertStringContainsString('form.program is defined', $form);
         self::assertStringContainsString('Publish now', $index);
         self::assertStringContainsString('Create new revision', $index);
         self::assertStringContainsString("template.origin.value == 'faculty_submission'", $index);
         self::assertStringContainsString('approved faculty revision; the faculty submission remains unchanged', $form);
+        self::assertStringContainsString('form.contactHours', $form);
+        self::assertStringContainsString('form.instructors', $form);
+        self::assertStringContainsString('form.textbooks', $form);
+        self::assertStringContainsString('form.courseType', $form);
+        self::assertStringContainsString('form.specificGoals', $form);
+        self::assertStringContainsString('form.studentOutcomes', $form);
+        self::assertStringContainsString('form.topicsCovered', $form);
+        self::assertStringContainsString('submission.workingRevision.appendixAReady', $form);
     }
 
     public function testAdminManagerIncludesCurrentApprovedFacultyTemplates(): void
@@ -101,7 +109,8 @@ final class AdminSyllabusTemplateControllerTest extends TestCase
         self::assertStringContainsString('submission.approvedRevision = currentApprovedRevision', $repository);
         self::assertStringContainsString('ProposalOrigin::CoordinatorCreated', $repository);
         self::assertStringContainsString('SubmissionStatus::Draft', $repository);
+        self::assertStringContainsString('SubmissionKind::SharedTemplate', $repository);
         self::assertStringContainsString('$submissions->findManagedTemplates($filter)', $controller);
-        self::assertStringContainsString('$submission->createCoordinatorRevisionDraft($user, $data->toContent())', $controller);
+        self::assertStringContainsString('$this->revisions->saveCoordinatorRevision($submission, $user, $data)', $controller);
     }
 }

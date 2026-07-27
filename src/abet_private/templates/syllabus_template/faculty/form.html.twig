@@ -80,13 +80,13 @@
         {% for message in app.flashes('error') %}<div class="flash flash--error">{{ message }}</div>{% endfor %}
         {% for message in app.flashes('info') %}<div class="flash flash--info">{{ message }}</div>{% endfor %}
 
-        {% if submission and submission.workingRevision.missingFields is not empty %}
+        {% if submission and submission.workingRevision.facultySubmissionBlockingFields is not empty %}
             <div class="missing-panel">
                 <div class="missing-panel__icon" aria-hidden="true">&#9888;</div>
                 <div>
                     <strong>This draft is not ready to submit.</strong>
                     <div>Complete the following required information:</div>
-                    <ul>{% for field in submission.workingRevision.missingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}</ul>
+                    <ul>{% for field in submission.workingRevision.facultySubmissionBlockingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'}) }}</li>{% endfor %}</ul>
                 </div>
             </div>
         {% endif %}
@@ -117,10 +117,30 @@
             </section>
 
             <section class="editor-section">
-                <div class="editor-section__heading"><h2>Additional syllabus information</h2><p>Add the catalog description and course outcomes for this proposal.</p></div>
+                <div class="editor-section__heading"><h2>Instruction and scheduling</h2><p>Record the contact pattern and people responsible for this syllabus.</p></div>
+                <div class="editor-grid">
+                    <div class="editor-field editor-field--wide">{{ form_label(form.contactHours) }}{{ form_widget(form.contactHours) }}<div class="editor-help">{{ form_help(form.contactHours) }}</div>{{ form_errors(form.contactHours) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.instructors) }}{{ form_widget(form.instructors) }}<div class="editor-help">{{ form_help(form.instructors) }}</div>{{ form_errors(form.instructors) }}</div>
+                </div>
+            </section>
+
+            <section class="editor-section">
+                <div class="editor-section__heading"><h2>Description and materials</h2><p>Capture the catalog language, prerequisites, and required learning materials.</p></div>
                 <div class="editor-grid">
                     <div class="editor-field editor-field--wide">{{ form_label(form.catalogDescription) }}{{ form_widget(form.catalogDescription) }}{{ form_errors(form.catalogDescription) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.prerequisites) }}{{ form_widget(form.prerequisites) }}{{ form_errors(form.prerequisites) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.textbooks) }}{{ form_widget(form.textbooks) }}<div class="editor-help">{{ form_help(form.textbooks) }}</div>{{ form_errors(form.textbooks) }}</div>
+                </div>
+            </section>
+
+            <section class="editor-section">
+                <div class="editor-section__heading"><h2>ABET alignment</h2><p>These fields complete the course evidence required for Appendix A.</p></div>
+                <div class="editor-grid">
+                    <div class="editor-field">{{ form_label(form.courseType) }} <span class="required-note">Required for Appendix A</span>{{ form_widget(form.courseType) }}{{ form_errors(form.courseType) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.specificGoals) }}{{ form_widget(form.specificGoals) }}<div class="editor-help">{{ form_help(form.specificGoals) }}</div>{{ form_errors(form.specificGoals) }}</div>
                     <div class="editor-field editor-field--wide">{{ form_label(form.courseOutcomes) }}{{ form_widget(form.courseOutcomes) }}<div class="editor-help">{{ form_help(form.courseOutcomes) }}</div>{{ form_errors(form.courseOutcomes) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.studentOutcomes) }}{{ form_widget(form.studentOutcomes) }}<div class="editor-help">{{ form_help(form.studentOutcomes) }}</div>{{ form_errors(form.studentOutcomes) }}</div>
+                    <div class="editor-field editor-field--wide">{{ form_label(form.topicsCovered) }}{{ form_widget(form.topicsCovered) }}<div class="editor-help">{{ form_help(form.topicsCovered) }}</div>{{ form_errors(form.topicsCovered) }}</div>
                 </div>
             </section>
 
@@ -143,15 +163,24 @@
         {{ form_end(form) }}
 
         {% if submission %}
+            <section class="publish-panel">
+                <h2>Appendix A readiness</h2>
+                {% if submission.workingRevision.appendixAReady %}
+                    <p>This revision contains the complete course evidence needed for Appendix A.</p>
+                {% else %}
+                    <p>This draft can still be saved or submitted when its submission requirements are met. Appendix A additionally needs:</p>
+                    <ul>{% for field in submission.workingRevision.appendixABlockingFields %}<li>{{ field|replace({'credits': 'Credit hours', 'contact_hours': 'Contact hours', 'credit_category': 'Credit categorization', 'instructors': 'Instructors', 'catalog_description': 'Catalog description', 'course_type': 'Course type', 'specific_goals': 'Specific goals', 'student_outcomes': 'Student outcomes', 'topics_covered': 'Topics covered'}) }}</li>{% endfor %}</ul>
+                {% endif %}
+            </section>
             <form id="delete-faculty-draft" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: submission.id}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete-faculty-syllabus-' ~ submission.id) }}">
             </form>
             <section class="publish-panel">
                 <h2>Submit syllabus proposal</h2>
-                <p>{{ submission.workingRevision.complete ? 'This revision contains all required information and is ready for coordinator approval.' : 'Submission becomes available after all required information is saved.' }}</p>
+                <p>{{ submission.workingRevision.facultySubmittable ? 'This revision contains all required information and is ready for coordinator approval.' : 'Submission becomes available after all required information is saved.' }}</p>
                 <form method="post" action="{{ path('app_faculty_syllabus_templates_submit', {id: submission.id}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('submit-faculty-syllabus-' ~ submission.id) }}">
-                    <button type="submit" class="button-primary"{% if not submission.workingRevision.complete %} disabled{% endif %}>Submit for approval</button>
+                    <button type="submit" class="button-primary"{% if not submission.workingRevision.facultySubmittable %} disabled{% endif %}>Submit for approval</button>
                 </form>
             </section>
         {% endif %}

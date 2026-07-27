@@ -53,24 +53,24 @@
                 <ul class="faculty-draft-list">
                     {% for draft in drafts %}
                         {% set missingLabels = [] %}
-                        {% for field in draft.workingRevision.missingFields %}
+                        {% for field in draft.workingRevision.facultySubmissionBlockingFields %}
                             {% set missingLabels = missingLabels|merge([field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'})]) %}
                         {% endfor %}
-                        {% set completenessLabel = draft.workingRevision.complete ? 'Complete' : 'Incomplete — Missing: ' ~ missingLabels|join(', ') %}
+                        {% set completenessLabel = draft.workingRevision.facultySubmittable ? 'Ready to submit' : 'Not ready to submit — Required: ' ~ missingLabels|join(', ') %}
                         <li class="faculty-draft-row">
                             <div class="faculty-draft-row__title">
                                 <span><strong>{{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }}</strong> — {{ draft.commonCourse.courseName }}</span>
                                 <span
-                                    class="completeness-icon completeness-icon--{{ draft.workingRevision.completenessStatus.value }}"
+                                    class="completeness-icon completeness-icon--{{ draft.workingRevision.facultySubmittable ? 'complete' : 'incomplete' }}"
                                     role="img"
                                     tabindex="0"
                                     aria-label="{{ completenessLabel }}"
                                     data-tooltip="{{ completenessLabel }}"
-                                >{{ draft.workingRevision.complete ? '✓' : '×' }}</span>
+                                >{{ draft.workingRevision.facultySubmittable ? '✓' : '×' }}</span>
                             </div>
                             <div class="faculty-draft-row__actions">
                                 <a class="button-secondary faculty-draft-row__action" href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
-                                {% if draft.workingRevision.complete %}
+                                {% if draft.workingRevision.facultySubmittable %}
                                     <form method="post" action="{{ path('app_faculty_syllabus_templates_submit', {id: draft.id}) }}" class="faculty-draft-submit-form">
                                         <input type="hidden" name="_token" value="{{ csrf_token('submit-faculty-syllabus-' ~ draft.id) }}">
                                         <button type="submit" class="button-primary faculty-draft-row__action">Submit for approval</button>

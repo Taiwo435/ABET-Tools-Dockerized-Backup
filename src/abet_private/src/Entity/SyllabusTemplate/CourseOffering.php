@@ -85,4 +85,16 @@ class CourseOffering
         $this->instructor = $instructor;
         $this->updatedAt = new \DateTimeImmutable();
     }
+
+    public function publish(TemplateRevision $revision): void
+    {
+        $submission = $revision->getSubmission();
+        if ($submission->getKind() !== SubmissionKind::FacultyOffering
+            || $submission->getCourseOffering() !== $this) {
+            throw new \DomainException('Only a faculty-offering revision for this offering can be published.');
+        }
+
+        $this->currentApprovedRevision = $revision;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 }

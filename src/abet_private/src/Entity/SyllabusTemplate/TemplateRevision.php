@@ -87,4 +87,68 @@ class TemplateRevision
     public function getMissingFields(): array { return SyllabusContentV1::normalizeFieldNames($this->missingFields); }
     public function isComplete(): bool { return $this->completenessStatus === CompletenessStatus::Complete; }
     public function getSchemaVersion(): string { return $this->schemaVersion; }
+
+    /**
+     * @return array{
+     *     purpose: SyllabusCompletenessPurpose,
+     *     status: CompletenessStatus,
+     *     missingFields: list<string>,
+     *     invalidFields: list<string>,
+     *     blockingFields: list<string>,
+     *     warnings: list<string>
+     * }
+     */
+    public function getCompletenessFor(SyllabusCompletenessPurpose $purpose): array
+    {
+        return TemplateContentCompleteness::assess($this->getContent(), $purpose);
+    }
+
+    public function isCompleteFor(SyllabusCompletenessPurpose $purpose): bool
+    {
+        return $this->getCompletenessFor($purpose)['status'] === CompletenessStatus::Complete;
+    }
+
+    /** @return list<string> */
+    public function getBlockingFieldsFor(SyllabusCompletenessPurpose $purpose): array
+    {
+        return $this->getCompletenessFor($purpose)['blockingFields'];
+    }
+
+    public function isDraftSaveable(): bool
+    {
+        return $this->isCompleteFor(SyllabusCompletenessPurpose::DraftSaveable);
+    }
+
+    public function isFacultySubmittable(): bool
+    {
+        return $this->isCompleteFor(SyllabusCompletenessPurpose::FacultySubmittable);
+    }
+
+    public function isCoordinatorPublishable(): bool
+    {
+        return $this->isCompleteFor(SyllabusCompletenessPurpose::CoordinatorPublishable);
+    }
+
+    public function isAppendixAReady(): bool
+    {
+        return $this->isCompleteFor(SyllabusCompletenessPurpose::AppendixAReady);
+    }
+
+    /** @return list<string> */
+    public function getFacultySubmissionBlockingFields(): array
+    {
+        return $this->getBlockingFieldsFor(SyllabusCompletenessPurpose::FacultySubmittable);
+    }
+
+    /** @return list<string> */
+    public function getCoordinatorPublicationBlockingFields(): array
+    {
+        return $this->getBlockingFieldsFor(SyllabusCompletenessPurpose::CoordinatorPublishable);
+    }
+
+    /** @return list<string> */
+    public function getAppendixABlockingFields(): array
+    {
+        return $this->getBlockingFieldsFor(SyllabusCompletenessPurpose::AppendixAReady);
+    }
 }
