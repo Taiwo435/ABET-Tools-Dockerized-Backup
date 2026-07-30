@@ -1,0 +1,219 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Profile | {% endblock %}
+
+{% block styles %}
+    <style>
+        .profile-shell {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        .profile-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .profile-header {
+            background-color: #8C1D40;
+            color: #fff;
+            padding: 2rem 2.5rem;
+            border-bottom: 4px solid #FFC627;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .profile-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .profile-header p {
+            margin: 4px 0 0;
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+
+        .profile-header-actions a {
+            color: rgba(255,255,255,0.95);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .profile-header-actions a:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: #fff;
+        }
+
+        .profile-body {
+            padding: 2.5rem;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: #fce8e8;
+            color: #b00020;
+            border-left: 4px solid #b00020;
+        }
+
+        .alert-success {
+            background: #eafaf0;
+            color: #146b14;
+            border-left: 4px solid #146b14;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .full-width { grid-column: 1 / -1; }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: #fafafa;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #8C1D40;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(140, 29, 64, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .profile-footer {
+            padding: 1.5rem 2.5rem;
+            background: #fcfcfc;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+
+        .btn-save {
+            background-color: #8C1D40;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background-color: #5c132a;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .profile-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="profile-shell">
+        <div class="profile-card">
+            <div class="profile-header">
+                <div>
+                    <h1>Edit Profile</h1>
+                    <p>Update your information visible to other users.</p>
+                </div>
+                <div class="profile-header-actions">
+                    <a href="{{ path('app_account_overview') }}">Cancel</a>
+                </div>
+            </div>
+
+            <form method="post" action="{{ path('app_account_profile_update') }}">
+                <div class="profile-body">
+
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-error">{{ message }}</div>
+                    {% endfor %}
+
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success">{{ message }}</div>
+                    {% endfor %}
+
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('profile_update') }}">
+
+                    <div class="form-grid">
+                        <div class="full-width">
+                            <label for="display_name">Display Name</label>
+                            <input type="text" id="display_name" name="display_name" maxlength="120" value="{{ profile.display_name }}">
+                        </div>
+
+                        <div>
+                            <label for="department">Department</label>
+                            <input type="text" id="department" name="department" maxlength="120" value="{{ profile.department }}">
+                        </div>
+
+                        <div>
+                            <label for="phone">Phone Number</label>
+                            <input type="text" id="phone" name="phone" maxlength="30" value="{{ profile.phone }}">
+                        </div>
+
+                        <div class="full-width">
+                            <label for="office_location">Office Location</label>
+                            <input type="text" id="office_location" name="office_location" maxlength="120" value="{{ profile.office_location }}">
+                        </div>
+
+                        <div class="full-width">
+                            <label for="bio">Professional Bio</label>
+                            <textarea id="bio" name="bio" maxlength="500" rows="5">{{ profile.bio }}</textarea>
+                            <div class="char-count">Max 500 characters</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-footer">
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </main>
+{% endblock %}

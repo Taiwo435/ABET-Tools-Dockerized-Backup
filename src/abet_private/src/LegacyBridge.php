@@ -69,10 +69,10 @@ class LegacyBridge
         }
 
         // account profile stuff
-        // NOTE: I had to change paths because some links ended with /
-        if ($requestPathInfo == '/account/profile/') {
-            return "{$legacyRoot}/account/profile/index.php";
-        }
+        // Removed: /account/profile/ now handled by AccountProfileController (#51)
+        //if ($requestPathInfo == '/account/profile/') {
+        //    return "{$legacyRoot}/account/profile/index.php";
+        //}
 
         if ($requestPathInfo == '/account/me/') {
             return "{$legacyRoot}/account/me/index.php";
@@ -90,10 +90,10 @@ class LegacyBridge
             return "{$legacyRoot}/account/help/index.php";
         }
 
-        // account actions
-        if ($requestPathInfo == '/account/profile/update/') {
-            return "{$legacyRoot}/account/profile/update.php";
-        }
+        // Removed: /account/profile/update/ now handled by AccountProfileController (#132)
+        //if ($requestPathInfo == '/account/profile/update/') {
+        //    return "{$legacyRoot}/account/profile/update.php";
+        // }
 
         if ($requestPathInfo == '/account/settings/email') {
             return "{$legacyRoot}/account/settings/email.php";
