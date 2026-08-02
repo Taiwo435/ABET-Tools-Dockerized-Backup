@@ -8,13 +8,12 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 /**
  * Activates a pending (is_active = 0) account once the user proves, via a
- * Clerk-verified Google sign-in, that they own the email address they
+ * Clerk-verified email sign-in, that they own the email address they
  * registered with, then logs them straight in — having just proven their
- * identity via Google, making them immediately re-enter a password too
- * would be redundant. Populates the same raw $_SESSION keys that native
- * /login (via SecurityAuditSubscriber) sets, since that's what every
- * legacy-page permission check and LegacySessionAuthenticator read from.
- * Password login at /login is otherwise untouched.
+ * identity, making them immediately re-enter a password too would be
+ * redundant. Populates the same raw $_SESSION keys that native /login
+ * (via SecurityAuditSubscriber) sets, since that's what every legacy-page
+ * permission check and LegacySessionAuthenticator read from.
  */
 
 function clerk_verify_json(int $status, array $data): never
@@ -66,7 +65,7 @@ try {
 
     if (!$user) {
         clerk_verify_json(404, [
-            'error' => 'That Google account\'s email doesn\'t match a pending signup. Make sure you sign in with the same email address you registered with.',
+            'error' => 'That email doesn\'t match a pending signup. Make sure you verify with the same email address you registered with.',
         ]);
     }
 

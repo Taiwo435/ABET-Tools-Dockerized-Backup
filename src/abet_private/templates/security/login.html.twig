@@ -79,10 +79,10 @@
     if (!button || !status) { return; }
 
     function showError(message) {
-      status.textContent = message || 'Google sign-in could not be completed.';
+      status.textContent = message || 'Sign-in could not be completed.';
       status.hidden = false;
       button.disabled = false;
-      button.textContent = 'Continue with Google';
+      button.textContent = 'Continue';
     }
 
     let exchangeInProgress = false;
@@ -96,7 +96,7 @@
 
       try {
         const token = await session.getToken({ skipCache: true });
-        if (!token) { throw new Error('Google sign-in did not return a token.'); }
+        if (!token) { throw new Error('Sign-in did not return a token.'); }
 
         const response = await fetch('/auth/clerk_login.php', {
           method: 'POST',
@@ -120,23 +120,19 @@
           try { await window.Clerk.signOut(); } catch (_) {}
         }
         exchangeInProgress = false;
-        showError(exception instanceof Error ? exception.message : 'Google sign-in could not be completed.');
+        showError(exception instanceof Error ? exception.message : 'Sign-in could not be completed.');
       }
     }
 
-    function openGoogleSignIn() {
+    function openEmailSignIn() {
       status.hidden = true;
       window.Clerk.openSignIn({
-        oauthFlow: 'redirect',
         routing: 'hash',
         withSignUp: true,
         forceRedirectUrl: '/login',
         fallbackRedirectUrl: '/login',
         signUpForceRedirectUrl: '/login',
-        signUpFallbackRedirectUrl: '/login',
-        appearance: {
-          layout: { socialButtonsPlacement: 'top', socialButtonsVariant: 'blockButton' }
-        }
+        signUpFallbackRedirectUrl: '/login'
       });
     }
 
@@ -156,12 +152,12 @@
       }
 
       button.disabled = false;
-      button.textContent = 'Continue with Google';
-      button.addEventListener('click', openGoogleSignIn);
+      button.textContent = 'Continue';
+      button.addEventListener('click', openEmailSignIn);
     } catch (exception) {
       console.error('Clerk initialization failed:', exception);
-      button.textContent = 'Google sign-in unavailable';
-      showError(exception instanceof Error ? exception.message : 'Google sign-in could not load.');
+      button.textContent = 'Sign-in unavailable';
+      showError(exception instanceof Error ? exception.message : 'Sign-in could not load.');
     }
   });
   </script>

@@ -8,10 +8,9 @@ use Firebase\JWT\JWT;
 use Symfony\Component\HttpClient\HttpClient;
 
 /**
- * Clerk is used ONLY to prove a user owns the email address they signed up
- * with (via "Continue with Google"), replacing the 6-digit email code that
- * needed a mail provider we don't have. Password login is untouched — this
- * is purely a one-time signup verification step.
+ * Clerk is used to prove a user owns the email address they sign in with,
+ * via an emailed one-time code — replacing the old 6-digit email code
+ * flow that needed a mail provider we don't have.
  */
 
 function clerk_publishable_key(): string

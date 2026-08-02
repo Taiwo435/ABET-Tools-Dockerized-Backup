@@ -55,9 +55,9 @@ header('Cross-Origin-Opener-Policy: same-origin');
         <h1>Verify Your Email</h1>
         <p>
           <?php if ($email !== ''): ?>
-            Sign in with Google using <strong><?= e($email) ?></strong> to confirm you own this address.
+            Verify <strong><?= e($email) ?></strong> with a one-time code to confirm you own this address.
           <?php else: ?>
-            Sign in with Google using the same email address you registered with.
+            Verify the same email address you registered with using a one-time code.
           <?php endif; ?>
         </p>
       </div>
@@ -96,7 +96,7 @@ window.addEventListener('load', async function () {
       const token = await session.getToken({ skipCache: true });
 
       if (!token) {
-        throw new Error('Google sign-in did not return a token.');
+        throw new Error('Sign-in did not return a token.');
       }
 
       const response = await fetch('/auth/clerk_verify_email.php', {
@@ -127,7 +127,7 @@ window.addEventListener('load', async function () {
         true
       );
       button.disabled = false;
-      button.textContent = 'Try Again with Google';
+      button.textContent = 'Try Again';
     }
   }
 
@@ -144,39 +144,32 @@ window.addEventListener('load', async function () {
       }
     });
 
-    // Already signed in to Google/Clerk in this browser (e.g. just verified
-    // a moment ago) — verify immediately instead of making them click
-    // through the Google chooser again.
+    // Already signed in to Clerk in this browser (e.g. just verified a
+    // moment ago) — verify immediately instead of making them go through
+    // email verification again.
     if (window.Clerk.session && window.Clerk.session.status === 'active') {
       await exchangeSession(window.Clerk.session);
       return;
     }
 
-    function openGoogleSignIn() {
+    function openEmailSignIn() {
       status.hidden = true;
       window.Clerk.openSignIn({
-        oauthFlow: 'redirect',
         routing: 'hash',
         withSignUp: true,
         forceRedirectUrl: '/verify-email<?= $email !== '' ? '?email=' . urlencode($email) : '' ?>',
         fallbackRedirectUrl: '/verify-email<?= $email !== '' ? '?email=' . urlencode($email) : '' ?>',
         signUpForceRedirectUrl: '/verify-email<?= $email !== '' ? '?email=' . urlencode($email) : '' ?>',
-        signUpFallbackRedirectUrl: '/verify-email<?= $email !== '' ? '?email=' . urlencode($email) : '' ?>',
-        appearance: {
-          layout: {
-            socialButtonsPlacement: 'top',
-            socialButtonsVariant: 'blockButton'
-          }
-        }
+        signUpFallbackRedirectUrl: '/verify-email<?= $email !== '' ? '?email=' . urlencode($email) : '' ?>'
       });
     }
 
     button.disabled = false;
-    button.textContent = 'Continue with Google to Verify';
-    button.addEventListener('click', openGoogleSignIn);
+    button.textContent = 'Verify with Email';
+    button.addEventListener('click', openEmailSignIn);
 
-    // Go straight to the Google picker instead of waiting for a click.
-    openGoogleSignIn();
+    // Go straight to the verification modal instead of waiting for a click.
+    openEmailSignIn();
   } catch (exception) {
     console.error('Clerk initialization failed:', exception);
     button.textContent = 'Verification unavailable';

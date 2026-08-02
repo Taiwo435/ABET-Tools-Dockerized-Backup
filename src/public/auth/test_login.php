@@ -7,10 +7,11 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
 /**
  * Test-only password login, used exclusively by the Selenium suite
  * (src/test/utils/backend_login.py) to establish an authenticated session
- * without driving the UI. /login itself is Google/email(Clerk)-driven now,
- * which can't be scripted end-to-end by Selenium (no way to automate a
- * real Google sign-in or read a Clerk email code in CI) — this endpoint is
- * NOT a substitute for it and is completely inert outside APP_ENV=test.
+ * without driving the UI. /login itself is email(Clerk)-verification-driven
+ * now, which can't be scripted end-to-end by Selenium (no way to
+ * automate reading a Clerk email code in CI) — this endpoint is NOT a
+ * substitute for it and is completely inert unless explicitly enabled
+ * (see the ENABLE_TEST_LOGIN_ENDPOINT check below).
  */
 
 // Deliberately its own flag rather than APP_ENV=test: the web container

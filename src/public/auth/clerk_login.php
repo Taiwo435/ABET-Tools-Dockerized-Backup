@@ -9,14 +9,13 @@ require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 /**
- * "Continue with Google" on the login page. Auto-creates an account on
- * first sign-in (a Clerk-verified Google email is at least as strong proof
- * of ownership as our own code/link verification would have been), so
- * Google users never have to separately fill out the password register
- * form first. Existing password-based accounts also work here as long as
- * they're active. Logs the user in the same way native password login
- * does: populates the raw $_SESSION keys legacy pages and
- * LegacySessionAuthenticator read from.
+ * Email sign-in on the login page. Auto-creates an account on first
+ * sign-in (a Clerk-verified email is at least as strong proof of ownership
+ * as our own code/link verification would have been), so users never have
+ * to separately fill out a password register form first. Existing
+ * password-based accounts also work here as long as they're active. Logs
+ * the user in the same way native password login does: populates the raw
+ * $_SESSION keys legacy pages and LegacySessionAuthenticator read from.
  */
 
 function clerk_login_json(int $status, array $data): never
@@ -67,11 +66,11 @@ try {
     $user = $stmt->fetch();
 
     if (!$user) {
-        // Google already proved they own this email — no separate password
+        // Clerk already proved they own this email — no separate password
         // registration or verification step needed. Unusable random
         // password hash: the password_hash column is NOT NULL, but this
-        // account can only ever be signed into via Google unless the user
-        // later sets a real password themselves.
+        // account can only ever be signed into via email verification
+        // unless the user later sets a real password themselves.
         $placeholderHash = password_hash(bin2hex(random_bytes(32)), PASSWORD_BCRYPT);
         $defaultPermissions = \App\Entity\Permissions::ROLE_FACULTY_FORM->value;
 

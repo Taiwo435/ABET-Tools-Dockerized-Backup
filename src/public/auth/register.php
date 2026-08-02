@@ -8,11 +8,11 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 start_session();
 
 /**
- * Account creation is entirely Google/Clerk-driven now (see
- * auth/clerk_login.php, which auto-creates an account the first time a new
- * verified Google email signs in) — this page is just the "Create Account"
- * landing screen with the same email + Continue with Google flow as
- * /login, so there's no separate password form to fill out.
+ * Account creation is entirely Clerk-driven now (see auth/clerk_login.php,
+ * which auto-creates an account the first time a new verified email signs
+ * in) — this page is just the "Create Account" landing screen with the
+ * same email verification flow as /login, so there's no separate password
+ * form to fill out.
  */
 
 $publishableKey = null;
@@ -67,7 +67,7 @@ try {
 
       <div class="form-header">
         <h1>Create Account</h1>
-        <p>Enter your email, then verify with Google.</p>
+        <p>Enter your email, then verify with a one-time code.</p>
       </div>
 
       <?php if ($publishableKey !== null): ?>
@@ -100,10 +100,10 @@ window.addEventListener('load', async function () {
   if (!button || !status) { return; }
 
   function showError(message) {
-    status.textContent = message || 'Google sign-in could not be completed.';
+    status.textContent = message || 'Sign-in could not be completed.';
     status.hidden = false;
     button.disabled = false;
-    button.textContent = 'Continue with Google';
+    button.textContent = 'Continue';
   }
 
   let exchangeInProgress = false;
@@ -117,7 +117,7 @@ window.addEventListener('load', async function () {
 
     try {
       const token = await session.getToken({ skipCache: true });
-      if (!token) { throw new Error('Google sign-in did not return a token.'); }
+      if (!token) { throw new Error('Sign-in did not return a token.'); }
 
       const response = await fetch('/auth/clerk_login.php', {
         method: 'POST',
@@ -138,23 +138,19 @@ window.addEventListener('load', async function () {
     } catch (exception) {
       console.error('Clerk sign-up failed:', exception);
       exchangeInProgress = false;
-      showError(exception instanceof Error ? exception.message : 'Google sign-in could not be completed.');
+      showError(exception instanceof Error ? exception.message : 'Sign-in could not be completed.');
     }
   }
 
-  function openGoogleSignIn() {
+  function openEmailSignIn() {
     status.hidden = true;
     window.Clerk.openSignIn({
-      oauthFlow: 'redirect',
       routing: 'hash',
       withSignUp: true,
       forceRedirectUrl: '/register',
       fallbackRedirectUrl: '/register',
       signUpForceRedirectUrl: '/register',
-      signUpFallbackRedirectUrl: '/register',
-      appearance: {
-        layout: { socialButtonsPlacement: 'top', socialButtonsVariant: 'blockButton' }
-      }
+      signUpFallbackRedirectUrl: '/register'
     });
   }
 
@@ -174,12 +170,12 @@ window.addEventListener('load', async function () {
     }
 
     button.disabled = false;
-    button.textContent = 'Continue with Google';
-    button.addEventListener('click', openGoogleSignIn);
+    button.textContent = 'Continue';
+    button.addEventListener('click', openEmailSignIn);
   } catch (exception) {
     console.error('Clerk initialization failed:', exception);
-    button.textContent = 'Google sign-in unavailable';
-    showError(exception instanceof Error ? exception.message : 'Google sign-in could not load.');
+    button.textContent = 'Sign-in unavailable';
+    showError(exception instanceof Error ? exception.message : 'Sign-in could not load.');
   }
 });
 </script>
