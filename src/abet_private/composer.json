@@ -16,6 +16,7 @@
         "symfony/http-client": "^7.4",
         "symfony/http-kernel": "^7.4.8",
         "symfony/monolog-bundle": "^4.0.2",
+        "symfony/rate-limiter": "^7.4",
         "symfony/runtime": "^7.4.8",
         "symfony/security-bundle": "^7.4.8",
         "symfony/stimulus-bundle": "^2.34",
