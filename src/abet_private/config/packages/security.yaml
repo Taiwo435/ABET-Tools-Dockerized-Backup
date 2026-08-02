@@ -54,6 +54,7 @@ security:
         # Native Symfony routes migrated as part of #132 (batch 1: account/*)
         - { path: ^/account/profile, roles: ROLE_USER }
         - { path: ^/account/settings, roles: ROLE_USER }
+        - { path: ^/account/privacy, roles: ROLE_USER }
 
     # NOTE (#132): Legacy-bridged routes (src/public/*.php, dispatched via
     # LegacyBridge.php) are NOT yet covered here — they still rely on

@@ -83,9 +83,10 @@ class LegacyBridge
         //    return "{$legacyRoot}/account/settings/index.php";
         //}
 
-        if ($requestPathInfo == '/account/privacy/') {
-            return "{$legacyRoot}/account/privacy/index.php";
-        }
+        // Removed: /account/privacy/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/') {
+        //    return "{$legacyRoot}/account/privacy/index.php";
+        //}
 
         if ($requestPathInfo == '/account/help/') {
             return "{$legacyRoot}/account/help/index.php";
@@ -106,17 +107,20 @@ class LegacyBridge
         //    return "{$legacyRoot}/account/settings/password.php";
         //}
 
-        if ($requestPathInfo == '/account/privacy/consent/') {
-            return "{$legacyRoot}/account/privacy/consent.php";
-        }
+        // Removed: /account/privacy/consent/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/consent/') {
+        //    return "{$legacyRoot}/account/privacy/consent.php";
+        //}
 
-        if ($requestPathInfo == '/account/privacy/export-data/') {
-            return "{$legacyRoot}/account/privacy/export-data.php";
-        }
+        // Removed: /account/privacy/export-data/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/export-data/') {
+        //    return "{$legacyRoot}/account/privacy/export-data.php";
+        //}
 
-        if ($requestPathInfo == '/account/privacy/delete-request/') {
-            return "{$legacyRoot}/account/privacy/delete-request.php";
-        }
+        // Removed: /account/privacy/delete-request/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/delete-request/') {
+        //    return "{$legacyRoot}/account/privacy/delete-request.php";
+        //}
 
         // faq
         if ($requestPathInfo == '/account/help/faq/') {

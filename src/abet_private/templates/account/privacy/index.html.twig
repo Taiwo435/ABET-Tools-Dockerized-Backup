@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Privacy | {% endblock %}
+
+{% block styles %}
+    <style>
+        .privacy-shell {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+        .privacy-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.08);
+        }
+        .privacy-card h1 {
+            margin: 0 0 14px;
+            color: #8C1D40;
+        }
+        .privacy-card ul {
+            margin: 14px 0 0 18px;
+        }
+        .privacy-card a {
+            color: #8C1D40;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="privacy-shell">
+        <div class="privacy-card">
+            <h1>Privacy</h1>
+            <ul>
+                <li><a href="https://www.asu.edu/about/privacy" target="_blank" rel="noopener noreferrer">ASU Privacy</a></li>
+                <li><a href="https://registrar.asu.edu/policies/ferpa" target="_blank" rel="noopener noreferrer">Grades and Records</a></li>
+                <li>Export Data <em>(coming soon)</em></li>
+                <li>Delete Request <em>(coming soon)</em></li>
+            </ul>
+        </div>
+    </main>
+{% endblock %}
