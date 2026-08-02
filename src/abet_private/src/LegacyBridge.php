@@ -88,9 +88,10 @@ class LegacyBridge
         //    return "{$legacyRoot}/account/privacy/index.php";
         //}
 
-        if ($requestPathInfo == '/account/help/') {
-            return "{$legacyRoot}/account/help/index.php";
-        }
+	// Removed: /account/help/ now handled by AccountHelpController (#132)
+        //if ($requestPathInfo == '/account/help/') {
+        //    return "{$legacyRoot}/account/help/index.php";
+        //}
 
         // Removed: /account/profile/update/ now handled by AccountProfileController (#132)
         //if ($requestPathInfo == '/account/profile/update/') {
@@ -122,15 +123,17 @@ class LegacyBridge
         //    return "{$legacyRoot}/account/privacy/delete-request.php";
         //}
 
+	// Removed: /account/help/faq/ now handled by AccountHelpController (#132)
         // faq
-        if ($requestPathInfo == '/account/help/faq/') {
-            return "{$legacyRoot}/account/help/faq.php";
-        }
+        //if ($requestPathInfo == '/account/help/faq/') {
+        //    return "{$legacyRoot}/account/help/faq.php";
+        //}
 
+	// Removed: /account/help/contact/ now handled by AccountHelpController (#132)
         // contact
-        if ($requestPathInfo == '/account/help/contact/') {
-            return "{$legacyRoot}/account/help/contact.php";
-        }
+        //if ($requestPathInfo == '/account/help/contact/') {
+        //    return "{$legacyRoot}/account/help/contact.php";
+        //}
 
         // TOOL 2: Faculty form
         if ($requestPathInfo == '/faculty-form/') {
