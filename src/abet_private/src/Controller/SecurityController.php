@@ -42,4 +42,20 @@ class SecurityController extends AbstractController
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
+    // #132: /auth/login.php and /auth/logout.php are legacy raw paths that
+    // used to serve duplicate, dead-code copies of this same functionality.
+    // Redirecting instead of deleting, in case anything still links to the
+    // old raw path directly.
+    #[Route(path: '/auth/login.php', name: 'app_legacy_login_redirect')]
+    public function legacyLoginRedirect(): Response
+    {
+        return $this->redirectToRoute('app_login');
+    }
+
+    #[Route(path: '/auth/logout.php', name: 'app_legacy_logout_redirect')]
+    public function legacyLogoutRedirect(): Response
+    {
+        return $this->redirectToRoute('app_logout');
+    }
+
 }

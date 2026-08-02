@@ -40,6 +40,7 @@ class LegacyBridge
         // .htaccess pretty paths but here
         // ----------------------------
 
+
         if ($requestPathInfo == '/') {
             return "{$legacyRoot}/auth/login.php";
         }
@@ -55,18 +56,21 @@ class LegacyBridge
             return "{$legacyRoot}/home.php";
         }
 
+	// Removed: /login is a native Symfony route
         // you probably can tell the pattern. Next line in .htaccess
-        if ($requestPathInfo == '/login') {
-            return "{$legacyRoot}/auth/login.php";
-        }
+        //if ($requestPathInfo == '/login') {
+        //    return "{$legacyRoot}/auth/login.php";
+        //}
+
 
         if ($requestPathInfo == '/register') {
             return "{$legacyRoot}/auth/register.php";
         }
 
-        if ($requestPathInfo == '/logout') {
-            return "{$legacyRoot}/auth/logout.php";
-        }
+	// Removed: /logout is a native Symfony route
+        //if ($requestPathInfo == '/logout') {
+        //    return "{$legacyRoot}/auth/logout.php";
+        //}
 
         // account profile stuff
         // Removed: /account/profile/ now handled by AccountProfileController (#51)
