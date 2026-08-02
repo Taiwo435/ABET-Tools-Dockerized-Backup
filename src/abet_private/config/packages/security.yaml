@@ -44,6 +44,7 @@ security:
         - { path: ^/logout, roles: PUBLIC_ACCESS }
         - { path: ^/auth/login\.php$, roles: PUBLIC_ACCESS }
         - { path: ^/auth/logout\.php$, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
 
         # Native Symfony routes migrated as part of #132
         - { path: ^/admin/templates, roles: ROLE_ADMIN }
@@ -59,6 +60,7 @@ security:
         - { path: ^/account/settings, roles: ROLE_USER }
         - { path: ^/account/privacy, roles: ROLE_USER }
         - { path: ^/account/help, roles: ROLE_USER }
+        - { path: ^/account/me, roles: ROLE_USER }
 
     # NOTE (#132): Legacy-bridged routes (src/public/*.php, dispatched via
     # LegacyBridge.php) are NOT yet covered here — they still rely on

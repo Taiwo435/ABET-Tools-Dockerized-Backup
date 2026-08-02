@@ -30,24 +30,23 @@ final class AccountProfileController extends AbstractController
     #[Route('/account/profile/', name: 'app_account_profile', methods: ['GET'])]
     public function index(#[CurrentUser] User $user, Connection $connection): Response
     {
-        $profile = $connection->fetchAssociative(
-            'SELECT display_name, department, phone, office_location, bio
-             FROM user_profiles
-             WHERE user_id = :uid
-             LIMIT 1',
-            ['uid' => $user->getId()]
-        );
-
-        $profile = array_merge([
-            'display_name'    => '',
-            'department'      => '',
-            'phone'           => '',
-            'office_location' => '',
-            'bio'             => '',
-        ], $profile ?: []);
+        $profile = $this->fetchProfile($connection, $user->getId());
 
         return $this->render('account/profile.html.twig', [
             'profile' => $profile,
+        ]);
+    }
+
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[Route('/account/me/', name: 'app_account_me', methods: ['GET'])]
+    public function directory(#[CurrentUser] User $user, Connection $connection): Response
+    {
+        $profile = $this->fetchProfile($connection, $user->getId());
+
+        return $this->render('account/profile_view.html.twig', [
+            'profile' => $profile,
+            'email' => $user->getEmail(),
+            'asurite' => $user->getAsurite(),
         ]);
     }
 
@@ -148,6 +147,26 @@ final class AccountProfileController extends AbstractController
         }
 
         return [$data, $errors];
+    }
+
+    private function fetchProfile(Connection $connection, int $userId): array
+    {
+        $profile = $connection->fetchAssociative(
+            'SELECT display_name, department, phone, office_location, bio, updated_at
+             FROM user_profiles
+             WHERE user_id = :uid
+             LIMIT 1',
+            ['uid' => $userId]
+        );
+
+        return array_merge([
+            'display_name'    => '',
+            'department'      => '',
+            'phone'           => '',
+            'office_location' => '',
+            'bio'             => '',
+            'updated_at'      => '',
+        ], $profile ?: []);
     }
 
     private function vTrim(?string $value, int $maxLen): string

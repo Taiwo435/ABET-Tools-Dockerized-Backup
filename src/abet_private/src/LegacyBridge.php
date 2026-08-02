@@ -41,9 +41,10 @@ class LegacyBridge
         // ----------------------------
 
 
-        if ($requestPathInfo == '/') {
-            return "{$legacyRoot}/auth/login.php";
-        }
+	// Removed: / is now a native Symfony route (redirects to /login) (#132)
+        //if ($requestPathInfo == '/') {
+        //    return "{$legacyRoot}/auth/login.php";
+        //}
 
         // this is a template...
         if ($requestPathInfo == '/URI') {
@@ -78,9 +79,10 @@ class LegacyBridge
         //    return "{$legacyRoot}/account/profile/index.php";
         //}
 
-        if ($requestPathInfo == '/account/me/') {
-            return "{$legacyRoot}/account/me/index.php";
-        }
+	// Removed: /account/me/ now handled by AccountProfileController::directory() (#132)
+        // if ($requestPathInfo == '/account/me/') {
+        //    return "{$legacyRoot}/account/me/index.php";
+        //}
 
 	// Removed: /account/settings/ now handled by AccountSettingsController (#132)
         // if ($requestPathInfo == '/account/settings/') {
