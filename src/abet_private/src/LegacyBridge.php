@@ -78,9 +78,10 @@ class LegacyBridge
             return "{$legacyRoot}/account/me/index.php";
         }
 
-        if ($requestPathInfo == '/account/settings/') {
-            return "{$legacyRoot}/account/settings/index.php";
-        }
+	// Removed: /account/settings/ now handled by AccountSettingsController (#132)
+        // if ($requestPathInfo == '/account/settings/') {
+        //    return "{$legacyRoot}/account/settings/index.php";
+        //}
 
         if ($requestPathInfo == '/account/privacy/') {
             return "{$legacyRoot}/account/privacy/index.php";
@@ -95,13 +96,15 @@ class LegacyBridge
         //    return "{$legacyRoot}/account/profile/update.php";
         // }
 
-        if ($requestPathInfo == '/account/settings/email') {
-            return "{$legacyRoot}/account/settings/email.php";
-        }
+	// Removed: /account/settings/email/ now handled by AccountSettingsController (#132)
+        //if ($requestPathInfo == '/account/settings/email') {
+        //    return "{$legacyRoot}/account/settings/email.php";
+        //}
 
-        if ($requestPathInfo == '/account/settings/password/') {
-            return "{$legacyRoot}/account/settings/password.php";
-        }
+	// Removed: /account/settings/password/ now handled by AccountSettingsController (#132)
+        //if ($requestPathInfo == '/account/settings/password/') {
+        //    return "{$legacyRoot}/account/settings/password.php";
+        //}
 
         if ($requestPathInfo == '/account/privacy/consent/') {
             return "{$legacyRoot}/account/privacy/consent.php";
