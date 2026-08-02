@@ -52,6 +52,7 @@ security:
         - { path: ^/home, roles: ROLE_USER }
         - { path: ^/profile, roles: ROLE_USER }
         - { path: '^/tool/assignmentsgrades*', roles: ROLE_ASSIGNMENTS_GRADES }
+        - { path: ^/tools/, roles: ROLE_USER }
 
         # Native Symfony routes migrated as part of #132 (batch 1: account/*)
         - { path: ^/account/profile, roles: ROLE_USER }
