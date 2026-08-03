@@ -636,8 +636,8 @@ CREATE TABLE IF NOT EXISTS syllabus_templates (
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE SET NULL,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
+
 -- Insert default OpenAI key placeholder
 INSERT INTO settings (setting_key, setting_value)
 VALUES ('openai_api_key', '') ON DUPLICATE KEY
 UPDATE setting_key = setting_key;
-

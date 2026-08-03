@@ -45,13 +45,22 @@ SECTIONS = [
 
 
 class ReportBuilder:
-    def __init__(self, template_path, db, year, department, degree_type):
+    def __init__(
+        self,
+        template_path,
+        db,
+        year,
+        department,
+        degree_type,
+        appendix_a_contract,
+    ):
         self.questionnaire = Questionnaire(
             template_path=template_path,
             db=db,
             year=year,
             department=department,
-            degree_type=degree_type
+            degree_type=degree_type,
+            appendix_a_contract=appendix_a_contract,
         )
 
     def build(self, output_path):

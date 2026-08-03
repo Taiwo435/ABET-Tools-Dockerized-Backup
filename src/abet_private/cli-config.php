@@ -15,6 +15,10 @@ use Doctrine\Migrations\Configuration\Migration\JsonFile;
 require_once 'vendor/autoload.php';
 require_once 'bootstrap.php';
 
+if (!isset($entityManager)) {
+    $entityManager = Services::getEntityManager();
+}
+
 $paths = [__DIR__.'/database/entities'];
 $config = new JsonFile('database/migrations.json');
 

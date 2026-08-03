@@ -1,0 +1,67 @@
+<style>
+    .hold-delete-control { display: grid; gap: .3rem; justify-items: stretch; min-width: 150px; }
+    .hold-delete-button { position: relative; isolation: isolate; overflow: hidden; box-sizing: border-box; width: 100%; height: 42px; padding: .65rem .85rem; border: 1px solid var(--asu-maroon); border-radius: 4px; background: var(--asu-maroon); color: #fff; cursor: pointer; font: inherit; font-weight: 700; line-height: 1.2; touch-action: manipulation; user-select: none; -webkit-touch-callout: none; }
+    .hold-delete-button__fill { position: absolute; z-index: -1; inset: 0; background: rgba(255, 198, 39, .45); transform: scaleX(0); transform-origin: left center; pointer-events: none; }
+    .hold-delete-button.is-holding .hold-delete-button__fill { transform: scaleX(1); transition: transform 2s linear; }
+    .hold-delete-button__label { pointer-events: none; }
+    .hold-delete-warning { color: #6f1d2a; font-size: .78rem; line-height: 1.25; text-align: center; }
+</style>
+
+<script>
+    (() => {
+        const holdDuration = 2000;
+
+        document.querySelectorAll('[data-hold-delete]').forEach((button) => {
+            if (button.dataset.holdDeleteReady === 'true') {
+                return;
+            }
+            button.dataset.holdDeleteReady = 'true';
+
+            const label = button.querySelector('[data-hold-delete-label]');
+            let timer = null;
+            let completed = false;
+
+            const reset = () => {
+                if (completed) {
+                    return;
+                }
+                window.clearTimeout(timer);
+                timer = null;
+                button.classList.remove('is-holding');
+                button.setAttribute('aria-pressed', 'false');
+                label.textContent = 'Hold to delete';
+            };
+
+            const begin = (event) => {
+                if (event.type === 'pointerdown' && event.button !== 0) {
+                    return;
+                }
+                if (event.type === 'keydown' && !['Enter', ' '].includes(event.key)) {
+                    return;
+                }
+                if (event.repeat || timer !== null || completed) {
+                    return;
+                }
+
+                event.preventDefault();
+                button.classList.add('is-holding');
+                button.setAttribute('aria-pressed', 'true');
+                label.textContent = 'Keep holding…';
+                timer = window.setTimeout(() => {
+                    completed = true;
+                    label.textContent = 'Deleting…';
+                    document.getElementById(button.dataset.deleteForm)?.requestSubmit();
+                }, holdDuration);
+            };
+
+            button.addEventListener('pointerdown', begin);
+            button.addEventListener('pointerup', reset);
+            button.addEventListener('pointerleave', reset);
+            button.addEventListener('pointercancel', reset);
+            button.addEventListener('keydown', begin);
+            button.addEventListener('keyup', reset);
+            button.addEventListener('blur', reset);
+            button.addEventListener('click', (event) => event.preventDefault());
+        });
+    })();
+</script>

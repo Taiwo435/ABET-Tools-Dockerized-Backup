@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "courses": [
+    {
+      "course_code": "CSE 423",
+      "course_name": "Systems Capstone Project I",
+      "credits": 3,
+      "contact_hours": "Three lecture/lab hours per week",
+      "credit_category": "Engineering topics",
+      "delivery_type": "in_person",
+      "instructors": ["Alex Rivera"],
+      "textbooks": [],
+      "catalog_description": "Team-based specification, design, implementation, evaluation, and testing.",
+      "prerequisites": "Senior standing in the program",
+      "course_type": "R",
+      "specific_goals": ["Apply an iterative engineering process"],
+      "student_outcomes": ["Communicate effectively with technical audiences"],
+      "topics_covered": ["Requirements", "Risk management", "Verification"]
+    },
+    {
+      "course_code": "CSE 434",
+      "course_name": "Computer Networks",
+      "credits": 3,
+      "contact_hours": "Three lecture hours per week",
+      "credit_category": "Engineering topics",
+      "delivery_type": "online",
+      "instructors": ["Morgan Lee"],
+      "textbooks": ["Computer Networking: A Top-Down Approach"],
+      "catalog_description": "Principles and implementation of computer communication networks.",
+      "prerequisites": "CSE 310",
+      "course_type": "E",
+      "specific_goals": ["Analyze layered network protocols"],
+      "student_outcomes": ["Design solutions that meet stated requirements"],
+      "topics_covered": ["Routing", "Transport", "Network security"]
+    },
+    {
+      "course_code": "CSE 445",
+      "course_name": "Distributed Software Development",
+      "credits": 3,
+      "contact_hours": "Two lecture hours and one project hour per week",
+      "credit_category": "Engineering topics",
+      "delivery_type": "hybrid",
+      "instructors": ["Taylor Shah"],
+      "textbooks": [],
+      "catalog_description": "Design and implementation of distributed software systems.",
+      "prerequisites": "CSE 330",
+      "course_type": "SE",
+      "specific_goals": ["Build dependable distributed services"],
+      "student_outcomes": ["Function effectively on a technical team"],
+      "topics_covered": ["Service interfaces", "Consistency", "Fault tolerance"]
+    }
+  ]
+}

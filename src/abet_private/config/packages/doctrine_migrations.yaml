@@ -4,7 +4,7 @@ doctrine_migrations:
 
     # List of namespace/path pairs to search for migrations, at least one required
     migrations_paths:
-        'Migrations': '%kernel.project_dir%/src/Migrations'
+        'Migrations': '%kernel.project_dir%/database/migrations'
 
     # Connection to use for the migrations
     connection: default

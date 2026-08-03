@@ -1,0 +1,152 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Faculty Syllabus Templates | {% endblock %}
+
+{% block styles %}<link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-5">{% endblock %}
+
+{% block body %}
+    <style>
+        .faculty-syllabus { width: min(1050px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
+        .faculty-syllabus h1 { color: var(--asu-maroon); }
+        .faculty-syllabus__section { margin-top: 1.5rem; padding: 1.25rem; background: #fff; border: 1px solid #ddd; border-radius: 6px; }
+        .faculty-syllabus table { width: 100%; border-collapse: collapse; }
+        .faculty-syllabus th, .faculty-syllabus td { padding: .75rem; border-bottom: 1px solid #ddd; text-align: left; }
+        .faculty-syllabus th { background: var(--asu-maroon); color: #fff; }
+        .faculty-syllabus form { margin: 0; }
+        .faculty-draft-list { display: grid; gap: .8rem; padding: 0; list-style: none; }
+        .faculty-draft-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: .8rem; border-bottom: 1px solid #ddd; }
+        .faculty-draft-row:last-child { padding-bottom: 0; border-bottom: 0; }
+        .faculty-draft-row__title { line-height: 1.5; }
+        .faculty-draft-row__actions { display: flex; flex-wrap: wrap; align-items: start; gap: .75rem; }
+        .faculty-draft-row__action { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 170px; height: 42px; min-height: 42px; padding: .65rem .85rem; border-width: 1px; line-height: 1.2; text-align: center; white-space: nowrap; }
+        .faculty-draft-row__action.button-primary { border: 1px solid transparent; }
+        .faculty-draft-submit-form, .faculty-draft-row__actions > .hold-delete-control { width: 170px; }
+        .faculty-draft-submit-form .faculty-draft-row__action { width: 100%; }
+        .completeness-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; margin-left: .25rem; border-radius: 50%; font-size: .9rem; font-weight: 800; line-height: 1; vertical-align: text-bottom; cursor: help; }
+        .completeness-icon--complete { background: #d8f0df; color: #155b2d; }
+        .completeness-icon--incomplete { background: #f9d7dc; color: #9f1d3f; }
+        .completeness-icon::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + .55rem); left: 50%; z-index: 10; box-sizing: border-box; width: max-content; max-width: min(300px, 80vw); padding: .55rem .7rem; border-radius: 5px; background: #2f2f2f; color: #fff; font-size: .78rem; font-weight: 600; line-height: 1.35; text-align: left; white-space: normal; opacity: 0; pointer-events: none; transform: translate(-50%, .25rem); transition: opacity .15s ease, transform .15s ease; }
+        .completeness-icon:hover::after, .completeness-icon:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+        .completeness-icon:focus-visible { outline: 3px solid rgba(255, 198, 39, .55); outline-offset: 2px; }
+        .faculty-syllabus__toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
+        .faculty-proposal-list { display: grid; gap: .65rem; padding: 0; list-style: none; }
+        .faculty-proposal-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding-bottom: .65rem; border-bottom: 1px solid #ddd; }
+        .faculty-proposal { width: 100%; }
+        .faculty-proposal__summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; }
+        .faculty-proposal__feedback { margin: .65rem 0 0; padding: .75rem .9rem; border-left: 4px solid var(--asu-maroon); background: #f6f6f6; color: #444; white-space: pre-wrap; }
+    </style>
+
+    <main class="faculty-syllabus">
+        <div class="faculty-syllabus__toolbar">
+            <div>
+                <h1>Faculty Course Syllabi</h1>
+                <p>Create a syllabus for a specific course offering, starting blank or from an approved shared template.</p>
+            </div>
+            <a href="{{ path('app_faculty_syllabus_templates_new') }}" class="button-primary">Create blank offering</a>
+        </div>
+
+        <div class="syllabus-lifecycle" aria-label="Faculty syllabus lifecycle">
+            <div class="syllabus-lifecycle__step"><strong>1. Identify offering</strong><span>Choose the academic year, term, section, and delivery type.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>2. Complete syllabus</strong><span>Start from a shared template or enter the content manually.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>3. Submit for review</strong><span>The submitted revision is frozen for the audit trail.</span></div>
+            <div class="syllabus-lifecycle__step"><strong>4. Use for accreditation</strong><span>Approved, Appendix A-ready evidence becomes exportable.</span></div>
+        </div>
+        <div class="syllabus-context-card">
+            <h2>Submission and report readiness are separate</h2>
+            <p>You can submit after the coordinator-review fields are complete. Appendix A readiness tracks the additional accreditation evidence needed before report export.</p>
+        </div>
+
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}<p role="status" class="flash-{{ type }}">{{ message }}</p>{% endfor %}
+        {% endfor %}
+
+        {% if drafts is not empty %}
+            <section class="faculty-syllabus__section">
+                <h2>Your drafts</h2>
+                <ul class="faculty-draft-list">
+                    {% for draft in drafts %}
+                        {% set missingLabels = [] %}
+                        {% for field in draft.workingRevision.facultySubmissionBlockingFields %}
+                            {% set missingLabels = missingLabels|merge([field|replace({'credits': 'Credit hours', 'course_coordinators': 'Course coordinator', 'credit_category': 'Credit categorization'})]) %}
+                        {% endfor %}
+                        {% set completenessLabel = draft.workingRevision.facultySubmittable ? 'Ready to submit' : 'Not ready to submit — Required: ' ~ missingLabels|join(', ') %}
+                        <li class="faculty-draft-row">
+                            <div class="faculty-draft-row__title">
+                                <span><strong>{{ draft.commonCourse.courseSubject }} {{ draft.commonCourse.courseNumber }}</strong> — {{ draft.commonCourse.courseName }}{% if draft.courseOffering %}<br><small>{{ draft.courseOffering.term }} {{ draft.courseOffering.academicYear }}{% if draft.courseOffering.section %}, section {{ draft.courseOffering.section }}{% endif %} · {{ draft.courseOffering.deliveryType.value|replace({'_': ' '})|title }}</small>{% endif %}</span>
+                                {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: draft, revision: draft.workingRevision, readinessMode: 'faculty'} only %}
+                                <span
+                                    class="completeness-icon completeness-icon--{{ draft.workingRevision.facultySubmittable ? 'complete' : 'incomplete' }}"
+                                    role="img"
+                                    tabindex="0"
+                                    aria-label="{{ completenessLabel }}"
+                                    data-tooltip="{{ completenessLabel }}"
+                                >{{ draft.workingRevision.facultySubmittable ? '✓' : '×' }}</span>
+                            </div>
+                            <div class="faculty-draft-row__actions">
+                                <a class="button-secondary faculty-draft-row__action" href="{{ path('app_faculty_syllabus_templates_edit', {id: draft.id}) }}">Continue editing</a>
+                                {% if draft.workingRevision.facultySubmittable %}
+                                    <form method="post" action="{{ path('app_faculty_syllabus_templates_submit', {id: draft.id}) }}" class="faculty-draft-submit-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('submit-faculty-syllabus-' ~ draft.id) }}">
+                                        <button type="submit" class="button-primary faculty-draft-row__action">Submit for approval</button>
+                                    </form>
+                                {% endif %}
+                                <form id="delete-faculty-draft-{{ draft.id }}" method="post" action="{{ path('app_faculty_syllabus_templates_delete', {id: draft.id}) }}" class="hold-delete-control">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-faculty-syllabus-' ~ draft.id) }}">
+                                    <button type="button" class="hold-delete-button" data-hold-delete data-delete-form="delete-faculty-draft-{{ draft.id }}" aria-pressed="false" aria-describedby="delete-faculty-draft-warning-{{ draft.id }}">
+                                        <span class="hold-delete-button__fill" aria-hidden="true"></span>
+                                        <span class="hold-delete-button__label" data-hold-delete-label>Hold to delete</span>
+                                    </button>
+                                    <small id="delete-faculty-draft-warning-{{ draft.id }}" class="hold-delete-warning">Deletions are permanent.</small>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        {% if proposals is not empty %}
+            <section class="faculty-syllabus__section">
+                <h2>Your submitted proposals</h2>
+                <ul class="faculty-proposal-list">
+                    {% for proposal in proposals %}
+                        <li class="faculty-proposal">
+                            <div class="faculty-proposal__summary">
+                                <span><strong>{{ proposal.commonCourse.courseSubject }} {{ proposal.commonCourse.courseNumber }}</strong> — {{ proposal.commonCourse.courseName }}{% if proposal.courseOffering %}<br><small>{{ proposal.courseOffering.term }} {{ proposal.courseOffering.academicYear }}{% if proposal.courseOffering.section %}, section {{ proposal.courseOffering.section }}{% endif %}</small>{% endif %}</span>
+                                <span>{{ proposal.status.value|replace({'_': ' '})|title }}</span>
+                            </div>
+                            {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: proposal, revision: proposal.approvedRevision ?: proposal.submittedRevision, readinessMode: 'faculty'} only %}
+                            {% if proposal.review and proposal.review.comment %}
+                                <p class="faculty-proposal__feedback"><strong>Coordinator feedback:</strong> {{ proposal.review.comment }}</p>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        <section class="faculty-syllabus__section">
+            <h2>Available shared templates</h2>
+            {% if courses is empty %}
+                <p>No approved shared syllabus templates are available yet.</p>
+            {% else %}
+                <table>
+                    <thead><tr><th>Course</th><th>Program</th><th>Delivery</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for course in courses %}
+                        <tr>
+                            <td><strong>{{ course.courseSubject }} {{ course.courseNumber }}</strong><br>{{ course.courseName }}</td>
+                            <td>{{ course.program.name }}</td>
+                            <td>{{ course.deliveryType.value|replace({'_': ' '})|title }}</td>
+                            <td>
+                                <a href="{{ path('app_faculty_syllabus_templates_use', {id: course.id}) }}" class="button-primary">Create offering syllabus</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </section>
+    </main>
+    {% include 'syllabus_template/faculty/_hold_delete_behavior.html.twig' %}
+{% endblock %}

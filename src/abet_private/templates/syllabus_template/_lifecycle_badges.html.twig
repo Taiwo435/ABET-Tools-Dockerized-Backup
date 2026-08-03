@@ -1,0 +1,20 @@
+{% set targetIsOffering = submission.kind.value == 'faculty_offering' %}
+{% set workflowState = submission.status.value %}
+{% set readinessMode = readinessMode|default(targetIsOffering ? 'faculty' : 'coordinator') %}
+{% set transitionReady = readinessMode == 'faculty' ? revision.facultySubmittable : revision.coordinatorPublishable %}
+{% set sourceLabel = revision.sourceType.value|replace({
+    'manual_entry': 'Manual entry',
+    'shared_template_prefill': 'Shared template prefill',
+    'pdf_extraction': 'PDF extraction',
+    'manual_edit': 'Manual edit'
+}) %}
+
+<div class="syllabus-badges" aria-label="Syllabus lifecycle status">
+    <span class="syllabus-badge syllabus-badge--{{ targetIsOffering ? 'offering' : 'shared' }}">{{ targetIsOffering ? 'Course offering' : 'Shared template' }}</span>
+    <span class="syllabus-badge syllabus-badge--{{ workflowState }}">{{ workflowState|replace({'_': ' '})|title }}</span>
+    {% if workflowState == 'draft' %}
+        <span class="syllabus-badge syllabus-badge--{{ transitionReady ? 'ready' : 'attention' }}">{{ transitionReady ? (readinessMode == 'faculty' ? 'Ready to submit' : 'Ready to publish') : (readinessMode == 'faculty' ? 'Needs submission fields' : 'Needs publication fields') }}</span>
+    {% endif %}
+    <span class="syllabus-badge syllabus-badge--{{ revision.appendixAReady ? 'ready' : 'attention' }}">{{ revision.appendixAReady ? 'Appendix A ready' : 'Appendix A evidence incomplete' }}</span>
+    <span class="syllabus-badge syllabus-badge--source">Source: {{ sourceLabel }}</span>
+</div>
