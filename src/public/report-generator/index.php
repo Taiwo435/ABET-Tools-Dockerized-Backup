@@ -379,8 +379,19 @@ function e(string $v): string {
     <section class="card">
       <h1>Generate Long Report</h1>
       <p class="sub">
-        Generate the long faculty report and download it as a DOCX file.
+        Generate the long faculty report from lifecycle-approved Appendix A
+        data and download it as a DOCX file.
       </p>
+      <label id="appendixContractDropzone" class="dropzone">
+        <input id="appendixContractFile" type="file" accept=".json,application/json" multiple>
+        <div><strong>Choose report-ready Appendix A JSON files</strong></div>
+        <div class="hint">
+          Export each selected shared baseline or offering from
+          <a href="/admin/syllabus-templates?view=appendix_a">Shared Syllabus Templates</a>
+          (2MB combined limit)
+        </div>
+        <div id="appendixContractFileName" class="file-name">No Appendix A contracts selected</div>
+      </label>
       <div class="actions">
         <button id="LRbtn" class="btn prim" type="button">Generate Long Report</button>
         <a id="downloadLongDocxBtn" class="btn outline" href="#" style="display:none;">
@@ -424,8 +435,11 @@ function e(string $v): string {
     const LRbtn = document.getElementById('LRbtn');
     const lrStatusEl = document.getElementById('lrStatus');
     const downloadLongDocxBtn = document.getElementById('downloadLongDocxBtn');
+    const appendixContractFileInput = document.getElementById('appendixContractFile');
+    const appendixContractFileName = document.getElementById('appendixContractFileName');
 
     let selectedFile = null;
+    let selectedAppendixContractFiles = [];
 
 
 
@@ -481,6 +495,33 @@ function e(string $v): string {
     fileInput.addEventListener('change', () => {
       const f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
       setFile(f);
+    });
+
+    appendixContractFileInput.addEventListener('change', () => {
+      const files = Array.from(appendixContractFileInput.files || []);
+      if (files.length === 0 || files.some(file => !isJsonFile(file))) {
+        selectedAppendixContractFiles = [];
+        appendixContractFileInput.value = '';
+        appendixContractFileName.textContent = 'Invalid selection. Choose only .json files.';
+        setLRStatus('err', 'Appendix A must be supplied as report-ready JSON files.');
+        resetLongResults();
+        return;
+      }
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      if (totalSize > 2 * 1024 * 1024) {
+        selectedAppendixContractFiles = [];
+        appendixContractFileInput.value = '';
+        appendixContractFileName.textContent = 'Selected files exceed 2MB combined.';
+        setLRStatus('err', 'Appendix A JSON files must not exceed 2MB combined.');
+        resetLongResults();
+        return;
+      }
+
+      selectedAppendixContractFiles = files;
+      appendixContractFileName.textContent =
+        `${files.length} contract${files.length === 1 ? '' : 's'} selected (${Math.round(totalSize / 1024)} KB)`;
+      setLRStatus('info', 'Appendix A contracts ready.');
+      resetLongResults();
     });
 
     // Drag/drop behavior
@@ -570,8 +611,16 @@ function e(string $v): string {
     LRbtn.addEventListener('click', async () => {
       resetLongResults();
 
+      if (selectedAppendixContractFiles.length === 0) {
+        setLRStatus('err', 'Choose at least one report-ready Appendix A JSON file first.');
+        return;
+      }
+
       const fd = new FormData();
       fd.append('csrf_token', '<?php echo e($csrfToken); ?>');
+      selectedAppendixContractFiles.forEach(file => {
+        fd.append('appendix_a_contract[]', file);
+      });
 
       LRbtn.disabled = true;
       setLRStatus('info', 'Generating long report...');

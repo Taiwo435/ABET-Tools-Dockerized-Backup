@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abet-tools.local/contracts/syllabus-content-v1.schema.json",
+  "title": "ABET Tools Syllabus Content",
+  "type": "object",
+  "required": [
+    "schema_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "credits": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0
+    },
+    "contact_hours": {
+      "type": "string"
+    },
+    "credit_category": {
+      "type": "string"
+    },
+    "delivery_type": {
+      "enum": [
+        "in_person",
+        "online",
+        "hybrid",
+        "unspecified",
+        ""
+      ]
+    },
+    "course_coordinators": {
+      "$ref": "#/$defs/stringList"
+    },
+    "instructors": {
+      "$ref": "#/$defs/stringList"
+    },
+    "textbooks": {
+      "$ref": "#/$defs/stringList"
+    },
+    "catalog_description": {
+      "type": "string"
+    },
+    "prerequisites": {
+      "type": "string"
+    },
+    "course_type": {
+      "enum": [
+        "R",
+        "E",
+        "SE",
+        ""
+      ]
+    },
+    "specific_goals": {
+      "$ref": "#/$defs/stringList"
+    },
+    "course_outcomes": {
+      "$ref": "#/$defs/stringList"
+    },
+    "student_outcomes": {
+      "$ref": "#/$defs/stringList"
+    },
+    "topics_covered": {
+      "$ref": "#/$defs/stringList"
+    }
+  },
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": true
+}

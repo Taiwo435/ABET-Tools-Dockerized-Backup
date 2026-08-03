@@ -42,6 +42,19 @@
 
         <div class="tools-grid">
 
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">Faculty Syllabus Templates</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>Create a term-specific course syllabus from an approved shared template or a blank offering, then submit it for accreditation review.</p>
+                        <a href="{{ path('app_faculty_syllabus_templates') }}" class="action-link">Open Faculty Syllabi &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
             {% if app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_ASSIGNMENTS_GRADES)%}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
@@ -87,6 +100,7 @@
                     </div>
                 </div>
             </div>
+            
             {# <?php endif; ?> #}
 
             {# <?php if (hasPermission($permissions, PERM_REPORT_GEN_TOOL)): ?> #}
@@ -104,7 +118,7 @@
             </div>
             {# <?php endif; ?> #}
 
-            {# <?php if (hasPermission($permissions, PERM_ADMIN_PANEL)): ?> #}
+            {% if is_granted('ROLE_ADMIN') %}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">Admin Panel</div>
@@ -113,11 +127,11 @@
                 <div class="card-body">
                     <div class="card-body-inner">
                         <p>Manage destination course IDs, user permissions, and other admin settings.</p>
-                        <a href="/AssignmentsGrades/admin.php" class="action-link">Open Admin Panel &rarr;</a>
+                        <a href="{{ path('app_admin_panel') }}" class="action-link">Open Admin Panel &rarr;</a>
                     </div>
                 </div>
             </div>
-            {# <?php endif; ?> #}
+            {% endif %}
 
             {% if app.debug %}
             <div class="tool-card">
