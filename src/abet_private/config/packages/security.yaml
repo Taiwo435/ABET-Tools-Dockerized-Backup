@@ -61,6 +61,7 @@ security:
         - { path: ^/account/privacy, roles: ROLE_USER }
         - { path: ^/account/help, roles: ROLE_USER }
         - { path: ^/account/me, roles: ROLE_USER }
+        - { path: ^/report-generator/, roles: ROLE_USER }
 
     # NOTE (#132): Legacy-bridged routes (src/public/*.php, dispatched via
     # LegacyBridge.php) are NOT yet covered here — they still rely on

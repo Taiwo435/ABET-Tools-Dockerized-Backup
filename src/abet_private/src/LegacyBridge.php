@@ -240,7 +240,8 @@ class LegacyBridge
             '/faculty-form/'       => 'ROLE_FACULTY_FORM',
             '/coordinator-form/'   => 'ROLE_COORDINATOR_FORM',
             '/AssignmentsGrades/'  => 'ROLE_ASSIGNMENTS_GRADES',
-            '/report-generator/'   => 'ROLE_REPORTGEN',
+  	    // Removed: /report-generator/ now handled by ReportGeneratorController (#132)
+	    //'/report-generator/'   => 'ROLE_REPORTGEN',
         ];
 
         foreach ($roleMap as $prefix => $role) {
