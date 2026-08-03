@@ -28,10 +28,10 @@ class Services {
 
     public static function getConnection() : Connection {
         $connectionParams = [
-            'dbname' => $_ENV['MYSQL_DATABASE'],
-            'user' => $_ENV['MYSQL_USER'],
-            'password' => $_ENV['MYSQL_PASS'],
-            'host' => "127.0.0.1",
+            'dbname' => getenv('MYSQL_DATABASE'),
+            'user' => getenv('MYSQL_USER'),
+            'password' => getenv('MYSQL_PASS'),
+            'host' => getenv('MYSQL_HOSTNAME') ?: '127.0.0.1',
             'driver' => 'pdo_mysql',
         ];
 
@@ -49,10 +49,10 @@ class Services {
             $ORMConfig = ORMSetup::createAttributeMetadataConfiguration($paths, $isDevMode);
 
             $connectionParams = [
-                'dbname' => $_ENV['MYSQL_DATABASE'],
-                'user' => $_ENV['MYSQL_USER'],
-                'password' => $_ENV['MYSQL_PASS'],
-                'host' => "127.0.0.1",
+                'dbname' => getenv('MYSQL_DATABASE'),
+                'user' => getenv('MYSQL_USER'),
+                'password' => getenv('MYSQL_PASS'),
+                'host' => getenv('MYSQL_HOSTNAME') ?: '127.0.0.1',
                 'driver' => 'pdo_mysql',
             ];
 

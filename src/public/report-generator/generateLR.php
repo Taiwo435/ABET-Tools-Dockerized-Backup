@@ -106,6 +106,69 @@ try {
         json_response(403, ['ok' => false, 'error' => 'Invalid CSRF token']);
     }
 
+    $contractUpload = $_FILES['appendix_a_contract'] ?? null;
+    if (!is_array($contractUpload)
+        || !isset($contractUpload['tmp_name'], $contractUpload['size'])
+    ) {
+        json_response(400, ['ok' => false, 'error' => 'At least one report-ready Appendix A JSON file is required']);
+    }
+
+    $tmpNames = is_array($contractUpload['tmp_name'])
+        ? $contractUpload['tmp_name']
+        : [$contractUpload['tmp_name']];
+    $sizes = is_array($contractUpload['size'])
+        ? $contractUpload['size']
+        : [$contractUpload['size']];
+    $errors = is_array($contractUpload['error'] ?? null)
+        ? $contractUpload['error']
+        : [$contractUpload['error'] ?? UPLOAD_ERR_NO_FILE];
+    if ($tmpNames === [] || count($tmpNames) !== count($sizes) || count($tmpNames) !== count($errors)) {
+        json_response(400, ['ok' => false, 'error' => 'Appendix A uploads are invalid']);
+    }
+
+    $totalSize = array_sum(array_map('intval', $sizes));
+    if ($totalSize > 2 * 1024 * 1024) {
+        json_response(413, ['ok' => false, 'error' => 'Appendix A JSON files exceed the 2MB combined limit']);
+    }
+
+    $appendixAContract = ['schema_version' => null, 'courses' => []];
+    foreach ($tmpNames as $index => $tmpName) {
+        if (($errors[$index] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+            || !is_uploaded_file((string)$tmpName)
+        ) {
+            json_response(400, ['ok' => false, 'error' => 'An Appendix A upload is invalid']);
+        }
+
+        $contractJson = file_get_contents((string)$tmpName);
+        if ($contractJson === false) {
+            json_response(400, ['ok' => false, 'error' => 'An Appendix A JSON file could not be read']);
+        }
+        try {
+            $uploadedContract = json_decode($contractJson, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            json_response(400, ['ok' => false, 'error' => 'An Appendix A file is not valid JSON']);
+        }
+        if (!is_array($uploadedContract)
+            || array_is_list($uploadedContract)
+            || !is_string($uploadedContract['schema_version'] ?? null)
+            || !is_array($uploadedContract['courses'] ?? null)
+            || !array_is_list($uploadedContract['courses'])
+            || $uploadedContract['courses'] === []
+            || array_diff(array_keys($uploadedContract), ['schema_version', 'courses']) !== []
+        ) {
+            json_response(400, ['ok' => false, 'error' => 'An Appendix A file does not contain a versioned courses contract']);
+        }
+
+        if ($appendixAContract['schema_version'] === null) {
+            $appendixAContract['schema_version'] = $uploadedContract['schema_version'];
+        } elseif ($appendixAContract['schema_version'] !== $uploadedContract['schema_version']) {
+            json_response(400, ['ok' => false, 'error' => 'Appendix A files use different schema versions']);
+        }
+        array_push($appendixAContract['courses'], ...$uploadedContract['courses']);
+    }
+    if ($appendixAContract['courses'] === []) {
+        json_response(400, ['ok' => false, 'error' => 'Appendix A contracts contain no courses']);
+    }
 
     #paths
     $jobsRoot = getenv('ABET_PRIVATE_DIR') . '/report_jobs';
@@ -131,10 +194,11 @@ try {
     #hardcoded defaults for now adjust later maybe
     $reportgenUrl = api_base('reportgen') . '/generate-report';
     $payload = json_encode([
-        'year'        => 2026,
-        'department'  => 'CSE',
-        'degree_type' => 'BS',
-    ]);
+        'year'                => 2026,
+        'department'          => 'CSE',
+        'degree_type'         => 'BS',
+        'appendix_a_contract' => $appendixAContract,
+    ], JSON_THROW_ON_ERROR);
 
     $result = curl_api_raw($reportgenUrl, $payload);
 
@@ -149,7 +213,13 @@ try {
         #more error handling for api call if not successful
         $decoded = @json_decode((string)$result['body'], true);
         $detail  = $result['error'] ?? ($decoded['detail'] ?? "HTTP {$result['status']}");
-        json_response(500, [
+        if (is_array($detail)) {
+            $detail = json_encode($detail);
+        }
+        $responseCode = $result['status'] >= 400 && $result['status'] < 500
+            ? $result['status']
+            : 500;
+        json_response($responseCode, [
             'ok'    => false,
             'error' => 'Report API error: ' . $detail,
             'job_id' => $jobId
