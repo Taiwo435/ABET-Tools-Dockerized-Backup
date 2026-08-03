@@ -46,11 +46,18 @@ celery_app.conf.task_soft_time_limit = 1800  # 30 min
 # Hard limit: SIGKILL after this
 celery_app.conf.task_time_limit = 2100  # 35 min
 
-# ---------- Redis Visibility Timeout ----------
+# ---------- Redis Prefix & Transport Options ----------
 # Must exceed your longest possible task duration.
 # If a task runs longer than this, Redis assumes the worker died
 # and redelivers the message, causing duplicate execution.
-celery_app.conf.broker_transport_options = {"visibility_timeout": 43200}  # 12 hours
+redis_prefix_celery = os.getenv("REDIS_PREFIX_CELERY", "celery_")
+celery_app.conf.broker_transport_options = {
+    "visibility_timeout": 43200,  # 12 hours
+    "global_keyprefix": redis_prefix_celery,
+}
+celery_app.conf.result_backend_transport_options = {
+    "global_keyprefix": redis_prefix_celery,
+}
 
 # ---------- Result Storage ----------
 celery_app.conf.result_expires = 86400  # 24h, store to mysql for persistent storage
