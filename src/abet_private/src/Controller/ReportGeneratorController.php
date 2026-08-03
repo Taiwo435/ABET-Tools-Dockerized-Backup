@@ -191,7 +191,7 @@ final class ReportGeneratorController extends AbstractController
         if (!is_dir($outDir) && !mkdir($outDir, 0700, true)) {
             return $this->json(['ok' => false, 'error' => 'Cannot create output directory'], 500);
         }
-        $finalDocx = $outDir . '/report.docx';
+        $finalDocx = $outDir . '/' . 'long_report.docx';
         file_put_contents($finalDocx, $body);
 
         $this->recordJob($connection, $jobId, $user->getId(), 'long_report_generation', 'reportgen', 'completed');
@@ -199,7 +199,7 @@ final class ReportGeneratorController extends AbstractController
         return $this->json([
             'ok' => true,
             'job_id' => $jobId,
-            'docx_url' => $this->generateUrl('app_report_generator_view', ['job' => $jobId, 'file' => 'report.docx']),
+            'docx_url' => $this->generateUrl('app_report_generator_view', ['job' => $jobId, 'file' => 'long_report.docx']),
         ]);
     }
 
@@ -212,7 +212,7 @@ final class ReportGeneratorController extends AbstractController
         if (!preg_match('/^[A-Za-z0-9_-]{10,80}$/', $job)) {
             throw $this->createNotFoundException('Invalid job id');
         }
-        if (!in_array($file, ['report.pdf', 'report.docx'], true)) {
+        if (!in_array($file, ['report.pdf', 'report.docx', 'long_report.pdf', 'long_report.docx'], true)) {
             throw $this->createNotFoundException('Invalid file');
         }
 
@@ -237,12 +237,12 @@ final class ReportGeneratorController extends AbstractController
 
         $response = new BinaryFileResponse($path);
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        if ($file === 'report.pdf') {
+        if ($file === 'report.pdf' || $file === 'long_report.pdf') {
             $response->headers->set('Content-Type', 'application/pdf');
-            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, 'report.pdf');
+            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, $file);
         } else {
             $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'report.docx');
+            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file);
         }
 
         return $response;

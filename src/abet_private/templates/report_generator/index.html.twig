@@ -82,17 +82,17 @@
             <p class="sub">Upload a Canvas JSON export to standardize accreditation data.</p>
 
             <label id="dropzone" class="dropzone">
-                <input id="jsonFile" type="file" accept=".json,application/json">
+                <input id="jsonFileInput" type="file" accept=".json,application/json">
                 <div><strong>Drag &amp; drop JSON here</strong> or click to browse</div>
                 <div class="file-name" id="fileName">No file selected</div>
             </label>
 
-            <button id="generateBtn" class="btn btn-primary" type="button">Generate Report</button>
+            <button id="generateReportBtn" class="btn btn-primary" type="button">Generate Report</button>
 
             <div id="status" class="status"></div>
 
             <div id="results" class="results">
-                <a id="openPdfBtn" class="pdf" href="#" target="_blank" rel="noopener" style="display:none;">Open PDF</a>
+                <a id="downloadPdfBtn" class="pdf" href="#" target="_blank" rel="noopener" style="display:none;">Open PDF</a>
                 <a id="downloadDocxBtn" class="docx" href="#" style="display:none;">Download DOCX</a>
             </div>
         </div>
@@ -100,7 +100,7 @@
         <div class="rg-card">
             <h1>Generate Long Report</h1>
             <p class="sub">Generate the long faculty report and download it as a DOCX file.</p>
-            <button id="lrBtn" class="btn btn-primary" type="button">Generate Long Report</button>
+            <button id="generateLongReportBtn" class="btn btn-primary" type="button">Generate Long Report</button>
             <div id="lrStatus" class="status"></div>
             <div class="results" id="lrResults">
                 <a id="downloadLongDocxBtn" class="docx" href="#" style="display:none;">Download Long Report DOCX</a>
@@ -112,12 +112,12 @@
         const csrfToken = "{{ csrf_token('report_generate') }}";
 
         const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('jsonFile');
+        const fileInput = document.getElementById('jsonFileInput');
         const fileNameEl = document.getElementById('fileName');
-        const generateBtn = document.getElementById('generateBtn');
+        const generateBtn = document.getElementById('generateReportBtn');
         const statusEl = document.getElementById('status');
         const resultsEl = document.getElementById('results');
-        const openPdfBtn = document.getElementById('openPdfBtn');
+        const openPdfBtn = document.getElementById('downloadPdfBtn');
         const downloadDocxBtn = document.getElementById('downloadDocxBtn');
         let selectedFile = null;
 
@@ -170,7 +170,7 @@
             }
         });
 
-        const lrBtn = document.getElementById('lrBtn');
+        const lrBtn = document.getElementById('generateLongReportBtn');
         const lrStatusEl = document.getElementById('lrStatus');
         const downloadLongDocxBtn = document.getElementById('downloadLongDocxBtn');
 

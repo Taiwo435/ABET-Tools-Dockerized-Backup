@@ -240,7 +240,7 @@ def test_navigation(driver):
     open_dropdown(driver)
 
     # go to me
-    my_profile_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/div/a");
+    my_profile_link = driver.find_element(By.ID, "nav-my-profile");
     my_profile_link.click()
 
     expect_route(driver, "/account/me/")
@@ -257,7 +257,7 @@ def test_navigation(driver):
     open_dropdown(driver)
 
     # go to edit
-    edit_profile_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[1]");
+    edit_profile_link = driver.find_element(By.ID, "nav-edit-profile");
     edit_profile_link.click()
 
     expect_route(driver, "/account/profile/")
@@ -274,7 +274,7 @@ def test_navigation(driver):
 
     open_dropdown(driver)
 
-    account_settings_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[2]")
+    account_settings_link = driver.find_element(By.ID, "nav-account-settings")
     account_settings_link.click()
 
     expect_route(driver, "/account/settings/")
@@ -290,7 +290,7 @@ def test_navigation(driver):
 
     open_dropdown(driver)
 
-    privacy_faq_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[3]")
+    privacy_faq_link = driver.find_element(By.ID, "nav-privacy")
     privacy_faq_link.click()
 
     expect_route(driver, "/account/privacy/")
@@ -306,7 +306,7 @@ def test_navigation(driver):
 
     open_dropdown(driver)
 
-    help_faq_link = driver.find_element(By.XPATH, "/html/body/header/div[2]/div/div/div/a[4]")
+    help_faq_link = driver.find_element(By.ID, "nav-help")
     help_faq_link.click()
 
     expect_route(driver, "/account/help/")
