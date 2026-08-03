@@ -14,6 +14,17 @@ require __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__."/../../docker");
 $dotenv->load();
 
+function abetEnv(string $name, ?string $default = null): ?string {
+    $processValue = getenv($name);
+    if ($processValue !== false) {
+        return $processValue;
+    }
+
+    $dotenvValue = $_ENV[$name] ?? $_SERVER[$name] ?? null;
+
+    return is_string($dotenvValue) ? $dotenvValue : $default;
+}
+
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
@@ -28,10 +39,10 @@ class Services {
 
     public static function getConnection() : Connection {
         $connectionParams = [
-            'dbname' => getenv('MYSQL_DATABASE'),
-            'user' => getenv('MYSQL_USER'),
-            'password' => getenv('MYSQL_PASS'),
-            'host' => getenv('MYSQL_HOSTNAME') ?: '127.0.0.1',
+            'dbname' => abetEnv('MYSQL_DATABASE'),
+            'user' => abetEnv('MYSQL_USER'),
+            'password' => abetEnv('MYSQL_PASS'),
+            'host' => abetEnv('MYSQL_HOSTNAME', '127.0.0.1'),
             'driver' => 'pdo_mysql',
         ];
 
@@ -49,10 +60,10 @@ class Services {
             $ORMConfig = ORMSetup::createAttributeMetadataConfiguration($paths, $isDevMode);
 
             $connectionParams = [
-                'dbname' => getenv('MYSQL_DATABASE'),
-                'user' => getenv('MYSQL_USER'),
-                'password' => getenv('MYSQL_PASS'),
-                'host' => getenv('MYSQL_HOSTNAME') ?: '127.0.0.1',
+                'dbname' => abetEnv('MYSQL_DATABASE'),
+                'user' => abetEnv('MYSQL_USER'),
+                'password' => abetEnv('MYSQL_PASS'),
+                'host' => abetEnv('MYSQL_HOSTNAME', '127.0.0.1'),
                 'driver' => 'pdo_mysql',
             ];
 
@@ -94,5 +105,5 @@ class Services {
 
 
 
-if (getenv("APP_ENV") != 'test')
+if (abetEnv("APP_ENV") != 'test')
 $entityManager = Services::getEntityManager();
