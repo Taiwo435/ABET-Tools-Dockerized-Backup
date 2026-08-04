@@ -42,6 +42,19 @@
 
         <div class="tools-grid">
 
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">Faculty Syllabus Templates</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>Create a term-specific course syllabus from an approved shared template or a blank offering, then submit it for accreditation review.</p>
+                        <a href="{{ path('app_faculty_syllabus_templates') }}" class="action-link">Open Faculty Syllabi &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
             {% if app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_ASSIGNMENTS_GRADES)%}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">

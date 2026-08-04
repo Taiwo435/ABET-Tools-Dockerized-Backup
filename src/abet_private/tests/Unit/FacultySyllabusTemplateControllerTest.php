@@ -1,0 +1,123 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Controller\SyllabusTemplate\FacultySyllabusTemplateController;
+use App\Entity\SyllabusTemplate\TemplateSubmission;
+use Doctrine\ORM\Mapping\OneToMany;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+final class FacultySyllabusTemplateControllerTest extends TestCase
+{
+    #[DataProvider('facultyRoutes')]
+    public function testFacultyRoutesRequireAnAuthenticatedUser(
+        string $methodName,
+        string $path,
+        string $routeName,
+        array $methods,
+    ): void {
+        $method = (new ReflectionClass(FacultySyllabusTemplateController::class))->getMethod($methodName);
+        $route = $method->getAttributes(Route::class)[0]->newInstance();
+        $grant = $method->getAttributes(IsGranted::class)[0]->newInstance();
+
+        self::assertSame($path, $route->path);
+        self::assertSame($routeName, $route->name);
+        self::assertSame($methods, $route->methods);
+        self::assertSame('ROLE_USER', $grant->attribute);
+    }
+
+    public static function facultyRoutes(): array
+    {
+        return [
+            'index' => ['index', '/syllabus-templates', 'app_faculty_syllabus_templates', ['GET']],
+            'create blank' => ['createBlank', '/syllabus-templates/new', 'app_faculty_syllabus_templates_new', ['GET', 'POST']],
+            'use template' => ['useTemplate', '/syllabus-templates/{id}/use', 'app_faculty_syllabus_templates_use', ['GET', 'POST']],
+            'edit' => ['edit', '/syllabus-templates/drafts/{id}/edit', 'app_faculty_syllabus_templates_edit', ['GET', 'POST']],
+            'submit' => ['submit', '/syllabus-templates/drafts/{id}/submit', 'app_faculty_syllabus_templates_submit', ['POST']],
+            'delete' => ['delete', '/syllabus-templates/drafts/{id}/delete', 'app_faculty_syllabus_templates_delete', ['POST']],
+        ];
+    }
+
+    public function testFacultyTemplatesExposeSelectionDraftAndEditingUi(): void
+    {
+        $index = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/faculty/index.html.twig');
+        $form = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/faculty/form.html.twig');
+        $holdDelete = file_get_contents(dirname(__DIR__, 2).'/templates/syllabus_template/faculty/_hold_delete_behavior.html.twig');
+        $homepage = file_get_contents(dirname(__DIR__, 2).'/templates/homepage/home.html.twig');
+
+        self::assertIsString($index);
+        self::assertIsString($form);
+        self::assertIsString($holdDelete);
+        self::assertIsString($homepage);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_use'", $index);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_new')", $index);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_edit'", $index);
+        self::assertStringContainsString('Create offering syllabus', $index);
+        self::assertStringContainsString('Save working copy', $form);
+        self::assertStringContainsString('Create my draft', $form);
+        self::assertStringContainsString('Create blank draft', $form);
+        self::assertStringContainsString('form.program is defined', $form);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_submit'", $form);
+        self::assertStringContainsString('Submit for approval', $form);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_submit', {id: draft.id})", $index);
+        self::assertStringContainsString("csrf_token('submit-faculty-syllabus-' ~ draft.id)", $index);
+        self::assertStringContainsString('{% if draft.workingRevision.facultySubmittable %}', $index);
+        self::assertStringContainsString('faculty-draft-submit-form', $index);
+        self::assertStringContainsString('Your submitted proposals', $index);
+        self::assertStringContainsString('Coordinator feedback:', $index);
+        self::assertStringContainsString('proposal.review.comment', $index);
+        self::assertStringContainsString('Nothing is saved until', $form);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $form);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates_delete'", $index);
+        self::assertStringContainsString('Hold to delete', $index);
+        self::assertStringContainsString('Hold to delete', $form);
+        self::assertStringContainsString('Deletions are permanent.', $index);
+        self::assertStringContainsString('Deletions are permanent.', $form);
+        self::assertStringContainsString('draft.workingRevision.facultySubmittable', $index);
+        self::assertStringContainsString('draft.workingRevision.facultySubmissionBlockingFields', $index);
+        self::assertStringContainsString('data-tooltip="{{ completenessLabel }}"', $index);
+        self::assertStringContainsString('Not ready to submit — Required:', $index);
+        self::assertStringContainsString('.completeness-icon:hover::after', $index);
+        self::assertStringContainsString("draft.workingRevision.facultySubmittable ? '✓' : '×'", $index);
+        self::assertStringNotContainsString('confirm(', $form);
+        self::assertStringContainsString('const holdDuration = 2000', $holdDelete);
+        self::assertStringContainsString("button.addEventListener('pointerdown', begin)", $holdDelete);
+        self::assertStringContainsString("button.addEventListener('keydown', begin)", $holdDelete);
+        self::assertStringContainsString('requestSubmit()', $holdDelete);
+        self::assertStringContainsString("path('app_faculty_syllabus_templates')", $homepage);
+        self::assertStringContainsString('form.contactHours', $form);
+        self::assertStringContainsString('form.instructors', $form);
+        self::assertStringContainsString('form.textbooks', $form);
+        self::assertStringContainsString('form.prerequisites', $form);
+        self::assertStringContainsString('form.courseType', $form);
+        self::assertStringContainsString('form.specificGoals', $form);
+        self::assertStringContainsString('form.studentOutcomes', $form);
+        self::assertStringContainsString('form.topicsCovered', $form);
+        self::assertStringContainsString('submission.workingRevision.appendixABlockingFields', $form);
+        self::assertStringContainsString('form.academicYear', $form);
+        self::assertStringContainsString('form.term', $form);
+        self::assertStringContainsString('form.section', $form);
+        self::assertStringContainsString('draft.courseOffering.term', $index);
+
+        $controller = file_get_contents(dirname(__DIR__, 2).'/src/Controller/SyllabusTemplate/FacultySyllabusTemplateController.php');
+        self::assertIsString($controller);
+        self::assertStringContainsString('TemplateSubmission::forFacultyOffering', $controller);
+        self::assertStringContainsString("'include_offering_identity' => true", $controller);
+        self::assertStringContainsString('Faculty Course Syllabi', $index);
+        self::assertStringContainsString('Submission and report readiness are separate', $index);
+        self::assertStringContainsString("syllabus_template/_lifecycle_badges.html.twig", $index);
+    }
+
+    public function testDeletingDraftSubmissionAlsoRemovesItsOwnedRevisions(): void
+    {
+        $property = (new ReflectionClass(TemplateSubmission::class))->getProperty('revisions');
+        $mapping = $property->getAttributes(OneToMany::class)[0]->newInstance();
+
+        self::assertContains('persist', $mapping->cascade);
+        self::assertContains('remove', $mapping->cascade);
+    }
+}

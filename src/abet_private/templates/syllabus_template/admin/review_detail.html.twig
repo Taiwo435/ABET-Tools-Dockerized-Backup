@@ -1,0 +1,233 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }} | {% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="/assets/css/syllabus-lifecycle.css?v=20260727-5">
+    <style>
+        .review-detail { width: 100%; max-width: 980px; margin: 2rem auto 3rem; padding: 0 1.25rem; }
+        .review-detail__topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .review-detail__meta { color: #666; font-size: .92rem; }
+        .review-detail__meta strong { color: var(--asu-maroon); }
+        .context-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1rem; }
+        .context-item { padding: .9rem 1rem; background: var(--asu-white); border: 1px solid #e2e2e2; border-radius: 6px; }
+        .context-item dt { margin-bottom: .25rem; color: #666; font-size: .78rem; font-weight: 700; letter-spacing: .025em; text-transform: uppercase; }
+        .context-item dd { margin: 0; color: #333; font-weight: 700; }
+        .stale-warning { display: flex; gap: .8rem; margin-bottom: 1rem; padding: 1rem 1.15rem; border-left: 5px solid var(--asu-gold); border-radius: 5px; background: #fff7db; color: #4f3a00; }
+        .stale-warning__icon { font-size: 1.25rem; }
+        .review-card { overflow: hidden; background: var(--asu-white); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
+        .review-section { padding: 1.5rem 1.75rem; border-bottom: 1px solid #e7e7e7; }
+        .review-section:last-child { border-bottom: 0; }
+        .review-section__heading { margin-bottom: 1rem; }
+        .review-section__heading h2 { color: var(--asu-maroon); font-size: 1.18rem; }
+        .review-section__heading p { color: #666; font-size: .9rem; }
+        .read-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+        .read-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .read-field { min-width: 0; }
+        .read-field--wide { grid-column: 1 / -1; }
+        .read-field__label { display: block; margin-bottom: .35rem; color: #555; font-size: .82rem; font-weight: 700; }
+        .read-field__value { min-height: 1.35rem; color: #222; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .read-list { margin: 0; padding-left: 1.2rem; color: #222; line-height: 1.55; }
+        .not-provided { color: #777; font-style: italic; }
+        .review-note { margin-top: 1rem; padding: 1rem 1.15rem; border: 1px solid #dedede; border-left: 5px solid var(--asu-gold); border-radius: 6px; background: var(--asu-white); color: #555; }
+        .flash { margin-bottom: 1rem; padding: .85rem 1rem; border-radius: 5px; font-weight: 600; }
+        .flash--error { border-left: 5px solid var(--error-red); background: #f8e1e5; color: var(--error-red); }
+        .decision-panel { margin-top: 1.25rem; padding: 1.25rem 1.5rem; background: var(--asu-white); border: 1px solid #dedede; border-left: 5px solid #218739; border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
+        .decision-panel h2 { color: var(--asu-maroon); font-size: 1.1rem; }
+        .decision-panel p { margin: .25rem 0 1rem; color: #666; font-size: .9rem; }
+        .decision-panel__warning { color: #8a2038 !important; font-weight: 700; }
+        .decision-panel .button-primary:disabled { background: #aaa; color: #f4f4f4; cursor: not-allowed; }
+        .review-approval-action { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; max-width: 280px; min-height: 2.75rem; }
+        .decision-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+        .decision-panel--deny { border-left-color: var(--error-red); }
+        .denial-disclosure > summary { list-style: none; cursor: pointer; }
+        .denial-disclosure > summary::-webkit-details-marker { display: none; }
+        .denial-disclosure[open] > summary { margin-bottom: 1rem; }
+        .denial-disclosure form { padding-top: 1rem; border-top: 1px solid #dedede; }
+        .decision-panel textarea { box-sizing: border-box; width: 100%; min-height: 115px; margin: .35rem 0 .75rem; padding: .7rem; border: 1px solid #aaa; border-radius: 4px; font: inherit; }
+        .field-error { margin: 0 0 .65rem !important; color: var(--error-red) !important; font-weight: 700; }
+        .review-outcome { margin-top: 1rem; padding: 1.25rem 1.5rem; border-left: 5px solid var(--asu-maroon); border-radius: 7px; background: var(--asu-white); box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
+        .review-outcome__feedback { padding: .8rem; background: #f6f6f6; white-space: pre-wrap; }
+        @media (max-width: 760px) {
+            .context-grid, .read-grid, .read-grid--three, .decision-grid { grid-template-columns: 1fr; }
+            .read-field--wide { grid-column: auto; }
+            .review-section { padding: 1.2rem; }
+            .review-detail__topbar a { width: 100%; box-sizing: border-box; text-align: center; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {% set revision = submission.submittedRevision %}
+    {% set content = revision.content %}
+    {% set provenance = revision.sourceProvenance.toArray %}
+    {% set publicationTarget = submission.kind.value == 'faculty_offering' ? 'course offering' : 'shared template' %}
+    <section class="hero hero-small">
+        <h1>Review {{ submission.commonCourse.courseSubject }} {{ submission.commonCourse.courseNumber }}</h1>
+        <p>{{ submission.review ? 'Read-only record of the frozen submission and completed review.' : "Read the faculty member's frozen submitted revision before making a decision." }}</p>
+    </section>
+
+    <main class="review-detail">
+        <div class="review-detail__topbar">
+            <div class="review-detail__meta">
+                <strong>{{ submission.commonCourse.courseName }}</strong>
+                &middot; Submitted {{ submission.submittedAt|date('M j, Y \a\t g:i A') }}
+            </div>
+            <a href="{{ path('app_admin_syllabus_templates', {
+                program: submission.commonCourse.program.id,
+                view: 'offerings',
+                _fragment: submission.review ? 'review-history' : 'pending-review'
+            }) }}" class="button-secondary">Back to Course Offerings &amp; Review</a>
+        </div>
+
+        {% for message in app.flashes('error') %}<div class="flash flash--error" role="alert">{{ message }}</div>{% endfor %}
+
+        <dl class="context-grid">
+            <div class="context-item"><dt>Faculty</dt><dd>{{ submission.submittedBy.asurite }}</dd></div>
+            <div class="context-item"><dt>Program</dt><dd>{{ submission.commonCourse.program.initials }} {{ submission.commonCourse.program.year }}</dd></div>
+            <div class="context-item"><dt>Delivery</dt><dd>{{ (submission.courseOffering ? submission.courseOffering.deliveryType.value : submission.commonCourse.deliveryType.value)|replace({'_': ' '})|title }}</dd></div>
+            <div class="context-item"><dt>Submitted revision</dt><dd>Rev. {{ revision.revisionNumber }}</dd></div>
+            <div class="context-item"><dt>Content source</dt><dd>{{ revision.sourceType.value|replace({'_': ' '})|title }}{% if revision.sourceProvenance.sourceDocument %}<br>{{ revision.sourceProvenance.sourceDocument.original_filename }}{% endif %}</dd></div>
+        </dl>
+        {% include 'syllabus_template/_lifecycle_badges.html.twig' with {submission: submission, revision: submission.approvedRevision ?: revision, readinessMode: 'faculty'} only %}
+
+        {% if sharedTemplateChanged and not submission.review %}
+            <div class="stale-warning" role="alert">
+                <div class="stale-warning__icon" aria-hidden="true">&#9888;</div>
+                <div>
+                    <strong>Shared template changed since this proposal began.</strong>
+                    <div>This faculty copy was based on revision {{ submission.basedOnRevision.revisionNumber }}, while revision {{ submission.commonCourse.currentApprovedRevision.revisionNumber }} is currently published. The proposal must be reconciled before approval.</div>
+                </div>
+            </div>
+        {% endif %}
+
+        <article class="review-card">
+            <section class="review-section">
+                <div class="review-section__heading"><h2>Course details</h2><p>Common-course identity associated with this submission.</p></div>
+                <div class="read-grid read-grid--three">
+                    <div class="read-field"><span class="read-field__label">Course subject</span><div class="read-field__value">{{ submission.commonCourse.courseSubject }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Course number</span><div class="read-field__value">{{ submission.commonCourse.courseNumber }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Delivery type</span><div class="read-field__value">{{ (submission.courseOffering ? submission.courseOffering.deliveryType.value : submission.commonCourse.deliveryType.value)|replace({'_': ' '})|title }}</div></div>
+                    {% if submission.courseOffering %}
+                        <div class="read-field"><span class="read-field__label">Offering</span><div class="read-field__value">{{ submission.courseOffering.term }} {{ submission.courseOffering.academicYear }}{% if submission.courseOffering.section %}, section {{ submission.courseOffering.section }}{% endif %}</div></div>
+                    {% endif %}
+                    <div class="read-field read-field--wide"><span class="read-field__label">Course name</span><div class="read-field__value">{{ submission.commonCourse.courseName }}</div></div>
+                </div>
+            </section>
+
+            <section class="review-section">
+                <div class="review-section__heading"><h2>Required syllabus information</h2><p>Fields required when the faculty member submitted this revision.</p></div>
+                <div class="read-grid read-grid--three">
+                    <div class="read-field"><span class="read-field__label">Credit hours</span><div class="read-field__value">{{ content.credits }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Credit categorization</span><div class="read-field__value">{{ content.credit_category }}</div></div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Course coordinators</span>
+                        <ul class="read-list">{% for coordinator in content.course_coordinators %}<li>{{ coordinator }}</li>{% endfor %}</ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="review-section">
+                <div class="review-section__heading"><h2>Instruction and materials</h2><p>Scheduling, instructional responsibility, and source materials included in the proposal.</p></div>
+                <div class="read-grid">
+                    <div class="read-field"><span class="read-field__label">Contact hours</span><div class="read-field__value">{{ content.contact_hours|default('') ?: 'Not provided' }}</div></div>
+                    <div class="read-field"><span class="read-field__label">Prerequisites</span><div class="read-field__value">{{ content.prerequisites|default('') ?: 'Not provided' }}</div></div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Instructors</span>
+                        {% if content.instructors|default([]) is not empty %}<ul class="read-list">{% for instructor in content.instructors %}<li>{{ instructor }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
+                    </div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Textbooks and required materials</span>
+                        {% if content.textbooks|default([]) is not empty %}<ul class="read-list">{% for textbook in content.textbooks %}<li>{{ textbook }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
+                    </div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Catalog description</span>
+                        <div class="read-field__value">{% if content.catalog_description is not empty %}{{ content.catalog_description }}{% else %}<span class="not-provided">Not provided</span>{% endif %}</div>
+                    </div>
+                    <div class="read-field read-field--wide">
+                        <span class="read-field__label">Course outcomes</span>
+                        {% if content.course_outcomes is not empty %}<ul class="read-list">{% for outcome in content.course_outcomes %}<li>{{ outcome }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="review-section">
+                <div class="review-section__heading"><h2>ABET alignment</h2><p>Evidence used to determine Appendix A readiness.</p></div>
+                <div class="read-grid">
+                    <div class="read-field"><span class="read-field__label">Course type</span><div class="read-field__value">{{ content.course_type|default('') ?: 'Not provided' }}</div></div>
+                    <div class="read-field read-field--wide"><span class="read-field__label">Specific goals</span>{% if content.specific_goals|default([]) is not empty %}<ul class="read-list">{% for goal in content.specific_goals %}<li>{{ goal }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}</div>
+                    <div class="read-field read-field--wide"><span class="read-field__label">Student outcomes</span>{% if content.student_outcomes|default([]) is not empty %}<ul class="read-list">{% for outcome in content.student_outcomes %}<li>{{ outcome }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}</div>
+                    <div class="read-field read-field--wide"><span class="read-field__label">Topics covered</span>{% if content.topics_covered|default([]) is not empty %}<ul class="read-list">{% for topic in content.topics_covered %}<li>{{ topic }}</li>{% endfor %}</ul>{% else %}<div class="not-provided">Not provided</div>{% endif %}</div>
+                </div>
+            </section>
+
+            {% if provenance.source_type == 'pdf_extraction' %}
+                <section class="review-section">
+                    <div class="review-section__heading"><h2>PDF extraction provenance</h2><p>Traceability metadata retained with this immutable revision.</p></div>
+                    <div class="read-grid">
+                        <div class="read-field"><span class="read-field__label">Source document</span><div class="read-field__value">{{ provenance.source_document.original_filename }}</div></div>
+                        <div class="read-field"><span class="read-field__label">Document SHA-256</span><div class="read-field__value">{{ provenance.source_document.sha256 }}</div></div>
+                        <div class="read-field"><span class="read-field__label">Extractor</span><div class="read-field__value">{{ provenance.extraction.extractor|default('Not recorded') }}{% if provenance.extraction.extractor_version|default(null) %} {{ provenance.extraction.extractor_version }}{% endif %}</div></div>
+                        <div class="read-field"><span class="read-field__label">Extracted</span><div class="read-field__value">{{ provenance.extraction.extracted_at|date('M j, Y g:i A') }}</div></div>
+                        <div class="read-field read-field--wide"><span class="read-field__label">Fields with trace data</span><div class="read-field__value">{{ provenance.fields|length }}</div></div>
+                    </div>
+                </section>
+            {% elseif provenance.source_revision %}
+                <section class="review-section">
+                    <div class="review-section__heading"><h2>Revision provenance</h2><p>This content was derived from an earlier immutable syllabus revision.</p></div>
+                    <div class="read-grid">
+                        <div class="read-field"><span class="read-field__label">Source revision</span><div class="read-field__value">Rev. {{ provenance.source_revision.revision_number }}</div></div>
+                        <div class="read-field"><span class="read-field__label">Source schema</span><div class="read-field__value">{{ provenance.source_revision.schema_version }}</div></div>
+                    </div>
+                </section>
+            {% endif %}
+        </article>
+
+        <div class="review-note">The submitted faculty revision is frozen and remains read-only for the full audit history.</div>
+
+        {% if submission.review %}
+            <section class="review-outcome">
+                <h2>Completed review</h2>
+                <dl class="context-grid">
+                    <div class="context-item"><dt>Decision</dt><dd>{{ submission.review.decision.value|replace({'_': ' '})|title }}</dd></div>
+                    <div class="context-item"><dt>Reviewer</dt><dd>{{ submission.review.reviewer.asurite }}</dd></div>
+                    <div class="context-item"><dt>Decided</dt><dd>{{ submission.decidedAt|date('M j, Y g:i A') }}</dd></div>
+                    <div class="context-item"><dt>Published revision</dt><dd>{{ submission.approvedRevision ? 'Rev. ' ~ submission.approvedRevision.revisionNumber : 'None' }}</dd></div>
+                </dl>
+                {% if submission.review.comment %}<p class="review-outcome__feedback"><strong>Feedback:</strong> {{ submission.review.comment }}</p>{% endif %}
+                {% if submission.approvedRevision and submission.approvedRevision.appendixAReady %}
+                    <p><a class="button-secondary" href="{{ path('app_admin_syllabus_template_appendix_a_export', {id: submission.id}) }}">Download report-ready JSON</a></p>
+                {% endif %}
+            </section>
+        {% else %}
+            <div class="decision-grid">
+                <section class="decision-panel">
+                    <h2>Approve submission</h2>
+                    <p>Publish the frozen faculty revision exactly as submitted to the {{ publicationTarget }}.</p>
+                    {% if sharedTemplateChanged %}<p class="decision-panel__warning">Unavailable because the shared template changed after this faculty copy was created.</p>{% endif %}
+                    <form method="post" action="{{ path('app_admin_syllabus_template_review_approve', {id: submission.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('approve-syllabus-submission-' ~ submission.id) }}">
+                        <button type="submit" class="button-primary review-approval-action"{% if sharedTemplateChanged %} disabled{% endif %}>Approve Unchanged</button>
+                    </form>
+                    <p><a href="{{ path('app_admin_syllabus_template_review_edit', {id: submission.id}) }}" class="button-primary review-approval-action">Review and approve with edits</a></p>
+                </section>
+
+                <section class="decision-panel decision-panel--deny">
+                    <h2>Deny submission</h2>
+                    <p>Return a final denial decision with feedback visible to the faculty member.</p>
+                    <details class="denial-disclosure"{% if denialError|default(null) %} open{% endif %}>
+                        <summary class="button-primary review-approval-action">Deny submission</summary>
+                        <form method="post" action="{{ path('app_admin_syllabus_template_review_deny', {id: submission.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('deny-syllabus-submission-' ~ submission.id) }}">
+                            <label for="denial-feedback"><strong>Coordinator feedback</strong></label>
+                            <textarea id="denial-feedback" name="feedback" required aria-describedby="denial-feedback-help denial-feedback-error">{{ denialFeedback|default('') }}</textarea>
+                            <small id="denial-feedback-help">Required. Explain what must be corrected.</small>
+                            {% if denialError|default(null) %}<p id="denial-feedback-error" class="field-error" role="alert">{{ denialError }}</p>{% endif %}
+                            <button type="submit" class="button-primary review-approval-action">Confirm denial</button>
+                        </form>
+                    </details>
+                </section>
+            </div>
+        {% endif %}
+    </main>
+{% endblock %}

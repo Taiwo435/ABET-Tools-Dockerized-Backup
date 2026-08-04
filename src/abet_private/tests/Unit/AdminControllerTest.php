@@ -45,6 +45,18 @@ final class AdminControllerTest extends TestCase
         self::assertStringNotContainsString('Coming Soon', $template);
     }
 
+    public function testSymfonyHomepageLinksAdminsToCentralAdminPanel(): void
+    {
+        $template = file_get_contents(
+            dirname(__DIR__, 2).'/templates/homepage/home.html.twig'
+        );
+
+        self::assertIsString($template);
+        self::assertStringContainsString("is_granted('ROLE_ADMIN')", $template);
+        self::assertStringContainsString("path('app_admin_panel')", $template);
+        self::assertStringNotContainsString('/AssignmentsGrades/admin.php', $template);
+    }
+
     public function testAdminUsersRouteRequiresAdminRole(): void
     {
         self::assertTrue(

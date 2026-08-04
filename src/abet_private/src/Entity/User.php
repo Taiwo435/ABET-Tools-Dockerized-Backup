@@ -315,34 +315,3 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->permissions = 0;
     }
 }
-
-/**
- * The Matrix of possible permissions a user can have
- * NOTE: If this is in production, ALWAYS add values afterward! (by production i mean has REAL user data)
- * Otherwise, you WILL ruin the implementation!!
- * 
- * Uses a bitmask implementation, max of 32 permissions unless we change column length (very possible)
- */
-enum Permissions : int {
-    case ROLE_ADMIN = 1 << 0;
-    case ROLE_ASSIGNMENTS_GRADES = 1 << 1;
-    case ROLE_CANVAS_FORMATTING = 1 << 2;
-    case ROLE_REPORTGEN = 1 << 3;
-    case ROLE_FACULTY_FORM = 1 << 4;
-    case ROLE_COORDINATOR_FORM = 1 << 5;
-
-    /**
-     * Human-readable display name — single source of truth for every screen
-     * that shows a user's permissions, so they never leak SHOUTY_ROLE_NAMEs.
-     */
-    public function label(): string {
-        return match ($this) {
-            self::ROLE_ADMIN => 'Admin',
-            self::ROLE_ASSIGNMENTS_GRADES => 'Assignments & Grades',
-            self::ROLE_CANVAS_FORMATTING => 'Canvas Formatting',
-            self::ROLE_REPORTGEN => 'Report Generation',
-            self::ROLE_FACULTY_FORM => 'Faculty Form',
-            self::ROLE_COORDINATOR_FORM => 'Coordinator Form',
-        };
-    }
-}

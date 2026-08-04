@@ -14,6 +14,17 @@ require __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__."/../../docker");
 $dotenv->load();
 
+function abetEnv(string $name, ?string $default = null): ?string {
+    $processValue = getenv($name);
+    if ($processValue !== false) {
+        return $processValue;
+    }
+
+    $dotenvValue = $_ENV[$name] ?? $_SERVER[$name] ?? null;
+
+    return is_string($dotenvValue) ? $dotenvValue : $default;
+}
+
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
@@ -27,15 +38,15 @@ class Services {
     private static ?EntityManager $instance = null;
 
     public static function getConnection() : Connection {
-    $connectionParams = [
-        'dbname' => $_ENV['MYSQL_DATABASE'],
-        'user' => $_ENV['MYSQL_USER'],
-        'password' => $_ENV['MYSQL_PASS'],
-        'host' => file_exists('/.dockerenv') ? $_ENV['MYSQL_HOSTNAME'] : '127.0.0.1',
-        'driver' => 'pdo_mysql',
-    ];
+        $connectionParams = [
+            'dbname' => abetEnv('MYSQL_DATABASE'),
+            'user' => abetEnv('MYSQL_USER'),
+            'password' => abetEnv('MYSQL_PASS'),
+            'host' => abetEnv('MYSQL_HOSTNAME', '127.0.0.1'),
+            'driver' => 'pdo_mysql',
+        ];
 
-    return DriverManager::getConnection($connectionParams);
+        return DriverManager::getConnection($connectionParams);
     }
 
 
@@ -48,10 +59,10 @@ class Services {
             $ORMConfig = ORMSetup::createAttributeMetadataConfiguration($paths, $isDevMode);
 
             $connectionParams = [
-                'dbname' => $_ENV['MYSQL_DATABASE'],
-                'user' => $_ENV['MYSQL_USER'],
-                'password' => $_ENV['MYSQL_PASS'],
-                'host' => file_exists('/.dockerenv') ? $_ENV['MYSQL_HOSTNAME'] : '127.0.0.1',
+                'dbname' => abetEnv('MYSQL_DATABASE'),
+                'user' => abetEnv('MYSQL_USER'),
+                'password' => abetEnv('MYSQL_PASS'),
+                'host' => abetEnv('MYSQL_HOSTNAME', '127.0.0.1'),
                 'driver' => 'pdo_mysql',
             ];
 
@@ -93,5 +104,5 @@ class Services {
 
 
 
-if (getenv("APP_ENV") != 'test')
+if (abetEnv("APP_ENV") != 'test')
 $entityManager = Services::getEntityManager();

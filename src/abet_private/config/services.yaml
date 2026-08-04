@@ -19,5 +19,23 @@ services:
     App\:
         resource: '../src/'
 
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
+        arguments:
+            - '@Redis'
+            - { prefix: '%env(REDIS_PREFIX_SYMFONY)%' }
+
+    Redis:
+        class: \Redis
+        calls:
+            - connect:
+                - '%env(REDIS_HOST)%'
+                - '%env(int:REDIS_PORT)%'
+
+    App\Service\Report\AppendixAReportExportBoundary:
+        alias: App\Service\Report\AppendixAReportExportService
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Repository\SyllabusReadinessRepository:
+        public: true

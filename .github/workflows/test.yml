@@ -152,5 +152,6 @@ jobs:
       - name: Run migrations
         working-directory: ./src/abet_private
         run: |
-          composer doctrine migrate --no-interaction
+          docker exec -i --env-file ../../docker/.env --env APP_ENV=test php_apache \
+            sh -c 'cd "$ABET_PRIVATE_DIR" && ./bin/console doctrine:migrations:migrate --no-interaction'
         

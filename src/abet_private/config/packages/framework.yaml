@@ -2,8 +2,12 @@
 framework:
     secret: '%env(APP_SECRET)%'
 
+    cache:
+        default_redis_provider: 'redis://redis:6379'
+
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
 
     #esi: true
     #fragments: true
