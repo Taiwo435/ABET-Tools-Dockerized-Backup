@@ -47,9 +47,10 @@ def add_db_user(
 ) -> None:
     """
     Inserts (or replaces) a user directly in the database, bypassing the
-    UI/Clerk registration flow entirely. Only intended for test setup — this
-    is why it insists on a password hash that matches the app's own hashing
-    scheme rather than accepting a raw stored password.
+    UI registration/email-verification flow entirely. Only intended for
+    test setup — this is why it insists on a password hash that matches
+    the app's own hashing scheme rather than accepting a raw stored
+    password.
     """
     password_hash = (
         DEFAULT_TEST_PASSWORD_HASH

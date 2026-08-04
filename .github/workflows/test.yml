@@ -79,10 +79,6 @@ jobs:
           cp ./demo.env ./.env
           echo -e "\nSELENIUM_BROWSER=${{ inputs.browser || 'firefox' }}" >> ./.env
           echo -e "\nUID=$(id -u)" >> ./.env
-          # Enables /auth/test_login.php (see src/public/auth/test_login.php),
-          # used only by the Selenium suite to log in without driving the
-          # Google/email(Clerk) UI, which can't be scripted end-to-end.
-          echo -e "\nENABLE_TEST_LOGIN_ENDPOINT=1" >> ./.env
 
       - name: run docker compose to start the application 
         working-directory: ./docker

@@ -1,15 +1,15 @@
 """
-Logs a seeded test user in via /auth/test_login.php — a test-only endpoint
-(see src/public/auth/test_login.php) that only responds when APP_ENV=test,
-404s in every other environment. This exists because /login's UI is now
-Google/email(Clerk)-driven, which Selenium can't drive end-to-end (no way
-to script a real Google account or read a Clerk email code in CI).
+Logs a seeded test user in through the real /login endpoint (form_login)
+via a direct HTTP POST — the same request a browser form submission would
+make. Used instead of driving the UI form directly so tests don't need a
+full page interaction just to get authenticated.
 
 Returns the resulting PHPSESSID so it can be handed to the Selenium driver.
 """
 import http.cookiejar
-import json
+import re
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
@@ -17,26 +17,36 @@ def login_and_get_session_cookie(website_url: str, email: str, password: str) ->
     cookie_jar = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
 
-    data = json.dumps({"email": email, "password": password}).encode("utf-8")
+    login_page = opener.open(f"{website_url}/login").read().decode("utf-8")
+
+    csrf_match = re.search(r'name="_csrf_token"[^>]*value="([^"]*)"', login_page)
+    if not csrf_match:
+        raise RuntimeError("Could not find _csrf_token on /login page")
+    csrf_token = csrf_match.group(1)
+
+    data = urllib.parse.urlencode({
+        "_username": email,
+        "_password": password,
+        "_csrf_token": csrf_token,
+    }).encode("utf-8")
 
     request = urllib.request.Request(
-        f"{website_url}/auth/test_login.php",
+        f"{website_url}/login",
         data=data,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Origin": website_url,
+            "Referer": f"{website_url}/login",
+        },
         method="POST",
     )
 
     try:
         opener.open(request)
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            raise RuntimeError(
-                "/auth/test_login.php returned 404 — the web server's "
-                "APP_ENV must be 'test' for this endpoint to respond "
-                "(not just the PHPUnit/CLI env override)."
-            ) from e
-        # 401 (bad credentials) etc — fall through, caller gets a clear
-        # "no PHPSESSID" error below rather than a raw HTTPError.
+    except urllib.error.HTTPError:
+        # form_login redirects (3xx) on both success and failure; either way
+        # we just need whatever session cookie resulted from the attempt.
+        pass
 
     for cookie in cookie_jar:
         if cookie.name == "PHPSESSID":

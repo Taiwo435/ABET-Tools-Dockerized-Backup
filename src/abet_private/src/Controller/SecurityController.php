@@ -31,29 +31,9 @@ class SecurityController extends AbstractController
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        require_once getenv('ABET_PRIVATE_DIR') . '/lib/clerk.php';
-
-        $clerkPublishableKey = null;
-        $clerkFrontendApi = null;
-
-        try {
-            $key = trim((string) getenv('CLERK_PUBLISHABLE_KEY'));
-            if ($key !== '' && preg_match('/^pk_(test|live)_[A-Za-z0-9_-]+$/', $key)) {
-                $clerkPublishableKey = $key;
-                $clerkFrontendApi = clerk_frontend_api_domain();
-                clerk_browser_csp();
-            }
-        } catch (\Throwable) {
-            // Clerk misconfigured — degrade to password-only login.
-            $clerkPublishableKey = null;
-            $clerkFrontendApi = null;
-        }
-
         return $this->render('security/login.html.twig', [
             'last_username' => $lastUsername,
             'error' => $error,
-            'clerkPublishableKey' => $clerkPublishableKey,
-            'clerkFrontendApi' => $clerkFrontendApi,
         ]);
     }
 

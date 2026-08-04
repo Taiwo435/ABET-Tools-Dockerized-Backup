@@ -23,10 +23,10 @@ def driver():
 
 def login(driver):
     """
-    /login's UI is Google/email(Clerk)-driven now, which Selenium can't
-    drive end-to-end, so this seeds a user directly (utils/seeder.py) and
-    logs in through the still-fully-functional native /login endpoint
-    directly (utils/backend_login.py) instead of filling a form.
+    Account creation requires completing email verification, which can't be
+    scripted end-to-end by Selenium, so this seeds a user directly, already
+    active (utils/seeder.py), and logs in through the real /login endpoint
+    directly (utils/backend_login.py) instead of filling the form by hand.
     """
     add_db_user(EMAIL_ADDRESS, PASSWORD)
     login_via_backend(driver, EMAIL_ADDRESS, PASSWORD)

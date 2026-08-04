@@ -65,14 +65,6 @@ class LegacyBridge
             return "{$legacyRoot}/auth/resend_verification.php";
         }
 
-        if ($requestPathInfo == '/auth/clerk_verify_email.php') {
-            return "{$legacyRoot}/auth/clerk_verify_email.php";
-        }
-
-        if ($requestPathInfo == '/auth/clerk_login.php') {
-            return "{$legacyRoot}/auth/clerk_login.php";
-        }
-
         // account profile stuff
         // NOTE: I had to change paths because some links ended with /
         if ($requestPathInfo == '/account/profile/') {

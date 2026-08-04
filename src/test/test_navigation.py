@@ -114,10 +114,6 @@ def driver():
 def test_login_invalid_credentials(driver):
     """
     tests that users cannot simply access the website without having a valid session
-
-    /login's UI is Google/email(Clerk)-driven now, so this exercises the
-    test-only /auth/test_login.php endpoint (see utils/backend_login.py)
-    instead of a UI form, which no longer exists on the page.
     """
     from utils.backend_login import login_and_get_session_cookie
 
@@ -138,9 +134,9 @@ def test_register_and_login_valid_credentials_logout(driver):
     """
     tests login with valid credentials reaches /home, and that logout works.
 
-    Account creation is Google/email(Clerk)-driven now and can't be scripted
-    end-to-end by Selenium (no way to automate a real Google sign-in or read
-    a Clerk email code in CI), so the account is seeded directly in the
+    Account creation requires completing email verification, which can't be
+    scripted end-to-end by Selenium (no way to read the code from a real
+    inbox in CI), so the account is seeded directly, already active, in the
     database instead — see utils/seeder.py. Login itself still goes through
     the real, unmodified /login endpoint.
     """

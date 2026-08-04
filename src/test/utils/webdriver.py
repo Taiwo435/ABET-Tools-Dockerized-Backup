@@ -59,10 +59,9 @@ def init_webdriver():
 
 def login_via_backend(driver, email: str, password: str) -> None:
     """
-    Logs the Selenium session in via the test-only /auth/test_login.php
-    endpoint (see utils/backend_login.py) and injecting the resulting
-    session cookie into the browser, instead of driving the UI — /login is
-    now Google/email(Clerk)-driven, which can't be scripted end-to-end.
+    Logs the Selenium session in via a direct POST to /login (see
+    utils/backend_login.py) and injects the resulting session cookie into
+    the browser, instead of driving the UI form directly.
     """
     from utils.backend_login import login_and_get_session_cookie
 
