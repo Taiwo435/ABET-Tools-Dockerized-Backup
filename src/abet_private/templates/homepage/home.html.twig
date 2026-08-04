@@ -72,7 +72,7 @@
 
             {# <?php endif; ?> #}
 
-            {# <?php if (hasPermission($permissions, PERM_FACULTY_FORM_TOOL)): ?> #}
+            {% if app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_FACULTY_FORM) %}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">Faculty Form</div>
@@ -81,13 +81,13 @@
                 <div class="card-body">
                     <div class="card-body-inner">
                         <p>Fill out information about yourself that will be used on the ABET accreditation reports.</p>
-                        <a href="/faculty-form" class="action-link">Open Faculty Form &rarr;</a>
+                        <a href="/faculty-form/" class="action-link">Open Faculty Form &rarr;</a>
                     </div>
                 </div>
             </div>
-            {# <?php endif; ?> #}
+            {% endif %}
 
-            {# <?php if (hasPermission($permissions, PERM_COORDINATOR_FORM_TOOL)): ?> #}
+            {% if app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_COORDINATOR_FORM) %}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">Coordinator Form</div>
@@ -96,14 +96,13 @@
                 <div class="card-body">
                     <div class="card-body-inner">
                         <p>Fill out information to be used in the Questionnaire form.</p>
-                        <a href="/coordinator-form" class="action-link">Open Coordinator Form &rarr;</a>
+                        <a href="/coordinator-form/" class="action-link">Open Coordinator Form &rarr;</a>
                     </div>
                 </div>
             </div>
-            
-            {# <?php endif; ?> #}
+            {% endif %}
 
-            {# <?php if (hasPermission($permissions, PERM_REPORT_GEN_TOOL)): ?> #}
+            {% if app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_REPORTGEN) %}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">Generate ABET Report</div>
@@ -116,7 +115,7 @@
                     </div>
                 </div>
             </div>
-            {# <?php endif; ?> #}
+            {% endif %}
 
             {% if is_granted('ROLE_ADMIN') %}
             <div class="tool-card">
@@ -133,7 +132,26 @@
             </div>
             {% endif %}
 
-            {% if app.debug %}
+            {% if hasMissingPermissions %}
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">Request Access</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        {% if pendingPermissions|length > 0 %}
+                            <p>You have a pending request for: {{ pendingPermissions|permission_labels|join(', ') }}. An admin will review it shortly.</p>
+                        {% else %}
+                            <p>Don't see a tool you need? Request access to it here — an admin will review and approve it.</p>
+                        {% endif %}
+                        <a href="{{ path('app_account_request_access') }}" class="action-link">Request Access &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if app.debug and app.user.hasPermission(enum('App\\Entity\\Permissions').ROLE_ADMIN) %}
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">
                     <div class="card-title">DEBUG PANEL</div>

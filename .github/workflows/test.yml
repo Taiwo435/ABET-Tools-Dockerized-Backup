@@ -132,6 +132,14 @@ jobs:
           path: response.html
 
       - name: Run Selenium tests
+        env:
+          # Selenium's browser runs inside the selenium container, on the
+          # same Docker network as php_apache, so WEBSERVER_HOSTNAME
+          # (default 'php_apache') resolves fine there. pytest itself runs
+          # natively on this runner though, outside that network — its own
+          # direct HTTP calls (see src/test/utils/backend_login.py) need
+          # the host-mapped port instead.
+          BACKEND_URL: http://localhost:8080
         run: |
           # Run your Selenium tests here, for example:
           pytest src/test/

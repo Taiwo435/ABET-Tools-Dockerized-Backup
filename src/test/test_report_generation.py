@@ -5,7 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from utils.webdriver import init_webdriver, PROJECT_DIR
+from utils.webdriver import init_webdriver, login_via_backend, PROJECT_DIR
+from utils.seeder import add_db_user
 from dotenv import load_dotenv
 
 EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")
@@ -21,19 +22,16 @@ def driver():
 
 
 def login(driver):
-    driver.get(f"{WEBSITE_URL}/login")
+    """
+    Account creation requires completing email verification, which can't be
+    scripted end-to-end by Selenium, so this seeds a user directly, already
+    active (utils/seeder.py), and logs in through the real /login endpoint
+    directly (utils/backend_login.py) instead of filling the form by hand.
+    """
+    add_db_user(EMAIL_ADDRESS, PASSWORD)
+    login_via_backend(driver, EMAIL_ADDRESS, PASSWORD)
 
-    email_input = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.ID, "email"))
-    )
-
-    password_input = driver.find_element(By.ID, "password")
-    login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
-
-    email_input.send_keys(EMAIL_ADDRESS)
-    password_input.send_keys(PASSWORD)
-    login_button.click()
-
+    driver.get(f"{WEBSITE_URL}/home")
     WebDriverWait(driver, 10).until(
         EC.url_to_be(f"{WEBSITE_URL}/home")
     )

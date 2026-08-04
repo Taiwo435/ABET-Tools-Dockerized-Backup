@@ -1,9 +1,10 @@
 <?php
-
-
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/mailer.php';
 
 start_session();
 
@@ -28,8 +29,6 @@ function verify_register_csrf(?string $token): bool {
 
   return hash_equals($_SESSION['csrf_token_register'], $token);
 }
-
-
 
 /**
  * Password policy:
@@ -64,29 +63,7 @@ function password_policy_check(string $password): array {
   ];
 }
 
-/**
- * Returns the default permissions bitmask for a given role.
- * Must stay in sync with the Permissions enum in User.php.
- *
- * Permissions bit positions:
- *   AdminPanel           = 1 << 0 =  1
- *   GradeDataTool        = 1 << 1 =  2
- *   CanvasFormattingTool = 1 << 2 =  4
- *   ReportGenTool        = 1 << 3 =  8
- *   FacultyFormTool      = 1 << 4 = 16
- *   CoordinatorFormTool  = 1 << 5 = 32
- */
-function default_permissions_for_role(string $role): int {
-  if ($role === 'admin') {
-    // Admin gets all permissions
-    return (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
-  }
-  // Faculty gets GradeDataTool + CanvasFormattingTool + FacultyFormTool
-  return (1 << 1) | (1 << 2) | (1 << 4);
-}
-
 $email = '';
-$role = 'faculty';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!verify_register_csrf($_POST['csrf_token'] ?? null)) {
@@ -96,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = strtolower(trim($_POST['email'] ?? ''));
   $password = (string)($_POST['password'] ?? '');
   $confirm = (string)($_POST['confirm_password'] ?? '');
-  $role = in_array($_POST['role'] ?? '', ['admin', 'faculty']) ? $_POST['role'] : 'faculty';
 
   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Please enter a valid email address.';
@@ -127,15 +103,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $errors[] = 'An account with that email already exists.';
     } else {
       $hash = password_hash($password, PASSWORD_BCRYPT);
-      $permissions = default_permissions_for_role($role);
 
-      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role, is_active, permissions) VALUES (?, ?, ?, 1, ?)");
-      $stmt->execute([$email, $hash, $role, $permissions]);
+      // New accounts always default to the lowest-privilege role (Faculty).
+      // Users can no longer self-select permissions at signup (#89).
+      $permissions = \App\Entity\Permissions::ROLE_FACULTY_FORM->value;
+
+      $verificationCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+      $expiresAt = (new DateTime('+15 minutes'))->format('Y-m-d H:i:s');
+
+      $stmt = $pdo->prepare(
+        "INSERT INTO users (email, password_hash, is_active, permissions, email_verification_token, email_verification_expires_at)
+         VALUES (?, ?, 0, ?, ?, ?)"
+      );
+      $stmt->execute([$email, $hash, $permissions, $verificationCode, $expiresAt]);
+
+      send_verification_email($email, $verificationCode);
 
       $success = true;
     }
   }
-} 
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -168,15 +155,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?php if ($success): ?>
         <div class="msg success">
-          <strong>Success!</strong> Account created. You can now sign in.
+          <strong>Success!</strong> Account created. Enter the 6-digit code we emailed you to activate your account.
         </div>
-        <a href="/login" class="btn-submit" style="display:block; text-align:center; text-decoration:none;">Go to Sign In</a>
+        <a href="/verify-email?email=<?php echo urlencode($email); ?>" class="btn-submit" style="display:block; text-align:center; text-decoration:none;">Enter Verification Code</a>
+        <div class="footer-links" style="margin-top: 15px;">
+          <span>Didn't get the email?</span>
+          <a href="/resend-verification">Resend code</a>
+        </div>
       <?php else: ?>
 
         <?php if ($errors): ?>
           <div class="msg error" id="error-box">
-            <?php foreach ($errors as $e): ?>
-              <?php echo htmlspecialchars($e, ENT_QUOTES, 'UTF-8'); ?><br>
+            <?php foreach ($errors as $err): ?>
+              <?php echo htmlspecialchars($err, ENT_QUOTES, 'UTF-8'); ?><br>
             <?php endforeach; ?>
           </div>
         <?php endif; ?>
@@ -193,14 +184,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               required
               value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>"
             />
-          </div>
-
-          <div class="form-group">
-            <label for="role">Role</label>
-            <select id="role" name="role">
-              <option value="faculty" <?php echo $role === 'faculty' ? 'selected' : ''; ?>>Faculty</option>
-              <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>Admin</option>
-            </select>
           </div>
 
           <div class="form-group">

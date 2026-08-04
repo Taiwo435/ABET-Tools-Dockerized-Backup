@@ -18,7 +18,7 @@ $csrfToken = csrf_token('tool1_proxy');
     <div class="site-title">ABET Tools - Job History</div>
     <div class="nav-links">
       <a href="select-courses.php" class="nav-link">New Extraction</a>
-      <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
+      <a href="/home" class="nav-link">← Back to Dashboard</a>
     </div>
   </header>
 

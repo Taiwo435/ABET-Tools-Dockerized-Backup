@@ -2,11 +2,7 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 
-$role = $_SESSION['user_role'] ?? 'faculty';
-if ($role !== 'admin') {
-    http_response_code(403);
-    die("Access denied. Admins only.");
-}
+require_role('ROLE_ADMIN');
 
 $csrfToken = csrf_token('syllabus_templates');
 
@@ -216,7 +212,7 @@ try {
 <header class="site-header">
   <div class="site-title">ABET Tools - Syllabus Templates</div>
   <a href="admin.php" class="nav-link">← Back to Admin</a>
-  <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
+  <a href="/home" class="nav-link">← Back to Dashboard</a>
 </header>
 
 <div class="template-container">

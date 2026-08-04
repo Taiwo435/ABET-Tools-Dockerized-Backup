@@ -47,13 +47,12 @@ class Services {
         ];
 
         return DriverManager::getConnection($connectionParams);
-    } 
-
+    }
 
 
     public static function getEntityManager() {
         if (static::$instance === null) {
-            $paths = [__DIR__.'/database/entities'];
+            $paths = [__DIR__.'/src/Entity'];
 
             $isDevMode = true;
 

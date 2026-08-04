@@ -1,6 +1,9 @@
 <?php
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
+require_role('ROLE_FACULTY_FORM');
+
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/faculty_form_load.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php'; 
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/security_headers.php';
 
 
 $formName = "faculty-form";

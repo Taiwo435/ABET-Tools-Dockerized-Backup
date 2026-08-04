@@ -77,7 +77,14 @@ final class UserORMTest extends KernelTestCase {
 
         $perm = $user->hasPermission(Permissions::ROLE_ADMIN);
         $this->assertTrue($perm, "User expected to have AdminPanel role");
-        $this->assertEquals(["ROLE_ADMIN", "ROLE_USER"], $user->getRoles());
+        // getRoles() mirrors hasPermission()'s admin short-circuit: an admin
+        // implicitly has every permission role, otherwise Symfony's
+        // access_control/#[IsGranted] checks (which read getRoles(), not
+        // hasPermission()) would deny an admin access to tools they don't
+        // separately hold the specific permission bit for.
+        $expectedRoles = array_map(fn ($p) => $p->name, Permissions::cases());
+        $expectedRoles[] = 'ROLE_USER';
+        $this->assertEqualsCanonicalizing($expectedRoles, $user->getRoles());
 
         $user->setPermission(Permissions::ROLE_ADMIN, false);
 

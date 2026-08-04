@@ -8,7 +8,7 @@
 <body>
 
   <div class="login-container">
-    
+
     <div class="brand-section">
       <div class="brand-content">
         <h2>Arizona State University</h2>
@@ -25,24 +25,15 @@
         <p>Please sign in to access your dashboard.</p>
       </div>
 
-      {% if error %}
-        <div class="error-box">
-          <strong>Error:</strong> <?php echo e($error); ?>
-        </div>
-      {% endif %}
-
-      {# <?php if ($error): ?>
-        <div class="error-box">
-          <strong>Error:</strong> <?php echo e($error); ?>
-        </div>
-      <?php endif; ?> #}
-
       <form method="POST" autocomplete="on">
-        {# <input type="hidden" name="csrf" value="<?php echo e($_SESSION['csrf']); ?>"> #}
         {% if error %}
             <div class="msg error">
               <strong>Error:</strong>
               {{ error.messageKey|trans(error.messageData, 'security') }}
+            </div>
+        {% elseif app.request.query.get('verified') == '1' %}
+            <div class="msg success">
+              <strong>Email verified!</strong> You can now sign in.
             </div>
         {% endif %}
 
@@ -69,7 +60,7 @@
         <div class="footer-links">
           <div>
             <span>Don't have an account?</span>
-            <a href="/auth/register.php">Create Account</a>
+            <a href="/register">Create Account</a>
           </div>
           <div style="margin-top: 15px;">
             <a href="/auth/forgot_password.php" style="margin-left: 0;">Forgot Password?</a>

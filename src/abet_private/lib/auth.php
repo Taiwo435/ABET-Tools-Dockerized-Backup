@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
 
 /**
  * Auth/session helpers
@@ -103,21 +105,55 @@ function require_login(string $redirectTo = '/login'): void {
     safe_redirect($redirectTo);
   }
 
-  // Verify the user still exists in the database on every request
+  // Verify the user still exists AND refresh cached permissions/active
+  // status from the database on every request. $_SESSION['user_permissions']
+  // is only ever set at login time, so without this, any permission change
+  // made while a user is already logged in (very common while testing/
+  // administering) would silently go unrecognized by every legacy page
+  // gated with require_role() until that user logs out and back in again —
+  // even though Symfony-native pages (which load the User entity fresh
+  // each request) would immediately reflect the change.
   require_once getenv('ABET_PRIVATE_DIR') . '/lib/db.php';
-  $stmt = db()->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+  $stmt = db()->prepare('SELECT permissions, is_active FROM users WHERE id = :id LIMIT 1');
   $stmt->execute(['id' => (int)$_SESSION['user_id']]);
+  $row = $stmt->fetch();
 
-  if (!$stmt->fetch()) {
+  if (!$row) {
     logout('/login?reason=deleted');
   }
+
+  if ((int)$row['is_active'] !== 1) {
+    logout('/login?reason=deactivated');
+  }
+
+  $_SESSION['user_permissions'] = (int)$row['permissions'];
 }
 
+/**
+ * Requires the logged-in user to hold the given permission, identified by
+ * the Permissions enum case name (e.g. 'ROLE_FACULTY_FORM', 'ROLE_ADMIN').
+ * An admin always passes, mirroring User::hasPermission()'s short-circuit.
+ * Fails closed (403) on an unrecognized role name.
+ */
 function require_role(string $role): void {
   require_login();
 
-  $current = (string)($_SESSION['user_role'] ?? '');
-  if ($current !== $role) {
+  $permissions = (int)($_SESSION['user_permissions'] ?? 0);
+  $isAdmin = ($permissions & \App\Entity\Permissions::ROLE_ADMIN->value) !== 0;
+
+  if ($isAdmin) {
+    return;
+  }
+
+  $permission = null;
+  foreach (\App\Entity\Permissions::cases() as $case) {
+    if ($case->name === $role) {
+      $permission = $case;
+      break;
+    }
+  }
+
+  if ($permission === null || !($permissions & $permission->value)) {
     http_response_code(403);
     echo 'Forbidden';
     exit;

@@ -2,7 +2,6 @@
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
-$role = $_SESSION['user_role'] ?? 'faculty';
 $config = require getenv('ABET_PRIVATE_DIR') . '/destination_courses.php';
 $destCourses = $config['dest_courses'];
 ?>
@@ -21,7 +20,7 @@ $destCourses = $config['dest_courses'];
     <div class="site-title">ABET Tools - Connect to Class</div>
     <div class="header-actions">
       <a href="jobs.php" class="nav-link">View Jobs</a>
-      <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
+      <a href="/home" class="nav-link">← Back to Dashboard</a>
     </div>
   </header>
 

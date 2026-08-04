@@ -38,7 +38,8 @@ class LegacyBridge
         // ----------------------------
 
         if ($requestPathInfo == '/') {
-            return "{$legacyRoot}/auth/login.php";
+            header('Location: /login', true, 302);
+            exit;
         }
 
         // this is a template...
@@ -47,22 +48,21 @@ class LegacyBridge
 
         // skipped RewriteCond %{THE_REQUEST} \s/+index\.php(?:[?\s]|$) [NC]
 
-        // #RewriteRule ^index\.php$ /home [R=302,L]
-        if ($requestPathInfo == '/home') {
-            return "{$legacyRoot}/home.php";
-        }
-
-        // you probably can tell the pattern. Next line in .htaccess
-        if ($requestPathInfo == '/login') {
-            return "{$legacyRoot}/auth/login.php";
-        }
+        // /home, /login, /logout are now handled natively by Symfony
+        // (HomeController, SecurityController) — the front controller
+        // matches those routes before ever falling back here, so these
+        // legacy mappings would be unreachable dead code.
 
         if ($requestPathInfo == '/register') {
             return "{$legacyRoot}/auth/register.php";
         }
 
-        if ($requestPathInfo == '/logout') {
-            return "{$legacyRoot}/auth/logout.php";
+        if ($requestPathInfo == '/verify-email') {
+            return "{$legacyRoot}/auth/verify_email.php";
+        }
+
+        if ($requestPathInfo == '/resend-verification') {
+            return "{$legacyRoot}/auth/resend_verification.php";
         }
 
         // account profile stuff
