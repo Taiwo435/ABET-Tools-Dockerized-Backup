@@ -11,6 +11,7 @@ use App\Entity\SyllabusTemplate\RevisionAuthorType;
 use App\Entity\SyllabusTemplate\SubmissionStatus;
 use App\Entity\SyllabusTemplate\TemplateReview;
 use App\Entity\SyllabusTemplate\TemplateSubmission;
+use App\Entity\Permissions;
 use App\Entity\Program;
 use App\Entity\User;
 use PHPUnit\Framework\TestCase;
@@ -258,7 +259,7 @@ final class SyllabusTemplateLifecycleTest extends TestCase
     public function testCoordinatorCanSelfReviewFacultySubmissionForDemonstration(): void
     {
         [$course, , $coordinator] = $this->fixture();
-        $coordinator->setRole('admin');
+        $coordinator->setPermission(Permissions::ROLE_ADMIN, true);
         $offering = new CourseOffering(
             $course,
             '2026-2027',

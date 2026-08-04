@@ -65,6 +65,6 @@ final class ProgramReadinessControllerTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/program/9999/readiness');
 
-        self::assertResponseRedirects('/login2');
+        self::assertResponseRedirects('/login');
     }
 }
