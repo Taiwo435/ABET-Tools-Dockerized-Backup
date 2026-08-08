@@ -94,8 +94,10 @@ def test_admin_can_create_and_publish_syllabus_template_while_faculty_is_denied(
     click_button(driver, "Publish Current Revision")
 
     WebDriverWait(driver, 20).until(
+        lambda browser: "/admin/syllabus-templates" in browser.current_url
+        and "/edit" not in browser.current_url
+    )
+    WebDriverWait(driver, 20).until(
         EC.text_to_be_present_in_element((By.TAG_NAME, "body"), f"T{run_id}")
     )
-    assert "/admin/syllabus-templates" in driver.current_url
-    assert "/edit" not in driver.current_url
     assert "Published" in driver.find_element(By.TAG_NAME, "body").text
