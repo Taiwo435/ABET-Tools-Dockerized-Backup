@@ -4,16 +4,23 @@ import os
 import uuid
 
 import pytest
+from dotenv import load_dotenv
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
+from utils.seeder import (
+    DEFAULT_TEST_PASSWORD,
+    ROLE_ADMIN,
+    ROLE_FACULTY_FORM,
+    add_db_program,
+    add_db_user,
+)
+from utils.webdriver import PROJECT_DIR, init_webdriver, login_via_backend
 
-from utils.webdriver import init_webdriver
-
-
+load_dotenv(f"{PROJECT_DIR}/docker/.env")
 WEBSITE_URL = f"http://{os.getenv('WEBSERVER_HOSTNAME', 'php_apache')}"
-PASSWORD = "SyllabusWorkflow1!"
+PASSWORD = DEFAULT_TEST_PASSWORD
 
 
 @pytest.fixture
@@ -23,42 +30,29 @@ def driver():
     browser.quit()
 
 
-def register_and_login(driver, email: str, role: str) -> None:
-    driver.get(f"{WEBSITE_URL}/register")
-    WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.ID, "email"))
-    ).send_keys(email)
-    Select(driver.find_element(By.ID, "role")).select_by_value(role)
-    driver.find_element(By.ID, "password").send_keys(PASSWORD)
-    driver.find_element(By.ID, "confirm_password").send_keys(PASSWORD)
-    driver.find_element(By.ID, "submitBtn").click()
-
-    WebDriverWait(driver, 10).until(
-        EC.text_to_be_present_in_element((By.CLASS_NAME, "success"), "Account created")
-    )
-
-    driver.get(f"{WEBSITE_URL}/login2")
-    WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.ID, "email"))
-    ).send_keys(email)
-    driver.find_element(By.ID, "password").send_keys(PASSWORD)
-    driver.find_element(By.CLASS_NAME, "btn-submit").click()
-    WebDriverWait(driver, 10).until(EC.url_to_be(f"{WEBSITE_URL}/home2"))
+def login(driver, email: str) -> None:
+    login_via_backend(driver, email, PASSWORD)
+    driver.get(f"{WEBSITE_URL}/home")
+    WebDriverWait(driver, 10).until(EC.url_to_be(f"{WEBSITE_URL}/home"))
 
 
 def click_button(driver, label: str) -> None:
     button = driver.find_element(By.XPATH, f"//button[normalize-space()='{label}']")
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
     WebDriverWait(driver, 10).until(lambda _driver: button.is_displayed() and button.is_enabled())
-    button.click()
+    driver.execute_script("arguments[0].click();", button)
 
 
 def test_admin_can_create_and_publish_syllabus_template_while_faculty_is_denied(driver):
     run_id = uuid.uuid4().hex[:8]
     faculty_email = f"task115-faculty-{run_id}@example.com"
     admin_email = f"task115-admin-{run_id}@example.com"
+    program_id = add_db_program("Task 115 Browser Test Program", "T115", "2026")
 
-    register_and_login(driver, faculty_email, "faculty")
+    add_db_user(faculty_email, PASSWORD, permissions=ROLE_FACULTY_FORM)
+    add_db_user(admin_email, PASSWORD, permissions=ROLE_ADMIN)
+
+    login(driver, faculty_email)
     driver.get(f"{WEBSITE_URL}/admin/syllabus-templates")
     WebDriverWait(driver, 10).until(
         lambda browser: browser.execute_script("return document.readyState") == "complete"
@@ -69,7 +63,7 @@ def test_admin_can_create_and_publish_syllabus_template_while_faculty_is_denied(
     assert any(marker in denied_page for marker in ("Access Denied", "403", "Forbidden")), denied_page
 
     driver.delete_all_cookies()
-    register_and_login(driver, admin_email, "admin")
+    login(driver, admin_email)
     driver.get(f"{WEBSITE_URL}/admin/syllabus-templates")
     WebDriverWait(driver, 10).until(
         lambda browser: browser.execute_script("return document.readyState") == "complete"
@@ -77,12 +71,12 @@ def test_admin_can_create_and_publish_syllabus_template_while_faculty_is_denied(
     admin_page = driver.find_element(By.TAG_NAME, "body").text
     assert "Shared Syllabus Templates" in admin_page, f"{driver.current_url}\n{admin_page}"
 
-    driver.get(f"{WEBSITE_URL}/admin/syllabus-templates/new")
+    driver.get(f"{WEBSITE_URL}/admin/syllabus-templates/new?program={program_id}")
     WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.ID, "coordinator_template_program"))
     )
 
-    Select(driver.find_element(By.ID, "coordinator_template_program")).select_by_index(1)
+    Select(driver.find_element(By.ID, "coordinator_template_program")).select_by_value(str(program_id))
     driver.find_element(By.ID, "coordinator_template_courseSubject").send_keys("CSE")
     driver.find_element(By.ID, "coordinator_template_courseNumber").send_keys(f"T{run_id}")
     driver.find_element(By.ID, "coordinator_template_courseName").send_keys("Syllabus Workflow Test")
