@@ -59,11 +59,17 @@
 }
 
 .form-group.page-card {
+  background: white;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
   cursor: pointer;
-  transition: transform 0.06s ease, background 0.1s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .form-group.page-card:hover {
   transform: translateY(-1px);
-  background: rgba(0, 0, 0, 0.02);
+  background-color: #fafafa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

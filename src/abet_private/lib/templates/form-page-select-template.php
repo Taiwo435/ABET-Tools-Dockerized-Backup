@@ -116,15 +116,9 @@ $overallPercent = ($totalForms > 0) ? (int)floor(($totalCompleted / $totalForms)
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
 ?>
 
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><?php echo htmlspecialchars($pageTitle); ?></title>
-  <link rel="stylesheet" href="/assets/css/form.css">
-  <link rel="stylesheet" href="<?php echo htmlspecialchars($formCssPath); ?>">
-  <style>
+<link rel="stylesheet" href="/assets/css/form.css">
+<link rel="stylesheet" href="<?php echo htmlspecialchars($formCssPath); ?>">
+<style>
     .status-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
     .status-pill { font-size:0.85rem; padding:6px 10px; border-radius:999px; border:1px solid rgba(0,0,0,0.12); background:rgba(0,0,0,0.04); white-space:nowrap; }
     .status-pill.completed { background: rgba(46, 204, 113, 0.16); }
@@ -149,12 +143,22 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
     .page-select-actions { display:flex; gap:10px; flex-wrap:wrap; }
     .page-card-link { text-decoration:none; color:inherit; display:block; }
     .small-muted { opacity:0.75; font-size:0.9rem; margin-top:4px; }
-    .form-group.page-card { cursor:pointer; transition: transform 0.06s ease, background 0.1s ease; }
-    .form-group.page-card:hover { transform: translateY(-1px); background: rgba(0,0,0,0.02); }
+    .form-group.page-card {
+      background: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .form-group.page-card:hover {
+      transform: translateY(-2px);
+      background-color: #fafafa;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
     .right-allign-div { display:flex; justify-content:flex-end; margin-top:18px; width: 100%; }
-  </style>
-</head>
-<body>
+</style>
 
 <div class="center-div">
   <div class="form-holder">
