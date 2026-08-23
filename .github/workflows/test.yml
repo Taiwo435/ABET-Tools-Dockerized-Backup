@@ -131,6 +131,12 @@ jobs:
           name: fetched-response
           path: response.html
 
+      - name: Run migrations
+        working-directory: ./src/abet_private
+        run: |
+          docker exec -i --env-file ../../docker/.env --env APP_ENV=test php_apache \
+            sh -c 'cd "$ABET_PRIVATE_DIR" && ./bin/console doctrine:migrations:migrate --no-interaction'
+
       - name: Run Selenium tests
         env:
           # Selenium's browser runs inside the selenium container, on the
@@ -148,10 +154,3 @@ jobs:
         working-directory: ./src/abet_private
         run: |
           composer test
-          
-      - name: Run migrations
-        working-directory: ./src/abet_private
-        run: |
-          docker exec -i --env-file ../../docker/.env --env APP_ENV=test php_apache \
-            sh -c 'cd "$ABET_PRIVATE_DIR" && ./bin/console doctrine:migrations:migrate --no-interaction'
-        
