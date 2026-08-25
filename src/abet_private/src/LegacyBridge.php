@@ -52,9 +52,10 @@ class LegacyBridge
         // (HomeController, SecurityController) — the front controller
         // matches those routes before ever falling back here, so these
         // legacy mappings would be unreachable dead code.
-        if ($requestPathInfo == '/register') {
-            return "{$legacyRoot}/auth/register.php";
-        }
+        // Removed: /register is now a native Symfony route (RegisterController) (#132)
+        //if ($requestPathInfo == '/register') {
+        //    return "{$legacyRoot}/auth/register.php";
+        //}
         if ($requestPathInfo == '/verify-email') {
             return "{$legacyRoot}/auth/verify_email.php";
         }

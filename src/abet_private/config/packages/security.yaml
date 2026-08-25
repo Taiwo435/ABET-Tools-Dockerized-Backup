@@ -51,6 +51,7 @@ security:
         - { path: ^/auth/login\.php$, roles: PUBLIC_ACCESS }
         - { path: ^/auth/logout\.php$, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
 
         # Native Symfony routes migrated as part of #132
         - { path: ^/admin/templates, roles: ROLE_ADMIN }
