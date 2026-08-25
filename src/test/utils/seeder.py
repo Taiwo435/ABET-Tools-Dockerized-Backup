@@ -4,8 +4,9 @@ connecets to the db and adds them with said permissions
 
 running this on prod would be bad, huh?
 """
-import mysql.connector
 import os
+
+import mysql.connector
 
 # Precomputed bcrypt hash of the default TEST_PASSWORD ("superSecretPassword1!"),
 # generated the same way the app itself hashes passwords (PHP's password_hash,
@@ -70,6 +71,25 @@ def add_db_user(
             (email, password_hash, 1 if is_active else 0, permissions),
         )
         conn.commit()
+    finally:
+        conn.close()
+
+
+def add_db_program(name: str, code: str, year: str) -> int:
+    """Creates a reusable program fixture and returns its database ID."""
+    conn = _connect()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO programs (program_name, program_code, program_year)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE program_id = LAST_INSERT_ID(program_id)
+            """,
+            (name, code, year),
+        )
+        conn.commit()
+        return cursor.lastrowid
     finally:
         conn.close()
 
