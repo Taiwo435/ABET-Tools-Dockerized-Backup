@@ -211,10 +211,13 @@ class LegacyBridge
             '/logout',
             '/auth/login.php',
             '/auth/register.php',
-            '/auth/forgot_password.php',
-            '/auth/forgot_password_sent.php',
-            '/auth/reset_password.php',
-            '/auth/reset_password_success.php',
+            // Removed: forgot/reset password now handled by
+            // PasswordResetController at /forgot-password and
+            // /reset-password (#132)
+	    //'/auth/forgot_password.php',
+            //'/auth/forgot_password_sent.php',
+            //'/auth/reset_password.php',
+            //'/auth/reset_password_success.php',
             '/verify-email',
             '/resend-verification',
         ];
