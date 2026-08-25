@@ -1,8 +1,10 @@
 <?php
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/csrf.php';
+require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
 require_login();
 $csrfToken = csrf_token('tool1_proxy');
-$role = $_SESSION['user_role'] ?? 'faculty';
+$permissions = (int)($_SESSION['user_permissions'] ?? 0);
+$role = ($permissions & \App\Entity\Permissions::ROLE_ADMIN->value) ? 'admin' : 'faculty';
 
 error_log("user role: " . $role);
 if (empty($_SESSION['class_data'])) {
@@ -60,7 +62,7 @@ $program_year = substr($program_year, 0, 4);
   <header class="site-header">
     <div class="site-title">ABET Tools - Course Setup</div>
     <a href="select-courses.php" class="nav-link">← Back to Course Selection</a>
-    <a href="/../home.php" class="nav-link">← Back to Dashboard</a>
+    <a href="/home" class="nav-link">← Back to Dashboard</a>
   </header>
 
   <div class="main-container">

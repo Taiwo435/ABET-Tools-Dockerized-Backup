@@ -25,24 +25,31 @@ final class HomeController extends AbstractController
         //     'controller_name' => 'HomepageController',
         // ]);
     }
-    
-    
+
     // the base template
     // #[IsGranted('IS_AUTHENTICATED_FULLY')]
     // #[Route('/base', name: 'base')]
     // public function base(#[CurrentUser] User $user) {
     //     $parts = explode('@', (string)$user->getEmail());
     //     $asurite = $parts[0] ?? 'user';
-    //     return $this->render('base.html.twig', 
+    //     return $this->render('base.html.twig',
     //         ['user'=> $user,
     //         'asurite'=> $asurite]);
     // }
 
-    // home
+ // home
+
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/home', name: 'app_homepage')]
     public function home(#[CurrentUser] User $user) {
+        $missingPermissions = array_filter(
+            AccountController::REQUESTABLE_PERMISSIONS,
+            static fn (Permissions $permission): bool => !$user->hasPermission($permission),
+        );
+
         return $this->render('homepage/home.html.twig', [
+            'hasMissingPermissions' => count($missingPermissions) > 0,
+            'pendingPermissions' => $user->getRequestedPermissionNames(),
         ]);
     }
 

@@ -6,7 +6,6 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use InvalidArgumentException;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -27,9 +26,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name:"password_hash", type: "string", length:255)]
     private ?string $password = null;
 
-    #[ORM\Column(type: "string", columnDefinition: "ENUM('admin', 'faculty')")]
-    private string $role = 'faculty';
-
     /**
      * @var int The user permissions that define user roles
      * bitmask based on Permissions enum
@@ -40,11 +36,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "is_active", type: "boolean", options: ["default" => true])]
     private bool $isActive = true;
 
+    /**
+     * @var int|null Pending permissions bitmask requested via the "Request Access" page.
+     * NULL means the user has no pending request. Cleared on approve/deny.
+     */
+    #[ORM\Column(name: 'requested_permissions', type: 'integer', nullable: true)]
+    private ?int $requestedPermissions = null;
+
     #[ORM\Column(name: "last_login", type: "datetime", nullable: true)]
     private ?\DateTimeInterface $lastLogin = null;
 
     #[ORM\Column(name: "created_at", type: "datetime", options: ["default" => "CURRENT_TIMESTAMP"])]
     private \DateTimeInterface $createdAt;
+
+    /**
+     * Without this, a plain `new User()` (e.g. in UserORMTest) leaves
+     * $createdAt uninitialized until something explicitly sets it, which
+     * surfaces as "must not be accessed before initialization" the moment
+     * anything calls getCreatedAt() on that row.
+     */
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -77,29 +91,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPasswordHash(string $passwordHash): self
     {
         $this->password = $passwordHash;
-        return $this;
-    }
-
-    /**
-     * Gets the User role between (admin, faculty)
-     * @deprecated Use getRoles() for a more descriptive role interface
-     */
-    public function getRole(): string
-    {
-        return $this->role;
-    }
-
-    /**
-     * Gets the User role between (admin, faculty)
-     * @deprecated Use getRoles() for a more descriptive role interface
-     */
-    public function setRole(string $role): self
-    {
-        if (!in_array($role, ['admin', 'faculty'])) {
-            throw new InvalidArgumentException("Invalid role");
-        }
-
-        $this->role = $role;
         return $this;
     }
 
@@ -189,8 +180,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getRoles(): array
     {
-        // $roles = $this->roles;
-        $roles = $this->bitmaskToRoles($this->permissions);
+        // Mirrors hasPermission()'s admin short-circuit: an admin implicitly
+        // has every permission. Without this, Symfony's access_control /
+        // #[IsGranted] checks (which read getRoles(), not hasPermission())
+        // would deny an admin who doesn't happen to also have the specific
+        // permission bit for a given tool.
+        if ($this->permissions & Permissions::ROLE_ADMIN->value) {
+            $roles = array_map(static fn (Permissions $permission): string => $permission->name, Permissions::cases());
+        } else {
+            $roles = $this->bitmaskToRoles($this->permissions);
+        }
 
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
@@ -206,10 +205,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @return bool                             The value of the user's access.
      */
     public function hasPermission(Permissions $permission) : bool {
-        if ($this->role === 'admin') {
-            return true;
-        }
-        return ($this->permissions & $permission->value) != 0;
+    if ($this->permissions & Permissions::ROLE_ADMIN->value) {
+        return true;
+    }
+    return ($this->permissions & $permission->value) != 0;
     }
 
     /**
@@ -233,6 +232,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getPermissions() : int {
         return $this->permissions;
+    }
+
+    /**
+     * Overwrites the full permissions bitmask directly.
+     * @param int $permissions   The new permissions bitmask.
+     */
+    public function setPermissions(int $permissions) : void {
+        $this->permissions = $permissions;
+    }
+
+    /**
+     * The bitmask of permissions this user has requested but not yet been granted.
+     * NULL means there is no pending request.
+     */
+    public function getRequestedPermissions(): ?int {
+        return $this->requestedPermissions;
+    }
+
+    /**
+     * Sets the pending requested-permissions bitmask.
+     * Pass null to clear a pending request (e.g. after approve/deny).
+     */
+    public function setRequestedPermissions(?int $requestedPermissions): self {
+        $this->requestedPermissions = $requestedPermissions;
+        return $this;
+    }
+
+    /**
+     * Names of the currently-requested permissions, for display purposes.
+     * @return list<string>
+     */
+    public function getRequestedPermissionNames(): array {
+        if ($this->requestedPermissions === null) {
+            return [];
+        }
+        return $this->bitmaskToRoles($this->requestedPermissions);
     }
 
     // /**
@@ -286,22 +321,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-
     }
-}
 
-/**
- * The Matrix of possible permissions a user can have
- * NOTE: If this is in production, ALWAYS add values afterward! (by production i mean has REAL user data)
- * Otherwise, you WILL ruin the implementation!!
- * 
- * Uses a bitmask implementation, max of 32 permissions unless we change column length (very possible)
- */
-enum Permissions : int {
-    case ROLE_ADMIN = 1 << 0;
-    case ROLE_ASSIGNMENTS_GRADES = 1 << 1;
-    case ROLE_CANVAS_FORMATTING = 1 << 2;
-    case ROLE_REPORTGEN = 1 << 3;
-    case ROLE_FACULTY_FORM = 1 << 4;
-    case ROLE_COORDINATOR_FORM = 1 << 5;
 }

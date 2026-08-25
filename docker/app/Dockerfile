@@ -42,6 +42,9 @@ RUN pip3 install --no-cache-dir --break-system-packages \
 
 RUN docker-php-ext-install pdo pdo_mysql
 
+RUN pecl install redis \ 
+    && docker-php-ext-enable redis
+
 # The server will handle SSL, we don't need it here.
 RUN a2enmod rewrite
 RUN a2enmod setenvif

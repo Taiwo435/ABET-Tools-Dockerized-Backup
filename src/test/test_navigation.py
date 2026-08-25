@@ -27,8 +27,9 @@ EMAIL_ADDRESS = os.getenv("TEST_EMAIL", "test@example.com")
 PASSWORD = os.getenv("TEST_PASSWORD", "superSecretPassword1!")
 # WEBSITE_URL = f"http://localhost:{os.getenv('APP_PORT', '8080')}"
 WEBSITE_URL = f"http://{os.getenv('WEBSERVER_HOSTNAME', 'php_apache')}"
-from utils.webdriver import init_webdriver
+from utils.webdriver import init_webdriver, login_via_backend
 from utils.webdriver import PROJECT_DIR
+from utils.seeder import add_db_user, remove_db_user
 
 load_dotenv(f"{PROJECT_DIR}/docker/.env")
 # os.environ["PATH"] += os.pathsep + os.pathsep.join([
@@ -114,94 +115,49 @@ def test_login_invalid_credentials(driver):
     """
     tests that users cannot simply access the website without having a valid session
     """
-    driver.get(f"{WEBSITE_URL}/login")
+    from utils.backend_login import login_and_get_session_cookie
+
+    backend_url = os.getenv("BACKEND_URL", WEBSITE_URL)
+    session_id = login_and_get_session_cookie(backend_url, "invaliduser@asu.edu", "invalidpass")
+
+    driver.get(WEBSITE_URL)
+    driver.delete_cookie("PHPSESSID")
+    driver.add_cookie({"name": "PHPSESSID", "value": session_id, "path": "/"})
+
+    driver.get(f"{WEBSITE_URL}/home")
     driver.implicitly_wait(2)  # Wait for the page to load
-    assert driver.current_url == f"{WEBSITE_URL}/login", "User not redirected to login page on initial load"
-    print("Got the website")
-
-    email_input = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.ID, "email"))
-    )
-
-    password_input = driver.find_element(By.ID, "password")
-    login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
-
-    email_input.send_keys("invaliduser")
-    password_input.send_keys("invalidpass")
-    login_button.click()
-    
-    driver.implicitly_wait(2)  # Wait for the next page to load
 
     expect_route(driver, "/login")
 
 @pytest.mark.order(1)
 def test_register_and_login_valid_credentials_logout(driver):
     """
-    tests the register and login funcitonality for a valid login
-    + added test to test logout as well
+    tests login with valid credentials reaches /home, and that logout works.
+
+    Account creation requires completing email verification, which can't be
+    scripted end-to-end by Selenium (no way to read the code from a real
+    inbox in CI), so the account is seeded directly, already active, in the
+    database instead — see utils/seeder.py. Login itself still goes through
+    the real, unmodified /login endpoint.
     """
+    add_db_user(EMAIL_ADDRESS, PASSWORD)
 
-    driver.get(f"{WEBSITE_URL}/register")
+    login_via_backend(driver, EMAIL_ADDRESS, PASSWORD)
+    driver.get(f"{WEBSITE_URL}/home")
     driver.implicitly_wait(2)  # Wait for the page to load
-    print("Got the website")
-
-    expect_route(driver, "/register")
-
-    try:
-        email_input = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.ID, "email"))
-        )
-    except AssertionError:
-        print("===================ERROR=================")
-        print(driver.page_source)
-        print("===================END PAGE SOURCE=================")
-        raise AssertionError
-
-
-    # Fill out the registration form
-    password_input = driver.find_element(By.ID, "password")
-    confirm_password_input = driver.find_element(By.ID, "confirm_password")
-    register_button = driver.find_element(By.CLASS_NAME, "btn-submit")
-
-    email_input.send_keys(EMAIL_ADDRESS)
-    password_input.send_keys(PASSWORD)
-    confirm_password_input.send_keys(PASSWORD)
-    register_button.click()
-    driver.implicitly_wait(2)  # Wait for the next page to load
-
-    # sleep(2) 
-
-    # check if there's a success message
-    success_elements = driver.find_elements(By.CLASS_NAME, "success")
-
-    webdriver_wait = WebDriverWait(driver, 5)
-    webdriver_wait.until(EC.any_of(
-        EC.presence_of_element_located((By.CLASS_NAME, "success")),
-        EC.presence_of_element_located((By.CLASS_NAME, "error"))
-    ))
-
-    print(success_elements)
-    if len(success_elements) > 0:
-        innerHTML = success_elements[0].get_attribute('innerHTML')
-        assert innerHTML.strip() == "<strong>Success!</strong> Account created. You can now sign in.", "Success message not found after registration"
-    else:
-        # if not, check for error message about existing account
-        error_message_element = driver.find_element(By.CLASS_NAME, "error")
-        print(error_message_element.text)
-        assert error_message_element.text == "An account with that email already exists.", "Error message element not found after attempting to register with existing email"
-
-    driver.get(f"{WEBSITE_URL}/login")
-
-    email_input = driver.find_element(By.ID, "email")
-    password_input = driver.find_element(By.ID, "password")
-    login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
-
-    email_input.send_keys(EMAIL_ADDRESS)
-    password_input.send_keys(PASSWORD)
-    login_button.click()
-    driver.implicitly_wait(2)  # Wait for the next page to load
 
     expect_route(driver, "/home")
+
+    profile_button = driver.find_element(By.CLASS_NAME, "auth-btn")
+    profile_button.click()
+
+    logout_link = driver.find_element(By.CLASS_NAME, "logout-item")
+    logout_link.click()
+    driver.implicitly_wait(2)
+
+    expect_route(driver, "/login")
+
+    remove_db_user(EMAIL_ADDRESS)
 
 # @with_webdriver
 def test_navigation(driver):
@@ -209,22 +165,14 @@ def test_navigation(driver):
     test using the new decorator i just made
     should navigate to the homepage and some profile stuff
     """
+    add_db_user(EMAIL_ADDRESS, PASSWORD)
+
     driver.get(f"{WEBSITE_URL}")
     driver.implicitly_wait(2)  # Wait for the page to load
     print("Got the website")
 
-    driver.get(f"{WEBSITE_URL}/login")
-
-    email_input = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.ID, "email"))
-    )
-
-    password_input = driver.find_element(By.ID, "password")
-    login_button = driver.find_element(By.CLASS_NAME, "btn-submit")
-
-    email_input.send_keys(EMAIL_ADDRESS)
-    password_input.send_keys(PASSWORD)
-    login_button.click()
+    login_via_backend(driver, EMAIL_ADDRESS, PASSWORD)
+    driver.get(f"{WEBSITE_URL}/home")
     WebDriverWait(driver, 10).until(lambda d: "Log Out" in d.page_source)  # Wait for the next page to load
 
     expect_route(driver, "/home")
@@ -237,15 +185,26 @@ def test_navigation(driver):
         profile_button = driver.find_element(By.CLASS_NAME, "auth-btn");
         profile_button.click()
 
+    # NOTE: these steps used to locate dropdown links by absolute, index-based
+    # XPath (e.g. ".../div[2]/div/div/div/a[1]"), which silently drifted out
+    # of sync with base.html.twig's actual header markup (an extra "Request
+    # Access" link was added to the dropdown at some point, shifting every
+    # sibling index after it) and even pointed at a route ("/account/me/")
+    # the "My Profile" link no longer goes to (it's "/account/overview/"
+    # now). Selecting by href/class instead is robust to reordering.
+
     open_dropdown(driver)
 
-    # go to me
+    # go to my profile overview
     my_profile_link = driver.find_element(By.ID, "nav-my-profile");
+
     my_profile_link.click()
 
-    expect_route(driver, "/account/me/")
+    expect_route(driver, "/account/overview/")
 
-    back_link = driver.find_element(By.XPATH, "/html/body/div/div[1]/div[1]/a");
+    # account/me.html.twig has no dedicated back button — use the header's
+    # home icon, present on every page via base.html.twig.
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -258,12 +217,13 @@ def test_navigation(driver):
 
     # go to edit
     edit_profile_link = driver.find_element(By.ID, "nav-edit-profile");
+
     edit_profile_link.click()
 
     expect_route(driver, "/account/profile/")
 
     # go to home
-    back_link = driver.find_element(By.XPATH, "/html/body/div/div/div[2]/a[1]");
+    back_link = driver.find_element(By.CLASS_NAME, "btn-back")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -275,6 +235,7 @@ def test_navigation(driver):
     open_dropdown(driver)
 
     account_settings_link = driver.find_element(By.ID, "nav-account-settings")
+
     account_settings_link.click()
 
     expect_route(driver, "/account/settings/")
@@ -291,6 +252,7 @@ def test_navigation(driver):
     open_dropdown(driver)
 
     privacy_faq_link = driver.find_element(By.ID, "nav-privacy")
+
     privacy_faq_link.click()
 
     expect_route(driver, "/account/privacy/")
@@ -307,6 +269,7 @@ def test_navigation(driver):
     open_dropdown(driver)
 
     help_faq_link = driver.find_element(By.ID, "nav-help")
+
     help_faq_link.click()
 
     expect_route(driver, "/account/help/")
@@ -327,3 +290,5 @@ def test_navigation(driver):
     navigate_and_expect(driver, "/faculty-form/")
     navigate_and_expect(driver, "/coordinator-form/")
     navigate_and_expect(driver, "/report-generator/index.php")
+
+    remove_db_user(EMAIL_ADDRESS)

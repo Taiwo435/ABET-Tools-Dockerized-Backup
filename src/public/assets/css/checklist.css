@@ -43,7 +43,8 @@
 }
 
 .checklist-check,
-.checklist-x {
+.checklist-x,
+.checklist-info {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -61,6 +62,10 @@
 
 .checklist-x {
     color: #dc3545;
+}
+
+.checklist-info {
+    color: #8c1d40;
 }
 
 .checklist-label {

@@ -14,11 +14,20 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
+        arguments:
+            - '@Redis'
+            - { prefix: '%env(REDIS_PREFIX_SYMFONY)%' }
+    Redis:
+        class: \Redis
+        calls:
+            - connect:
+                - '%env(REDIS_HOST)%'
+                - '%env(int:REDIS_PORT)%'
     App\Service\Report\AppendixAReportExportBoundary:
         alias: App\Service\Report\AppendixAReportExportService
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-
     # LegacyBridge.php runs outside normal DI (called statically from
     # index.php's front controller), so it needs the Security service
     # made public to be fetched directly from the container. #132
@@ -31,13 +40,11 @@ services:
     Symfony\Bundle\SecurityBundle\Security:
         alias: security.helper
         public: true
-
     # Needed so index.php can render the branded error template for
     # exceptions thrown outside the normal Symfony request lifecycle
     # (e.g. from LegacyBridge's authorization checks). #51
     Twig\Environment:
         alias: twig
         public: true
-
     App\Repository\SyllabusReadinessRepository:
         public: true

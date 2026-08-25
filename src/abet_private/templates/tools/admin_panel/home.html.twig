@@ -1,6 +1,15 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Dashboard | {% endblock %}
+
+{% block styles %}
+    <style>
+        .admin-panel-grid {
+            margin-top: 2rem;
+        }
+    </style>
+{% endblock %}
+
 {# you can override the base template with these blocks!  #}
 {% block body %}
 {% autoescape 'html' %}
@@ -12,6 +21,7 @@
         <p>Access the core tools designed to empower the Sun Devil faculty. Select a tool below to learn more about its capabilities.</p>
     </section>
 
+    <div class="container admin-panel-grid">
         <div class="tools-grid">
 
             <div class="tool-card">
@@ -43,6 +53,19 @@
                 </div>
             </div>
             {# <?php endif; ?> #}
+
+            <div class="tool-card">
+                <div class="card-header" onclick="triggerToggle(this)">
+                    <div class="card-title">Permission Requests</div>
+                    <button class="toggle-btn" aria-label="Toggle Description" type="button">+</button>
+                </div>
+                <div class="card-body">
+                    <div class="card-body-inner">
+                        <p>Review and approve or deny pending access requests from faculty.</p>
+                        <a href="{{ path('app_admin_permission_queue') }}" class="action-link">Review Requests &rarr;</a>
+                    </div>
+                </div>
+            </div>
 
             <div class="tool-card">
                 <div class="card-header" onclick="triggerToggle(this)">

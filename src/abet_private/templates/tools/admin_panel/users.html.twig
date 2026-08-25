@@ -23,26 +23,39 @@
                 <thead>
                     <tr>
                         <th>Email</th>
-                        <th>Role</th>
                         <th>Status</th>
                         <th>Permissions</th>
                         <th>Last Login</th>
                         <th>Created</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                         <tr>
                             <td>{{ user.email }}</td>
-                            <td>{{ user.role|capitalize }}</td>
                             <td>
                                 <span class="status-pill {{ user.active ? 'active' : 'inactive' }}">
                                     {{ user.active ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td>{{ user.permissions|join(', ') }}</td>
+                            <td>{{ user.permissions|permission_labels|join(', ') }}</td>
                             <td>{{ user.lastLogin ? user.lastLogin|date('Y-m-d H:i') : 'Never' }}</td>
                             <td>{{ user.createdAt ? user.createdAt|date('Y-m-d') : 'Unknown' }}</td>
+                            <td>
+                                {% if user.email == app.user.userIdentifier %}
+                                    <span class="empty-state">(you)</span>
+                                {% else %}
+                                    <form method="post" action="{{ path('app_admin_users_toggle_admin', {id: user.id}) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token('admin_toggle_admin') }}">
+                                        {% if 'ROLE_ADMIN' in user.permissions %}
+                                            <button type="submit" class="btn btn-secondary">Revoke Admin</button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-secondary">Make Admin</button>
+                                        {% endif %}
+                                    </form>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% else %}
                         <tr>

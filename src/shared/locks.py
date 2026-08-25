@@ -7,7 +7,8 @@ _redis = redis.Redis.from_url(
 )
 
 def _build_lock_key(source_course_id: str, dest_course_id: str) -> str:
-    return f"extract_lock:{source_course_id}_to_{dest_course_id}"
+    REDIS_PREFIX = os.getenv("REDIS_PREFIX_CELERY", "celery_")
+    return f"{REDIS_PREFIX}extract_lock:{source_course_id}_to_{dest_course_id}"
 
 def acquire_course_lock(source_course_id: str, dest_course_id: str, ttl_seconds: int = 2700) -> bool:
     """Try to lock a source course to a specific destination. Returns True if acquired."""
