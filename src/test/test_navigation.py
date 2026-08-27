@@ -223,7 +223,7 @@ def test_navigation(driver):
     expect_route(driver, "/account/profile/")
 
     # go to home
-    back_link = driver.find_element(By.CLASS_NAME, "btn-back")
+    back_link = driver.find_element(By.LINK_TEXT, "Cancel")
     back_link.click()
 
     expect_route(driver, "/home")
