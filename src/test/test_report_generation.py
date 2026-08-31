@@ -68,7 +68,7 @@ def test_standard_report_generation(driver):
 
     status_el = WebDriverWait(driver, 60).until(
         EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "#status.ok")
+            (By.CSS_SELECTOR, ".status.ok")
         )
     )
 
