@@ -20,7 +20,7 @@ config.php
 mysql_data
 *log
 *logs
-report_jobs/*
+/src/abet_private/report_jobs/*
 !/src/abet_private/report_jobs/.gitkeep
 Test-PDFs
 

@@ -1,4 +1,6 @@
 <?php
+// DO NOT IMPORT THIS DIRECTLY!!!!
+// Use it as a SERVICE!!! 
 declare(strict_types=1);
 
 require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
@@ -48,6 +50,43 @@ function send_verification_email(string $toEmail, string $code): void {
     $transport = Transport::fromDsn($dsn);
     $mailer = new Mailer($transport);
     $mailer->send($email);
+}
+
+/**
+ * Sends the password reset email containing the reset link.
+ * Uses the same null-transport-logs-to-file fallback as
+ * send_verification_email(). Matches the signature that
+ * reset_password_lib.php's rp_send_password_reset_email() expects.
+ *
+ */
+function send_password_reset_email(string $toEmail, string $subject, string $htmlBody, string $textBody): bool {
+    $dsn = getenv('MAILER_DSN') ?: ($_ENV['MAILER_DSN'] ?? 'null://null');
+
+    $email = (new \Symfony\Component\Mime\Email())
+        ->from('no-reply@asu.edu')
+        ->to($toEmail)
+        ->subject($subject)
+        ->text($textBody)
+        ->html($htmlBody);
+
+    if ($dsn === 'null://null' || $dsn === '') {
+        $logDir = getenv('ABET_PRIVATE_DIR') . '/var/log';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+        $logLine = sprintf(
+            "[%s] Password reset email for %s (see reset_password_lib's own dev_reset_link fallback for the actual link)\n",
+            date('c'),
+            $toEmail
+        );
+        file_put_contents($logDir . '/mail.log', $logLine, FILE_APPEND);
+        return false;
+    }
+
+    $transport = \Symfony\Component\Mailer\Transport::fromDsn($dsn);
+    $mailer = new \Symfony\Component\Mailer\Mailer($transport);
+    $mailer->send($email);
+    return true;
 }
 
 /**

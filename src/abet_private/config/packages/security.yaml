@@ -45,9 +45,40 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # Public, unauthenticated entry points
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/auth/login\.php$, roles: PUBLIC_ACCESS }
+        - { path: ^/auth/logout\.php$, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/forgot-password, roles: PUBLIC_ACCESS }
+        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+
+        # Native Symfony routes migrated as part of #132
+        - { path: ^/admin/templates, roles: ROLE_ADMIN }
+        - { path: ^/admin/users, roles: ROLE_ADMIN }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/home, roles: ROLE_USER }
+        - { path: ^/profile, roles: ROLE_USER }
         - { path: '^/tool/assignmentsgrades*', roles: ROLE_ASSIGNMENTS_GRADES }
+        - { path: ^/tools/, roles: ROLE_USER }
+
+        # Native Symfony routes migrated as part of #132 (batch 1: account/*)
+        - { path: ^/account/profile, roles: ROLE_USER }
+        - { path: ^/account/settings, roles: ROLE_USER }
+        - { path: ^/account/privacy, roles: ROLE_USER }
+        - { path: ^/account/help, roles: ROLE_USER }
+        - { path: ^/account/me, roles: ROLE_USER }
+        - { path: ^/report-generator/, roles: ROLE_USER }
+
+    # NOTE (#132): Legacy-bridged routes (src/public/*.php, dispatched via
+    # LegacyBridge.php) are NOT yet covered here — they still rely on
+    # require_login()/require_role() checks inside each individual file
+    # rather than the Symfony firewall. Extending access_control to cover
+    # those paths (~28 files) is remaining work under this same ticket.
+
+# Issue #132 Activated central framework firewalls to enforce automatic endpoint security
 
 when@test:
     security:
@@ -57,5 +88,4 @@ when@test:
             Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
                 algorithm: bcrypt
                 cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon
+

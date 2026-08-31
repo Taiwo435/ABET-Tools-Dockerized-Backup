@@ -160,7 +160,7 @@ def test_register_and_login_valid_credentials_logout(driver):
     remove_db_user(EMAIL_ADDRESS)
 
 # @with_webdriver
-def test_navigation(driver): 
+def test_navigation(driver):
     """
     test using the new decorator i just made
     should navigate to the homepage and some profile stuff
@@ -196,7 +196,8 @@ def test_navigation(driver):
     open_dropdown(driver)
 
     # go to my profile overview
-    my_profile_link = driver.find_element(By.CSS_SELECTOR, "a.dropdown-user-link")
+    my_profile_link = driver.find_element(By.ID, "nav-my-profile");
+
     my_profile_link.click()
 
     expect_route(driver, "/account/overview/")
@@ -215,13 +216,14 @@ def test_navigation(driver):
     open_dropdown(driver)
 
     # go to edit
-    edit_profile_link = driver.find_element(By.CSS_SELECTOR, 'a[href="/account/profile/"]')
+    edit_profile_link = driver.find_element(By.ID, "nav-edit-profile");
+
     edit_profile_link.click()
 
     expect_route(driver, "/account/profile/")
 
     # go to home
-    back_link = driver.find_element(By.CLASS_NAME, "btn-back")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -232,12 +234,13 @@ def test_navigation(driver):
 
     open_dropdown(driver)
 
-    account_settings_link = driver.find_element(By.CSS_SELECTOR, 'a[href="/account/settings/"]')
+    account_settings_link = driver.find_element(By.ID, "nav-account-settings")
+
     account_settings_link.click()
 
     expect_route(driver, "/account/settings/")
 
-    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -248,12 +251,13 @@ def test_navigation(driver):
 
     open_dropdown(driver)
 
-    privacy_faq_link = driver.find_element(By.CSS_SELECTOR, 'a[href="/account/privacy/"]')
+    privacy_faq_link = driver.find_element(By.ID, "nav-privacy")
+
     privacy_faq_link.click()
 
     expect_route(driver, "/account/privacy/")
 
-    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -264,12 +268,13 @@ def test_navigation(driver):
 
     open_dropdown(driver)
 
-    help_faq_link = driver.find_element(By.CSS_SELECTOR, 'a[href="/account/help/"]')
+    help_faq_link = driver.find_element(By.ID, "nav-help")
+
     help_faq_link.click()
 
     expect_route(driver, "/account/help/")
 
-    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -281,7 +286,7 @@ def test_navigation(driver):
         driver.get(f"{WEBSITE_URL}{path}")
         expect_route(driver, path)
 
-    navigate_and_expect(driver, "/AssignmentsGrades/tool1.php")
+    navigate_and_expect(driver, "/tool/assignmentsgrades")
     navigate_and_expect(driver, "/faculty-form/")
     navigate_and_expect(driver, "/coordinator-form/")
     navigate_and_expect(driver, "/report-generator/index.php")

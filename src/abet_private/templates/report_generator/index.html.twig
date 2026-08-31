@@ -1,0 +1,200 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Report Generation | {% endblock %}
+
+{% block styles %}
+    <style>
+        .rg-shell {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+        .rg-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .rg-card h1 {
+            margin: 0 0 8px;
+            color: #8C1D40;
+            font-size: 24px;
+        }
+        .rg-card p.sub {
+            color: #5C6670;
+            margin: 0 0 24px;
+        }
+        .dropzone {
+            display: block;
+            border: 2px dashed #CBD5E0;
+            border-radius: 6px;
+            padding: 40px;
+            text-align: center;
+            background: #FAFAFA;
+            cursor: pointer;
+        }
+        .dropzone input { display: none; }
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn {
+            border: none;
+            padding: 12px 22px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn-primary { background: #8C1D40; color: #fff; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .status {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.info { display: block; background: #eef7fc; color: #0c3d5d; }
+        .status.ok { display: block; background: #e8f5e9; color: #0e4e2a; }
+        .status.err { display: block; background: #fdf2f2; color: #7a160e; }
+        .results { margin-top: 16px; display: none; }
+        .results.show { display: block; }
+        .results a {
+            display: inline-block;
+            margin-right: 12px;
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .results a.docx { background: #f0f0f0; color: #333; }
+        .results a.pdf { background: #FFC627; color: #000; }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="rg-shell">
+        <div class="rg-card">
+            <h1>ABET Report Generation</h1>
+            <p class="sub">Upload a Canvas JSON export to standardize accreditation data.</p>
+
+            <label id="dropzone" class="dropzone">
+                <input id="jsonFileInput" type="file" accept=".json,application/json">
+                <div><strong>Drag &amp; drop JSON here</strong> or click to browse</div>
+                <div class="file-name" id="fileName">No file selected</div>
+            </label>
+
+            <button id="generateReportBtn" class="btn btn-primary" type="button">Generate Report</button>
+
+            <div id="status" class="status"></div>
+
+            <div id="results" class="results">
+                <a id="downloadPdfBtn" class="pdf" href="#" target="_blank" rel="noopener" style="display:none;">Open PDF</a>
+                <a id="downloadDocxBtn" class="docx" href="#" style="display:none;">Download DOCX</a>
+            </div>
+        </div>
+
+        <div class="rg-card">
+            <h1>Generate Long Report</h1>
+            <p class="sub">Generate the long faculty report and download it as a DOCX file.</p>
+            <button id="generateLongReportBtn" class="btn btn-primary" type="button">Generate Long Report</button>
+            <div id="lrStatus" class="status"></div>
+            <div class="results" id="lrResults">
+                <a id="downloadLongDocxBtn" class="docx" href="#" style="display:none;">Download Long Report DOCX</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const csrfToken = "{{ csrf_token('report_generate') }}";
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('jsonFileInput');
+        const fileNameEl = document.getElementById('fileName');
+        const generateBtn = document.getElementById('generateReportBtn');
+        const statusEl = document.getElementById('status');
+        const resultsEl = document.getElementById('results');
+        const openPdfBtn = document.getElementById('downloadPdfBtn');
+        const downloadDocxBtn = document.getElementById('downloadDocxBtn');
+        let selectedFile = null;
+
+        function setStatus(el, type, msg) {
+            el.className = 'status ' + type;
+            el.textContent = msg;
+        }
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            const f = fileInput.files[0];
+            if (!f) return;
+            selectedFile = f;
+            fileNameEl.textContent = f.name;
+        });
+
+        generateBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                setStatus(statusEl, 'err', 'Please choose a JSON file first.');
+                return;
+            }
+            const fd = new FormData();
+            fd.append('_csrf_token', csrfToken);
+            fd.append('json_file', selectedFile);
+
+            generateBtn.disabled = true;
+            setStatus(statusEl, 'info', 'Generating report...');
+            resultsEl.classList.remove('show');
+
+            try {
+                const res = await fetch("{{ path('app_report_generator_generate') }}", { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Request failed');
+                }
+                if (data.docx_url) {
+                    downloadDocxBtn.href = data.docx_url;
+                    downloadDocxBtn.style.display = 'inline-block';
+                }
+                if (data.pdf_ready && data.pdf_url) {
+                    openPdfBtn.href = data.pdf_url;
+                    openPdfBtn.style.display = 'inline-block';
+                }
+                resultsEl.classList.add('show');
+                setStatus(statusEl, 'ok', 'Report generated successfully.');
+            } catch (err) {
+                setStatus(statusEl, 'err', err.message);
+            } finally {
+                generateBtn.disabled = false;
+            }
+        });
+
+        const lrBtn = document.getElementById('generateLongReportBtn');
+        const lrStatusEl = document.getElementById('lrStatus');
+        const downloadLongDocxBtn = document.getElementById('downloadLongDocxBtn');
+
+        lrBtn.addEventListener('click', async () => {
+            const fd = new FormData();
+            fd.append('_csrf_token', csrfToken);
+
+            lrBtn.disabled = true;
+            setStatus(lrStatusEl, 'info', 'Generating long report...');
+
+            try {
+                const res = await fetch("{{ path('app_report_generator_generate_lr') }}", { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Request failed');
+                }
+                downloadLongDocxBtn.href = data.docx_url;
+                downloadLongDocxBtn.style.display = 'inline-block';
+                setStatus(lrStatusEl, 'ok', 'Long report generated successfully.');
+            } catch (err) {
+                setStatus(lrStatusEl, 'err', err.message);
+            } finally {
+                lrBtn.disabled = false;
+            }
+        });
+    </script>
+{% endblock %}

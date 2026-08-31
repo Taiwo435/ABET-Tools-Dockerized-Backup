@@ -1,0 +1,343 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Classes | {% endblock %}
+
+{% block styles %}
+    <style>
+        :root {
+            --asu-maroon: #8C1D40;
+            --asu-gold: #FFC627;
+            --text-dark: #222;
+            --text-light: #555;
+            --bg-color: #F9F9F9;
+            --border-color: #E0E0E0;
+            --success: #0a7d30;
+            --warning: #b08d00;
+            --info: #1976d2;
+        }
+        .vc-main-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .vc-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .vc-page-title h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            color: var(--asu-maroon);
+        }
+        .vc-page-title p {
+            margin: 5px 0 0;
+            color: var(--text-light);
+        }
+        .vc-btn-primary {
+            background: var(--asu-maroon);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .vc-btn-primary:hover { background: #5c132a; }
+        .vc-filter-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .vc-filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .vc-filter-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+        .vc-filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .vc-filter-select:focus {
+            outline: none;
+            border-color: var(--asu-maroon);
+        }
+        .vc-classes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .vc-class-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .vc-class-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .vc-class-header {
+            background: linear-gradient(135deg, var(--asu-maroon) 0%, #5c132a 100%);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        .vc-class-code {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .vc-class-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+        .vc-class-meta {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        .vc-class-body { padding: 20px; }
+        .vc-class-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .vc-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .vc-info-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+        .vc-info-value {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        .vc-class-actions {
+            display: flex;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        .vc-action-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--asu-maroon);
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        .vc-action-btn:hover { background: #f5f5f5; }
+        .vc-semester-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: rgba(255,255,255,0.2);
+        }
+        .vc-status-active { background: #e6f4ea; color: #0a7d30; }
+        .vc-hidden-class { display: none; }
+        @media (max-width: 768px) {
+            .vc-classes-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="vc-main-container">
+        <div class="vc-page-header">
+            <div class="vc-page-title">
+                <h1>My Classes</h1>
+                <p>Manage all your courses and student outcomes</p>
+            </div>
+            <a href="{{ path('app_assignments_grades_canvas_course') }}" class="vc-btn-primary">+ Add New Class</a>
+        </div>
+
+        <div class="vc-filter-bar">
+            <div class="vc-filter-group">
+                <label class="vc-filter-label">Semester</label>
+                <select class="vc-filter-select" id="semesterFilter">
+                    <option value="all">All Semesters</option>
+                    <option value="fall-2024" selected>Fall 2024</option>
+                    <option value="summer-2024">Summer 2024</option>
+                    <option value="spring-2024">Spring 2024</option>
+                </select>
+            </div>
+            <div class="vc-filter-group">
+                <label class="vc-filter-label">Status</label>
+                <select class="vc-filter-select" id="statusFilter">
+                    <option value="all">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="upcoming">Upcoming</option>
+                </select>
+            </div>
+            <div class="vc-filter-group">
+                <label class="vc-filter-label">Department</label>
+                <select class="vc-filter-select" id="deptFilter">
+                    <option value="all">All Departments</option>
+                    <option value="cse">Computer Science (CS)</option>
+                    <option value="ece">Computer Systems (CSE)</option>
+                </select>
+            </div>
+        </div>
+
+	{#
+            NOTE for whoever picks up AssignmentsGrades/index.php: "View
+            Assignments" originally linked to that legacy file (still an
+            orphaned mockup, fate undecided as of #132). Changed to "#"
+            here, matching the already-nonfunctional "Gradebook"/
+            "Analytics" buttons, rather than link to a legacy path that
+            may not exist much longer.update "View Assignments"
+            on the first card below to point at wherever that work lands.
+        #}
+
+        <div class="vc-classes-grid" id="classesGrid">
+            <div class="vc-class-card" data-semester="fall-2024" data-status="active" data-dept="cse">
+                <div class="vc-class-header">
+                    <div class="vc-class-code">CSE 445 - Section 001</div>
+                    <h3 class="vc-class-title">Software Security</h3>
+                    <div class="vc-class-meta">
+                        <span class="vc-semester-badge">Fall 2024</span> •
+                        <span>48 Students</span>
+                    </div>
+                </div>
+                <div class="vc-class-body">
+                    <div class="vc-class-info-grid">
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Schedule</div>
+                            <div class="vc-info-value">MW 2:00-3:15 PM</div>
+                        </div>
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Location</div>
+                            <div class="vc-info-value">BYENG 210</div>
+                        </div>
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Instructor</div>
+                            <div class="vc-info-value">Dr. Sarah Smith</div>
+                        </div>
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Status</div>
+                            <div class="vc-info-value">
+                                <span class="vc-semester-badge vc-status-active">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vc-class-actions">
+                        <a href="#" class="vc-action-btn">View Assignments</a>
+                        <a href="#" class="vc-action-btn">Gradebook</a>
+                        <a href="#" class="vc-action-btn">Analytics</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vc-class-card" data-semester="fall-2024" data-status="active" data-dept="cse">
+                <div class="vc-class-header">
+                    <div class="vc-class-code">CSE 310 - Section 002</div>
+                    <h3 class="vc-class-title">Data Structures &amp; Algorithms</h3>
+                    <div class="vc-class-meta">
+                        <span class="vc-semester-badge">Fall 2024</span> •
+                        <span>52 Students</span>
+                    </div>
+                </div>
+                <div class="vc-class-body">
+                    <div class="vc-class-info-grid">
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Schedule</div>
+                            <div class="vc-info-value">TTh 10:30-11:45 AM</div>
+                        </div>
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Location</div>
+                            <div class="vc-info-value">BYENG 105</div>
+                        </div>
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Instructor</div>
+                            <div class="vc-info-value">Dr. Michael Johnson</div>
+                        </div>
+                        <div class="vc-info-item">
+                            <div class="vc-info-label">Status</div>
+                            <div class="vc-info-value">
+                                <span class="vc-semester-badge vc-status-active">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vc-class-actions">
+                        <a href="#" class="vc-action-btn">View Assignments</a>
+                        <a href="#" class="vc-action-btn">Gradebook</a>
+                        <a href="#" class="vc-action-btn">Analytics</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const semesterFilter = document.getElementById('semesterFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const deptFilter = document.getElementById('deptFilter');
+        const classCards = document.querySelectorAll('.vc-class-card');
+
+        function filterClasses() {
+            const semesterValue = semesterFilter.value;
+            const statusValue = statusFilter.value;
+            const deptValue = deptFilter.value;
+            classCards.forEach(card => {
+                const cardSemester = card.getAttribute('data-semester');
+                const cardStatus = card.getAttribute('data-status');
+                const cardDept = card.getAttribute('data-dept');
+                const semesterMatch = semesterValue === 'all' || cardSemester === semesterValue;
+                const statusMatch = statusValue === 'all' || cardStatus === statusValue;
+                const deptMatch = deptValue === 'all' || cardDept === deptValue;
+                if (semesterMatch && statusMatch && deptMatch) {
+                    card.classList.remove('vc-hidden-class');
+                } else {
+                    card.classList.add('vc-hidden-class');
+                }
+            });
+        }
+
+        semesterFilter.addEventListener('change', filterClasses);
+        statusFilter.addEventListener('change', filterClasses);
+        deptFilter.addEventListener('change', filterClasses);
+    </script>
+{% endblock %}

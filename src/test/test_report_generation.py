@@ -68,7 +68,7 @@ def test_standard_report_generation(driver):
 
     status_el = WebDriverWait(driver, 60).until(
         EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "#status.ok")
+            (By.CSS_SELECTOR, ".status.ok")
         )
     )
 
@@ -145,11 +145,11 @@ def test_long_report_generation(driver):
 def test_canvas_token_validation(driver):
     login(driver)
 
-    driver.get(f"{WEBSITE_URL}/AssignmentsGrades/tool1.php")
+    driver.get(f"{WEBSITE_URL}/tool/assignmentsgrades")
 
     token_input = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located(
-            (By.ID, "classToken")
+            (By.ID, "access_token_token")
         )
     )
 
@@ -159,7 +159,7 @@ def test_canvas_token_validation(driver):
 
     connect_btn = driver.find_element(
         By.ID,
-        "connectBtn"
+        "access_token_submit"
     )
 
     connect_btn.click()

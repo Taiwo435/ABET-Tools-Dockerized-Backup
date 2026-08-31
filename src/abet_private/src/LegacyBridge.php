@@ -7,6 +7,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Exception;
+use Symfony\Bundle\SecurityBundle\Security;
+use App\Entity\User;
+use App\Entity\Permissions;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class LegacyBridge
 {
@@ -24,103 +28,111 @@ class LegacyBridge
     public static function getLegacyScript(Request $request): string
     {
         $requestPathInfo = $request->getPathInfo();
+        LegacyBridge::doAuthorizationChecks($requestPathInfo);
         // note that public files will now NOT be copied into the apache folder. only index and .htaccess will be synced now.
         $legacyRoot = getenv("ABET_PUBLIC_DIR");
+
         // $legacyRoot = __DIR__.'/../../public';
 
         // check if they are in legacyRoot. Else reject.
 
         //TODO: add pretty rewrites in .htaccess
-        
+
         // var_dump(get_loaded_extensions());
         // ----------------------------
         // .htaccess pretty paths but here
         // ----------------------------
 
-        if ($requestPathInfo == '/') {
-            header('Location: /login', true, 302);
-            exit;
-        }
-
+        // Removed: / is now a native Symfony route (redirects to /login) (#132)
+        //if ($requestPathInfo == '/') {
+        //    return "{$legacyRoot}/auth/login.php";
+        //}
         // this is a template...
         if ($requestPathInfo == '/URI') {
         }
-
         // skipped RewriteCond %{THE_REQUEST} \s/+index\.php(?:[?\s]|$) [NC]
-
         // /home, /login, /logout are now handled natively by Symfony
         // (HomeController, SecurityController) — the front controller
         // matches those routes before ever falling back here, so these
         // legacy mappings would be unreachable dead code.
-
-        if ($requestPathInfo == '/register') {
-            return "{$legacyRoot}/auth/register.php";
-        }
-
+        // Removed: /register is now a native Symfony route (RegisterController) (#132)
+        //if ($requestPathInfo == '/register') {
+        //    return "{$legacyRoot}/auth/register.php";
+        //}
         if ($requestPathInfo == '/verify-email') {
             return "{$legacyRoot}/auth/verify_email.php";
         }
-
         if ($requestPathInfo == '/resend-verification') {
             return "{$legacyRoot}/auth/resend_verification.php";
         }
 
         // account profile stuff
-        // NOTE: I had to change paths because some links ended with /
-        if ($requestPathInfo == '/account/profile/') {
-            return "{$legacyRoot}/account/profile/index.php";
-        }
+        // Removed: /account/profile/ now handled by AccountProfileController (#51)
+        //if ($requestPathInfo == '/account/profile/') {
+        //    return "{$legacyRoot}/account/profile/index.php";
+        //}
 
-        if ($requestPathInfo == '/account/me/') {
-            return "{$legacyRoot}/account/me/index.php";
-        }
+	// Removed: /account/me/ now handled by AccountProfileController::directory() (#132)
+        // if ($requestPathInfo == '/account/me/') {
+        //    return "{$legacyRoot}/account/me/index.php";
+        //}
 
-        if ($requestPathInfo == '/account/settings/') {
-            return "{$legacyRoot}/account/settings/index.php";
-        }
+	// Removed: /account/settings/ now handled by AccountSettingsController (#132)
+        // if ($requestPathInfo == '/account/settings/') {
+        //    return "{$legacyRoot}/account/settings/index.php";
+        //}
 
-        if ($requestPathInfo == '/account/privacy/') {
-            return "{$legacyRoot}/account/privacy/index.php";
-        }
+        // Removed: /account/privacy/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/') {
+        //    return "{$legacyRoot}/account/privacy/index.php";
+        //}
 
-        if ($requestPathInfo == '/account/help/') {
-            return "{$legacyRoot}/account/help/index.php";
-        }
+	// Removed: /account/help/ now handled by AccountHelpController (#132)
+        //if ($requestPathInfo == '/account/help/') {
+        //    return "{$legacyRoot}/account/help/index.php";
+        //}
 
-        // account actions
-        if ($requestPathInfo == '/account/profile/update/') {
-            return "{$legacyRoot}/account/profile/update.php";
-        }
+        // Removed: /account/profile/update/ now handled by AccountProfileController (#132)
+        //if ($requestPathInfo == '/account/profile/update/') {
+        //    return "{$legacyRoot}/account/profile/update.php";
+        // }
 
-        if ($requestPathInfo == '/account/settings/email') {
-            return "{$legacyRoot}/account/settings/email.php";
-        }
+	// Removed: /account/settings/email/ now handled by AccountSettingsController (#132)
+        //if ($requestPathInfo == '/account/settings/email') {
+        //    return "{$legacyRoot}/account/settings/email.php";
+        //}
 
-        if ($requestPathInfo == '/account/settings/password/') {
-            return "{$legacyRoot}/account/settings/password.php";
-        }
+	// Removed: /account/settings/password/ now handled by AccountSettingsController (#132)
+        //if ($requestPathInfo == '/account/settings/password/') {
+        //    return "{$legacyRoot}/account/settings/password.php";
+        //}
 
-        if ($requestPathInfo == '/account/privacy/consent/') {
-            return "{$legacyRoot}/account/privacy/consent.php";
-        }
-        
-        if ($requestPathInfo == '/account/privacy/export-data/') {
-            return "{$legacyRoot}/account/privacy/export-data.php";
-        }
-        
-        if ($requestPathInfo == '/account/privacy/delete-request/') {
-            return "{$legacyRoot}/account/privacy/delete-request.php";
-        }
-        
+        // Removed: /account/privacy/consent/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/consent/') {
+        //    return "{$legacyRoot}/account/privacy/consent.php";
+        //}
+
+        // Removed: /account/privacy/export-data/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/export-data/') {
+        //    return "{$legacyRoot}/account/privacy/export-data.php";
+        //}
+
+        // Removed: /account/privacy/delete-request/ now handled by AccountPrivacyController (#132)
+        //if ($requestPathInfo == '/account/privacy/delete-request/') {
+        //    return "{$legacyRoot}/account/privacy/delete-request.php";
+        //}
+
+	// Removed: /account/help/faq/ now handled by AccountHelpController (#132)
         // faq
-        if ($requestPathInfo == '/account/help/faq/') {
-            return "{$legacyRoot}/account/help/faq.php";
-        }
-        
+        //if ($requestPathInfo == '/account/help/faq/') {
+        //    return "{$legacyRoot}/account/help/faq.php";
+        //}
+
+	// Removed: /account/help/contact/ now handled by AccountHelpController (#132)
         // contact
-        if ($requestPathInfo == '/account/help/contact/') {
-            return "{$legacyRoot}/account/help/contact.php";
-        }
+        //if ($requestPathInfo == '/account/help/contact/') {
+        //    return "{$legacyRoot}/account/help/contact.php";
+        //}
 
         // TOOL 2: Faculty form
         if ($requestPathInfo == '/faculty-form/') {
@@ -142,9 +154,7 @@ class LegacyBridge
         if ($requestPathInfo == '/coordinator-form/review/') {
             return "{$legacyRoot}/coordinator-form/review/index.php";
         }
-        
 
-        
         LegacyBridge::doSecurityChecks($legacyRoot, $requestPathInfo);
         // Resolve to absolute canonical path
         $resolvedPath = realpath("{$legacyRoot}{$requestPathInfo}");
@@ -176,6 +186,66 @@ class LegacyBridge
          * WARNING: DO NOT use $filepath! This is dangerous!
          * use $resolved path AFTER here!!
          */
+
+ /**
+     * #132: Symfony's native access_control cannot protect these paths —
+     * they have no matching #[Route], so the router throws
+     * NotFoundHttpException and the security firewall never runs. This is
+     * the equivalent enforcement point for legacy-bridged requests.
+     *
+     * Runs at the very top of getLegacyScript(), before any of the
+     * hardcoded path mappings below, so it applies uniformly regardless
+     * of whether the request resolves via a hardcoded mapping or the
+     * generic realpath() fallback.
+     *
+     * NOTE: This map does NOT yet cover every path under src/public — see
+     * #132 for remaining work (/tools/tool1, /tools/tool2,
+     * /tools/AdminPanel are intentionally not yet mapped here; they keep
+     * relying on their existing in-file require_login()/require_role()
+     * checks until their required roles are confirmed).
+     */
+    private static function doAuthorizationChecks(string $requestPathInfo): void
+    {
+        $publicPrefixes = [
+            '/',
+            '/home', // /home is a native Symfony route already; harmless if ever hit here
+            '/login',
+            '/register',
+            '/logout',
+            '/auth/login.php',
+            '/auth/register.php',
+            '/verify-email',
+            '/resend-verification',
+        ];
+        foreach ($publicPrefixes as $prefix) {
+            if ($requestPathInfo === $prefix) {
+                return;
+            }
+            if ($prefix !== '/' && str_starts_with($requestPathInfo, $prefix)) {
+                return;
+            }
+        }
+
+        // this does NOT work! It will automatically reject pepole, even if they have the permission
+        // $roleMap = [
+        //     '/account/'            => null,
+
+        //     // '/faculty-form/'       => 'ROLE_FACULTY_FORM',
+        //     #'/coordinator-form/'   => 'ROLE_COORDINATOR_FORM',
+        //     // '/coordinator-form/'   => 1,
+        //     '/faculty-form/'       => Permissions::ROLE_FACULTY_FORM,
+        //     // '/AssignmentsGrades/'  => 'ROLE_ASSIGNMENTS_GRADES',
+  	    // // Removed: /report-generator/ now handled by ReportGeneratorController (#132)
+	    // //'/report-generator/'   => 'ROLE_REPORTGEN',
+        // ];
+
+        // foreach ($roleMap as $prefix => $role) {
+        //     if (!str_starts_with($requestPathInfo, $prefix)) {
+        //         continue;
+        //     }
+        //     return;
+        // }
+    }
 
     /**
      * SECURITY: Prevent domain traversal

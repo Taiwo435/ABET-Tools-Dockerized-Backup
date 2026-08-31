@@ -6,6 +6,7 @@ use App\Entity\Permissions;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\MailerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,8 +17,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 // Permissions is declared inside User.php, so it isn't found by PSR-4
 // autoloading on its own — require it explicitly, same as AccountController.
-require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/mailer.php';
 
 final class AdminController extends AbstractController
 {
@@ -51,7 +50,12 @@ final class AdminController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/users/{id}/toggle-admin', name: 'app_admin_users_toggle_admin', methods: ['POST'])]
-    public function toggleAdmin(User $user, Request $request, EntityManagerInterface $em, #[CurrentUser] User $currentUser): RedirectResponse
+    public function toggleAdmin(
+        User $user, 
+        Request $request, 
+        EntityManagerInterface $em, 
+        #[CurrentUser] User $currentUser,
+        MailerService $mailer): RedirectResponse
     {
         if (!$this->isCsrfTokenValid('admin_toggle_admin', (string) $request->request->get('csrf_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -68,7 +72,7 @@ final class AdminController extends AbstractController
         $em->flush();
 
         if (!$isCurrentlyAdmin) {
-            send_permission_approved_email($user->getEmail(), ['ROLE_ADMIN']);
+            $mailer->send_permission_approved_email($user->getEmail(), ['ROLE_ADMIN']);
         }
 
         return $this->redirectToRoute('app_admin_users');
@@ -101,7 +105,11 @@ final class AdminController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/queue/{id}/approve', name: 'app_admin_permission_queue_approve', methods: ['POST'])]
-    public function approve(User $user, Request $request, EntityManagerInterface $em): RedirectResponse
+    public function approve(
+        User $user, 
+        Request $request, 
+        EntityManagerInterface $em,
+        MailerService $mailer): RedirectResponse
     {
         if (!$this->isCsrfTokenValid('admin_queue_action', (string) $request->request->get('csrf_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -114,7 +122,7 @@ final class AdminController extends AbstractController
             $user->setRequestedPermissions(null);
             $em->flush();
 
-            send_permission_approved_email($user->getEmail(), $grantedNames);
+            $mailer->send_permission_approved_email($user->getEmail(), $grantedNames);
         }
 
         return $this->redirectToRoute('app_admin_permission_queue');
