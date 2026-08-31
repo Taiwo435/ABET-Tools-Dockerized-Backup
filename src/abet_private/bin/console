@@ -4,12 +4,6 @@
 use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
-require_once __DIR__ . "/../vendor/autoload.php";
-
-Dotenv\Dotenv::createUnsafeImmutable(
-    __DIR__ . "/.."
-)->load();
-
 if (!is_dir(dirname(__DIR__).'/vendor')) {
     throw new LogicException('Dependencies are missing. Try running "composer install".');
 }
@@ -19,6 +13,8 @@ if (!is_file(dirname(__DIR__).'/vendor/autoload_runtime.php')) {
 }
 
 require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
+
+print("dir:". getenv("ABET_PRIVATE_DIR"));
 
 return function (array $context) {
     $kernel = new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);

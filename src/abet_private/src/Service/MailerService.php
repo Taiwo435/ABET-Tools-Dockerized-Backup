@@ -10,10 +10,10 @@ use \Symfony\Component\Mailer\Mailer;
 use \Symfony\Component\Mailer\Transport;
 use \Symfony\Component\Mime\Email;
 
-require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
+// require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
 // Permissions is declared inside User.php, so it isn't found by PSR-4
 // autoloading on its own — require it explicitly, same as auth.php.
-require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
+// require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
 
 
 // Acts as a service for stuff
