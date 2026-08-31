@@ -8,6 +8,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Exception;
 use Symfony\Bundle\SecurityBundle\Security;
+use App\Entity\User;
+use App\Entity\Permissions;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class LegacyBridge
 {
@@ -22,10 +25,10 @@ class LegacyBridge
      * If your mapping is complicated, you may want to write unit tests
      * to verify your logic, so this method is public static.
      */
-    public static function getLegacyScript(Request $request, Security $security): string
+    public static function getLegacyScript(Request $request): string
     {
         $requestPathInfo = $request->getPathInfo();
-        LegacyBridge::doAuthorizationChecks($security, $requestPathInfo);
+        LegacyBridge::doAuthorizationChecks($requestPathInfo);
         // note that public files will now NOT be copied into the apache folder. only index and .htaccess will be synced now.
         $legacyRoot = getenv("ABET_PUBLIC_DIR");
 
@@ -201,7 +204,7 @@ class LegacyBridge
      * relying on their existing in-file require_login()/require_role()
      * checks until their required roles are confirmed).
      */
-    private static function doAuthorizationChecks(Security $security, string $requestPathInfo): void
+    private static function doAuthorizationChecks(string $requestPathInfo): void
     {
         $publicPrefixes = [
             '/',
@@ -211,13 +214,6 @@ class LegacyBridge
             '/logout',
             '/auth/login.php',
             '/auth/register.php',
-            // Removed: forgot/reset password now handled by
-            // PasswordResetController at /forgot-password and
-            // /reset-password (#132)
-	    //'/auth/forgot_password.php',
-            //'/auth/forgot_password_sent.php',
-            //'/auth/reset_password.php',
-            //'/auth/reset_password_success.php',
             '/verify-email',
             '/resend-verification',
         ];
@@ -230,30 +226,25 @@ class LegacyBridge
             }
         }
 
-        $roleMap = [
-            '/account/'            => null,
-            '/faculty-form/'       => 'ROLE_FACULTY_FORM',
-            '/coordinator-form/'   => 'ROLE_COORDINATOR_FORM',
-            '/AssignmentsGrades/'  => 'ROLE_ASSIGNMENTS_GRADES',
-  	    // Removed: /report-generator/ now handled by ReportGeneratorController (#132)
-	    //'/report-generator/'   => 'ROLE_REPORTGEN',
-        ];
+        // this does NOT work! It will automatically reject pepole, even if they have the permission
+        // $roleMap = [
+        //     '/account/'            => null,
 
-        foreach ($roleMap as $prefix => $role) {
-            if (!str_starts_with($requestPathInfo, $prefix)) {
-                continue;
-            }
+        //     // '/faculty-form/'       => 'ROLE_FACULTY_FORM',
+        //     #'/coordinator-form/'   => 'ROLE_COORDINATOR_FORM',
+        //     // '/coordinator-form/'   => 1,
+        //     '/faculty-form/'       => Permissions::ROLE_FACULTY_FORM,
+        //     // '/AssignmentsGrades/'  => 'ROLE_ASSIGNMENTS_GRADES',
+  	    // // Removed: /report-generator/ now handled by ReportGeneratorController (#132)
+	    // //'/report-generator/'   => 'ROLE_REPORTGEN',
+        // ];
 
-            if (!$security->getUser()) {
-                throw new AccessDeniedHttpException('Authentication required.');
-            }
-
-            if ($role !== null && !$security->isGranted($role)) {
-                throw new AccessDeniedHttpException("Missing required role: {$role}");
-            }
-
-            return;
-        }
+        // foreach ($roleMap as $prefix => $role) {
+        //     if (!str_starts_with($requestPathInfo, $prefix)) {
+        //         continue;
+        //     }
+        //     return;
+        // }
     }
 
     /**
@@ -289,9 +280,9 @@ class LegacyBridge
         }
     }
 
-    public static function handleRequest(Request $request, Response $response, string $publicDirectory, Security $security): void
+    public static function handleRequest(Request $request, Response $response, string $publicDirectory): void
     {
-        $legacyScriptFilename = LegacyBridge::getLegacyScript($request, $security);
+        $legacyScriptFilename = LegacyBridge::getLegacyScript($request);
 
         // Possibly (re-)set some env vars (e.g. to handle forms
         // posting to PHP_SELF):
