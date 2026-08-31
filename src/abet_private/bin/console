@@ -4,6 +4,12 @@
 use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
+require_once __DIR__ . "/../vendor/autoload.php";
+
+Dotenv\Dotenv::createUnsafeImmutable(
+    __DIR__ . "/.."
+)->load();
+
 if (!is_dir(dirname(__DIR__).'/vendor')) {
     throw new LogicException('Dependencies are missing. Try running "composer install".');
 }

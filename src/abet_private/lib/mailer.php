@@ -1,4 +1,6 @@
 <?php
+// DO NOT IMPORT THIS DIRECTLY!!!!
+// Use it as a SERVICE!!! 
 declare(strict_types=1);
 
 require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
