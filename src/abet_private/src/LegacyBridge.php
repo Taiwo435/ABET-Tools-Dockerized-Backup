@@ -280,7 +280,7 @@ class LegacyBridge
         }
     }
 
-    public static function handleRequest(Request $request, Response $response, string $publicDirectory): void
+    public static function handleRequest(Request $request, Response $response, Kernel $kernel): void
     {
         $legacyScriptFilename = LegacyBridge::getLegacyScript($request);
 
