@@ -13,7 +13,7 @@ function db(): PDO
         return $pdo;
     }
 
-    $dsn = 'mysql:host=' . getenv('MYSQL_HOSTNAME') . ';dbname=' . getenv('MYSQL_DATABASE') . ';charset=utf8mb4';
+    $dsn = 'mysql:host=' . "127.0.0.1" . ';dbname=' . getenv('MYSQL_DATABASE') . ';charset=utf8mb4';
 
     $pdo = new PDO($dsn, getenv('MYSQL_USER'), getenv('MYSQL_PASS'), [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

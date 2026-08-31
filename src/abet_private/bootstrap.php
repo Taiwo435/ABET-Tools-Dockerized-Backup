@@ -46,6 +46,10 @@ class Services {
             'driver' => 'pdo_mysql',
         ];
 
+        if (abetEnv("APP_ENV") != 'test') {
+            $connectionParams['host'] = '127.0.0.1';
+        }
+
         return DriverManager::getConnection($connectionParams);
     }
 
@@ -65,6 +69,10 @@ class Services {
                 'host' => abetEnv('MYSQL_HOSTNAME', '127.0.0.1'),
                 'driver' => 'pdo_mysql',
             ];
+
+            if (abetEnv("APP_ENV") != 'test') {
+                $connectionParams['host'] = '127.0.0.1';
+            }
 
             echo ''. json_encode($connectionParams) .'';
 
