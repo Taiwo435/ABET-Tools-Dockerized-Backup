@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
-require_once getenv('ABET_PRIVATE_DIR') . '/vendor/autoload.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
+
+use Symfony\Component\HttpFoundation\Session\Session;
+use App\Entity\User;
 
 /**
  * Auth/session helpers

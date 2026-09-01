@@ -47,9 +47,10 @@ class Services {
         ];
 
         // only if trying to migrate
-        if (abetEnv("APP_ENV") != 'test') {
+        if ($_SERVER['APP_ENV'] != 'test') {
             $connectionParams['host'] = '127.0.0.1';
         }
+
 
         return DriverManager::getConnection($connectionParams);
     }
@@ -71,7 +72,7 @@ class Services {
                 'driver' => 'pdo_mysql',
             ];
 
-            if (abetEnv("APP_ENV") != 'test') {
+            if ($_SERVER['APP_ENV'] != 'test') {
                 $connectionParams['host'] = '127.0.0.1';
             }
 

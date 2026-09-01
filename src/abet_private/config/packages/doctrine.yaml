@@ -3,6 +3,7 @@ doctrine:
         user: '%env(MYSQL_USER)%'
         password: '%env(MYSQL_PASS)%'
         host: '%env(MYSQL_HOSTNAME)%' # when dev
+        # host: '127.0.0.1' # uncomment when you want to use composer console
         port: '%env(MYSQL_PORT)%'
         dbname: '%env(MYSQL_DATABASE)%'
         driver: pdo_mysql # Or your specific driver like pdo_pgsql
