@@ -118,6 +118,7 @@ final class CoordinatorFormController extends AbstractController
         ////////////////////////////////////////////////////
         // IN TEMPLATE 
         ////////////////////////////////////////////////////
+        // $editLink = $formBasePath . "/edit/?page=" . urlencode((string)$s["pageNumber"]);
 
         ////////////////////////////////////////////////////
         // FIN
@@ -134,6 +135,7 @@ final class CoordinatorFormController extends AbstractController
 
             "overallPercent" => $overallPercent
 
+            "editLink" => $editLink
         ]);
     }
 }
