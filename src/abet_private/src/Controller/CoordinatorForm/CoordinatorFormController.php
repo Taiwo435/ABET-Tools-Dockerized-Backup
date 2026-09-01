@@ -133,9 +133,9 @@ final class CoordinatorFormController extends AbstractController
             'completeMessage' => 'The form is complete. If necessary, you can edit your responses. Otherwise, you are done with this form and can safely navigate away from this page.',
             'incompleteMessage' => 'Your form is not yet complete. Click "Start / Continue" or select a page to fill out the remaining sections.',
 
-            "overallPercent" => $overallPercent
+            "overallPercent" => $overallPercent,
 
-            "editLink" => $editLink
+            "sections" => $sections,
         ]);
     }
 }

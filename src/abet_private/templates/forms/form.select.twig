@@ -91,7 +91,7 @@
 
         <hr class="section-divider">
 
-        <?php foreach ($sections as $s): ?>
+        {# <?php foreach ($sections as $s): ?>
         <?php
             $statusClass = "notstarted";
             if ($s["status"] === "Completed") $statusClass = "completed";
@@ -114,7 +114,33 @@
             </div>
             </div>
         </a>
-        <?php endforeach; ?>
+        <?php endforeach; ?> #}
+        {% for section in sections %}
+            {% set statusClass = 'notstarted' %}
+
+            {% if section.status == 'Completed' %}
+                {% set statusClass = 'completed' %}
+            {% elseif section.status == 'In Progress' %}
+                {% set statusClass = 'progress' %}
+            {% endif %}
+
+            <a class="page-card-link" href="{{ formBasePath }}/edit/?page={{ section.pageNumber|url_encode }}">
+                <div class="form-group page-card">
+                    <div class="status-row">
+                        <div>
+                            <label class="form-label">{{ section.title }}</label>
+                            <div class="small-muted">
+                                Go to page &rarr;
+                            </div>
+                        </div>
+                        <div class="status-pill {{ statusClass }}">
+                            {{ section.status }}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+
 
         <div class="right-allign-div">
         <button class="form-button form-button-save"
