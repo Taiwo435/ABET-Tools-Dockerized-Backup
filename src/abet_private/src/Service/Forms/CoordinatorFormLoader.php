@@ -5,12 +5,10 @@ use Symfony\Component\BrowserKit\Response;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use App\Entity\User;
-use Dba\Connection;
 
 class CoordinatorFormLoader
 {
     public function __construct(
-        private Connection $connection,
     ) {}
 
 function getReportSections(\PDO $pdo, int $program_id): array {
@@ -645,4 +643,54 @@ function loadFormData($pageName) {
 
     return $data;
 }
+
+////////////////////////////////////////////////////
+// HELPER FUNCTIONS WITHIN THE CONTROLLER PHP GUY
+// NO SPACE I GUESS
+////////////////////////////////////////////////////
+
+
+public function isEmptyValue($v): bool {
+    if ($v === null) return true;
+    if (is_string($v)) return trim($v) === "";
+    if (is_array($v)) return count($v) === 0;
+    return false;
+}
+
+public function decodeGridRows($v): array {
+    if (is_array($v)) return $v;
+    if (is_string($v) && trim($v) !== "") {
+        $decoded = json_decode($v, true);
+        if (is_array($decoded)) return $decoded;
+    }
+    return [];
+}
+
+function loadValues(string $pageName): array {
+    $data = $this->loadFormData($pageName);
+    return is_array($data) ? $data : [];
+}
+
+function normalizeFields(array $formJson): array {
+    $fields = $formJson["fields"] ?? [];
+    $out = [];
+    foreach ($fields as $field) {
+        $type = $field["type"] ?? "";
+        if ($type === "section-break" || $type === "section-label") continue;
+
+        $name = $field["name"] ?? null;
+        if (!$name) continue;
+
+        $out[] = [
+            "name" => $name,
+            "type" => $type,
+            "label" => $field["label"] ?? $name,
+            "required" => (bool)($field["required"] ?? false),
+        ];
+    }
+    return $out;
+}
+
+
+    
 }

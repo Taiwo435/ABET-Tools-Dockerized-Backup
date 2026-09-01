@@ -53,16 +53,16 @@
     <div class="form-holder">
 
         <div class="top-bar">
-        <h2 class="form-title"><?php echo htmlspecialchars($formDisplayTitle); ?></h2>
+        <h2 class="form-title">{{ formDisplayTitle }}</h2>
         <div class="page-select-actions">
             <button class="form-button form-button-save-continue"
                     type="button"
-                    onclick="window.location.assign('<?php echo htmlspecialchars($formBasePath . '/review'); ?>')">
+                    onclick="window.location.assign('{{formBasePath ~ "/review"}}')">
             Review All Information
             </button>
             <button class="form-button form-button-save"
                     type="button"
-                    onclick="window.location.assign('<?php echo htmlspecialchars($formBasePath . '/edit/?page=1'); ?>')">
+                    onclick="window.location.assign('{{formBasePath ~ "//edit/?page=1"}}')">
             Start / Continue
             </button>
         </div>
@@ -84,7 +84,7 @@
             </div>
         </div>
         <div class="progress-bar">
-            <div style="width: <?php echo htmlspecialchars((string)$overallPercent); ?>%"></div>
+            <div style="width: {{ overallPercent }} "></div>
         </div>
         </div>
 
