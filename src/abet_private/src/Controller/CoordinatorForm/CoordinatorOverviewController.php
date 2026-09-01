@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-final class CoordinatorFormController extends AbstractController
+final class CoordinatorOverviewController extends AbstractController
 {
     // public function __construct(
     //     private Connection $connection,
@@ -33,7 +33,7 @@ final class CoordinatorFormController extends AbstractController
     ////////////////////////////////////////////////////
     
     $formName = "coordinator-form";
-    // $formDisplayTitle = "Coordinator Form";
+    $formDisplayTitle = "Coordinator Form";
     $pageTitle = "Coordinator Form";
     $formBasePath = "/coordinator-form";
     $formCssPath = "/assets/css/faculty-form.css";
@@ -125,13 +125,13 @@ final class CoordinatorFormController extends AbstractController
         ////////////////////////////////////////////////////
 
         return $this->render('forms/form.select.twig',[
-            'formName' => 'coordinator-form',
-            'formDisplayTitle' => 'Coordinator Form',
-            'pageTitle' => 'Coordinator Form',
-            'formBasePath' => '/coordinator-form',
-            'formCssPath' => '/assets/css/faculty-form.css',
-            'completeMessage' => 'The form is complete. If necessary, you can edit your responses. Otherwise, you are done with this form and can safely navigate away from this page.',
-            'incompleteMessage' => 'Your form is not yet complete. Click "Start / Continue" or select a page to fill out the remaining sections.',
+            'formName' => $formName,
+            'formDisplayTitle' => $formDisplayTitle,
+            'pageTitle' => $pageTitle,
+            'formBasePath' => $formBasePath,
+            'formCssPath' => $formCssPath,
+            'completeMessage' => $completeMessage,
+            'incompleteMessage' => $incompleteMessage,
 
             "overallPercent" => $overallPercent,
 

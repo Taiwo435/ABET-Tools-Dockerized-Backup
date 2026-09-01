@@ -17,14 +17,9 @@ use Symfony\Component\Routing\Requirement\Requirement;
 
 final class CoordinatorFillController extends AbstractController
 {
-    // public function __construct(
-    //     private Connection $connection,
-    // ) {
-    // }
-
-
     #[Route('/tool/coordinator-form/edit/{page}', name: 'app_coordinator_form_edit', methods: ['GET'], requirements: ['page' => Requirement::DIGITS])]
     public function getForm(
+        Request $request,
         #[CurrentUser] User $user,
         CoordinatorFormLoader $loader,
         FormFunctions $helper,
@@ -35,12 +30,65 @@ final class CoordinatorFillController extends AbstractController
         // IN TEMPLATE 
         ////////////////////////////////////////////////////
 
+
+        $pageNumber = $page;
+        $formName = "coordinator-form";
+
+        //print_r(getAllPageNames($formName));
+
+        // Check if the page number is a valid integer
+        if (filter_var($pageNumber, FILTER_VALIDATE_INT) === false) {
+            header('Location: /coordinator-form/edit?page=1');
+        }
+
+        $pageNumber = (int) $pageNumber;
+
+        // If the form is past the last page, it will redirect to the review page
+        // if ($pageNumber > getPageCount($formName)) {
+        //     header('Location: /coordinator-form/review');
+        //     die();
+        // }
+
+        // Check if the page number is within the page count range
+        if ($pageNumber < 1) {
+            header('Location: /coordinator-form/edit?page=1');
+            die();
+        }
+
+        // Loads the name of the JSON file corresponding to its page order in the index.json file
+        $pageName = $helper->getPageNameFromNumber($formName, $pageNumber);
+
+        $form = $helper->loadFormPage($formName, $pageName);
+
+
+        $old = []; // The JSON data that will be autofilled onto the elements
+        $backendErrorMessage = '';
+
+        $session = $request->getSession();
+
+        if (!empty($session->get('coordinator_form_error_flag')) && $session->get('coordinator_form_error_flag') === true) {
+            $session->set('coordinator_form_error_flag', false);
+            $old = $session->get('coordinator_form_old');
+            $backendErrorMessage = $session->get('coordinator_form_error_message');
+        } else {
+            $loadedData = $loader->loadFormData($pageName);
+            $old = is_array($loadedData) ? $loadedData : [];
+        }
+
+
         ////////////////////////////////////////////////////
         // FIN
         ////////////////////////////////////////////////////
 
         return $this->render('forms/form.fillout.twig',[
-
         ]);
     }
+
+    #[Route('/tool/coordinator-form/submit/{page}', name: 'app_coordinator_form_edit', requirements: ['page' => Requirement::DIGITS])]
+    public function submitForm(
+        #[CurrentUser] User $user,
+        CoordinatorFormLoader $loader,
+        FormFunctions $helper,
+    )
+    {}
 }
