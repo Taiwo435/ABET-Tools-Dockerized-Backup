@@ -1,6 +1,0 @@
-{# require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php'; #}
-{% extends 'base.html.twig' %}
-
-{% block body %}
-test
-{% endblock %}
