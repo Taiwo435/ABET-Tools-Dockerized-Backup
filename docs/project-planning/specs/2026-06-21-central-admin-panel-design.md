@@ -1,4 +1,4 @@
-# Central Admin Panel Design
+# Central Administration Panel Design
 
 ## Scope
 

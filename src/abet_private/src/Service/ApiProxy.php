@@ -78,6 +78,19 @@ class ApiProxy
         return $response;
     }
 
+    /** Return the assignments for one Canvas course without exposing its token. */
+    public function getAssignments(string $token, string $courseId): ResponseInterface {
+        $client = HttpClient::create();
+        $url = $this->api_base(API::Extraction)
+            . '/canvas/courses/' . rawurlencode($courseId) . '/assignments';
+
+        return $client->request('GET', $url, [
+            'headers' => [
+                'canvas-access-token' => $token,
+            ],
+        ]);
+    }
+
     /**
      * Returns the extraction jobs that have been instantiated.
      * @param User $user The user who submitted the request

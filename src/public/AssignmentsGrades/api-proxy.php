@@ -113,6 +113,7 @@ $allowed_actions = [
     'check-job-history',
     'run-formatting',
     'fetch-classes-from-semester',
+    'fetch-assignments',
     'store-class-data-from-grid'
 ];
 if (!in_array($action, $allowed_actions, true)) {
@@ -176,6 +177,34 @@ if ($action === 'store-class-data-from-grid')
     $_SESSION['class_data'] = json_decode(post_str('selected_courses_data'), true);
     json_response(['success' => true]);
 } 
+
+if ($action === 'fetch-assignments') {
+    $courseId = post_str('course_id');
+    $token = $_SESSION['canvas_token'] ?? '';
+
+    if ($token === '') {
+        json_response(['success' => false, 'message' => 'Canvas token is missing or expired. Please reconnect.'], 401);
+    }
+    if ($error = validate_course_id($courseId, 'Course ID')) {
+        json_response(['success' => false, 'message' => $error], 400);
+    }
+
+    $url = api_base('extraction') . '/canvas/courses/' . rawurlencode($courseId) . '/assignments';
+    $result = curl_api($url, 'GET', $token);
+
+    if ($result['error']) {
+        json_response(['success' => false, 'message' => 'The assignments service is unavailable. Please try again.'], 502);
+    }
+    if ($result['status'] === 401 || $result['status'] === 403) {
+        json_response(['success' => false, 'message' => 'Canvas token is invalid or expired. Please reconnect.'], 401);
+    }
+    if ($result['status'] < 200 || $result['status'] >= 300) {
+        $detail = $result['body']['detail'] ?? 'Canvas could not load assignments.';
+        json_response(['success' => false, 'message' => $detail], $result['status']);
+    }
+
+    json_response(['success' => true, 'assignments' => $result['body'] ?? []]);
+}
 
 if ($action === 'verify-token'){
 

@@ -325,7 +325,7 @@ function e(string $v): string {
 </head>
 <body>
   <header class="topbar">
-    <a class="back-btn" href="/index.php">
+    <a class="back-btn" href="/home">
         <span>&larr;</span> Back to Home
     </a>
 
@@ -337,7 +337,7 @@ function e(string $v): string {
 
       <div class="menu" id="profileMenu">
         <div class="menu-user"><?php echo e($displayName); ?></div>
-        <a href="/index.php">Dashboard</a>
+        <a href="/home">Dashboard</a>
         <a href="/logout">Sign out</a>
       </div>
     </div>

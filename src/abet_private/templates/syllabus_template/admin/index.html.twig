@@ -52,6 +52,9 @@
     </section>
 
     <main class="syllabus-page">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+            <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
+        </div>
         <div class="syllabus-context-card">
             <h2>Shared templates are reusable baselines</h2>
             <p>Publishing here updates the common-course template faculty can use. Faculty offering syllabi are reviewed separately and never replace this baseline.</p>
@@ -161,16 +164,21 @@
                         </label>
                     </form>
                     <div class="syllabus-toolbar__actions">
-                        <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
-                        <a href="{{ path('app_admin_syllabus_templates_new', {program: readinessProgram.id}) }}" class="button-primary">Create Shared Template</a>
+                        {% if readinessProgram %}
+                            <a href="{{ path('app_admin_syllabus_templates_new', {program: readinessProgram.id}) }}" class="button-primary">Create Shared Template</a>
+                        {% endif %}
                     </div>
                 </div>
 
                 {% if templates is empty %}
                     <div class="empty-state">
                         <h2>No matching templates</h2>
-                        <p>No shared templates in this program match the selected publication filter.</p>
-                        <a href="{{ path('app_admin_syllabus_templates_new', {program: readinessProgram.id}) }}" class="button-primary">Create a shared template</a>
+                        {% if readinessProgram %}
+                            <p>No shared templates in this program match the selected publication filter.</p>
+                            <a href="{{ path('app_admin_syllabus_templates_new', {program: readinessProgram.id}) }}" class="button-primary">Create a shared template</a>
+                        {% else %}
+                            <p>Create a program before adding a shared syllabus template.</p>
+                        {% endif %}
                     </div>
                 {% else %}
                     <div class="syllabus-table-wrap">
@@ -220,9 +228,6 @@
             <section class="workspace-panel" aria-labelledby="offerings-view-heading">
                 <div class="workspace-panel__header">
                     <div><h2 id="offerings-view-heading">Course offerings &amp; review</h2><p>Review frozen faculty submissions and monitor every term-specific offering in this program.</p></div>
-                    <div class="syllabus-toolbar__actions">
-                        <a href="{{ path('app_admin_panel') }}" class="button-secondary">Back to Admin Panel</a>
-                    </div>
                 </div>
 
                 <div id="pending-review" class="workspace-subsection">

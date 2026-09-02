@@ -1,7 +1,5 @@
 # Central Admin Panel Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Make the existing Symfony Central Admin Panel available to authorized administrators without exposing unfinished links.
 
 **Architecture:** A focused Symfony controller owns the `/admin` endpoint and relies on the existing security role system. The existing Twig template is corrected to use the current assignments-and-grades route and to render User Management as disabled until Taiga task `#13` is implemented.
