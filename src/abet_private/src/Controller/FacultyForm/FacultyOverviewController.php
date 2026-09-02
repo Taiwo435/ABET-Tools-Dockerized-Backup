@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Controller\CoordinatorForm;
+namespace App\Controller\FacultyForm;
 
 use App\Entity\User;
-use App\Service\Forms\CoordinatorFormLoader;
+use App\Service\Forms\FacultyFormLoader;
 use App\Service\Forms\FormFunctions;
 use Dba\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-final class CoordinatorOverviewController extends AbstractController
+final class FacultyOverviewController extends AbstractController
 {
     // public function __construct(
     //     private Connection $connection,
@@ -22,20 +22,21 @@ final class CoordinatorOverviewController extends AbstractController
     // }
 
 
-    #[Route('/tool/coordinator-form', name: 'app_coordinator_form', methods: ['GET'])]
+    #[IsGranted('ROLE_FACULTY_FORM')]
+    #[Route('/tool/faculty-form', name: 'app_faculty_form', methods: ['GET'])]
     public function getForm(
         #[CurrentUser] User $user,
-        CoordinatorFormLoader $loader,
+        FacultyFormLoader $loader,
         FormFunctions $helper,
     ) {
     ////////////////////////////////////////////////////
     // INDEX PHP
     ////////////////////////////////////////////////////
-    
-    $formName = "coordinator-form";
-    $formDisplayTitle = "Coordinator Form";
-    $pageTitle = "Coordinator Form";
-    $formBasePath = "/tool/coordinator-form";
+
+    $formName = "faculty-form";
+    $formDisplayTitle = "Faculty Form";
+    $pageTitle = "Faculty Form";
+    $formBasePath = "/faculty-form";
     $formCssPath = "/assets/css/faculty-form.css";
 
     $completeMessage = "The form is complete. If necessary, you can edit your responses. Otherwise, you are done with this form and can safely navigate away from this page.";
@@ -56,7 +57,7 @@ final class CoordinatorOverviewController extends AbstractController
         $title = $form["title"] ?? $pageName;
 
         $fields = $helper->normalizeFields($form);
-        $saved = $loader->loadValues($pageName);
+        $saved = $loader->loadFormData($pageName);
 
         $reqCount = 0;
         $reqFilled = 0;
@@ -115,9 +116,9 @@ final class CoordinatorOverviewController extends AbstractController
 
         $overallPercent = ($totalForms > 0) ? (int)floor(($totalCompleted / $totalForms) * 100) : 0;
 
-        ////////////////////////////////////////////////////
+        //////////////////////////////////////////////////
         // IN TEMPLATE 
-        ////////////////////////////////////////////////////
+        //////////////////////////////////////////////////
         // $editLink = $formBasePath . "/edit/?page=" . urlencode((string)$s["pageNumber"]);
 
         ////////////////////////////////////////////////////

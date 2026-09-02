@@ -162,4 +162,32 @@ class FormFunctions
         return [];
     }
 
+    public function isEmptyValue($v): bool {
+        if ($v === null) return true;
+        if (is_string($v)) return trim($v) === "";
+        if (is_array($v)) return count($v) === 0;
+        return false;
+    }
+
+    function normalizeFields(array $formJson): array {
+        $fields = $formJson["fields"] ?? [];
+        $out = [];
+        foreach ($fields as $field) {
+            $type = $field["type"] ?? "";
+            if ($type === "section-break" || $type === "section-label") continue;
+
+            $name = $field["name"] ?? null;
+            if (!$name) continue;
+
+            $out[] = [
+                "name" => $name,
+                "type" => $type,
+                "label" => $field["label"] ?? $name,
+                "required" => (bool)($field["required"] ?? false),
+            ];
+        }
+        return $out;
+    }
+
+
 }
