@@ -100,3 +100,45 @@ function send_permission_approved_email(string $toEmail, array $grantedPermissio
     $mailer = new Mailer($transport);
     $mailer->send($email);
 }
+
+
+/**
+ * Sends the password reset email containing the reset link.
+ * Uses the same null-transport-logs-to-file fallback as
+ * send_verification_email(). Matches the signature that
+ * reset_password_lib.php's rp_send_password_reset_email() expects.
+ */
+function send_password_reset_email(string $toEmail, string $subject, string $htmlBody, string $textBody): bool {
+    // $_ENV isn't populated from real container env vars here (php.ini's
+    // variables_order lacks "E"), so $_ENV['MAILER_DSN'] is always unset
+    // even when the container genuinely has MAILER_DSN set — getenv() is
+    // the one that actually sees it.
+    $dsn = getenv('MAILER_DSN') ?: ($_ENV['MAILER_DSN'] ?? 'null://null');
+
+    $email = (new Email())
+        ->from('no-reply@asu.edu')
+        ->to($toEmail)
+        ->subject($subject)
+        ->text($textBody)
+        ->html($htmlBody);
+
+    if ($dsn === 'null://null' || $dsn === '') {
+        $logDir = getenv('ABET_PRIVATE_DIR') . '/var/log';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+        $logLine = sprintf(
+            "[%s] Password reset email for %s: %s\n",
+            date('c'),
+            $toEmail,
+            $subject
+        );
+        file_put_contents($logDir . '/mail.log', $logLine, FILE_APPEND);
+        return false;
+    }
+
+    $transport = Transport::fromDsn($dsn);
+    $mailer = new Mailer($transport);
+    $mailer->send($email);
+    return true;
+}
