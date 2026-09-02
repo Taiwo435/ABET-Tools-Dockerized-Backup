@@ -31,16 +31,27 @@ final class CoordinatorReviewController extends AbstractController
         int $page
     ) {
 
+        $formName = "coordinator-form";
+        $formBasePath = "/coordinator-form";
+        $reviewTitle = "Coordinator Form Review";
+        $reviewCssPath = "/assets/css/faculty-form-review.css";
+
         ////////////////////////////////////////////////////
         // IN TEMPLATE 
         ////////////////////////////////////////////////////
+
+        $pageNames = $helper->getAllPageNames($formName);
 
         ////////////////////////////////////////////////////
         // FIN
         ////////////////////////////////////////////////////
 
-        return $this->render('forms/form.fillout.twig',[
-
+        return $this->render('forms/form.review.twig',[
+            'formName' => $formName,
+            'formBasePath' => $formBasePath,
+            'reviewTitle' => $reviewTitle,
+            'reviewCssPath' => $reviewCssPath,
+            'pageNames' => $pageNames
         ]);
     }
 }

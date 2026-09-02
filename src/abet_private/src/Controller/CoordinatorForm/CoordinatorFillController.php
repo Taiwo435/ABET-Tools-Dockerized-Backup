@@ -4,6 +4,7 @@ namespace App\Controller\CoordinatorForm;
 
 use App\Entity\User;
 use App\Service\Forms\CoordinatorFormLoader;
+use App\Service\Forms\CoordinatorFormSaver;
 use App\Service\Forms\FormFunctions;
 use Dba\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -87,11 +88,22 @@ final class CoordinatorFillController extends AbstractController
         ]);
     }
 
-    #[Route('/tool/coordinator-form/submit/{page}', name: 'app_coordinator_form_edit', requirements: ['page' => Requirement::DIGITS])]
+    #[IsGranted("ROLE_USER")]
+    #[Route('/tool/coordinator-form/submit/{page}', 
+    name: 'app_coordinator_form_edit', 
+    requirements: ['page' => Requirement::DIGITS],
+    methods: ['POST'],
+    )]
     public function submitForm(
         #[CurrentUser] User $user,
-        CoordinatorFormLoader $loader,
+        CoordinatorFormSaver $saver,
         FormFunctions $helper,
+        Request $request,
     )
-    {}
+    {
+        $saver->handle_save();
+        return $this->redirectToRoute('app_coordinator_form_edit', [
+            'page' => $request->request->get('next_page_number'),
+        ]);
+    }
 }

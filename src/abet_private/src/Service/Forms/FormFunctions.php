@@ -138,4 +138,13 @@ class FormFunctions
         return count($form['pages']);
     }
 
+
+    # in form_functions
+    function formatReviewValue($v): string {
+        if ($v === null) return "";
+        if (is_bool($v)) return $v ? "Yes" : "No";
+        if (is_numeric($v)) return (string)$v;
+        if (is_string($v)) return $v;
+        return "";
+    }
 }

@@ -1,47 +1,20 @@
-<?php
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/auth-handler.php';
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/form_functions.php';
+{% extends 'base.html.twig' %}
 
-function decodeGridRows($v): array {
-    if (is_array($v)) return $v;
-    if (is_string($v) && trim($v) !== "") {
-        $decoded = json_decode($v, true);
-        if (is_array($decoded)) return $decoded;
-    }
-    return [];
-}
 
-# in form_functions
-function formatReviewValue($v): string {
-    if ($v === null) return "";
-    if (is_bool($v)) return $v ? "Yes" : "No";
-    if (is_numeric($v)) return (string)$v;
-    if (is_string($v)) return $v;
-    return "";
-}
-
-# in loader
-function loadValues(string $pageName): array {
-    $data = loadFormData($pageName);
-    return is_array($data) ? $data : [];
-}
-
-$pageNames = getAllPageNames($formName);
-
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
-?>
+{% block body %}
+{% autoescape 'html' %}
 
 <link rel="stylesheet" href="/assets/css/form.css">
-<link rel="stylesheet" href="<?php echo htmlspecialchars($reviewCssPath); ?>">
+<link rel="stylesheet" href="{{ reviewCssPath }}">
 
 <div class="center-div">
   <div class="form-holder review-form-holder">
     <div class="top-bar">
-      <h2 class="form-title"><?php echo htmlspecialchars($reviewTitle); ?></h2>
+      <h2 class="form-title">{{ revviewTitle }}</h2>
       <div class="page-select-actions">
         <button class="form-button form-button-return"
                 type="button"
-                onclick="window.location.assign('<?php echo htmlspecialchars($formBasePath); ?>')">
+                onclick="window.location.assign('{{ formBasePath }}')">
           Return to Page Select
         </button>
       </div>
@@ -158,14 +131,12 @@ require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-header.php';
     <div style="text-align: right;">
       <button class="form-button form-button-return"
               type="button"
-              onclick="window.location.assign('<?php echo htmlspecialchars($formBasePath); ?>')">
+              onclick="window.location.assign('{{ formBasePath }}')">
         Return to Page Select
       </button>
     </div>
 
   </div>
 </div>
-
-<?php
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/templates/primary-footer.php';
-?>
+{% endautoescape %}
+{% endblock %}

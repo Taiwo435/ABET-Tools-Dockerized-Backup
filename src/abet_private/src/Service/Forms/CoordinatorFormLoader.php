@@ -5,11 +5,17 @@ use Symfony\Component\BrowserKit\Response;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use App\Entity\User;
+use App\Service\LegacyDB;
 
 class CoordinatorFormLoader
 {
+    public LegacyDB $db;
+
     public function __construct(
-    ) {}
+        LegacyDB $db_instance,
+    ) {
+        $this->db = $db_instance;
+    }
 
 function getReportSections(\PDO $pdo, int $program_id): array {
     $stmt = $pdo->prepare("
@@ -166,7 +172,7 @@ function loadFormData($pageName) {
         return null;
     }
 
-    $pdo = db();
+    $pdo = $this->db->db();
     $program_id = (int) $_SESSION['program_id'];
     $pageName = normalizePageName($pageName);
 
