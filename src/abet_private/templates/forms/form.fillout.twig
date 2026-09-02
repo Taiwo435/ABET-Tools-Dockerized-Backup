@@ -9,166 +9,151 @@
     <div class="form-holder">
 
     <div class="top-bar">
-        <h2 class="form-title"><?= htmlspecialchars($form['title']) ?></h2>
+        <h2 class="form-title">{{ form.title }}</h2>
         <button class="form-button form-button-return" onclick="returnToPageSelect()">Return to Page Select (Without Saving)</button>
     </div>
 
-    <?php if ($backendErrorMessage !== ''): ?>
-        <h2 class="form-error">Warning. This page was not saved. The server gave the following message:<br><?= $backendErrorMessage ?></h2>
-    <?php endif ?>
+    {% if backendErrorMessage != '' %}
+        <h2 class="form-error">
+            Warning. This page was not saved. The server gave the following message:<br>
+            {{ backendErrorMessage }}
+        </h2>
+    {% endif %}
+
 
     <form action="<?= htmlspecialchars($form['action']) ?>" 
         method="<?= htmlspecialchars($form['method']) ?>" novalidate
         data-name="<?= $form['name'] ?>"
         data-form-group="<?= htmlspecialchars($formName) ?>">
 
-        <?php foreach ($form['fields'] as $field): 
-            $name = array_key_exists('name', $field) ? $field['name'] : '';
-            $type = $field['type'];
-            $raw = $old[$name] ?? '';
-            $value = is_string($raw) ? htmlspecialchars($raw, ENT_QUOTES, 'UTF-8') : '';
-            $error = $errors[$name] ?? '';
-        ?>
 
 
-            <?php if ($type === 'section-break'): ?>
-                <div class="form-section-break"></div>
-                <?php continue; ?>
-            <?php endif ?>
+    {% for field in form.fields %}
+        {% set name = field.name|default('') %}
+        {% set type = field.type %}
+        {% set raw = old[name]|default('') %}
+        {% set value = raw is string ? raw : '' %}
+        {% set error = errors[name]|default('') %}
+
+        {% if type == 'section-break' %}
+            <div class="form-section-break"></div>
+            {% continue %}
+        {% endif %}
+
+        <div class="form-group" id="{{ name }}">
+
+            {% if field.label is not empty %}
+                <label class="form-label
+                    {% if type == 'section-label' %}form-section-label{% endif %}
+                    {% if type == 'section-label-small' %}form-section-label-small{% endif %}
+                ">
+                    <div>{{ field.label }}</div>
+                    &nbsp;
+                    <div class="form-required-star">
+                        {% if field.required is defined %}*{% endif %}
+                    </div>
+                </label>
+            {% endif %}
+
+            {% if field.description is not empty %}
+                <p class="form-field-description">
+                    {{ field.description }}
+                </p>
+            {% endif %}
 
 
-            <div class="form-group" id="<?= $name ?>">
-                <?php if (!empty($field['label'])): ?>
-                    <label 
-                        class="form-label 
-                            <?php if ($type==="section-label") {echo "form-section-label";}?>
-                            <?php if ($type==="section-label-small") {echo "form-section-label-small";}?>"
+            {% if type == 'select' %}
+
+                <select class="form-select" name="{{ name }}">
+                    <option value="">Select...</option>
+
+                    {% for key, option in field.options %}
+                        <option value="{{ key }}" {% if value == key %}selected{% endif %}>
+                            {{ option }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+
+            {% elseif type == 'expandable-grid' %}
+
+                {% set columnCount = field.columns|length %}
+
+                <div
+                    class="expandable-grid"
+                    data-max-rows="{{ field.maxRows }}"
+                    data-allow-incomplete-rows="{{ field.allowIncompleteRows|default(false) }}"
+                >
+                    <div
+                        class="expandable-grid-container"
+                        name="{{ name }}"
+                        data-old-values="{{ raw|json_encode }}"
+                        data-old-values2="{{ value }}"
+                        style="grid-template-columns: repeat({{ columnCount }}, 1fr) 0.25fr;"
                     >
+                        <div class="expandable-grid-row expandable-grid-label-row">
 
-                        <div><?= htmlspecialchars($field['label']) ?></div>
-                        &nbsp;
-                        <div class="form-required-star"><?php if (array_key_exists('required', $field)) { echo ("      *"); } ?></div>
-                    </label>
-                <?php endif ?>
+                            {% for column in field.columns %}
+                                <label
+                                    class="expandable-grid-label"
+                                    data-type="{{ column.type }}"
+                                    data-name="{{ column.name }}"
+                                    data-numerical="{{ column.numerical|default(false) }}"
+                                    {% if column.options is defined and column.options is not empty %}
+                                        data-option-count="{{ column.options|length }}"
+                                        {% for key, text in column.options %}
+                                            data-option-{{ loop.index0 }}-value="{{ key }}"
+                                            data-option-{{ loop.index0 }}-text="{{ text }}"
+                                        {% endfor %}
+                                    {% endif %}
+                                >
+                                    {{ column.label }}
+                                </label>
+                            {% endfor %}
 
-                
-
-                <?php if (!empty($field["description"])): ?>
-                    <p class="form-field-description">
-                        <?=  htmlspecialchars($field["description"]) ?>
-                    </p>
-                <?php endif; ?>
-
-
-
-                <?php if ($type === 'select'): ?>
-
-                    <select class="form-select" name="<?= $name ?>">
-                        <option value="">Select...</option>
-                        <?php foreach ($field['options'] as $key => $option): ?>
-                            <option value="<?= $key ?>" <?= $value === $key ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($option) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-
-
-                <?php /*
-                expandable-grid element hierarchy:
-                >expandable-grid
-                    >expandable-grid-container
-                        >expandable-grid-label-row
-                            >expandable-grid-label
-                            >expandable-grid-label
-                            ...
-                        >expandable-grid-input-row
-                            >expandable-grid-[element]
-                            >expandable-grid-[element]
-                            ...
-                            >expandable-grid-remove-button
-                        >expandable-grid-input-row
-                            ...
-                        >expandable-grid-input-row
-                            ...
-                        ...
-                    >expandable-grid-add-button
-                    
-                Some information is stored in data-option-* attributes so data can be transfered from
-                php to javascript
-                */?>
-                <?php elseif ($type === 'expandable-grid'): ?>
-                    <?php
-                    $gridOldJson = "";
-                    if (is_array($raw)){
-                        $gridOldJson = json_encode($raw);
-                    } elseif (is_string($raw)){
-                        $gridOldJson = $raw;
-                    }
-                    ?>
-                    <?php $columnCount = count($field['columns']); ?>
-                    
-                    <div class="expandable-grid" data-max-rows="<?= $field['maxRows']?>" 
-                        data-allow-incomplete-rows="<?= array_key_exists('allowIncompleteRows', $field) ? $field['allowIncompleteRows'] : false ?>">
-                        <div class="expandable-grid-container"
-                            name="<?= $name ?>"
-                            data-old-values='<?= htmlspecialchars(json_encode($raw ?? ""), ENT_QUOTES, "UTF-8") ?>'
-                            data-old-values2=<?= json_encode($value) ?>
-                            style="grid-template-columns: repeat(<?= $columnCount ?> , 1fr) 0.25fr;">
-                            <div class="expandable-grid-row expandable-grid-label-row">
-                                <?php foreach ($field['columns'] as $column): ?>
-                                    <label class="expandable-grid-label" 
-                                        data-type="<?= htmlspecialchars($column['type'], ENT_QUOTES, 'UTF-8') ?>"
-                                        data-name="<?= htmlspecialchars($column['name'], ENT_QUOTES, 'UTF-8') ?>"
-                                        data-numerical="<?= array_key_exists('numerical', $column) ? $column['numerical'] : false ?>"
-                                        <?php if (!empty($column['options'])) {
-                                            echo("data-option-count=" . count($column['options']) . " ");
-
-                                            $optionCount = 0;
-                                            foreach ($column['options'] as $key => $text) {
-                                                echo ("data-option-" . $optionCount . "-value='" . $key . "' ");
-                                                echo ("data-option-" . $optionCount . "-text='" . $text . "' ");
-                                                $optionCount++;
-                                            }
-                                        } ?>
-                                        >
-                                        <?= htmlspecialchars($column['label']) ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            <?php //input rows will be added here ?>
                         </div>
-                        <button type="button" class="expandable-grid-add-button"
-                            onclick="addExpandableGridRow(this.parentElement)">Add Row</button>
+
+                        {# input rows will be added here #}
+
                     </div>
 
-
-
-                <?php elseif ($type === 'text'): ?>
-                    <input
-                        class="form-input"
-                        type="<?= htmlspecialchars($type) ?>"
-                        name="<?= $name ?>"
-                        value="<?= $value ?>"
+                    <button
+                        type="button"
+                        class="expandable-grid-add-button"
+                        onclick="addExpandableGridRow(this.parentElement)"
                     >
+                        Add Row
+                    </button>
+                </div>
 
 
+            {% elseif type == 'text' %}
 
-                <?php elseif ($type === 'text-field'): ?>
-                    <textarea 
-                        class="form-text-field" 
-                        name="<?= $name ?>"
-                        ><?= $value ?></textarea>
-                <?php endif; ?>
+                <input
+                    class="form-input"
+                    type="{{ type }}"
+                    name="{{ name }}"
+                    value="{{ value }}"
+                >
 
 
+            {% elseif type == 'text-field' %}
+
+                <textarea
+                    class="form-text-field"
+                    name="{{ name }}"
+                >{{ value }}</textarea>
+
+            {% endif %}
 
 
-                <?php if ($error): ?>
-                    <div class="error" ><?= htmlspecialchars($error) ?></div>
-                <?php endif; ?>
-            </div>
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
 
-        <?php endforeach; ?>
+        </div>
+
+    {% endfor %}
 
         <div class="bottom-buttons">
             <button class="form-button form-button-save" type="button" onclick="saveOnly()">Save Page</button>
@@ -218,12 +203,12 @@
     }
 
     function saveOnly () {
-        currentPage = <?= $_GET['page']; ?>;
+        currentPage = {{ page }};
         submitForm(currentPage, currentPage);
     }
 
     function saveAndContinue () {
-        currentPage = <?= $_GET['page']; ?>;
+        currentPage = {{ page }};
         submitForm(currentPage, currentPage + 1);
     }
 

@@ -1,11 +1,21 @@
 <?php
-require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth.php';
-require_role('ROLE_COORDINATOR_FORM');
+
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\Session\Session;
+
+$session = $request->getSession();
+
+var_dump(print_r([
+    "sess" => $session->get('user_id'),
+], true));
+
+require_once getenv('ABET_PRIVATE_DIR') . '/lib/auth2.php';
+require_role($session, 'ROLE_COORDINATOR_FORM');
 
 require_once getenv('ABET_PRIVATE_DIR') . '/lib/form-database/coordinator_form_load.php';
 
 $formName = "coordinator-form";
-$formDisplayTitle = "Coordinator Form";
+// $formDisplayTitle = "Coordinator Form";
 $pageTitle = "Coordinator Form";
 $formBasePath = "/coordinator-form";
 $formCssPath = "/assets/css/faculty-form.css";

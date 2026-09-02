@@ -81,6 +81,9 @@ final class CoordinatorFillController extends AbstractController
         ////////////////////////////////////////////////////
 
         return $this->render('forms/form.fillout.twig',[
+            'form' => $form,
+            'backendErrorMessage' => $backendErrorMessage,
+            'old' => $old,
         ]);
     }
 
