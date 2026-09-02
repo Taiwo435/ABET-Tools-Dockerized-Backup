@@ -14,8 +14,8 @@
       <div class="page-select-actions">
         <button class="form-button form-button-return"
                 type="button"
-                onclick="window.location.assign('{{ formBasePath }}')">
-          Return to Page Select
+                onclick="window.location.assign('{{ path('app_coordinator_form') }}')">
+        Return to Page Select
         </button>
       </div>
     </div>
@@ -49,7 +49,7 @@
 
     {% set title = form.title|default(pageName) %}
     {% set fields = form.fields|default([]) %}
-    {% set editLink = formBasePath ~ '/edit/?page=' ~ pageNumber|url_encode %}
+    {% set editLink = formBasePath ~ '/edit/' ~ pageNumber|url_encode %}
 
     <div class="review-section">
         <div class="review-section-header">
@@ -252,7 +252,7 @@
     <div style="text-align: right;">
       <button class="form-button form-button-return"
               type="button"
-              onclick="window.location.assign('{{ formBasePath }}')">
+              onclick="window.location.assign('{{ path('app_coordinator_form') }}')">
         Return to Page Select
       </button>
     </div>

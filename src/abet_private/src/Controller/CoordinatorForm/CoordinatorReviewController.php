@@ -34,7 +34,7 @@ final class CoordinatorReviewController extends AbstractController
     ) {
 
         $formName = "coordinator-form";
-        $formBasePath = "/coordinator-form";
+        $formBasePath = "/tool/coordinator-form";
         $reviewTitle = "Coordinator Form Review";
         $reviewCssPath = "/assets/css/faculty-form-review.css";
 
