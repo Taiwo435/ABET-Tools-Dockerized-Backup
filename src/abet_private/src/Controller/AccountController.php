@@ -12,10 +12,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-// Permissions is declared inside User.php, so it isn't found by PSR-4
-// autoloading on its own — require it explicitly, same as auth.php/register.php.
-require_once getenv('ABET_PRIVATE_DIR') . '/src/Entity/User.php';
-
 final class AccountController extends AbstractController
 {
     /**

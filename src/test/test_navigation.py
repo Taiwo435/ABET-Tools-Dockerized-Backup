@@ -223,7 +223,7 @@ def test_navigation(driver):
     expect_route(driver, "/account/profile/")
 
     # go to home
-    back_link = driver.find_element(By.LINK_TEXT, "Cancel")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -240,7 +240,7 @@ def test_navigation(driver):
 
     expect_route(driver, "/account/settings/")
 
-    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -257,7 +257,7 @@ def test_navigation(driver):
 
     expect_route(driver, "/account/privacy/")
 
-    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -274,7 +274,7 @@ def test_navigation(driver):
 
     expect_route(driver, "/account/help/")
 
-    back_link = driver.find_element(By.CLASS_NAME, "back-btn")
+    back_link = driver.find_element(By.CSS_SELECTOR, "a.home-link")
     back_link.click()
 
     expect_route(driver, "/home")
@@ -286,7 +286,7 @@ def test_navigation(driver):
         driver.get(f"{WEBSITE_URL}{path}")
         expect_route(driver, path)
 
-    navigate_and_expect(driver, "/AssignmentsGrades/tool1.php")
+    navigate_and_expect(driver, "/tool/assignmentsgrades")
     navigate_and_expect(driver, "/faculty-form/")
     navigate_and_expect(driver, "/coordinator-form/")
     navigate_and_expect(driver, "/report-generator/index.php")

@@ -60,9 +60,9 @@ if (false === $response->isNotFound()) {
     // Symfony successfully handled the route.
     $response->send();
 } else {
-    $security = $kernel->getContainer()->get(\Symfony\Bundle\SecurityBundle\Security::class);
     try {
-        LegacyBridge::handleRequest($request, $response, __DIR__, $security);
+        LegacyBridge::handleRequest($request, $response, __DIR__);
+
     }
     catch (NotFoundHttpException $e) {
         // Symfony's kernel already rendered $response as a proper 404 page
