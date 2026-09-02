@@ -28,7 +28,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 from typing import Annotated, NamedTuple, Optional, List, Dict, Any
 from typing_extensions import TypedDict
-import PyPDF2
+import pypdf
 import docx
 from csv_filter import RosterMap, parse_roster_for_major_map
 from xhtml2pdf import pisa
@@ -339,7 +339,7 @@ def extract_text_from_pdf(file_path: str) -> str:
     """Extracts text content from a PDF file."""
     try:
         with open(file_path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
+            reader = pypdf.PdfReader(f)
             return "".join(page.extract_text() for page in reader.pages)
     except Exception as e:
         logger.error("Error extracting text from PDF '%s': %s", file_path, e)
@@ -1223,9 +1223,15 @@ ALLOWED_COURSE_IDS = {
 @app.get("/canvas/courses")
 def list_canvas_courses(
     canvas_access_token: Annotated[str, Header()],
-    enrollment_type: str = Query(default="teacher"),
+    enrollment_type: list[str] = Query(default=["teacher", "ta"]),
 ):
-    """Fetch instructor courses from Canvas, filtered to CSE + allowed IDs."""
+    """Fetch instructor/TA courses from Canvas, filtered to CSE + allowed IDs.
+
+    Defaults to both 'teacher' and 'ta' enrollment types, since being a TA
+    on a course commonly comes with the same practical access as being its
+    teacher, and the caller shouldn't have to know or guess which one a
+    given user actually holds.
+    """
     if canvas_access_token == "mock_token":
         return [
             {
@@ -1238,23 +1244,113 @@ def list_canvas_courses(
             }
         ]
     fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
-    courses = fetcher.get_paginated_list(
-        "courses",
-        params={
-            "enrollment_type": enrollment_type,
-            "include[]": ["term", "total_students", "teachers"],
-        },
-    )
-    # Keep only CSE courses + explicitly allowed course IDs
+    courses = []
+    seen_ids = set()
+    for single_type in enrollment_type:
+        type_courses = fetcher.get_paginated_list(
+            "courses",
+            params={
+                "enrollment_type": single_type,
+                "include[]": ["term", "total_students", "teachers"],
+            },
+        )
+        for c in type_courses:
+            if c.get("id") not in seen_ids:
+                seen_ids.add(c.get("id"))
+                courses.append(c)
+
+    # Keep only CS/CSE courses + explicitly allowed course IDs
+    cs_cse_pattern = re.compile(r"CSE?\d")
     filtered = [
         c
         for c in courses
         if c.get("id") in ALLOWED_COURSE_IDS
-        or (c.get("course_code") or "").upper().startswith("CSE")
-        # Also match term-prefixed codes like "2023Fall-T-CSE423-70483"
-        or "CSE" in (c.get("course_code") or "").upper()
+        or cs_cse_pattern.search((c.get("course_code") or "").upper())
     ]
     return filtered
+
+
+@app.get("/canvas/courses/{course_id}/assignments")
+def list_canvas_assignments(
+    course_id: str,
+    canvas_access_token: Annotated[str, Header()],
+):
+    """Return every assignment for one Canvas course.
+
+    The response is deliberately limited to fields needed by the assignments
+    display page. The Canvas access token is accepted only as a request header
+    and is never included in the response.
+    """
+    if not course_id.isdigit():
+        raise HTTPException(
+            status_code=400, detail="Course ID must be a numeric Canvas Course ID."
+        )
+    if not canvas_access_token or not canvas_access_token.strip():
+        raise HTTPException(status_code=401, detail="Canvas access token is required.")
+
+    # Keep the repository's existing mock-token development flow usable for
+    # local end-to-end testing without a personal Canvas credential.
+    if canvas_access_token == "mock_token":
+        return [
+            {
+                "id": 1001,
+                "name": "Mock Published Assignment",
+                "assignment_group": "Assignments",
+                "points_possible": 25,
+                "average_grade": 21.5,
+            },
+            {
+                "id": 1002,
+                "name": "Mock Assignment Without Due Date",
+                "assignment_group": "Projects",
+                "points_possible": 100,
+                "average_grade": None,
+            },
+        ]
+
+    fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
+    try:
+        token_check = fetcher.session.get(
+            f"{fetcher.canvas_domain}/api/v1/users/self", timeout=10
+        )
+    except requests.RequestException as exc:
+        raise HTTPException(
+            status_code=502, detail="Canvas is unavailable. Please try again."
+        ) from exc
+    if token_check.status_code in (401, 403):
+        raise HTTPException(status_code=401, detail="Token is invalid or expired.")
+    if not token_check.ok:
+        raise HTTPException(
+            status_code=token_check.status_code,
+            detail=f"Unexpected Canvas response: {token_check.status_code}",
+        )
+
+    try:
+        cd = _prepare_course_data(course_id, fetcher)
+    except ValueError as exc:
+        # An empty course is a successful fetch with no rows, not an API error.
+        if str(exc) == "No assignments found in the course.":
+            return []
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    assignments = []
+    for assignment in cd.all_assignments:
+        scores = [
+            submission.get("score")
+            for submission in cd.submissions_by_assignment.get(assignment.get("id"), [])
+            if isinstance(submission.get("score"), (int, float))
+            and not isinstance(submission.get("score"), bool)
+        ]
+        assignments.append({
+            "id": assignment.get("id"),
+            "name": assignment.get("name", ""),
+            "assignment_group": cd.assignment_groups.get(
+                assignment.get("assignment_group_id"), "Uncategorized"
+            ),
+            "points_possible": assignment.get("points_possible"),
+            "average_grade": round(sum(scores) / len(scores), 2) if scores else None,
+        })
+    return assignments
 
 
 @app.get("/verify-token")

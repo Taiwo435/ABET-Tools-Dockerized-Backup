@@ -17,11 +17,14 @@ Maps to tool1.php
 
     <div class="main-container">
         
-        <div class="page-header">
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
             <div class="page-title">
                 <h1>Connect to Canvas Class</h1>
                 <p>Enter your Canvas Access Token</p>
             </div>
+            {% if is_granted('ROLE_ADMIN') %}
+                <a href="{{ path('app_admin_panel') }}" class="btn btn-secondary">Back to Admin Panel</a>
+            {% endif %}
         </div>
 
         <div>

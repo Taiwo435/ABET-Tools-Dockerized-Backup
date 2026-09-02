@@ -90,6 +90,9 @@
         .ag-import-title { font-weight: 700; color: var(--asu-maroon); margin-bottom: 6px; }
         .ag-checkbox-group { display: flex; flex-direction: column; gap: 10px; }
         .ag-checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .ag-page-state { padding: 28px 20px; text-align: center; color: var(--text-light); }
+        .ag-page-state.ag-error { color: #b3261e; }
+        .ag-abet-score-input { width: 90px; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; }
     </style>
 {% endblock %}
 
@@ -98,7 +101,7 @@
         <div class="ag-page-header">
             <div class="ag-page-title">
                 <h1>Assignments &amp; Grades</h1>
-                <p>CSE 445: Software Security • Fall 2024</p>
+                <p>Course ID: <span id="courseIdLabel">{{ courseId ?: 'Invalid' }}</span></p>
             </div>
                         <div style="display: flex; gap: 10px;">
                 <button class="ag-btn-header" style="background: var(--asu-maroon); border-color: var(--asu-maroon);" onclick="showImportDialog()">Import to Canvas</button>
@@ -170,139 +173,29 @@
         <div class="ag-stats-grid">
             <div class="ag-stat-card">
                 <div class="ag-stat-label">Total Assignments</div>
-                <div class="ag-stat-value">5</div>
-                <div class="ag-stat-subtitle">4 graded, 1 scheduled</div>
-            </div>
-            <div class="ag-stat-card">
-                <div class="ag-stat-label">Completion Rate</div>
-                <div class="ag-stat-value">94%</div>
-                <div class="ag-stat-subtitle">45/48 students</div>
-            </div>
-            <div class="ag-stat-card">
-                <div class="ag-stat-label">Average Grade</div>
-                <div class="ag-stat-value">85.2</div>
-                <div class="ag-stat-subtitle">Class performance</div>
+                <div class="ag-stat-value" id="assignmentCount">—</div>
+                <div class="ag-stat-subtitle" id="assignmentCountDetail">Loading from Canvas</div>
             </div>
         </div>
 
         <div class="ag-data-card">
-            <div class="ag-card-tabs">
-                <a href="#" class="ag-tab ag-tab-active">All Assignments</a>
-                <a href="#" class="ag-tab">Analytics</a>
-            </div>
             <div class="ag-filter-bar">
-                <div class="ag-filter-group">
-                    <label class="ag-filter-label">Status</label>
-                    <select class="ag-filter-select" id="statusFilter">
-                        <option value="all">All Statuses</option>
-                        <option value="graded">Graded</option>
-                        <option value="scheduled">Scheduled</option>
-                    </select>
-                </div>
-                <div class="ag-filter-group">
-                    <label class="ag-filter-label">Type</label>
-                    <select class="ag-filter-select" id="typeFilter">
-                        <option value="all">All Types</option>
-                        <option value="homework">Homework</option>
-                        <option value="project">Project</option>
-                        <option value="exam">Exam</option>
-                        <option value="quiz">Quiz</option>
-                    </select>
-                </div>
+                <button type="button" class="ag-btn-secondary" id="refreshAssignments">Refresh</button>
             </div>
+            <div id="assignmentsState" class="ag-page-state" role="status" aria-live="polite">Loading assignments…</div>
             <div class="ag-table-responsive">
-                <table class="ag-table">
+                <table class="ag-table" id="assignmentsTable" hidden>
                     <thead>
                         <tr>
                             <th>Assignment Name</th>
-                            <th>Due Date</th>
-                            <th>Type</th>
-                            <th>Submissions</th>
-                            <th>Status</th>
-                            <th style="text-align: right;">Actions</th>
+                            <th>Canvas ID</th>
+                            <th>Assignment Group</th>
+                            <th>Points Possible</th>
+                            <th>Average Grade</th>
+                            <th>ABET Score</th>
                         </tr>
                     </thead>
-                    <tbody id="assignmentsTableBody">
-                        <tr data-status="graded" data-type="homework" data-id="hw1">
-                            <td>
-                                <strong>Homework 1: Threat Models</strong>
-                                <div class="ag-progress-bar-container"><div class="ag-progress-bar" style="width: 94%;"></div></div>
-                            </td>
-                            <td>Oct 12, 2024</td>
-                            <td>Homework</td>
-                            <td>45 / 48</td>
-                            <td><span class="ag-status-badge ag-status-graded">Graded</span></td>
-                            <td style="text-align: right;">
-                                <a class="ag-action-link" onclick="editAssignment('hw1')">Edit</a>
-                                <a class="ag-action-link" onclick="viewStats('hw1')">View Stats</a>
-                                <a class="ag-action-link" onclick="exportAssignment('hw1')">Export</a>
-                                <a class="ag-action-link" onclick="removeAssignment('hw1')" style="color: #d32f2f;">Remove</a>
-                            </td>
-                        </tr>
-                        <tr data-status="graded" data-type="project" data-id="proj1">
-                            <td>
-                                <strong>Project: Secure Login</strong>
-                                <div class="ag-progress-bar-container"><div class="ag-progress-bar" style="width: 100%;"></div></div>
-                            </td>
-                            <td>Nov 01, 2024</td>
-                            <td>Project</td>
-                            <td>48 / 48</td>
-                            <td><span class="ag-status-badge ag-status-graded">Graded</span></td>
-                            <td style="text-align: right;">
-                                <a class="ag-action-link" onclick="editAssignment('proj1')">Edit</a>
-                                <a class="ag-action-link" onclick="viewStats('proj1')">View Stats</a>
-                                <a class="ag-action-link" onclick="exportAssignment('proj1')">Export</a>
-                                <a class="ag-action-link" onclick="removeAssignment('proj1')" style="color: #d32f2f;">Remove</a>
-                            </td>
-                        </tr>
-                        <tr data-status="graded" data-type="quiz" data-id="quiz2">
-                            <td>
-                                <strong>Quiz 2: Cryptography</strong>
-                                <div class="ag-progress-bar-container"><div class="ag-progress-bar" style="width: 100%;"></div></div>
-                            </td>
-                            <td>Oct 25, 2024</td>
-                            <td>Quiz</td>
-                            <td>48 / 48</td>
-                            <td><span class="ag-status-badge ag-status-graded">Graded</span></td>
-                            <td style="text-align: right;">
-                                <a class="ag-action-link" onclick="editAssignment('quiz2')">Edit</a>
-                                <a class="ag-action-link" onclick="viewStats('quiz2')">View Stats</a>
-                                <a class="ag-action-link" onclick="exportAssignment('quiz2')">Export</a>
-                                <a class="ag-action-link" onclick="removeAssignment('quiz2')" style="color: #d32f2f;">Remove</a>
-                            </td>
-                        </tr>
-                        <tr data-status="scheduled" data-type="exam" data-id="midterm">
-                            <td>
-                                <strong>Midterm Exam</strong>
-                                <div class="ag-progress-bar-container"><div class="ag-progress-bar" style="width: 0%;"></div></div>
-                            </td>
-                            <td>Nov 15, 2024</td>
-                            <td>Exam</td>
-                            <td>--</td>
-                            <td><span class="ag-status-badge ag-status-scheduled">Scheduled</span></td>
-                            <td style="text-align: right;">
-                                <a class="ag-action-link" onclick="editAssignment('midterm')">Edit</a>
-                                <a class="ag-action-link" onclick="previewAssignment('midterm')">Preview</a>
-                                <a class="ag-action-link" onclick="removeAssignment('midterm')" style="color: #d32f2f;">Remove</a>
-                            </td>
-                        </tr>
-                        <tr data-status="graded" data-type="homework" data-id="hw3">
-                            <td>
-                                <strong>Homework 3: Access Control</strong>
-                                <div class="ag-progress-bar-container"><div class="ag-progress-bar" style="width: 88%;"></div></div>
-                            </td>
-                            <td>Nov 08, 2024</td>
-                            <td>Homework</td>
-                            <td>42 / 48</td>
-                            <td><span class="ag-status-badge ag-status-graded">Graded</span></td>
-                            <td style="text-align: right;">
-                                <a class="ag-action-link" onclick="editAssignment('hw3')">Edit</a>
-                                <a class="ag-action-link" onclick="viewStats('hw3')">View Stats</a>
-                                <a class="ag-action-link" onclick="exportAssignment('hw3')">Export</a>
-                                <a class="ag-action-link" onclick="removeAssignment('hw3')" style="color: #d32f2f;">Remove</a>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="assignmentsTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -466,27 +359,105 @@
                 toggleLink.textContent = 'Show Help';
             }
         }
-        const statusFilter = document.getElementById('statusFilter');
-        const typeFilter = document.getElementById('typeFilter');
         const tableBody = document.getElementById('assignmentsTableBody');
-        const rows = tableBody.getElementsByTagName('tr');
-        function filterTable() {
-            const statusValue = statusFilter.value;
-            const typeValue = typeFilter.value;
-            for (let row of rows) {
-                const rowStatus = row.getAttribute('data-status');
-                const rowType = row.getAttribute('data-type');
-                const statusMatch = statusValue === 'all' || rowStatus === statusValue;
-                const typeMatch = typeValue === 'all' || rowType === typeValue;
-                if (statusMatch && typeMatch) {
-                    row.classList.remove('ag-hidden-row');
-                } else {
-                    row.classList.add('ag-hidden-row');
+        const assignmentsTable = document.getElementById('assignmentsTable');
+        const assignmentsState = document.getElementById('assignmentsState');
+        const refreshButton = document.getElementById('refreshAssignments');
+        const assignmentCount = document.getElementById('assignmentCount');
+        const assignmentCountDetail = document.getElementById('assignmentCountDetail');
+        const courseId = {{ courseId|json_encode|raw }};
+        const assignmentsApiUrl = {{ path('app_assignments_grades_assignments_api')|json_encode|raw }};
+
+        function addCell(row, value) {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function renderAssignments(assignments) {
+            tableBody.replaceChildren();
+            assignments.forEach((assignment) => {
+                const row = document.createElement('tr');
+                row.dataset.id = String(assignment.id ?? '');
+                const nameCell = addCell(row, '');
+                const name = document.createElement('strong');
+                name.textContent = assignment.name || 'Untitled assignment';
+                nameCell.appendChild(name);
+                addCell(row, assignment.id ?? '—');
+                addCell(row, assignment.assignment_group || 'Uncategorized');
+                addCell(row, assignment.points_possible ?? '—');
+                addCell(row, assignment.average_grade ?? 'No graded submissions');
+                const abetCell = document.createElement('td');
+                const abetInput = document.createElement('input');
+                abetInput.type = 'number';
+                abetInput.className = 'ag-abet-score-input';
+                abetInput.min = '0';
+                abetInput.max = '7';
+                abetInput.step = 'any';
+                abetInput.placeholder = 'Score';
+                abetInput.setAttribute('aria-label', `ABET score for ${assignment.name || 'assignment'}`);
+                abetInput.addEventListener('input', () => {
+                    if (abetInput.value === '') return;
+                    const score = Number(abetInput.value);
+                    if (score > 7) abetInput.value = '7';
+                    if (score < 0) abetInput.value = '0';
+                });
+                abetCell.appendChild(abetInput);
+                row.appendChild(abetCell);
+                tableBody.appendChild(row);
+            });
+        }
+
+        function showAssignmentState(message, isError = false) {
+            assignmentsState.textContent = message;
+            assignmentsState.classList.toggle('ag-error', isError);
+            assignmentsState.hidden = false;
+            assignmentsTable.hidden = true;
+        }
+
+        async function loadAssignments() {
+            tableBody.replaceChildren();
+            assignmentCount.textContent = '—';
+            assignmentCountDetail.textContent = 'Loading from Canvas';
+
+            if (!courseId || !/^\d+$/.test(String(courseId))) {
+                showAssignmentState('Invalid course ID. Select a course and try again.', true);
+                assignmentCountDetail.textContent = 'Invalid course ID';
+                return;
+            }
+
+            refreshButton.disabled = true;
+            showAssignmentState('Loading assignments…');
+            try {
+                const response = await fetch(`${assignmentsApiUrl}?courseId=${encodeURIComponent(courseId)}`, {
+                    headers: { Accept: 'application/json' },
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Canvas/API error while loading assignments.');
                 }
+
+                const assignments = Array.isArray(data.assignments) ? data.assignments : [];
+                assignmentCount.textContent = String(assignments.length);
+                assignmentCountDetail.textContent = assignments.length === 1 ? 'Canvas assignment' : 'Canvas assignments';
+                if (assignments.length === 0) {
+                    showAssignmentState('No assignments found.');
+                    return;
+                }
+                renderAssignments(assignments);
+                assignmentsState.hidden = true;
+                assignmentsTable.hidden = false;
+            } catch (error) {
+                showAssignmentState(error.message || 'Canvas/API error while loading assignments.', true);
+                assignmentCountDetail.textContent = 'Unable to load assignments';
+            } finally {
+                refreshButton.disabled = false;
             }
         }
-        statusFilter.addEventListener('change', filterTable);
-        typeFilter.addEventListener('change', filterTable);
+
+        refreshButton.addEventListener('click', loadAssignments);
+        loadAssignments();
         function showModal(modalId) { document.getElementById(modalId).classList.add('ag-show'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('ag-show'); }
         window.onclick = function(event) {
