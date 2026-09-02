@@ -10,11 +10,14 @@ use App\Service\LegacyDB;
 class CoordinatorFormLoader
 {
     public LegacyDB $db;
+    public FormFunctions $helper;
 
     public function __construct(
         LegacyDB $db_instance,
+        FormFunctions $formFunctions,
     ) {
         $this->db = $db_instance;
+        $this->helper = $formFunctions;
     }
 
 function getReportSections(\PDO $pdo, int $program_id): array {
@@ -174,18 +177,18 @@ function loadFormData($pageName) {
 
     $pdo = $this->db->db();
     $program_id = (int) $_SESSION['program_id'];
-    $pageName = normalizePageName($pageName);
+    $pageName = $this->normalizePageName($pageName);
 
-    $program = getProgramInfo($pdo, $program_id);
-    $data = getReportSections($pdo, $program_id);
+    $program = $this->getProgramInfo($pdo, $program_id);
+    $data = $this->getReportSections($pdo, $program_id);
 
     foreach ($data as $key => $value) {
-        $data[$key] = decodeJsonIfNeeded($value);
+        $data[$key] = $this->decodeJsonIfNeeded($value);
     }
 
     switch ($pageName) {
         case 'programSelect':
-            $selectedProgram = $_SESSION['selected_program'] ?? getProgramSelectionKey($program);
+            $selectedProgram = $_SESSION['selected_program'] ?? $this->getProgramSelectionKey($program);
             if ($selectedProgram) {
                 $data['program'] = $selectedProgram;
             }
@@ -242,7 +245,7 @@ function loadFormData($pageName) {
             break;
 
         case 'student_outcomes':
-            $data['method_of_assessment'] = loadOutcomeAssessmentRows($pdo, $program_id);
+            $data['method_of_assessment'] = $this->loadOutcomeAssessmentRows($pdo, $program_id);
 
             $stmt = $pdo->prepare("
                 SELECT course_name, outcome_number, attainment_level
@@ -293,7 +296,7 @@ function loadFormData($pageName) {
                 }
             }
 
-            $data['assessment_results'] = loadAssessmentSummaryRows($pdo, $program_id);
+            $data['assessment_results'] = $this->loadAssessmentSummaryRows($pdo, $program_id);
 
             $stmt = $pdo->prepare("
                 SELECT outcome_number, semesters_assessed, percentage_met, times_consecutive_not_met, percentage_met_secondary

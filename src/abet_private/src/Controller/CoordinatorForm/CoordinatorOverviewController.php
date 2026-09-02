@@ -35,7 +35,7 @@ final class CoordinatorOverviewController extends AbstractController
     $formName = "coordinator-form";
     $formDisplayTitle = "Coordinator Form";
     $pageTitle = "Coordinator Form";
-    $formBasePath = "/coordinator-form";
+    $formBasePath = "/tool/coordinator-form";
     $formCssPath = "/assets/css/faculty-form.css";
 
     $completeMessage = "The form is complete. If necessary, you can edit your responses. Otherwise, you are done with this form and can safely navigate away from this page.";

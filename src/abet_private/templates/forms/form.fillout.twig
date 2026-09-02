@@ -31,13 +31,13 @@
     {% for field in form.fields %}
         {% set name = field.name|default('') %}
         {% set type = field.type %}
-        {% set raw = old[name]|default('') %}
-        {% set value = raw is string ? raw : '' %}
+        {% set raw_val = old[name]|default('') %}
+        {% set value = raw_val|default('') %}
         {% set error = errors[name]|default('') %}
 
         {% if type == 'section-break' %}
             <div class="form-section-break"></div>
-            {% continue %}
+            {# {% continue %} #}
         {% endif %}
 
         <div class="form-group" id="{{ name }}">
@@ -55,7 +55,7 @@
                 </label>
             {% endif %}
 
-            {% if field.description is not empty %}
+            {% if field.description|default('') %}
                 <p class="form-field-description">
                     {{ field.description }}
                 </p>
@@ -87,7 +87,7 @@
                     <div
                         class="expandable-grid-container"
                         name="{{ name }}"
-                        data-old-values="{{ raw|json_encode }}"
+                        data-old-values="{{ raw_val|json_encode }}"
                         data-old-values2="{{ value }}"
                         style="grid-template-columns: repeat({{ columnCount }}, 1fr) 0.25fr;"
                     >

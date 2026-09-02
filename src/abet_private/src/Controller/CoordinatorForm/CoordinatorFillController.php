@@ -18,8 +18,13 @@ use Symfony\Component\Routing\Requirement\Requirement;
 
 final class CoordinatorFillController extends AbstractController
 {
-    #[Route('/tool/coordinator-form/edit/{page}', name: 'app_coordinator_form_edit', methods: ['GET'], requirements: ['page' => Requirement::DIGITS])]
-    public function getForm(
+
+    #[Route(
+        '/tool/coordinator-form/edit/{page}', 
+        name: 'app_coordinator_form_edit', 
+        methods: ['GET'], 
+        requirements: ['page' => Requirement::DIGITS])]
+    public function editForm(
         Request $request,
         #[CurrentUser] User $user,
         CoordinatorFormLoader $loader,
@@ -85,12 +90,13 @@ final class CoordinatorFillController extends AbstractController
             'form' => $form,
             'backendErrorMessage' => $backendErrorMessage,
             'old' => $old,
+            'page' => $page,
         ]);
     }
 
     #[IsGranted("ROLE_USER")]
     #[Route('/tool/coordinator-form/submit/{page}', 
-    name: 'app_coordinator_form_edit', 
+    name: 'app_coordinator_form_submit', 
     requirements: ['page' => Requirement::DIGITS],
     methods: ['POST'],
     )]

@@ -6,11 +6,16 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use App\Entity\User;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Service\LegacyDB;
 
 class FormFunctions
 {
+    public LegacyDB $db;
     public function __construct(
-    ) {}
+        LegacyDB $db_instance,
+    ) {
+        $this->db = $db_instance;
+    }
 
 
     /*
@@ -33,7 +38,7 @@ class FormFunctions
         
         $form = json_decode(file_get_contents($path), true);
 
-        if ($pageNumber < 1 || $pageNumber > getPageCount($formName)) {
+        if ($pageNumber < 1 || $pageNumber > $this->getPageCount($formName)) {
             $pageNumber = 1;
         }
 
@@ -57,7 +62,7 @@ class FormFunctions
         }
         
         $form = json_decode(file_get_contents($path), true);
-        $pdo = db();
+        $pdo = $this->db->db();
         foreach ($form['pages'] as $page) {
             try {
                 $query = "SELECT EXISTS(SELECT 1 FROM " . $page['tableName'] . " WHERE user_id = :user_id)";

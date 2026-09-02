@@ -23,12 +23,14 @@ final class CoordinatorReviewController extends AbstractController
     // }
 
 
-    #[Route('/tool/coordinator-form/review/{page}', name: 'app_coordinator_form_review', methods: ['GET'], requirements: ['page' => Requirement::DIGITS])]
+    #[Route('/tool/coordinator-form/review', 
+    name: 'app_coordinator_form_review', 
+    methods: ['GET'], 
+    )]
     public function getForm(
         #[CurrentUser] User $user,
         CoordinatorFormLoader $loader,
         FormFunctions $helper,
-        int $page
     ) {
 
         $formName = "coordinator-form";

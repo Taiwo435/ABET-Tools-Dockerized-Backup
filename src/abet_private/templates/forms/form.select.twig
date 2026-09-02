@@ -61,7 +61,7 @@
             </button>
             <button class="form-button form-button-save"
                     type="button"
-                    onclick="window.location.assign('{{formBasePath ~ "//edit/?page=1"}}')">
+                    onclick="window.location.assign('{{formBasePath ~ "/edit/1"}}')">
             Start / Continue
             </button>
         </div>
@@ -124,7 +124,7 @@
                 {% set statusClass = 'progress' %}
             {% endif %}
 
-            <a class="page-card-link" href="{{ formBasePath }}/edit/?page={{ section.pageNumber|url_encode }}">
+            <a class="page-card-link" href="{{ formBasePath }}/edit/{{ section.pageNumber|url_encode }}">
                 <div class="form-group page-card">
                     <div class="status-row">
                         <div>
