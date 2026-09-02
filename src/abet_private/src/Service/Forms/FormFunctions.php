@@ -152,4 +152,14 @@ class FormFunctions
         if (is_string($v)) return $v;
         return "";
     }
+
+    public function decodeGridRows($v): array {
+        if (is_array($v)) return $v;
+        if (is_string($v) && trim($v) !== "") {
+            $decoded = json_decode($v, true);
+            if (is_array($decoded)) return $decoded;
+        }
+        return [];
+    }
+
 }

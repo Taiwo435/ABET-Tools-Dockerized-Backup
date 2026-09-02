@@ -20,11 +20,11 @@
       </div>
     </div>
 
-    <?php foreach ($pageNames as $idx => $pageName): ?>
+    {# <?php foreach ($pageNames as $idx => $pageName): ?>
       <?php
         $pageNumber = $idx + 1;
         $form = loadFormPage($formName, $pageName);
-        $saved = loadValues($pageName);
+        $saved = loadValues($pageName); // ignore this, $saved is passed in
 
         $title = $form["title"] ?? $pageName;
         $fields = $form["fields"] ?? [];
@@ -41,9 +41,32 @@
                   onclick="window.location.assign('<?php echo htmlspecialchars($editLink); ?>')">
             Edit Section
           </button>
+        </div> #}
+    {% for pageName in pageNames %}
+    {% set pageNumber = loop.index %}
+    {% set form = loadFormPage(formName, pageName) %}
+    {% set saved = loadValuesCoordinator(pageName)|default(null) %}
+
+    {% set title = form.title|default(pageName) %}
+    {% set fields = form.fields|default([]) %}
+    {% set editLink = formBasePath ~ '/edit/?page=' ~ pageNumber|url_encode %}
+
+    <div class="review-section">
+        <div class="review-section-header">
+            <div>
+                <h3 class="form-label">{{ title }}</h3>
+            </div>
+
+            <button
+                class="form-button form-button-save"
+                type="button"
+                onclick="window.location.assign('{{ editLink }}')"
+            >
+                Edit Section
+            </button>
         </div>
 
-        <?php foreach ($fields as $field): ?>
+        {# <?php foreach ($fields as $field): ?>
           <?php
             $type = $field["type"] ?? "";
 
@@ -123,7 +146,105 @@
             <?php endif; ?>
 
           </div>
-        <?php endforeach; ?>
+        <?php endforeach; ?> #}
+    {% for field in fields %}
+        {% set type = field.type|default('') %}
+
+        {% if type != 'section-break' %}
+
+        {% set name = field.name|default('') %}
+
+        {% if name != '' or type == 'section-label' or type == 'section-label-small' %}
+
+            {% set label = field.label|default('') %}
+            {% set required = field.required|default(false) %}
+            {% set description = field.description|default('') %}
+            {% set rawVal = saved[name]|default(null) %}
+
+            {% if type == 'select' %}
+                {% set key = rawVal|default('')%}
+                {% set opts = field.options|default({}) %}
+
+                {% if key != '' and opts[key] is defined %}
+                    {% set displayVal = opts[key] %}
+                {% else %}
+                    {% set displayVal = key %}
+                {% endif %}
+            {% else %}
+                {% set displayVal = formatReviewValue(rawVal) %}
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label">
+                    {{ label }}{% if required %}*{% endif %}
+                </label>
+
+                {% if description %}
+                    <p class="form-field-description">
+                        {{ description }}
+                    </p>
+                {% endif %}
+
+                {% if type == 'section-label' or type == 'section-label-small' %}
+                    {# Intentionally empty #}
+
+                {% elseif type == 'expandable-grid' %}
+
+                    {% set rows = decodeGridRows(rawVal) %}
+                    {% set cols = field.columns|default([]) %}
+
+                    <table class="review-grid">
+                        <thead>
+                            <tr>
+                                {% for c in cols %}
+                                    <th>
+                                        {{ c.label|default(c.name|default('Column')) }}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% if rows|length == 0 %}
+                                <tr>
+                                    <td colspan="{{ max(1, cols|length) }}">
+                                        <span class="review-empty">(empty)</span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                {% for r in rows %}
+                                    <tr>
+                                        {% for c in cols %}
+                                            {% set cn = c.name|default('') %}
+
+                                            <td>
+                                                {{ formatReviewValue(r[cn]|default('')) }}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+
+                {% else %}
+
+                    <div class="review-value-box">
+                        {% if displayVal != '' %}
+                            {{ displayVal }}
+                        {% else %}
+                            <span class="review-empty">(empty)</span>
+                        {% endif %}
+                    </div>
+
+                {% endif %}
+            </div>
+
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% endfor %}
 
       </div>
     <?php endforeach; ?>

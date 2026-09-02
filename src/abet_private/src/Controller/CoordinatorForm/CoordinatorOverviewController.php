@@ -68,7 +68,7 @@ final class CoordinatorOverviewController extends AbstractController
             $val = $saved[$fname] ?? null;
 
             if ($type === "expandable-grid") {
-                if (count($loader->decodeGridRows($val)) > 0) $anyFilled = true;
+                if (count($helper->decodeGridRows($val)) > 0) $anyFilled = true;
             } else {
                 if (!$loader->isEmptyValue($val)) $anyFilled = true;
             }
@@ -76,7 +76,7 @@ final class CoordinatorOverviewController extends AbstractController
             if ($f["required"]) {
                 $reqCount++;
                 if ($type === "expandable-grid") {
-                    if (count($loader->decodeGridRows($val)) > 0) $reqFilled++;
+                    if (count($helper->decodeGridRows($val)) > 0) $reqFilled++;
                 } else {
                     if (!$loader->isEmptyValue($val)) $reqFilled++;
                 }

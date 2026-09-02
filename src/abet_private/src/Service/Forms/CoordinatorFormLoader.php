@@ -666,15 +666,6 @@ public function isEmptyValue($v): bool {
     return false;
 }
 
-public function decodeGridRows($v): array {
-    if (is_array($v)) return $v;
-    if (is_string($v) && trim($v) !== "") {
-        $decoded = json_decode($v, true);
-        if (is_array($decoded)) return $decoded;
-    }
-    return [];
-}
-
 function loadValues(string $pageName): array {
     $data = $this->loadFormData($pageName);
     return is_array($data) ? $data : [];

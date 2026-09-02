@@ -7,26 +7,28 @@ use Twig\Attribute\AsTwigFunction;
 
 class FormExtension
 {
-    public FormFunctions $helper;
 
     public function __construct(
-        FormFunctions $formFunctions
+        private FormFunctions $helper
     )
+    {}
+
+    #[AsTwigFunction('loadFormPage')]
+    public function loadFormPage(string $formName, string $pageName): array
     {
-        $this->helper = $formFunctions;
+        return $this->helper->loadFormPage($formName, $pageName);
     }
 
     #[AsTwigFunction('formatReviewValue')]
-    public function formatReview($v) : string
+    public function formatReviewValue(mixed $value): string
     {
-        return $this->helper->formatReviewValue($v);
+        return $this->helper->formatReviewValue($value);
     }
 
-    // #[AsTwigFunction('decodeGridRows')]
-    // public function decodeGrid($v) : string
-    // {
-    //     return $this->helper->decodeGridRows();
-    // }
-
+    #[AsTwigFunction('decodeGridRows')]
+    public function decodeGridRows(mixed $value): array
+    {
+        return $this->helper->decodeGridRows($value);
+    }
 }
 ?>

@@ -44,6 +44,7 @@ final class CoordinatorReviewController extends AbstractController
 
         $pageNames = $helper->getAllPageNames($formName);
 
+
         ////////////////////////////////////////////////////
         // FIN
         ////////////////////////////////////////////////////
@@ -53,7 +54,8 @@ final class CoordinatorReviewController extends AbstractController
             'formBasePath' => $formBasePath,
             'reviewTitle' => $reviewTitle,
             'reviewCssPath' => $reviewCssPath,
-            'pageNames' => $pageNames
+            'pageNames' => $pageNames,
+            'loadValues' => fn (string $pageName) => $loader->loadValues($pageName),
         ]);
     }
 }
