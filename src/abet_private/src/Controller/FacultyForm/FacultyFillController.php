@@ -3,8 +3,8 @@
 namespace App\Controller\FacultyForm;
 
 use App\Entity\User;
-use App\Service\Forms\CoordinatorFormLoader;
-use App\Service\Forms\CoordinatorFormSaver;
+use App\Service\Forms\FacultyFormLoader;
+use App\Service\Forms\FacultyFormSaver;
 use App\Service\Forms\FormFunctions;
 use Dba\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,14 +20,14 @@ final class FacultyFillController extends AbstractController
 {
 
     #[Route(
-        '/tool/coordinator-form/edit/{page}', 
-        name: 'app_coordinator_form_edit', 
+        '/tool/faculty-form/edit/{page}', 
+        name: 'app_faculty_form_edit', 
         methods: ['GET'], 
         requirements: ['page' => Requirement::DIGITS])]
     public function editForm(
         Request $request,
         #[CurrentUser] User $user,
-        CoordinatorFormLoader $loader,
+        FacultyFormLoader $loader,
         FormFunctions $helper,
         int $page
     ) {
@@ -38,14 +38,16 @@ final class FacultyFillController extends AbstractController
 
 
         $pageNumber = $page;
-        $formName = "coordinator-form";
+        $formName = "faculty-form";
 
         //print_r(getAllPageNames($formName));
 
-        // Check if the page number is a valid integer
-        if (filter_var($pageNumber, FILTER_VALIDATE_INT) === false) {
-            header('Location: /coordinator-form/edit?page=1');
+        // Check if the page number is within the page count range
+        if ($pageNumber < 1) {
+            header('Location: /faculty-form/edit?page=1');
+            die();
         }
+
 
         $pageNumber = (int) $pageNumber;
 
@@ -54,12 +56,6 @@ final class FacultyFillController extends AbstractController
         //     header('Location: /coordinator-form/review');
         //     die();
         // }
-
-        // Check if the page number is within the page count range
-        if ($pageNumber < 1) {
-            header('Location: /coordinator-form/edit?page=1');
-            die();
-        }
 
         // Loads the name of the JSON file corresponding to its page order in the index.json file
         $pageName = $helper->getPageNameFromNumber($formName, $pageNumber);
@@ -72,10 +68,10 @@ final class FacultyFillController extends AbstractController
 
         $session = $request->getSession();
 
-        if (!empty($session->get('coordinator_form_error_flag')) && $session->get('coordinator_form_error_flag') === true) {
-            $session->set('coordinator_form_error_flag', false);
-            $old = $session->get('coordinator_form_old');
-            $backendErrorMessage = $session->get('coordinator_form_error_message');
+        if (!empty($session->get('faculty_form_error_flag')) && $session->get('faculty_form_error_flag') === true) {
+            $session->set('faculty_form_error_flag', false);
+            $old = $session->get('faculty_form_old');
+            $backendErrorMessage = $session->get('faculty_form_error_message');
         } else {
             $loadedData = $loader->loadFormData($pageName);
             $old = is_array($loadedData) ? $loadedData : [];
@@ -89,6 +85,7 @@ final class FacultyFillController extends AbstractController
         return $this->render('forms/form.fillout.twig',[
             'form' => $form,
             'formName' => $formName,
+            'homeRoute' => 'app_faculty_form',
             'backendErrorMessage' => $backendErrorMessage,
             'old' => $old,
             'page' => $page,
@@ -96,20 +93,20 @@ final class FacultyFillController extends AbstractController
     }
 
     #[IsGranted("ROLE_USER")]
-    #[Route('/tool/coordinator-form/edit/submit.php', 
-    name: 'app_coordinator_form_submit', 
+    #[Route('/tool/faculty-form/edit/submit.php', 
+    name: 'app_faculty_form_submit', 
     requirements: ['page' => Requirement::DIGITS],
     methods: ['POST'],
     )]
     public function submitForm(
         #[CurrentUser] User $user,
-        CoordinatorFormSaver $saver,
+        FacultyFormSaver $saver,
         FormFunctions $helper,
         Request $request,
     )
     {
         $saver->handle_save();
-        return $this->redirectToRoute('app_coordinator_form_edit', [
+        return $this->redirectToRoute('app_faculty_form_edit', [
             'page' => $request->request->get('next_page_number'),
         ]);
     }

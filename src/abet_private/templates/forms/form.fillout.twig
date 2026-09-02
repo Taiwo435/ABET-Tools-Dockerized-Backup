@@ -10,7 +10,7 @@
 
     <div class="top-bar">
         <h2 class="form-title">{{ form.title }}</h2>
-        <a href="{{path("app_coordinator_form")}}">
+        <a href="{{ path(homeRoute) }}">
             <button class="form-button form-button-return">Return to Page Select (Without Saving)</button>
         </a>
     </div>
@@ -160,7 +160,7 @@
 
         <div class="bottom-buttons">
             <button class="form-button form-button-save" type="button" onclick="saveOnly()">Save Page</button>
-            <button class="form-button form-button-save-continue" type="button" onclick="saveAndContinue()">Save & Next Page, test</button>
+            <button class="form-button form-button-save-continue" type="button" onclick="saveAndContinue()">Save & Next Page</button>
         </div>
         
         <div class="form-error-holder"></div>

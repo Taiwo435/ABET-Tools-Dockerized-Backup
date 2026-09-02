@@ -36,7 +36,7 @@ final class FacultyOverviewController extends AbstractController
     $formName = "faculty-form";
     $formDisplayTitle = "Faculty Form";
     $pageTitle = "Faculty Form";
-    $formBasePath = "/faculty-form";
+    $formBasePath = "/tool/faculty-form";
     $formCssPath = "/assets/css/faculty-form.css";
 
     $completeMessage = "The form is complete. If necessary, you can edit your responses. Otherwise, you are done with this form and can safely navigate away from this page.";

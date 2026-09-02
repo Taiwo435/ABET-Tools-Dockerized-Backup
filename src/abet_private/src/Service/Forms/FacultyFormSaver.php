@@ -28,7 +28,7 @@ class FacultyFormSaver
     $_SESSION['faculty_form_old'] = $_POST;
     $_SESSION['faculty_form_error_message'] = $message;
     
-    $url = '/faculty-form/edit/?page=' . $_POST['current_page_number'];
+    $url = '/tool/faculty-form/edit/' . $_POST['current_page_number'];
     header('Location: ' . $url);
     
     $loggedMessageFull = "FACULTY FORM SAVE ERROR FOR USER WITH ID " . $_SESSION['user_id'] . ": " . $loggedMessage . " | ERROR LOGGED AT: " . date("Y-m-d H:i:s T") . "\n";
@@ -77,7 +77,7 @@ class FacultyFormSaver
         return $response;
     }
 
-    function doSaveFunction() {
+    function handle_save() {
 
 
         $pdo = $this->db->db();
@@ -98,7 +98,7 @@ class FacultyFormSaver
                 $department = explode('-', $_POST['department']);
                 if (count($department) != 2) {
                     $message = "Department field must be in the format '[ProgramName]-[ProgramCode]'. Currently, it is '" . $_POST['department'] . "'.";
-                    handleSaveError($message, $message);
+                    $this->handleSaveError($message, $message);
                     die();
                 }
 
@@ -123,7 +123,7 @@ class FacultyFormSaver
                     $program_id = $result['program_id'];
                 }
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
 
@@ -166,7 +166,7 @@ class FacultyFormSaver
                 ");
                 $stmt->execute($fields);
             } catch (\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
 
@@ -206,7 +206,7 @@ class FacultyFormSaver
                 ");
                 $stmt->execute($fields);
             } catch (\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
             
@@ -222,13 +222,13 @@ class FacultyFormSaver
             $percentSum = $teaching_pct + $research_or_scholarship_pct + $other_pct;
             if ($percentSum != 100) {
                 $message = "Teaching, Research/Service, and Other Work Percentages should sum to 100%. Currently, they sum to " . $percentSum . "%.";
-                handleSaveError($message, $message);
+                $this->handleSaveError($message, $message);
                 die();
             }
 
             if ($pct_time_devoted_to_program > 100) {
                 $message = "Percentage of time devoted to program cannot exceed 100. Currently, it is " . $pct_time_devoted_to_program . "%.";
-                handleSaveError($message, $message);
+                $this->handleSaveError($message, $message);
                 die();
             }
 
@@ -238,12 +238,13 @@ class FacultyFormSaver
                 $result = $stmt->fetch();
 
                 if (!$result) {
-                    handleSaveError("No program found for the current user. Please fill out the Info page first.");
+                    $err = "No program found for the current user. Please fill out the Info page first.";
+                    $this->handleSaveError($err, $err);
                     die();
                 }
 
                 if (!$result) {
-                    handleSaveError("User not found.");
+                    $this->handleSaveError("User not found.", "User not found");
                     die();
                 }
 
@@ -251,15 +252,15 @@ class FacultyFormSaver
 
 
             } catch(\PDOException $e) {
-                handleSaveError($e->getMessage());
+                $this->handleSaveError($e->getMessage(), $e->getMessage());
                 die();
             }
 
             try {
-                $workloadData = getProfessorWorkloadJson($asurite);
+                $workloadData = $this->getProfessorWorkloadJson($asurite);
 
             } catch (\Exception $e) {
-                handleSaveError($e->getMessage());
+                $this->handleSaveError($e->getMessage(), $e->getMessage());
             }
 
             $fields = [
@@ -293,14 +294,14 @@ class FacultyFormSaver
                 ");
                 $stmt->execute($fields);
             } catch (\PDOException $e) {
-                handleSaveError($e->getMessage(), $e->getMessage());
+                $this->handleSaveError($e->getMessage(), $e->getMessage());
                 die();
             }
             break;
             
         default:
             $message = "Page " . $_POST['page_name'] . " not recognized.";
-            handleSaveError($genericErrorMessage, $message);
+            $this->handleSaveError($genericErrorMessage, $message);
             break;
         }
     }

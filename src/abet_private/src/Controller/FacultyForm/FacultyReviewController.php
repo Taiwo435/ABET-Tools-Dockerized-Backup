@@ -23,8 +23,8 @@ final class FacultyReviewController extends AbstractController
     // }
 
 
-    #[Route('/tool/coordinator-form/review', 
-    name: 'app_coordinator_form_review', 
+    #[Route('/tool/faculty-form/review', 
+    name: 'app_faculty_form_review', 
     methods: ['GET'], 
     )]
     public function getForm(
