@@ -37,6 +37,7 @@ final class CoordinatorReviewController extends AbstractController
         $formBasePath = "/tool/coordinator-form";
         $reviewTitle = "Coordinator Form Review";
         $reviewCssPath = "/assets/css/faculty-form-review.css";
+        $homeRoute = "app_coordinator_form";
 
         ////////////////////////////////////////////////////
         // IN TEMPLATE 
@@ -55,6 +56,7 @@ final class CoordinatorReviewController extends AbstractController
             'reviewTitle' => $reviewTitle,
             'reviewCssPath' => $reviewCssPath,
             'pageNames' => $pageNames,
+            'homeRoute' => $homeRoute,
             'loadValues' => fn (string $pageName) => $loader->loadValues($pageName),
         ]);
     }

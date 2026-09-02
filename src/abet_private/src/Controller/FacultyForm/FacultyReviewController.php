@@ -3,7 +3,7 @@
 namespace App\Controller\FacultyForm;
 
 use App\Entity\User;
-use App\Service\Forms\CoordinatorFormLoader;
+use App\Service\Forms\FacultyFormLoader;
 use App\Service\Forms\FormFunctions;
 use Dba\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,14 +29,16 @@ final class FacultyReviewController extends AbstractController
     )]
     public function getForm(
         #[CurrentUser] User $user,
-        CoordinatorFormLoader $loader,
+        FacultyFormLoader $loader,
         FormFunctions $helper,
     ) {
 
-        $formName = "coordinator-form";
-        $formBasePath = "/tool/coordinator-form";
-        $reviewTitle = "Coordinator Form Review";
+        $formName = "faculty-form";
+        $formBasePath = "/tool/faculty-form";
+        $reviewTitle = "Faculty Form Review";
         $reviewCssPath = "/assets/css/faculty-form-review.css";
+        $homeRoute = "app_faculty_form";
+
 
         ////////////////////////////////////////////////////
         // IN TEMPLATE 
@@ -55,7 +57,8 @@ final class FacultyReviewController extends AbstractController
             'reviewTitle' => $reviewTitle,
             'reviewCssPath' => $reviewCssPath,
             'pageNames' => $pageNames,
-            'loadValues' => fn (string $pageName) => $loader->loadValues($pageName),
+            'homeRoute' => $homeRoute,
+            'loadValues' => fn (string $pageName) => $loader->loadFormData($pageName),
         ]);
     }
 }
