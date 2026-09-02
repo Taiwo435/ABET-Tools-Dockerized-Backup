@@ -3,6 +3,7 @@
 namespace App\Controller\AssignmentsGrades;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -21,8 +22,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AssignmentsController extends AbstractController
 {
     #[Route('/AssignmentsGrades/assignments', name: 'app_assignments_grades_assignments', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return $this->render('tools/assignments_grades/assignments.html.twig');
+        return $this->render('tools/assignments_grades/assignments.html.twig', [
+            'courseId' => $request->query->get('courseId'),
+        ]);
     }
 }

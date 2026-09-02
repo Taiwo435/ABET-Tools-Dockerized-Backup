@@ -10,59 +10,64 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
 use App\Entity\Task\AssignmentsGrades\AccessTokenForm;
-use App\Entity\Task\AssignmentsGrades\NewExtractionForm;
 use App\Form\AssignmentsGrades\AccessTokenType;
-use App\Form\AssignmentsGrades\NewExtractionType;
-use App\Form\NewExtractionType as FormNewExtractionType;
-use App\Service\API;
 use App\Service\ApiProxy;
 
 /**
- * Controller that deals with the form that starts a new extraction
+ * Controller that deals with loading and displaying the courses a
+ * connected Canvas token has access to.
+ *
+ * Courses are loaded all at once
+ * (no term/semester selection step), identified by their Canvas course
+ * ID. Any filtering by that ID happens later, downstream, after data has
+ * been imported into the final compiled report shell -- not on this page.
+ * The previous Symfony Form (NewExtractionType/NewExtractionForm) is no
+ * longer used here: its only real field (Term) had no choices ever
+ * defined, and is no longer needed under the new workflow.
  */
 final class NewExtractionController extends AbstractController
 {
-
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/tool/assignmentsgrades/new_extraction', name: 'app_assignments_grades_new_extraction')]
     public function course_select(
-        #[CurrentUser] User $user, 
+        #[CurrentUser] User $user,
         ApiProxy $proxy,
-        Request $request) {
+        Request $request
+    ) {
+        $session = $request->getSession();
+        $token = $session->get('canvas_token');
 
-        /**
-         * This creates a form using these docs:
-         * @see https://symfony.com/doc/current/forms.html
-         */
-        // Initialize a AccessTokenForm that encapsulates the data returned
-        $task = new NewExtractionForm();
-        $task->setTerm('');
-        $task->setDegree('');
-
-        // Use the form builder that we defined
-        $form = $this->createForm(NewExtractionType::class, $task);
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            // $form->getData() holds the submitted values
-            // but, the original `$task` variable has also been updated
-            $task = $form->getData();
+        if (!$token) {
+            // Template already handles this case (checks
+            // app.session.has('canvas_token')), but without a token there
+            // is nothing to fetch, so skip straight to rendering it empty.
+            return $this->render('tools/assignments_grades/new_extraction.html.twig', [
+                'courses' => [],
+            ]);
         }
 
+        $response = $proxy->getAllCourses($token);
+
+        if ($response->getStatusCode() !== 200) {
+            return $this->render('tools/assignments_grades/new_extraction.html.twig', [
+                'courses' => [],
+                'error' => $response->toArray(false)['detail'] ?? 'Failed to load courses from Canvas.',
+            ]);
+        }
+
+        $courses = $response->toArray(false);
+
         return $this->render('tools/assignments_grades/new_extraction.html.twig', [
-            'form' => $form
+            'courses' => $courses,
         ]);
     }
 
     #[Route('/tool/assignmentsgrades/testform', name: 'test_form')]
     public function new(Request $request, #[CurrentUser] User $user): Response
     {
-        //asurite
-        $parts = explode('@', (string)$user->getEmail());
+        $parts = explode('@', (string) $user->getEmail());
         $asurite = $parts[0] ?? 'user';
 
-        // creates a task object and initializes some data for this example
         $task = new AccessTokenForm();
         $task->setToken('');
 
@@ -72,12 +77,7 @@ final class NewExtractionController extends AbstractController
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            // $form->getData() holds the submitted values
-            // but, the original `$task` variable has also been updated
             $task = $form->getData();
-
-            // ... perform some action, such as saving the task to the database
-
             return $this->redirectToRoute('app_assignments_grades_jobs');
         }
 
@@ -85,5 +85,4 @@ final class NewExtractionController extends AbstractController
             'form' => $form,
         ]);
     }
-
 }

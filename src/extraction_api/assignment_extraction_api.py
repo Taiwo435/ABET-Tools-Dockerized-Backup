@@ -28,7 +28,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 from typing import Annotated, NamedTuple, Optional, List, Dict, Any
 from typing_extensions import TypedDict
-import PyPDF2
+import pypdf
 import docx
 from csv_filter import RosterMap, parse_roster_for_major_map
 from xhtml2pdf import pisa
@@ -339,7 +339,7 @@ def extract_text_from_pdf(file_path: str) -> str:
     """Extracts text content from a PDF file."""
     try:
         with open(file_path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
+            reader = pypdf.PdfReader(f)
             return "".join(page.extract_text() for page in reader.pages)
     except Exception as e:
         logger.error("Error extracting text from PDF '%s': %s", file_path, e)
@@ -1223,9 +1223,15 @@ ALLOWED_COURSE_IDS = {
 @app.get("/canvas/courses")
 def list_canvas_courses(
     canvas_access_token: Annotated[str, Header()],
-    enrollment_type: str = Query(default="teacher"),
+    enrollment_type: list[str] = Query(default=["teacher", "ta"]),
 ):
-    """Fetch instructor courses from Canvas, filtered to CSE + allowed IDs."""
+    """Fetch instructor/TA courses from Canvas, filtered to CSE + allowed IDs.
+
+    Defaults to both 'teacher' and 'ta' enrollment types, since being a TA
+    on a course commonly comes with the same practical access as being its
+    teacher, and the caller shouldn't have to know or guess which one a
+    given user actually holds.
+    """
     if canvas_access_token == "mock_token":
         return [
             {
@@ -1238,21 +1244,28 @@ def list_canvas_courses(
             }
         ]
     fetcher = CanvasGradesFetcher(access_token=canvas_access_token)
-    courses = fetcher.get_paginated_list(
-        "courses",
-        params={
-            "enrollment_type": enrollment_type,
-            "include[]": ["term", "total_students", "teachers"],
-        },
-    )
-    # Keep only CSE courses + explicitly allowed course IDs
+    courses = []
+    seen_ids = set()
+    for single_type in enrollment_type:
+        type_courses = fetcher.get_paginated_list(
+            "courses",
+            params={
+                "enrollment_type": single_type,
+                "include[]": ["term", "total_students", "teachers"],
+            },
+        )
+        for c in type_courses:
+            if c.get("id") not in seen_ids:
+                seen_ids.add(c.get("id"))
+                courses.append(c)
+
+    # Keep only CS/CSE courses + explicitly allowed course IDs
+    cs_cse_pattern = re.compile(r"CSE?\d")
     filtered = [
         c
         for c in courses
         if c.get("id") in ALLOWED_COURSE_IDS
-        or (c.get("course_code") or "").upper().startswith("CSE")
-        # Also match term-prefixed codes like "2023Fall-T-CSE423-70483"
-        or "CSE" in (c.get("course_code") or "").upper()
+        or cs_cse_pattern.search((c.get("course_code") or "").upper())
     ]
     return filtered
 

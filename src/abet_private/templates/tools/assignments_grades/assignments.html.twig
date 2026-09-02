@@ -98,7 +98,11 @@
         <div class="ag-page-header">
             <div class="ag-page-title">
                 <h1>Assignments &amp; Grades</h1>
-                <p>CSE 445: Software Security • Fall 2024</p>
+                {% if courseId %}
+                    <p>Course ID: {{ courseId }} <span style="color: #999;">(real course selected -- mock content below still needs replacing with real data)</span></p>
+                {% else %}
+                    <p>CSE 445: Software Security • Fall 2024</p>
+                {% endif %}
             </div>
                         <div style="display: flex; gap: 10px;">
                 <button class="ag-btn-header" style="background: var(--asu-maroon); border-color: var(--asu-maroon);" onclick="showImportDialog()">Import to Canvas</button>

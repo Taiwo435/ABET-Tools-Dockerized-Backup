@@ -2,7 +2,7 @@ fastapi
 uvicorn
 requests
 python-docx
-PyPDF2
+pypdf
 xhtml2pdf
 python-multipart
 httpx

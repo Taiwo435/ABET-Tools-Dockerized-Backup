@@ -45,6 +45,40 @@ class ApiProxy
     }
 
     /**
+     * Returns every Canvas course the given token has faculty access to,
+     * with no term/semester filtering applied.
+     *
+     * Courses are loaded all at once rather than
+     * requiring a semester to be selected first -- courses are identified
+     * by their Canvas course ID, and any filtering happens later, after
+     * data has been imported into the final compiled report shell, not
+     * on this page.
+     *
+     * @param string $token The Canvas access token to fetch courses with
+     * @return ResponseInterface The response from the API
+     */
+      public function getAllCourses(string $token) {
+        $client = HttpClient::create();
+        // No enrollment_type override here -- the extraction API's
+        // /canvas/courses endpoint now defaults to fetching both
+        // 'teacher' and 'ta' enrollments on its own, so this endpoint
+        // works correctly for either role without the caller needing
+        // to know or guess which one a given user actually holds.
+        $url = $this->api_base(API::Extraction) . '/canvas/courses';
+
+        $response = $client->request(
+            'GET',
+            $url,
+            [
+                'headers' => [
+                    'canvas-access-token' => $token,
+                ],
+            ]
+        );
+        return $response;
+    }
+
+    /**
      * Returns the extraction jobs that have been instantiated.
      * @param User $user The user who submitted the request
      * @return ResponseInterface The response by the API
