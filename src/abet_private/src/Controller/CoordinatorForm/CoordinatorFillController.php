@@ -88,6 +88,7 @@ final class CoordinatorFillController extends AbstractController
 
         return $this->render('forms/form.fillout.twig',[
             'form' => $form,
+            'formName' => $formName,
             'backendErrorMessage' => $backendErrorMessage,
             'old' => $old,
             'page' => $page,
@@ -95,7 +96,7 @@ final class CoordinatorFillController extends AbstractController
     }
 
     #[IsGranted("ROLE_USER")]
-    #[Route('/tool/coordinator-form/submit/{page}', 
+    #[Route('/tool/coordinator-form/edit/submit.php', 
     name: 'app_coordinator_form_submit', 
     requirements: ['page' => Requirement::DIGITS],
     methods: ['POST'],

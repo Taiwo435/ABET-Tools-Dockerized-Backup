@@ -78,7 +78,7 @@ function getProgramSelectionMap() {
 }
 
 function findOrCreateProgram(\PDO $pdo, string $programName, string $programCode = '', ?string $programYear = null) {
-    $programYear = $programYear ?: getCurrentProgramYear();
+    $programYear = $programYear ?: $this->getCurrentProgramYear();
 
     $stmt = $pdo->prepare("
         SELECT program_id
@@ -125,22 +125,22 @@ public function handle_save() {
     case 'programSelect':
         try {
             $selectedProgram = $_POST['program'] ?? '';
-            $programMap = getProgramSelectionMap();
+            $programMap = $this->getProgramSelectionMap();
 
             if (!isset($programMap[$selectedProgram])) {
                 $message = "Please select a valid program before continuing.";
-                handleSaveError($message, $message);
+                $this->handleSaveError($message, $message);
                 die();
             }
 
             $program = $programMap[$selectedProgram];
-            $program_id = findOrCreateProgram($pdo, $program['program_name'], $program['program_code']);
+            $program_id = $this->findOrCreateProgram($pdo, $program['program_name'], $program['program_code']);
 
             $_SESSION['program_id'] = $program_id;
             $_SESSION['selected_program'] = $selectedProgram;
 
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         break;
@@ -156,16 +156,16 @@ public function handle_save() {
 
                 if (count($department) != 2 || $department[0] === '' || $department[1] === '') {
                     $message = "Select a program on the first page before saving Background Information.";
-                    handleSaveError($message, $message);
+                    $this->handleSaveError($message, $message);
                     die();
                 }
 
-                $program_id = findOrCreateProgram($pdo, $department[0], $department[1]);
+                $program_id = $this->findOrCreateProgram($pdo, $department[0], $department[1]);
                 $_SESSION['program_id'] = $program_id;
             }
 
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
 
@@ -192,7 +192,7 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -248,7 +248,7 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -257,7 +257,7 @@ public function handle_save() {
             $stmt = $pdo->prepare("DELETE FROM student_admission_requirements");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
 
@@ -297,7 +297,7 @@ public function handle_save() {
                 ]);
             }
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         break;
@@ -327,17 +327,17 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('peo_review_process');
+        $rows = $this->getGridRows('peo_review_process');
         try {
             $stmt = $pdo->prepare("DELETE FROM peo_review WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
 
@@ -354,7 +354,7 @@ public function handle_save() {
                     'constituencies' => $row['constituencies'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -381,17 +381,17 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('courses_and_methods_of_assessment');
+        $rows = $this->getGridRows('courses_and_methods_of_assessment');
         try {
             $stmt = $pdo->prepare("DELETE FROM outcome_assessment WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -407,17 +407,17 @@ public function handle_save() {
                     'assessment_method' => $row['assessment_method'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('assessment_results_summary');
+        $rows = $this->getGridRows('assessment_results_summary');
         try {
             $stmt = $pdo->prepare("DELETE FROM assessment_summary WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -433,17 +433,17 @@ public function handle_save() {
                     'result' => $row['summary'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('percentages_met_table');
+        $rows = $this->getGridRows('percentages_met_table');
         try {
             $stmt = $pdo->prepare("DELETE FROM outcome_met_percentages WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -462,7 +462,7 @@ public function handle_save() {
                     'percentage_met_secondary' => $row['percentage_met_past_year'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -490,18 +490,18 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('hardware_sequence_consideration');
+        $rows = $this->getGridRows('hardware_sequence_consideration');
         try {
             $stmt = $pdo->prepare("DELETE FROM continuous_improvement 
                 WHERE program_id = :program_id AND type = 'hardware'");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -517,18 +517,18 @@ public function handle_save() {
                     'problem_analysis' => $row['problem_analysis'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('semester_year_assessment_improvements');
+        $rows = $this->getGridRows('semester_year_assessment_improvements');
         try {
             $stmt = $pdo->prepare("DELETE FROM continuous_improvement 
                 WHERE program_id = :program_id AND type = 'semester_improvement'");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -547,18 +547,18 @@ public function handle_save() {
                     'status_actions' => $row['status_of_actions'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('program_educational_objectives_update');
+        $rows = $this->getGridRows('program_educational_objectives_update');
         try {
             $stmt = $pdo->prepare("DELETE FROM continuous_improvement 
                 WHERE program_id = :program_id AND type = 'peo_update'");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -576,7 +576,7 @@ public function handle_save() {
                     'result' => $row['result'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -603,18 +603,18 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('table_5_1_curriculum');
+        $rows = $this->getGridRows('table_5_1_curriculum');
         try {
             $stmt = $pdo->prepare("DELETE FROM curriculum 
                 WHERE program_id = :program_id AND concentration IS NULL");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -630,18 +630,18 @@ public function handle_save() {
                     'credit_hours' => $row['credit_hours'] ?? 0
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('table_5_1a_curriculum');
+        $rows = $this->getGridRows('table_5_1a_curriculum');
         try {
             $stmt = $pdo->prepare("DELETE FROM curriculum 
                 WHERE program_id = :program_id AND concentration = 'Cybersecurity'");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -657,17 +657,17 @@ public function handle_save() {
                     'credit_hours' => $row['credit_hours'] ?? 0
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('cse_400_level_courses');
+        $rows = $this->getGridRows('cse_400_level_courses');
         try {
             $stmt = $pdo->prepare("DELETE FROM concentration_courses WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -684,7 +684,7 @@ public function handle_save() {
                     'required_for' => ($row['required_for_cbs'] === 'yes') ? 'CbS' : ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -714,18 +714,18 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('faculty_qualifications_by_program');
+        $rows = $this->getGridRows('faculty_qualifications_by_program');
         try {
             $stmt = $pdo->prepare("DELETE FROM faculty_qualifications_by_program 
                 WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -744,12 +744,12 @@ public function handle_save() {
                     'lecturers_pop' => $row['lecturers_pop'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $workloadRows = getGridRows('faculty_workload_summary');
+        $workloadRows = $this->getGridRows('faculty_workload_summary');
         try {
             $stmt = $pdo->prepare("
                 INSERT INTO report_sections (program_id, section_key, content)
@@ -761,7 +761,7 @@ public function handle_save() {
                 'content' => json_encode($workloadRows)
             ]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         break;
@@ -790,17 +790,17 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('computer_resources_table');
+        $rows = $this->getGridRows('computer_resources_table');
         try {
             $stmt = $pdo->prepare("DELETE FROM facility_rooms");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -818,7 +818,7 @@ public function handle_save() {
                     'zoom_level' => $row['zoom_level'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -844,17 +844,17 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('scai_staff');
+        $rows = $this->getGridRows('scai_staff');
         try {
             $stmt = $pdo->prepare("DELETE FROM scai_staff");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -869,12 +869,12 @@ public function handle_save() {
                     'staff_size' => $row['staff_size'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $supportRows = getGridRows('support_staffing_summary');
+        $supportRows = $this->getGridRows('support_staffing_summary');
         try {
             $stmt = $pdo->prepare("
                 INSERT INTO report_sections (program_id, section_key, content)
@@ -886,7 +886,7 @@ public function handle_save() {
                 'content' => json_encode($supportRows)
             ]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         break;
@@ -911,17 +911,17 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('uto_lab_computers');
+        $rows = $this->getGridRows('uto_lab_computers');
         try {
             $stmt = $pdo->prepare("DELETE FROM uto_lab_computers");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -935,17 +935,17 @@ public function handle_save() {
                     'quantity' => $row['quantity'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('uto_lab_software');
+        $rows = $this->getGridRows('uto_lab_software');
         try {
             $stmt = $pdo->prepare("DELETE FROM uto_lab_software");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -961,17 +961,17 @@ public function handle_save() {
                     'installed_citrix' => !empty($row['version_installed_on_citrix']) ? 1 : 0
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('scia_instructional_lab_equipment');
+        $rows = $this->getGridRows('scia_instructional_lab_equipment');
         try {
             $stmt = $pdo->prepare("DELETE FROM scia_lab_computers");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -985,17 +985,17 @@ public function handle_save() {
                     'quantity' => $row['quantity'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('printers');
+        $rows = $this->getGridRows('printers');
         try {
             $stmt = $pdo->prepare("DELETE FROM scia_printers");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -1009,17 +1009,17 @@ public function handle_save() {
                     'quantity' => $row['details'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('scia_brickyard_software_list');
+        $rows = $this->getGridRows('scia_brickyard_software_list');
         try {
             $stmt = $pdo->prepare("DELETE FROM scia_brickyard_software");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -1038,7 +1038,7 @@ public function handle_save() {
                     'vdi_lab' => !empty($row['vdi_lab']) ? 1 : 0
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -1069,17 +1069,17 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('program_enrollment_degree_data');
+        $rows = $this->getGridRows('program_enrollment_degree_data');
         try {
             $stmt = $pdo->prepare("DELETE FROM program_enrollment WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -1112,17 +1112,17 @@ public function handle_save() {
                     'degrees_doctorates' => $row['doctorates'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('personnel');
+        $rows = $this->getGridRows('personnel');
         try {
             $stmt = $pdo->prepare("DELETE FROM personnel WHERE program_id = :program_id");
             $stmt->execute(['program_id' => $program_id]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -1139,7 +1139,7 @@ public function handle_save() {
                     'fte' => $row['fte'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
@@ -1167,17 +1167,17 @@ public function handle_save() {
                     'content' => $_POST[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('roles_and_responsibilities');
+        $rows = $this->getGridRows('roles_and_responsibilities');
         try {
             $stmt = $pdo->prepare("DELETE FROM assessment_roles");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -1191,17 +1191,17 @@ public function handle_save() {
                     'responsibilities' => $row['responsibilities'] ?? ''
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $rows = getGridRows('constituency_input');
+        $rows = $this->getGridRows('constituency_input');
         try {
             $stmt = $pdo->prepare("DELETE FROM assessment_constituency");
             $stmt->execute();
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         foreach ($rows as $row) {
@@ -1219,12 +1219,12 @@ public function handle_save() {
                     ])
                 ]);
             } catch(\PDOException $e) {
-                handleSaveError($genericErrorMessage, $e->getMessage());
+                $this->handleSaveError($genericErrorMessage, $e->getMessage());
                 die();
             }
         }
 
-        $processRows = getGridRows('assessment_processes');
+        $processRows = $this->getGridRows('assessment_processes');
         try {
             $stmt = $pdo->prepare("
                 INSERT INTO report_sections (program_id, section_key, content)
@@ -1236,13 +1236,13 @@ public function handle_save() {
                 'content' => json_encode($processRows)
             ]);
         } catch(\PDOException $e) {
-            handleSaveError($genericErrorMessage, $e->getMessage());
+            $this->handleSaveError($genericErrorMessage, $e->getMessage());
             die();
         }
         break;
 
     default:
-        handleSaveError($genericErrorMessage, "Page " . $_POST['page_name'] . " not recognized.");
+        $this->handleSaveError($genericErrorMessage, "Page " . $_POST['page_name'] . " not recognized.");
         break;
     }
         
