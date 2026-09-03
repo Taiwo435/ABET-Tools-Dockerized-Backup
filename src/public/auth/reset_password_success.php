@@ -30,7 +30,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
       Your password has been updated successfully. You can now sign in with your new password.
     </div>
 
-    <a class="button" href="login.php">Go to Login</a>
+    <a class="button" href="/login">Go to Login</a>
   </div>
 </body>
 </html>
