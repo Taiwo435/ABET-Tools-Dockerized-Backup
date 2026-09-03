@@ -11,7 +11,6 @@ function decodeGridRows($v): array {
     return [];
 }
 
-# in form_functions
 function formatReviewValue($v): string {
     if ($v === null) return "";
     if (is_bool($v)) return $v ? "Yes" : "No";
@@ -20,7 +19,6 @@ function formatReviewValue($v): string {
     return "";
 }
 
-# in loader
 function loadValues(string $pageName): array {
     $data = loadFormData($pageName);
     return is_array($data) ? $data : [];

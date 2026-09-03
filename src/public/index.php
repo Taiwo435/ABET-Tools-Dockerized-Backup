@@ -56,12 +56,48 @@ $kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
 
+if ($_SERVER['APP_ENV'] === 'prod') {
+    $security = $kernel->getContainer()->get(
+        \Symfony\Bundle\SecurityBundle\Security::class
+    );
+
+    $user = $security->getUser();
+
+    $log = sprintf(
+        <<<'LOG'
+==============================
+Request Debug
+==============================
+Datetime: %s
+Method:   %s
+URI:      %s
+IP:       %s
+User:     %s
+Session:  %s
+==============================
+
+LOG,
+        date('Y-m-d H:i:s T'),
+        $request->getMethod(),
+        $request->getRequestUri(),
+        $request->getClientIp() ?? 'unknown',
+        $user ? $user->getUserIdentifier() : 'NULL',
+        var_export($_SESSION ?? [], true)
+    );
+
+    file_put_contents(
+        '/tmp/debug.log',
+        $log,
+        FILE_APPEND | LOCK_EX
+    );
+}
+
 if (false === $response->isNotFound()) {
     // Symfony successfully handled the route.
     $response->send();
 } else {
     try {
-        LegacyBridge::handleRequest($request, $response, __DIR__);
+        LegacyBridge::handleRequest($request, $response, $kernel);
 
     }
     catch (NotFoundHttpException $e) {

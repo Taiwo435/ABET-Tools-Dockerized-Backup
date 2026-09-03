@@ -79,6 +79,9 @@ security:
     # those paths (~28 files) is remaining work under this same ticket.
 
 # Issue #132 Activated central framework firewalls to enforce automatic endpoint security
+when@dev:
+    security:
+        expose_security_errors: all
 
 when@test:
     security:

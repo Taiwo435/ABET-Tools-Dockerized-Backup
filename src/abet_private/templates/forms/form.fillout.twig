@@ -1,0 +1,559 @@
+{% extends 'base.html.twig' %}
+
+
+{% block body %}
+{% autoescape 'html' %}
+    <link rel="stylesheet" href="/assets/css/form.css">
+
+    <div class="center-div">
+    <div class="form-holder">
+
+    <div class="top-bar">
+        <h2 class="form-title">{{ form.title }}</h2>
+        <a href="{{ path(homeRoute) }}">
+            <button class="form-button form-button-return">Return to Page Select (Without Saving)</button>
+        </a>
+    </div>
+
+    {% if backendErrorMessage != '' %}
+        <h2 class="form-error">
+            Warning. This page was not saved. The server gave the following message:<br>
+            {{ backendErrorMessage }}
+        </h2>
+    {% endif %}
+
+
+    <form action="{{ form.action }}"
+        method="{{ form.method }}"
+        novalidate
+        data-name="{{ form.name }}"
+        data-form-group="{{ formName }}">
+
+
+
+    {% for field in form.fields %}
+        {% set name = field.name|default('') %}
+        {% set type = field.type %}
+        {% set raw_val = old[name]|default('') %}
+        {% set value = raw_val|default('') %}
+        {% set error = errors[name]|default('') %}
+
+        {% if type == 'section-break' %}
+            <div class="form-section-break"></div>
+            {# {% continue %} #}
+        {% endif %}
+
+        <div class="form-group" id="{{ name }}">
+
+            {% if field.label is defined %}
+                <label class="form-label
+                    {% if type == 'section-label' %}form-section-label{% endif %}
+                    {% if type == 'section-label-small' %}form-section-label-small{% endif %}
+                ">
+                    <div>{{ field.label }}</div>
+                    &nbsp;
+                    <div class="form-required-star">
+                        {% if field.required is defined %}*{% endif %}
+                    </div>
+                </label>
+            {% endif %}
+
+            {% if field.description|default('') %}
+                <p class="form-field-description">
+                    {{ field.description }}
+                </p>
+            {% endif %}
+
+
+            {% if type == 'select' %}
+
+                <select class="form-select" name="{{ name }}">
+                    <option value="">Select...</option>
+
+                    {% for key, option in field.options %}
+                        <option value="{{ key }}" {% if value == key %}selected{% endif %}>
+                            {{ option }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+
+            {% elseif type == 'expandable-grid' %}
+
+                {% set columnCount = field.columns|length %}
+
+                <div
+                    class="expandable-grid"
+                    data-max-rows="{{ field.maxRows }}"
+                    data-allow-incomplete-rows="{{ field.allowIncompleteRows|default(false) }}"
+                >
+                    <div
+                        class="expandable-grid-container"
+                        name="{{ name }}"
+                        data-old-values="{{ raw_val|json_encode }}"
+                        data-old-values2="{{ value }}"
+                        style="grid-template-columns: repeat({{ columnCount }}, 1fr) 0.25fr;"
+                    >
+                        <div class="expandable-grid-row expandable-grid-label-row">
+
+                            {% for column in field.columns %}
+                                <label
+                                    class="expandable-grid-label"
+                                    data-type="{{ column.type }}"
+                                    data-name="{{ column.name }}"
+                                    data-numerical="{{ column.numerical|default(false) }}"
+                                    {% if column.options is defined and column.options is not empty %}
+                                        data-option-count="{{ column.options|length }}"
+                                        {% for key, text in column.options %}
+                                            data-option-{{ loop.index0 }}-value="{{ key }}"
+                                            data-option-{{ loop.index0 }}-text="{{ text }}"
+                                        {% endfor %}
+                                    {% endif %}
+                                >
+                                    {{ column.label }}
+                                </label>
+                            {% endfor %}
+
+                        </div>
+
+                        {# input rows will be added here #}
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="expandable-grid-add-button"
+                        onclick="addExpandableGridRow(this.parentElement)"
+                    >
+                        Add Row
+                    </button>
+                </div>
+
+
+            {% elseif type == 'text' %}
+
+                <input
+                    class="form-input"
+                    type="{{ type }}"
+                    name="{{ name }}"
+                    value="{{ value }}"
+                >
+
+
+            {% elseif type == 'text-field' %}
+
+                <textarea
+                    class="form-text-field"
+                    name="{{ name }}"
+                >{{ value }}</textarea>
+
+            {% endif %}
+
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+        </div>
+
+    {% endfor %}
+
+        <div class="bottom-buttons">
+            <button class="form-button form-button-save" type="button" onclick="saveOnly()">Save Page</button>
+            <button class="form-button form-button-save-continue" type="button" onclick="saveAndContinue()">Save & Next Page</button>
+        </div>
+        
+        <div class="form-error-holder"></div>
+    </form>
+
+    <script>
+    console.log("I'm alive!");
+    function submitForm (currentPageNumber, nextPageNumber) {
+            console.log("Submitting...");
+
+            if (!validateForm()) {
+                return;
+            }
+
+            prepareDataFromGridElements();
+
+            const form = document.querySelector('form[data-form-group]');
+
+            // Adds hidden input fields, so needed data can easily be passed over to the submit handler.
+            const currentPageNumberInput = document.createElement('input');
+            currentPageNumberInput.type = "hidden";
+            currentPageNumberInput.name = "current_page_number";
+            currentPageNumberInput.value = currentPageNumber;
+            form.appendChild(currentPageNumberInput);
+
+            const nextPageNumberInput = document.createElement('input');
+            nextPageNumberInput.type = "hidden";
+            nextPageNumberInput.name = "next_page_number";
+            nextPageNumberInput.value = nextPageNumber;
+            form.appendChild(nextPageNumberInput);
+
+            const pageNameInput = document.createElement('input');
+            pageNameInput.type = "hidden";
+            pageNameInput.name = "page_name";
+            pageNameInput.value = "placeholder";
+            pageNameInput.value = form.getAttribute('data-name');
+            form.appendChild(pageNameInput);
+            
+
+            form.submit();
+        }
+
+
+        function saveOnly () {
+            currentPage = {{ page }};
+            submitForm(currentPage, currentPage);
+        }
+
+        function saveAndContinue () {
+            currentPage = {{ page }};
+            submitForm(currentPage, currentPage + 1);
+        }
+
+        function validateForm() {
+            const form = document.querySelector('form[data-form-group]');
+            const formConfig = {{ form|json_encode|raw }};
+
+            let errors = [];
+
+            form.querySelector('.form-error-holder').replaceChildren();
+
+            formConfig.fields.forEach(field => {
+                const input = form.querySelector(`[name="${field.name}"]`);
+                if (!input) return;
+                clearError(input);
+                let value = "";
+                if (field.type !== "expandable-grid") {
+                    value = input.value.trim();
+                }
+
+                // Make sure expandable-grid is checked first because its logic differs
+                if (field.type === "expandable-grid") {
+                    const expandableGridRows = input.querySelectorAll('.expandable-grid-input-row');
+
+                    let hasAFullRow = false;
+                    expandableGridRows.forEach((row, rowIndex) => {
+                        rowElements = row.children;
+                        rowElementsArray = Array.from(rowElements);
+                        let isEmptyRow = true;
+                        let isFullRow = true;
+
+                        let hasCheckbox = false;
+                        rowElementsArray.forEach((element, elementIndex) => {
+                            let elementValue = "";
+                            if (element.classList.contains('expandable-grid-checkbox-container')) {
+                                elementValue = element.children[0].checked;
+                                hasCheckbox = true;
+                            } else {
+                                elementValue = element.value;
+                            }
+
+                            isNumerical = element.getAttribute('data-numerical') === "1";
+                            if (isNumerical && !isPositiveWholeNumber(elementValue)) {
+                                const labelName = element.getAttribute('data-label-title');
+                                errors.push(`"${labelName}" must be entered as a positive, whole number.`);
+                                showError(input, `"${labelName}" must be entered as a positive, whole number.`);
+                                return;
+                            }
+
+                            if (element.classList.contains('expandable-grid-remove-button')) {
+                                return;
+                            }
+
+                            if (String(elementValue).trim() !== '') {
+                                isEmptyRow = false;
+                            } else if (String(elementValue).trim() === '') {
+                                isFullRow = false;
+                            }
+                        });
+
+
+                        if (isEmptyRow) {
+                            removeExpandableGridRow(row);
+                            return;
+                        }
+
+                        allowIncompleteRows = input.parentElement.getAttribute('data-allow-incomplete-rows') === "1";
+                        if (!isFullRow && !hasCheckbox && !allowIncompleteRows) {
+                            errors.push("Rows cannot be partially filled out. Either fill out all parts of the row or remove the row.");
+                            showError(input, "Rows cannot be partially filled out. Either fill out all parts of the row or remove the row.");
+                            return;
+                        } else {
+                            hasAFullRow = true;
+                        }
+                    });
+
+                    if (field.required && !hasAFullRow) {
+                        errors.push(`${field.label} is required. Complete at least one row.`);
+                        showError(input, `${field.label} is required. Complete at least one row.`);
+                        return;
+                    }
+                    // Return here because we the other checks don't work with expandable grids.
+                    return;
+                }
+
+                // Required validation
+                if (field.required && value === "") {
+                    errors.push(`${field.label} is required.`);
+                    showError(input, `${field.label} is required.`);
+                    return;
+                }
+                
+                // Numerical field validation
+                if (field.numerical && value != "") {
+                    newValue = value.replace(/%/g, '');
+                    if (!isPositiveWholeNumber(newValue)) {
+                        errors.push(`${field.label} must be entered as a positive, whole number.`)
+                        showError(input, `${field.label} must be entered as a positive, whole number.`)
+                        return;
+                    }
+                }
+
+                // Min length validation
+                if (field.minLength && value.length < field.minLength) {
+                    errors.push(`${field.label} must be at least ${field.minLength} characters.`);
+                    showError(input, `${field.label} must be at least ${field.minLength} characters.`);
+                }
+
+                // Max length validation
+                if (field.maxLength && value.length > field.maxLength) {
+                    errors.push(`${field.label} must be no more than ${field.maxLength} characters.`);
+                    showError(input, `${field.label} must be no more than ${field.maxLength} characters.`);
+                }
+
+                // Email validation
+                if (field.type === "email" && value !== "") {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(value)) {
+                        errors.push("Invalid email format.");
+                        showError(input, "Invalid email format.");
+                    }
+                }
+            });
+            
+            if (errors.length > 0) {
+                const formErrorDiv = form.querySelector('.form-error-holder');
+                const formError = document.createElement('div');
+                formError.classList = "error";
+                formError.textContent = "Errors in form detected. Please fix before saving.";
+                formErrorDiv.appendChild(formError);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        function loadDataToGridElements() {
+            expandableGrids = document.querySelectorAll('.expandable-grid');
+            expandableGrids.forEach((grid) => { 
+                const gridContainer = grid.querySelector('.expandable-grid-container');
+                oldValues = gridContainer.getAttribute('data-old-values2')
+                if (oldValues == "") {
+                    addExpandableGridRow(grid);
+                    return;
+                }
+                
+                oldRowData = JSON.parse(oldValues);
+                if (oldRowData.length == 0) {
+                    addExpandableGridRow(grid);
+                    return;
+                }
+                oldRowData.forEach((rowData, rowIndex) => {
+                    addExpandableGridRow(grid, rowData);
+                });
+            });
+        }
+
+        /*
+            When HTML forms submit, they look for specific input elements, and send over only those values.
+            The expandable-grids are incompatible with that system, so this function compiles all the values
+            from the expandable-grids, and adds the information onto hidden input elements
+            that will be sent over when the form submits.
+        */
+        function prepareDataFromGridElements() {
+            expandableGrids = document.querySelectorAll('.expandable-grid-container');
+            expandableGrids.forEach((grid, gridIndex) => {
+                rows = [];
+
+                inputRows = grid.querySelectorAll('.expandable-grid-input-row');       
+                inputRows.forEach((row, rowIndex) => {
+                    rowJSON = {};
+
+                    inputElements = row.children;
+                    inputElementsArray = Array.from(inputElements);
+                    let isEmptyRow = true;
+                    inputElementsArray.forEach((element, elementIndex) => {
+                        // Ignores the remove buttons
+                        if (element.classList.contains('expandable-grid-remove-button')) {
+                            return;
+                        }
+
+                        let elementValue = "";
+                        if (element.classList.contains('expandable-grid-checkbox-container')) {
+                            elementValue = element.children[0].checked;
+                        } else {
+                            elementValue = element.value;
+                        }
+
+                        if (element.value !== "") {
+                            isEmptyRow = false;
+                        }
+
+                        columnName = grid.querySelector('.expandable-grid-label-row').children[elementIndex].getAttribute("data-name");
+                        rowJSON[columnName] = elementValue;
+                        
+                    });
+                    if (!isEmptyRow) {
+                        rows.push(rowJSON);
+                    }
+                });
+
+                const expandableGridInput = document.createElement('input');
+                expandableGridInput.type = "hidden";
+                expandableGridInput.name = grid.getAttribute("name");
+                expandableGridInput.value = JSON.stringify(rows);
+
+                const form = document.querySelector('form[data-form-group]');
+                form.appendChild(expandableGridInput);
+            });
+        }
+
+        function addExtendableGridRow(expandableGrid) {
+            addExtendableGridRow(extendableGrid, null);
+        }
+        function addExpandableGridRow (expandableGrid, oldRowDataJSON) {
+            const gridContainer = expandableGrid.querySelector('.expandable-grid-container');
+            
+            let maxRows = expandableGrid.getAttribute('data-max-rows');
+            maxRows = parseInt(maxRows);
+            if (Number.isNaN(maxRows)) {
+                // Default value
+                maxRows = 10;
+            }
+            
+            if (gridContainer.childElementCount >= maxRows + 1) {
+                return;
+            }
+            
+            const columnCount = gridContainer.querySelector('.expandable-grid-label-row').childElementCount;
+            
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'expandable-grid-row expandable-grid-input-row';
+            
+            const labelRow = gridContainer.querySelector('.expandable-grid-label-row');
+            for (let i = 0; i < columnCount; i++) {
+                const label = labelRow.children[i]
+                const columnType = label.getAttribute('data-type');
+                const columnName = label.getAttribute('data-name');
+                const columnNumerical = label.getAttribute('data-numerical');
+                const columnLabelTitle = label.textContent.trim();
+
+                let inputField;
+                
+                if (columnType === 'select') {
+                    inputField = document.createElement('select');
+                    const optionCount = labelRow.children[i].getAttribute('data-option-count');
+
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = "";
+                    defaultOption.textContent = "Select...";
+                    inputField.appendChild(defaultOption);
+                    for (let j = 0; j < optionCount; j++) {
+                        const newOption = document.createElement('option');
+                        newOption.value = label.getAttribute('data-option-' + j + '-value');
+                        newOption.textContent = label.getAttribute('data-option-' + j + '-text');
+                        inputField.appendChild(newOption);
+                    }
+                    inputField.className = 'expandable-grid-select';
+                    if (oldRowDataJSON != null) {
+                        inputField.value = oldRowDataJSON[columnName];
+                    }
+                } else if (columnType === 'checkbox') {
+                    inputField = document.createElement('div');
+                    inputField.className = 'expandable-grid-checkbox-container';
+                    
+
+                    checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'expandable-grid-checkbox';
+                    if (oldRowDataJSON != null) {
+                        checkbox.checked = oldRowDataJSON[columnName];
+                    }
+                    inputField.appendChild(checkbox);
+                } else if (columnType === 'text') {
+                    inputField = document.createElement('input');
+                    inputField.className = 'expandable-grid-small-input';
+                    if (oldRowDataJSON != null) {
+                        inputField.value = oldRowDataJSON[columnName];
+                    }
+                } else {
+                    inputField = document.createElement('textarea');
+                    inputField.className = 'expandable-grid-large-input';
+                    if (oldRowDataJSON != null) {
+                        inputField.textContent = oldRowDataJSON[columnName];
+                    }
+                }
+
+                inputField.dataset.numerical = columnNumerical;
+                inputField.dataset.labelTitle = columnLabelTitle;
+                rowDiv.appendChild(inputField);
+            }
+            
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'expandable-grid-remove-button';
+            removeButton.textContent = "Remove";
+            removeButton.onclick = function() { removeExpandableGridRow(this.parentElement) };
+            rowDiv.appendChild(removeButton);
+            
+            gridContainer.appendChild(rowDiv);
+        }
+
+        function removeExpandableGridRow (expandableGridRow) {
+            // Ensures a row can't be removed if it is the only one
+            if (expandableGridRow.parentElement.querySelectorAll('.expandable-grid-input-row').length <= 1) {
+                return;
+            }
+            
+            expandableGridRow.remove();
+        }
+
+        function showError(input, message) {
+            clearError(input);
+
+            const error = document.createElement("div");
+            error.className = "error";
+            error.innerText = message;
+
+            input.parentNode.appendChild(error);
+            input.classList.add("input-error");
+        }
+
+        function clearError(input) {
+            const existing = input.parentNode.querySelector(".error");
+            if (existing) existing.remove();
+            input.classList.remove("input-error");
+        }
+
+        function isPositiveWholeNumber(value) {
+            const num = Number(value);
+            if (!Number.isInteger(num) || num < 0) {
+                return false
+            }
+            return true
+        }
+
+        loadDataToGridElements();
+    </script>
+
+
+    </div>
+    </div>
+
+{% endautoescape %}
+{% endblock %}
