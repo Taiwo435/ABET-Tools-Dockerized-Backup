@@ -23,6 +23,7 @@ final class FacultyReviewController extends AbstractController
     // }
 
 
+    #[IsGranted('ROLE_FACULTY_FORM')]
     #[Route('/tool/faculty-form/review', 
     name: 'app_faculty_form_review', 
     methods: ['GET'], 

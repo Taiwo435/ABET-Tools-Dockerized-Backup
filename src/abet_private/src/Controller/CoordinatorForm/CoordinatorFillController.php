@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Requirement\Requirement;
 final class CoordinatorFillController extends AbstractController
 {
 
+    #[IsGranted("ROLE_COORDINATOR_FORM")]
     #[Route(
         '/tool/coordinator-form/edit/{page}', 
         name: 'app_coordinator_form_edit', 
@@ -96,7 +97,7 @@ final class CoordinatorFillController extends AbstractController
         ]);
     }
 
-    #[IsGranted("ROLE_USER")]
+    #[IsGranted("ROLE_COORDINATOR_FORM")]
     #[Route('/tool/coordinator-form/edit/submit.php', 
     name: 'app_coordinator_form_submit', 
     requirements: ['page' => Requirement::DIGITS],

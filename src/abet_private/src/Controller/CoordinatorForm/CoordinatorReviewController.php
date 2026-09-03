@@ -23,6 +23,7 @@ final class CoordinatorReviewController extends AbstractController
     // }
 
 
+    #[IsGranted("ROLE_COORDINATOR_FORM")]
     #[Route('/tool/coordinator-form/review', 
     name: 'app_coordinator_form_review', 
     methods: ['GET'], 

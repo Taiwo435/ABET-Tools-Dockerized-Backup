@@ -22,6 +22,7 @@ final class CoordinatorOverviewController extends AbstractController
     // }
 
 
+    #[IsGranted("ROLE_COORDINATOR_FORM")]
     #[Route('/tool/coordinator-form', name: 'app_coordinator_form', methods: ['GET'])]
     public function getForm(
         #[CurrentUser] User $user,
