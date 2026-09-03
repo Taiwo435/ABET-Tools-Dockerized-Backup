@@ -30,7 +30,7 @@ class CoordinatorFormSaver
         $session->set('coordinator_form_old', $request->request->all());
         $session->set('coordinator_form_error_message', $message);
 
-        $url = '/coordinator-form/edit/?page=' . $request->request->get('current_page_number');
+        $url = '/tool/coordinator-form/edit/' . $request->request->get('current_page_number');
 
         header('Location: ' . $url);
 
@@ -51,12 +51,21 @@ class CoordinatorFormSaver
  * The JS submits grid data as a JSON string (via JSON.stringify).
  * This helper decodes it back to an array so PHP can iterate over it.
  */
-function getGridRows($key) {
-    $raw = $_POST[$key] ?? [];
-    if (is_string($raw) && !empty($raw)) {
+private function getGridRows(string $key): array {
+    $request = $this->requestStack->getCurrentRequest();
+
+    if ($request === null) {
+        return [];
+    }
+
+    $post = $request->request->all();
+    $raw = $post[$key] ?? [];
+
+    if (is_string($raw) && $raw !== '') {
         $decoded = json_decode($raw, true);
         return is_array($decoded) ? $decoded : [];
     }
+
     return is_array($raw) ? $raw : [];
 }
 
@@ -111,20 +120,91 @@ function findOrCreateProgram(\PDO $pdo, string $programName, string $programCode
     return (int) $pdo->lastInsertId();
 }
 
+// This lets the new Symfony form names reach the existing saver cases without rewriting those cases yet.
+private function normalizePageName(string $pageName): string
+{
+    return match ($pageName) {
+        'studentOutcomes' => 'student_outcomes',
+        'continuousImprovement' => 'continuous_improvement',
+        'institutionalSupport' => 'institutional_support_staffing',
+        'equipment' => 'appendix_c_equipment',
+        'institutionalSummary' => 'institutional_summary',
+        'assessmentPlan' => 'assessment_plan',
+        default => $pageName,
+    };
+}
+
+
+/**
+ * Finds the database program_id that matches a major name from the admissions form.
+ *
+ * The admissions grid stores majors as human-readable names, but
+ * admission_major_map links admissions records to programs using program_id.
+ *
+ * If multiple program records have the same name, prefer the one from the
+ * current program year so the admissions data is linked to the correct version
+ * of that program.
+ *
+ * Returns null if no matching program can be found.
+ */
+private function findAdmissionProgramIdByName(
+    \PDO $pdo,
+    string $majorName,
+    int $currentProgramId
+): ?int {
+    $yearStmt = $pdo->prepare("
+        SELECT program_year
+        FROM programs
+        WHERE program_id = :program_id
+    ");
+    $yearStmt->execute(['program_id' => $currentProgramId]);
+    $programYear = (string) ($yearStmt->fetchColumn() ?: '');
+
+    $stmt = $pdo->prepare("
+        SELECT program_id
+        FROM programs
+        WHERE LOWER(TRIM(program_name)) = LOWER(TRIM(:program_name))
+        ORDER BY
+            CASE WHEN program_year = :program_year THEN 0 ELSE 1 END,
+            CAST(COALESCE(NULLIF(program_year, ''), '0') AS UNSIGNED) DESC,
+            program_id DESC
+        LIMIT 1
+    ");
+
+    $stmt->execute([
+        'program_name' => $majorName,
+        'program_year' => $programYear
+    ]);
+
+    $programId = $stmt->fetchColumn();
+
+    return $programId === false ? null : (int) $programId;
+}
+
 ///////////////////////////////////////////////
 // giant function 
 ///////////////////////////////////////////////
 
 public function handle_save() {
+    $request = $this->requestStack->getCurrentRequest();
+
+    if ($request === null) {
+        throw new \LogicException('CoordinatorFormSaver requires an active HTTP request.');
+    }
+
+    $session = $request->getSession();
+    $post = $request->request->all();
 
     $pdo = $this->db->db();
 
     $genericErrorMessage = "Something went wrong while saving the form. Please contact sdosburn@asu.edu if the problem persists.";
 
-    switch ($_POST['page_name']) {
+    $pageName = $this->normalizePageName((string) ($post['page_name'] ?? ''));
+
+    switch ($pageName) {
     case 'programSelect':
         try {
-            $selectedProgram = $_POST['program'] ?? '';
+            $selectedProgram = $post['program'] ?? '';
             $programMap = $this->getProgramSelectionMap();
 
             if (!isset($programMap[$selectedProgram])) {
@@ -136,8 +216,8 @@ public function handle_save() {
             $program = $programMap[$selectedProgram];
             $program_id = $this->findOrCreateProgram($pdo, $program['program_name'], $program['program_code']);
 
-            $_SESSION['program_id'] = $program_id;
-            $_SESSION['selected_program'] = $selectedProgram;
+            $session->set('program_id', $program_id);
+            $session->set('selected_program', $selectedProgram);
 
         } catch(\PDOException $e) {
             $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -148,10 +228,10 @@ public function handle_save() {
     case 'background':
         $program_id = null;
         try {
-            if (!empty($_SESSION['program_id'])) {
-                $program_id = (int) $_SESSION['program_id'];
+            if ($session->has('program_id')) {
+                $program_id = (int) $session->get('program_id');
             } else {
-                $departmentValue = trim($_POST['department'] ?? '');
+                $departmentValue = trim($post['department'] ?? '');
                 $department = array_map('trim', explode('-', $departmentValue, 2));
 
                 if (count($department) != 2 || $department[0] === '' || $department[1] === '') {
@@ -161,7 +241,7 @@ public function handle_save() {
                 }
 
                 $program_id = $this->findOrCreateProgram($pdo, $department[0], $department[1]);
-                $_SESSION['program_id'] = $program_id;
+                $session->set('program_id', $program_id);
             }
 
         } catch(\PDOException $e) {
@@ -189,7 +269,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -199,7 +279,7 @@ public function handle_save() {
         break;
 
     case 'generalCriteria':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         // Plain text fields saved to report_sections
         $section_keys = [
@@ -232,7 +312,8 @@ public function handle_save() {
             'independent_study_research_and_internship_credit',
             'graduation_requirements',
             'flowchart_and_dars_audit',
-            'records_of_student_work_transcripts'
+            'records_of_student_work_transcripts',
+            'student_addmissions_text_above_table'
         ];
 
         foreach ($section_keys as $key) {
@@ -245,7 +326,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -253,445 +334,1068 @@ public function handle_save() {
             }
         }
 
-        try {
-            $stmt = $pdo->prepare("DELETE FROM student_admission_requirements");
-            $stmt->execute();
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
+        $rows = $this->getGridRows('student_addmissions_table');
 
         try {
-            $freshman = $_POST['freshman'] ?? '';
-            if ($freshman !== '') {
-                $stmt = $pdo->prepare("
-                    INSERT INTO student_admission_requirements (freshman)
-                    VALUES (:freshman)
-                ");
-                $stmt->execute([
-                    'freshman' => $freshman
+            $pdo->beginTransaction();
+
+            // This table represents the full shared admissions grid.
+            // admission_major_map rows are removed automatically by ON DELETE CASCADE.
+            $pdo->exec("DELETE FROM student_admission_requirements");
+
+            $insertRequirement = $pdo->prepare("
+                INSERT INTO student_admission_requirements
+                    (freshman, transfer_12_23, transfer_24_primary, transfer_24_secondary)
+                VALUES
+                    (:freshman, :transfer_12_23, :transfer_24_primary, :transfer_24_secondary)
+            ");
+
+            $insertMajorMap = $pdo->prepare("
+                INSERT INTO admission_major_map (admission_id, program_id)
+                VALUES (:admission_id, :program_id)
+            ");
+
+            foreach ($rows as $row) {
+                $major = trim((string) ($row['major'] ?? ''));
+                $freshman = trim((string) ($row['freshman_admission_criteria'] ?? ''));
+                $transfer12 = trim((string) ($row['transfer_admission_criteria_12_13'] ?? ''));
+                $transfer24Primary = trim((string) ($row['transfer_admission_criteria_primary_24'] ?? ''));
+                $transfer24Secondary = trim((string) ($row['transfer_admission_criteria_secondary_24'] ?? ''));
+
+                // Ignore completely empty rows.
+                if (
+                    $major === ''
+                    && $freshman === ''
+                    && $transfer12 === ''
+                    && $transfer24Primary === ''
+                    && $transfer24Secondary === ''
+                ) {
+                    continue;
+                }
+
+                $insertRequirement->execute([
+                    'freshman' => $freshman,
+                    'transfer_12_23' => $transfer12,
+                    'transfer_24_primary' => $transfer24Primary,
+                    'transfer_24_secondary' => $transfer24Secondary
                 ]);
+
+                $admissionId = (int) $pdo->lastInsertId();
+
+                // The schema supports multiple majors in one cell.
+                $majorNames = array_unique(array_filter(array_map(
+                    'trim',
+                    explode(',', $major)
+                )));
+
+                foreach ($majorNames as $majorName) {
+                    $majorProgramId = $this->findAdmissionProgramIdByName(
+                        $pdo,
+                        $majorName,
+                        $program_id
+                    );
+
+                    if ($majorProgramId === null) {
+                        throw new \InvalidArgumentException(
+                            "Admissions major '{$majorName}' does not match a program in the database."
+                        );
+                    }
+
+                    $insertMajorMap->execute([
+                        'admission_id' => $admissionId,
+                        'program_id' => $majorProgramId
+                    ]);
+                }
             }
 
-            $transfer_12_23 = $_POST['transfer_12_23'] ?? '';
-            if ($transfer_12_23 !== '') {
-                $stmt = $pdo->prepare("
-                    INSERT INTO student_admission_requirements (transfer_12_23)
-                    VALUES (:transfer_12_23)
-                ");
-                $stmt->execute([
-                    'transfer_12_23' => $transfer_12_23
-                ]);
+            $pdo->commit();
+
+        } catch (\InvalidArgumentException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
             }
 
-            $transfer_24_primary = $_POST['transfer_24_primary'] ?? '';
-            $transfer_24_secondary = $_POST['transfer_24_secondary'] ?? '';
-            if ($transfer_24_primary !== '' || $transfer_24_secondary !== '') {
-                $stmt = $pdo->prepare("
-                    INSERT INTO student_admission_requirements (transfer_24_primary, transfer_24_secondary)
-                    VALUES (:primary, :secondary)
-                ");
-                $stmt->execute([
-                    'primary' => $transfer_24_primary,
-                    'secondary' => $transfer_24_secondary
-                ]);
+            $this->handleSaveError($e->getMessage(), $e->getMessage());
+
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
             }
-        } catch(\PDOException $e) {
+
             $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
         }
+
+
+
         break;
 
     case 'educationalObjectives':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         $section_keys = [
             'mission_statement',
-            'program_educational_objectives',
-            'public_availability_of_peos',
-            'consistency_with_mission',
-            'program_constituencies',
-            'how_peos_meet_constituencies'
+            'program_education_objectives',
+            'blue-box',
+            'consistency_program_education_object_mission_institution',
+            'program_constituencies_text_above_subheaders',
+            'industry',
+            'alumni',
+            'students',
+            'faculty',
+            'process_reivew_program_education_objectives_text',
+            'engagement_constituencies',
+            'industry_engagement',
+            'alumni_engagement',
+            'studnet_engagement',
+            'faculty_engagement',
+            'ensuring_consistency'
         ];
 
-        foreach ($section_keys as $key) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO report_sections (program_id, section_key, content)
-                    VALUES (:program_id, :section_key, :content)
-                    ON DUPLICATE KEY UPDATE content = VALUES(content)
-                ");
-                $stmt->execute([
+        $rows = $this->getGridRows('table_1-1');
+
+        try {
+            $pdo->beginTransaction();
+
+            $saveSection = $pdo->prepare("
+                INSERT INTO report_sections (program_id, section_key, content)
+                VALUES (:program_id, :section_key, :content)
+                ON DUPLICATE KEY UPDATE content = VALUES(content)
+            ");
+
+            foreach ($section_keys as $key) {
+                $saveSection->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
             }
-        }
 
-        $rows = $this->getGridRows('peo_review_process');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM peo_review WHERE program_id = :program_id");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
+            $delete = $pdo->prepare("
+                DELETE FROM peo_review
+                WHERE program_id = :program_id
+            ");
+            $delete->execute([
+                'program_id' => $program_id
+            ]);
 
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO peo_review (program_id, input_method, schedule, constituencies)
-                    VALUES (:program_id, :input_method, :schedule, :constituencies)
-                ");
-                $stmt->execute([
+            $insert = $pdo->prepare("
+                INSERT INTO peo_review
+                    (program_id, input_method, schedule, constituencies)
+                VALUES
+                    (:program_id, :input_method, :schedule, :constituencies)
+            ");
+
+            foreach ($rows as $row) {
+                $inputMethod = trim((string) ($row['input_method'] ?? ''));
+                $schedule = trim((string) ($row['schedule'] ?? ''));
+                $constituencies = trim((string) ($row['constituencies'] ?? ''));
+
+                if (
+                    $inputMethod === ''
+                    && $schedule === ''
+                    && $constituencies === ''
+                ) {
+                    continue;
+                }
+
+                $insert->execute([
                     'program_id' => $program_id,
-                    'input_method' => $row['input_method'] ?? '',
-                    'schedule' => $row['schedule'] ?? '',
-                    'constituencies' => $row['constituencies'] ?? ''
+                    'input_method' => $inputMethod,
+                    'schedule' => $schedule,
+                    'constituencies' => $constituencies
                 ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
             }
+
+            $pdo->commit();
+
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            $this->handleSaveError(
+                $genericErrorMessage,
+                $e->getMessage()
+            );
         }
+
         break;
 
     case 'student_outcomes':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
+        // Current Criterion 3 text fields from studentOutcomes.json.
+        // These are stored as free-text report sections.
         $section_keys = [
-            'student_outcomes_definition',
-            'relationship_to_peos'
+            'student_outcomes_text',
+            'student_outcomes_one',
+            'student_outcomes_two',
+            'student_outcomes_three',
+            'student_outcomes_four',
+            'student_outcomes_five',
+            'student_outcomes_six',
+            'student_outcomes_seven',
+            'student_outcome_to_program_education_objects_one',
+            'student_outcome_to_program_education_objects_two',
+            'student_outcome_to_program_education_objects_three',
+            'student_outcome_to_program_education_objects_four'
         ];
 
-        foreach ($section_keys as $key) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO report_sections (program_id, section_key, content)
-                    VALUES (:program_id, :section_key, :content)
-                    ON DUPLICATE KEY UPDATE content = VALUES(content)
-                ");
-                $stmt->execute([
+        // Each grid corresponds to one Program Educational Objective.
+        $topicGrids = [
+            1 => 'topics_answered_by_objective_one',
+            2 => 'topics_answered_by_objective_two',
+            3 => 'topics_answered_by_objective_three',
+            4 => 'topics_answered_by_objective_four'
+        ];
+
+        try {
+            $pdo->beginTransaction();
+
+            // Save the narrative/text fields.
+            $saveSection = $pdo->prepare("
+                INSERT INTO report_sections (program_id, section_key, content)
+                VALUES (:program_id, :section_key, :content)
+                ON DUPLICATE KEY UPDATE content = VALUES(content)
+            ");
+
+            foreach ($section_keys as $key) {
+                $saveSection->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
             }
+
+            // Replace the existing Criterion 3 topic rows for this program
+            // with the current contents of the four expandable grids.
+            $deleteTopics = $pdo->prepare("
+                DELETE FROM student_outcome_peo_topics
+                WHERE program_id = :program_id
+            ");
+
+            $deleteTopics->execute([
+                'program_id' => $program_id
+            ]);
+
+            $insertTopic = $pdo->prepare("
+                INSERT INTO student_outcome_peo_topics
+                    (program_id, objective_number, topic_number, topic)
+                VALUES
+                    (:program_id, :objective_number, :topic_number, :topic)
+            ");
+
+            foreach ($topicGrids as $objectiveNumber => $gridName) {
+                $rows = $this->getGridRows($gridName);
+
+                foreach ($rows as $row) {
+                    $topicNumber = trim((string) ($row['topic_number'] ?? ''));
+                    $topic = trim((string) ($row['topic'] ?? ''));
+
+                    // Ignore completely empty rows.
+                    if ($topicNumber === '' && $topic === '') {
+                        continue;
+                    }
+
+                    $insertTopic->execute([
+                        'program_id' => $program_id,
+                        'objective_number' => $objectiveNumber,
+                        'topic_number' => $topicNumber,
+                        'topic' => $topic
+                    ]);
+                }
+            }
+
+            $pdo->commit();
+
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            $this->handleSaveError(
+                $genericErrorMessage,
+                $e->getMessage()
+            );
         }
 
-        $rows = $this->getGridRows('courses_and_methods_of_assessment');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM outcome_assessment WHERE program_id = :program_id");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO outcome_assessment (program_id, outcome_number, course_name, assessment_method)
-                    VALUES (:program_id, :outcome_number, :course_name, :assessment_method)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'outcome_number' => $row['abet_outcome'] ?? '',
-                    'course_name' => $row['class_name'] ?? '',
-                    'assessment_method' => $row['assessment_method'] ?? ''
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
-
-        $rows = $this->getGridRows('assessment_results_summary');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM assessment_summary WHERE program_id = :program_id");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO assessment_summary (program_id, outcome_number, semester, result)
-                    VALUES (:program_id, :outcome_number, :semester, :result)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'outcome_number' => $row['outcome'] ?? '',
-                    'semester' => '',
-                    'result' => $row['summary'] ?? ''
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
-
-        $rows = $this->getGridRows('percentages_met_table');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM outcome_met_percentages WHERE program_id = :program_id");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO outcome_met_percentages 
-                    (program_id, outcome_number, semesters_assessed, percentage_met, times_consecutive_not_met, percentage_met_secondary)
-                    VALUES (:program_id, :outcome_number, :semesters_assessed, :percentage_met, :times_consecutive_not_met, :percentage_met_secondary)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'outcome_number' => $row['outcome'] ?? '',
-                    'semesters_assessed' => $row['semesters_assessed'] ?? '',
-                    'percentage_met' => $row['percentage_met'] ?? '',
-                    'times_consecutive_not_met' => $row['times_two_consecutive_semesters_not_met'] ?? '',
-                    'percentage_met_secondary' => $row['percentage_met_past_year'] ?? ''
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
         break;
 
     case 'continuous_improvement':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
+        // Current Criterion 4 narrative/text fields.
         $section_keys = [
-            'student_outcomes_assessment',
-            'continuous_improvement_process',
+            'criterion4_continuou_improvement_text',
+            'frequency',
+            'level_of_attainment',
+            'summaries',
+            'text_above_table_4-6',
+            'document_maintained',
+            'continuous_improvement_text',
+            'continuous_improvement_process_overview',
+            'problem_identification',
+            'implementation',
+            'evalutation',
+            'closing_the_loop',
             'additional_information'
         ];
 
-        foreach ($section_keys as $key) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO report_sections (program_id, section_key, content)
-                    VALUES (:program_id, :section_key, :content)
-                    ON DUPLICATE KEY UPDATE content = VALUES(content)
-                ");
-                $stmt->execute([
+        try {
+            $pdo->beginTransaction();
+
+            /*
+            * Save normal narrative fields to report_sections.
+            */
+            $saveSection = $pdo->prepare("
+                INSERT INTO report_sections (program_id, section_key, content)
+                VALUES (:program_id, :section_key, :content)
+                ON DUPLICATE KEY UPDATE content = VALUES(content)
+            ");
+
+            foreach ($section_keys as $key) {
+                $saveSection->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
             }
-        }
 
-        $rows = $this->getGridRows('hardware_sequence_consideration');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM continuous_improvement 
-                WHERE program_id = :program_id AND type = 'hardware'");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO continuous_improvement 
+            /*
+            * Smaller/general-purpose grids do not have dedicated normalized
+            * database tables, so preserve their complete row structure as JSON.
+            */
+            $jsonGrids = [
+                'topics',
+                'outcome_not_met',
+                'data_collection',
+                'constituency_improvement_tables',
+                'improvements_underway'
+            ];
+
+            foreach ($jsonGrids as $gridName) {
+                $rows = $this->getGridRows($gridName);
+
+                $saveSection->execute([
+                    'program_id' => $program_id,
+                    'section_key' => $gridName,
+                    'content' => json_encode($rows)
+                ]);
+            }
+
+            /*
+            * Table 4-1 — Courses and method of assessment for each outcome.
+            *
+            * The form displays one row per ABET outcome and one column per
+            * course. The database stores one row per outcome/course combination.
+            */
+            $courseColumns = [
+                'class_one'   => 'CSE 301',
+                'class_two'   => 'CSE 320',
+                'class_three' => 'CSE 325',
+                'class_four'  => 'CSE 360',
+                'class_five'  => 'CSE 365',
+                'class_six'   => 'CSE 423',
+                'class_seven' => 'CSE 424',
+                'class_eight' => 'CSE 434',
+                'class_nine'  => 'IEE 380'
+            ];
+
+            // Spaces in submitted field names are normalized to underscores by PHP.
+            $table41Rows = $this->getGridRows('Table_4-1');
+
+            $delete = $pdo->prepare("
+                DELETE FROM outcome_assessment
+                WHERE program_id = :program_id
+            ");
+            $delete->execute(['program_id' => $program_id]);
+
+            $insert = $pdo->prepare("
+                INSERT INTO outcome_assessment
+                    (program_id, outcome_number, course_name, assessment_method)
+                VALUES
+                    (:program_id, :outcome_number, :course_name, :assessment_method)
+            ");
+
+            foreach ($table41Rows as $row) {
+                $outcomeNumber = trim((string) ($row['abet_number'] ?? ''));
+
+                if ($outcomeNumber === '') {
+                    continue;
+                }
+
+                foreach ($courseColumns as $column => $courseName) {
+                    $method = trim((string) ($row[$column] ?? ''));
+
+                    if ($method === '') {
+                        continue;
+                    }
+
+                    $insert->execute([
+                        'program_id' => $program_id,
+                        'outcome_number' => $outcomeNumber,
+                        'course_name' => $courseName,
+                        'assessment_method' => $method
+                    ]);
+                }
+            }
+
+            /*
+            * Table 4-2 — Required level of attainment for each assessment.
+            *
+            * Uses the same course-column layout as Table 4-1.
+            */
+            $table42Rows = $this->getGridRows('Table_4-2');
+
+            $delete = $pdo->prepare("
+                DELETE FROM outcome_attainment_level
+                WHERE program_id = :program_id
+            ");
+            $delete->execute(['program_id' => $program_id]);
+
+            $insert = $pdo->prepare("
+                INSERT INTO outcome_attainment_level
+                    (program_id, outcome_number, course_name, attainment_level)
+                VALUES
+                    (:program_id, :outcome_number, :course_name, :attainment_level)
+            ");
+
+            foreach ($table42Rows as $row) {
+                $outcomeNumber = trim((string) ($row['abet_number'] ?? ''));
+
+                if ($outcomeNumber === '') {
+                    continue;
+                }
+
+                foreach ($courseColumns as $column => $courseName) {
+                    $attainmentLevel = trim((string) ($row[$column] ?? ''));
+
+                    if ($attainmentLevel === '') {
+                        continue;
+                    }
+
+                    $insert->execute([
+                        'program_id' => $program_id,
+                        'outcome_number' => $outcomeNumber,
+                        'course_name' => $courseName,
+                        'attainment_level' => $attainmentLevel
+                    ]);
+                }
+            }
+
+            /*
+            * Table 4-3 — Summary of assessment results.
+            *
+            * The form has one column per semester while the database stores
+            * one row per outcome/semester combination.
+            */
+            $semesterColumns = [
+                'semester_one'   => 'F21',
+                'semester_two'   => 'S22',
+                'semester_three' => 'F22',
+                'semester_four'  => 'S23',
+                'semester_five'  => 'F23',
+                'semester_six'   => 'S24',
+                'semester_seven' => 'F24',
+                'semester_eight' => 'S25'
+            ];
+
+            $table43Rows = $this->getGridRows('Table_4-3');
+
+            $delete = $pdo->prepare("
+                DELETE FROM assessment_summary
+                WHERE program_id = :program_id
+            ");
+            $delete->execute(['program_id' => $program_id]);
+
+            $insert = $pdo->prepare("
+                INSERT INTO assessment_summary
+                    (program_id, outcome_number, semester, result)
+                VALUES
+                    (:program_id, :outcome_number, :semester, :result)
+            ");
+
+            foreach ($table43Rows as $row) {
+                $outcomeNumber = trim((string) ($row['abet_number'] ?? ''));
+
+                if ($outcomeNumber === '') {
+                    continue;
+                }
+
+                foreach ($semesterColumns as $column => $semester) {
+                    $result = trim((string) ($row[$column] ?? ''));
+
+                    if ($result === '') {
+                        continue;
+                    }
+
+                    $insert->execute([
+                        'program_id' => $program_id,
+                        'outcome_number' => $outcomeNumber,
+                        'semester' => $semester,
+                        'result' => $result
+                    ]);
+                }
+            }
+
+            /*
+            * Table 4-6 — Percentage of outcomes met.
+            */
+            $table46Rows = $this->getGridRows('table_4-6');
+
+            $delete = $pdo->prepare("
+                DELETE FROM outcome_met_percentages
+                WHERE program_id = :program_id
+            ");
+            $delete->execute(['program_id' => $program_id]);
+
+            $insert = $pdo->prepare("
+                INSERT INTO outcome_met_percentages
+                    (
+                        program_id,
+                        outcome_number,
+                        semesters_assessed,
+                        percentage_met,
+                        times_consecutive_not_met,
+                        percentage_met_secondary
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        :outcome_number,
+                        :semesters_assessed,
+                        :percentage_met,
+                        :times_consecutive_not_met,
+                        :percentage_met_secondary
+                    )
+            ");
+
+            foreach ($table46Rows as $row) {
+                $outcomeNumber = trim((string) ($row['outcome'] ?? ''));
+                $semestersAssessed = trim((string) ($row['semesters_assessed'] ?? ''));
+                $percentageMet = trim((string) ($row['precentage_met'] ?? ''));
+                $timesNotMet = trim((string) ($row['time_of_2_consecutive_sem_not_met'] ?? ''));
+                $percentagePastYear = trim((string) ($row['precentage_met_in_past_year'] ?? ''));
+
+                if (
+                    $outcomeNumber === ''
+                    && $semestersAssessed === ''
+                    && $percentageMet === ''
+                    && $timesNotMet === ''
+                    && $percentagePastYear === ''
+                ) {
+                    continue;
+                }
+
+                $insert->execute([
+                    'program_id' => $program_id,
+                    'outcome_number' => $outcomeNumber,
+                    'semesters_assessed' => $semestersAssessed,
+                    'percentage_met' => $percentageMet,
+                    'times_consecutive_not_met' => $timesNotMet,
+                    'percentage_met_secondary' => $percentagePastYear
+                ]);
+            }
+
+            /*
+            * Improvement of hardware sequence consideration.
+            */
+            $hardwareRows = $this->getGridRows('hardware_sequence_consideration');
+
+            $delete = $pdo->prepare("
+                DELETE FROM continuous_improvement
+                WHERE program_id = :program_id
+                AND type = 'hardware'
+            ");
+            $delete->execute(['program_id' => $program_id]);
+
+            $insert = $pdo->prepare("
+                INSERT INTO continuous_improvement
                     (program_id, type, source, problem_analysis)
-                    VALUES (:program_id, 'hardware', :source, :problem_analysis)
-                ");
-                $stmt->execute([
+                VALUES
+                    (:program_id, 'hardware', :source, :problem_analysis)
+            ");
+
+            foreach ($hardwareRows as $row) {
+                $source = trim((string) ($row['sources'] ?? ''));
+                $problemAnalysis = trim((string) ($row['problem_analysis'] ?? ''));
+
+                if ($source === '' && $problemAnalysis === '') {
+                    continue;
+                }
+
+                $insert->execute([
                     'program_id' => $program_id,
-                    'source' => $row['sources'] ?? '',
-                    'problem_analysis' => $row['problem_analysis'] ?? ''
+                    'source' => $source,
+                    'problem_analysis' => $problemAnalysis
                 ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
             }
+
+            /*
+            * Improvements based on semesters where an assessment outcome
+            * was not met.
+            */
+            $assessmentOutcomeRows = $this->getGridRows('assessment_outcome');
+
+            $delete = $pdo->prepare("
+                DELETE FROM continuous_improvement
+                WHERE program_id = :program_id
+                AND type = 'semester_improvement'
+            ");
+            $delete->execute(['program_id' => $program_id]);
+
+            $insert = $pdo->prepare("
+                INSERT INTO continuous_improvement
+                    (
+                        program_id,
+                        type,
+                        semester_year,
+                        source,
+                        problem_analysis,
+                        actions_plans,
+                        status_actions
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        'semester_improvement',
+                        :semester_year,
+                        :source,
+                        :problem_analysis,
+                        :actions_plans,
+                        :status_actions
+                    )
+            ");
+
+            foreach ($assessmentOutcomeRows as $row) {
+                $semester = trim((string) ($row['semester'] ?? ''));
+                $source = trim((string) ($row['sources'] ?? ''));
+                $problemAnalysis = trim((string) ($row['problem_analysis'] ?? ''));
+                $actions = trim((string) ($row['actions'] ?? ''));
+                $status = trim((string) ($row['status_of_actions'] ?? ''));
+
+                if (
+                    $semester === ''
+                    && $source === ''
+                    && $problemAnalysis === ''
+                    && $actions === ''
+                    && $status === ''
+                ) {
+                    continue;
+                }
+
+                $insert->execute([
+                    'program_id' => $program_id,
+                    'semester_year' => $semester,
+                    'source' => $source,
+                    'problem_analysis' => $problemAnalysis,
+                    'actions_plans' => $actions,
+                    'status_actions' => $status
+                ]);
+            }
+
+            /*
+            * Program Educational Objectives update.
+            */
+            $peoRows = $this->getGridRows('education_objectives_update');
+
+            $delete = $pdo->prepare("
+                DELETE FROM continuous_improvement
+                WHERE program_id = :program_id
+                AND type = 'peo_update'
+            ");
+            $delete->execute(['program_id' => $program_id]);
+
+            $insert = $pdo->prepare("
+                INSERT INTO continuous_improvement
+                    (
+                        program_id,
+                        type,
+                        source,
+                        problem_analysis,
+                        actions_plans,
+                        result
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        'peo_update',
+                        :source,
+                        :problem_analysis,
+                        :actions_plans,
+                        :result
+                    )
+            ");
+
+            foreach ($peoRows as $row) {
+                $source = trim((string) ($row['sources'] ?? ''));
+                $problemAnalysis = trim((string) ($row['problem_analysis'] ?? ''));
+                $actions = trim((string) ($row['actions'] ?? ''));
+                $result = trim((string) ($row['result'] ?? ''));
+
+                if (
+                    $source === ''
+                    && $problemAnalysis === ''
+                    && $actions === ''
+                    && $result === ''
+                ) {
+                    continue;
+                }
+
+                $insert->execute([
+                    'program_id' => $program_id,
+                    'source' => $source,
+                    'problem_analysis' => $problemAnalysis,
+                    'actions_plans' => $actions,
+                    'result' => $result
+                ]);
+            }
+
+            $pdo->commit();
+
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            $this->handleSaveError(
+                $genericErrorMessage,
+                $e->getMessage()
+            );
         }
 
-        $rows = $this->getGridRows('semester_year_assessment_improvements');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM continuous_improvement 
-                WHERE program_id = :program_id AND type = 'semester_improvement'");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO continuous_improvement 
-                    (program_id, type, semester_year, source, problem_analysis, actions_plans, status_actions)
-                    VALUES (:program_id, 'semester_improvement', :semester_year, :source, :problem_analysis, :actions_plans, :status_actions)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'semester_year' => $row['semester_year'] ?? '',
-                    'source' => $row['source'] ?? '',
-                    'problem_analysis' => $row['problem_analysis'] ?? '',
-                    'actions_plans' => $row['actions_plans'] ?? '',
-                    'status_actions' => $row['status_of_actions'] ?? ''
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
-
-        $rows = $this->getGridRows('program_educational_objectives_update');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM continuous_improvement 
-                WHERE program_id = :program_id AND type = 'peo_update'");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO continuous_improvement 
-                    (program_id, type, source, problem_analysis, actions_plans, result)
-                    VALUES (:program_id, 'peo_update', :source, :problem_analysis, :actions_plans, :result)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'source' => $row['source'] ?? '',
-                    'problem_analysis' => $row['problem_analysis'] ?? '',
-                    'actions_plans' => $row['actions'] ?? '',
-                    'result' => $row['result'] ?? ''
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
         break;
 
     case 'curriculum':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
-        $section_keys = [
-            'program_curriculum',
-            'course_syllabi'
-        ];
-
-        foreach ($section_keys as $key) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO report_sections (program_id, section_key, content)
-                    VALUES (:program_id, :section_key, :content)
-                    ON DUPLICATE KEY UPDATE content = VALUES(content)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
-
-        $rows = $this->getGridRows('table_5_1_curriculum');
         try {
-            $stmt = $pdo->prepare("DELETE FROM curriculum 
-                WHERE program_id = :program_id AND concentration IS NULL");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO curriculum 
-                    (program_id, course, course_type, credit_hours_other)
-                    VALUES (:program_id, :course, 'R', :credit_hours)
-                ");
-                $stmt->execute([
+            $pdo->beginTransaction();
+
+            /*
+            * Technical Elective List
+            *
+            * One form row maps to one concentration_courses row.
+            */
+            $technicalElectiveRows = $this->getGridRows('technical_electives');
+
+            $delete = $pdo->prepare("
+                DELETE FROM concentration_courses
+                WHERE program_id = :program_id
+            ");
+            $delete->execute([
+                'program_id' => $program_id
+            ]);
+
+            $insertTechnicalElective = $pdo->prepare("
+                INSERT INTO concentration_courses
+                    (
+                        program_id,
+                        department,
+                        course_number,
+                        course_title,
+                        required_for
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        :department,
+                        :course_number,
+                        :course_title,
+                        :required_for
+                    )
+            ");
+
+            foreach ($technicalElectiveRows as $row) {
+                $courseNumber = trim((string) ($row['course_number'] ?? ''));
+                $courseTitle = trim((string) ($row['course_title'] ?? ''));
+                $requiredFor = trim((string) ($row['required_for'] ?? ''));
+
+                if (
+                    $courseNumber === ''
+                    && $courseTitle === ''
+                    && $requiredFor === ''
+                ) {
+                    continue;
+                }
+
+                $insertTechnicalElective->execute([
                     'program_id' => $program_id,
-                    'course' => ($row['course'] ?? '') . ' ' . ($row['title'] ?? ''),
-                    'credit_hours' => $row['credit_hours'] ?? 0
+                    'department' => 'CSE',
+                    'course_number' => $courseNumber,
+                    'course_title' => $courseTitle,
+                    'required_for' => $requiredFor
                 ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
             }
+
+
+            /*
+            * Full Curriculum for the Program
+            *
+            * The current form maps directly onto the curriculum table.
+            */
+            $curriculumRows = $this->getGridRows('program_curriculum');
+
+            $delete = $pdo->prepare("
+                DELETE FROM curriculum
+                WHERE program_id = :program_id
+            ");
+            $delete->execute([
+                'program_id' => $program_id
+            ]);
+
+            $insertCurriculum = $pdo->prepare("
+                INSERT INTO curriculum
+                    (
+                        program_id,
+                        concentration,
+                        semester_year,
+                        course,
+                        course_type,
+                        credit_hours_math_science,
+                        credit_hours_engineering,
+                        credit_hours_other,
+                        significant_design,
+                        last_two_terms,
+                        max_section_enrollment
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        NULL,
+                        :semester_year,
+                        :course,
+                        :course_type,
+                        :credit_hours_math_science,
+                        :credit_hours_engineering,
+                        :credit_hours_other,
+                        :significant_design,
+                        :last_two_terms,
+                        :max_section_enrollment
+                    )
+            ");
+
+            foreach ($curriculumRows as $row) {
+                $course = trim((string) ($row['course_number_title'] ?? ''));
+                $semester = trim((string) ($row['semester_offered'] ?? ''));
+                $courseType = trim((string) ($row['course_type'] ?? ''));
+
+                $mathScience = trim((string) ($row['credit_hours_math_science'] ?? ''));
+                $engineering = trim((string) ($row['credit_hours_engineering'] ?? ''));
+                $other = trim((string) ($row['credit_hours_other'] ?? ''));
+
+                $significantDesign = trim((string) ($row['significant_design'] ?? ''));
+                $lastTwoTerms = trim((string) ($row['last_two_terms'] ?? ''));
+                $maxEnrollment = trim((string) ($row['max_section_enrollment'] ?? ''));
+
+                if (
+                    $course === ''
+                    && $semester === ''
+                    && $courseType === ''
+                    && $mathScience === ''
+                    && $engineering === ''
+                    && $other === ''
+                    && $significantDesign === ''
+                    && $lastTwoTerms === ''
+                    && $maxEnrollment === ''
+                ) {
+                    continue;
+                }
+
+                $insertCurriculum->execute([
+                    'program_id' => $program_id,
+                    'semester_year' => $semester,
+                    'course' => $course,
+                    'course_type' => $courseType,
+                    'credit_hours_math_science' => $mathScience === '' ? null : $mathScience,
+                    'credit_hours_engineering' => $engineering === '' ? null : $engineering,
+                    'credit_hours_other' => $other === '' ? null : $other,
+                    'significant_design' =>
+                        $significantDesign === ''
+                            ? null
+                            : ($significantDesign === 'yes' ? 1 : 0),
+                    'last_two_terms' => $lastTwoTerms,
+                    'max_section_enrollment' =>
+                        $maxEnrollment === '' ? null : $maxEnrollment
+                ]);
+            }
+
+
+            /*
+            * Course Alignment with Program Educational Objectives
+            *
+            * The form uses one wide row per PEO.
+            * The database stores one row per PEO/year-level combination.
+            */
+            $peoRows = $this->getGridRows('peo_course_alignment');
+
+            $delete = $pdo->prepare("
+                DELETE FROM curriculum_peo_alignment
+                WHERE program_id = :program_id
+            ");
+            $delete->execute([
+                'program_id' => $program_id
+            ]);
+
+            $insertPeoAlignment = $pdo->prepare("
+                INSERT INTO curriculum_peo_alignment
+                    (
+                        program_id,
+                        objective_number,
+                        year_level,
+                        courses
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        :objective_number,
+                        :year_level,
+                        :courses
+                    )
+            ");
+
+            $yearColumns = [
+                'freshman_courses' => 'Freshman',
+                'sophomore_courses' => 'Sophomore',
+                'junior_courses' => 'Junior',
+                'senior_courses' => 'Senior'
+            ];
+
+            foreach ($peoRows as $row) {
+                $objectiveNumber = trim((string) ($row['objective_number'] ?? ''));
+
+                foreach ($yearColumns as $column => $yearLevel) {
+                    $courses = trim((string) ($row[$column] ?? ''));
+
+                    if ($objectiveNumber === '' || $courses === '') {
+                        continue;
+                    }
+
+                    $insertPeoAlignment->execute([
+                        'program_id' => $program_id,
+                        'objective_number' => $objectiveNumber,
+                        'year_level' => $yearLevel,
+                        'courses' => $courses
+                    ]);
+                }
+            }
+
+
+            /*
+            * Course Alignment with ABET Student Outcomes
+            *
+            * Same normalized approach as the PEO alignment table.
+            */
+            $outcomeRows = $this->getGridRows('abet_course_alignment');
+
+            $delete = $pdo->prepare("
+                DELETE FROM curriculum_outcome_alignment
+                WHERE program_id = :program_id
+            ");
+            $delete->execute([
+                'program_id' => $program_id
+            ]);
+
+            $insertOutcomeAlignment = $pdo->prepare("
+                INSERT INTO curriculum_outcome_alignment
+                    (
+                        program_id,
+                        student_outcome,
+                        year_level,
+                        courses
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        :student_outcome,
+                        :year_level,
+                        :courses
+                    )
+            ");
+
+            foreach ($outcomeRows as $row) {
+                $studentOutcome = trim((string) ($row['student_outcome'] ?? ''));
+
+                foreach ($yearColumns as $column => $yearLevel) {
+                    $courses = trim((string) ($row[$column] ?? ''));
+
+                    if ($studentOutcome === '' || $courses === '') {
+                        continue;
+                    }
+
+                    $insertOutcomeAlignment->execute([
+                        'program_id' => $program_id,
+                        'student_outcome' => $studentOutcome,
+                        'year_level' => $yearLevel,
+                        'courses' => $courses
+                    ]);
+                }
+            }
+
+
+            /*
+            * Math Pre/Co-Requisites
+            *
+            * The schema now stores both the course and its prerequisite.
+            */
+            $prerequisiteRows = $this->getGridRows('math_pre_co_requisites');
+
+            $delete = $pdo->prepare("
+                DELETE FROM course_pre_co_requisite
+                WHERE program_id = :program_id
+            ");
+            $delete->execute([
+                'program_id' => $program_id
+            ]);
+
+            $insertPrerequisite = $pdo->prepare("
+                INSERT INTO course_pre_co_requisite
+                    (
+                        program_id,
+                        course_number,
+                        pre_co_requisite
+                    )
+                VALUES
+                    (
+                        :program_id,
+                        :course_number,
+                        :pre_co_requisite
+                    )
+            ");
+
+            foreach ($prerequisiteRows as $row) {
+                $courseNumber = trim((string) ($row['course_number'] ?? ''));
+                $prerequisite = trim((string) ($row['pre_co_requisite'] ?? ''));
+
+                if ($courseNumber === '' && $prerequisite === '') {
+                    continue;
+                }
+
+                $insertPrerequisite->execute([
+                    'program_id' => $program_id,
+                    'course_number' => $courseNumber,
+                    'pre_co_requisite' => $prerequisite
+                ]);
+            }
+
+
+            $pdo->commit();
+
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            $this->handleSaveError(
+                $genericErrorMessage,
+                $e->getMessage()
+            );
         }
 
-        $rows = $this->getGridRows('table_5_1a_curriculum');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM curriculum 
-                WHERE program_id = :program_id AND concentration = 'Cybersecurity'");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO curriculum 
-                    (program_id, concentration, course, course_type, credit_hours_other)
-                    VALUES (:program_id, 'Cybersecurity', :course, 'R', :credit_hours)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'course' => ($row['course'] ?? '') . ' ' . ($row['title'] ?? ''),
-                    'credit_hours' => $row['credit_hours'] ?? 0
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
-
-        $rows = $this->getGridRows('cse_400_level_courses');
-        try {
-            $stmt = $pdo->prepare("DELETE FROM concentration_courses WHERE program_id = :program_id");
-            $stmt->execute(['program_id' => $program_id]);
-        } catch(\PDOException $e) {
-            $this->handleSaveError($genericErrorMessage, $e->getMessage());
-            die();
-        }
-        foreach ($rows as $row) {
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO concentration_courses 
-                    (program_id, department, course_number, course_title, required_for)
-                    VALUES (:program_id, 'CSE', :course_number, :course_title, :required_for)
-                ");
-                $stmt->execute([
-                    'program_id' => $program_id,
-                    'course_number' => $row['course_number'] ?? '',
-                    'course_title' => $row['course_title'] ?? '',
-                    'required_for' => ($row['required_for_cbs'] === 'yes') ? 'CbS' : ''
-                ]);
-            } catch(\PDOException $e) {
-                $this->handleSaveError($genericErrorMessage, $e->getMessage());
-                die();
-            }
-        }
         break;
 
     case 'faculty':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         $section_keys = [
             'faculty_qualifications_narrative',
@@ -711,7 +1415,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -767,7 +1471,7 @@ public function handle_save() {
         break;
 
     case 'facilities':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         $section_keys = [
             'offices_classrooms_labs',
@@ -787,7 +1491,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -825,7 +1529,7 @@ public function handle_save() {
         break;
 
     case 'institutional_support_staffing':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         $section_keys = [
             'staffing_narrative'
@@ -841,7 +1545,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -892,7 +1596,7 @@ public function handle_save() {
         break;
 
     case 'appendix_c_equipment':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         $section_keys = [
             'equipment_overview'
@@ -908,7 +1612,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -1045,7 +1749,7 @@ public function handle_save() {
         break;
 
     case 'institutional_summary':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         $section_keys = [
             'institution',
@@ -1066,7 +1770,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -1146,7 +1850,7 @@ public function handle_save() {
         break;
 
     case 'assessment_plan':
-        $program_id = $_SESSION['program_id'];
+        $program_id = (int) $session->get('program_id');
 
         $section_keys = [
             'introduction',
@@ -1164,7 +1868,7 @@ public function handle_save() {
                 $stmt->execute([
                     'program_id' => $program_id,
                     'section_key' => $key,
-                    'content' => $_POST[$key] ?? ''
+                    'content' => $post[$key] ?? ''
                 ]);
             } catch(\PDOException $e) {
                 $this->handleSaveError($genericErrorMessage, $e->getMessage());
@@ -1242,7 +1946,7 @@ public function handle_save() {
         break;
 
     default:
-        $this->handleSaveError($genericErrorMessage, "Page " . $_POST['page_name'] . " not recognized.");
+        $this->handleSaveError($genericErrorMessage, "Page " . ($post['page_name'] ?? '') . " not recognized.");
         break;
     }
         

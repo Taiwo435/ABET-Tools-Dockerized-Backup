@@ -203,7 +203,7 @@
     },
     {
       "type": "expandable-grid",
-      "name": "technical_electives",
+      "name": "math_pre_co_requisites",
       "columns": [
         {
           "type": "text",

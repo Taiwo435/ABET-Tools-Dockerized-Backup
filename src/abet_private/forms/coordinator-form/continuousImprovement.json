@@ -150,7 +150,7 @@
       "label": "7. The frequency with which these assessment processes are carried out"
     },
     {
-      "name" : "frequency ",
+      "name" : "frequency",
       "description": "Copy text below header.",
       "type": "text-field"
     },
@@ -168,7 +168,7 @@
       "label": "9. Summaries of the results of the evaluation process and an analysis illustrating the extent to which each of the student outcomes is being attained."
     },
     {
-      "name" : "summaries ",
+      "name" : "summaries",
       "description": "Copy text below header to when table 4-3 is mentioned.",
       "type": "text-field"
     },
@@ -371,7 +371,7 @@
     },
     {
       "type": "text-field",
-      "name": "Closing the loop",
+      "name": "closing_the_loop",
       "description": "Copy all text to from \"Closing the loop\" to \"Improvements Actions Based on Outcomes Assessment\""
     },
     {
@@ -405,7 +405,7 @@
         {
           "name": "semester",
           "label": "Semester",
-          "type": "test"
+          "type": "text"
         },
         {
           "name": "sources",
@@ -466,7 +466,7 @@
     },  
     { 
       "type": "expandable-grid",
-      "name": "education_objectives_update",
+      "name": "constituency_improvement_tables",
       "description": "Tables between the one above and \"Improvements Underway will good  here",
       "columns": [
         {
@@ -504,7 +504,7 @@
     },   
     { 
       "type": "expandable-grid",
-      "name": "education_objectives_update",
+      "name": "improvements_underway",
       "description": "Tables between \"Improvements Underway\" to \"Additional Information\"",
       "columns": [
         {

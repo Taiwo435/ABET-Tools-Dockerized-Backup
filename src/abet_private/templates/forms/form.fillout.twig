@@ -91,7 +91,6 @@
                         class="expandable-grid-container"
                         name="{{ name }}"
                         data-old-values="{{ raw_val|json_encode }}"
-                        data-old-values2="{{ value }}"
                         style="grid-template-columns: repeat({{ columnCount }}, 1fr) 0.25fr;"
                     >
                         <div class="expandable-grid-row expandable-grid-label-row">
@@ -352,7 +351,7 @@
             expandableGrids = document.querySelectorAll('.expandable-grid');
             expandableGrids.forEach((grid) => { 
                 const gridContainer = grid.querySelector('.expandable-grid-container');
-                oldValues = gridContainer.getAttribute('data-old-values2')
+                oldValues = gridContainer.getAttribute('data-old-values')
                 if (oldValues == "") {
                     addExpandableGridRow(grid);
                     return;

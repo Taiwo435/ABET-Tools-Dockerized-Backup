@@ -251,6 +251,41 @@ CREATE TABLE IF NOT EXISTS peo_review (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
 );
+
+-- -----------------------------------------------
+-- CRITERION 3. STUDENT OUTCOMES
+-- Relationship of Student Outcomes to Program Educational Objectives
+--
+-- The current Criterion 3 form contains four expandable grids:
+-- topics_answered_by_objective_one
+-- topics_answered_by_objective_two
+-- topics_answered_by_objective_three
+-- topics_answered_by_objective_four
+--
+-- Each row contains:
+--   topic_number = the numbered topic/student outcome
+--   topic        = the description of that topic
+--
+-- Instead of creating four separate tables, objective_number identifies
+-- which of the four Program Educational Objective grids the row belongs to.
+-- For example:
+--   objective_number = 1 -> topics_answered_by_objective_one
+--   objective_number = 2 -> topics_answered_by_objective_two
+--   objective_number = 3 -> topics_answered_by_objective_three
+--   objective_number = 4 -> topics_answered_by_objective_four
+--
+-- program_id keeps Criterion 3 data separated by ABET program.
+-- -----------------------------------------------
+CREATE TABLE IF NOT EXISTS student_outcome_peo_topics (
+    topic_id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    objective_number INT NOT NULL,
+    topic_number VARCHAR(50),
+    topic TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
+);
+
 -- CRITERION 4. CONTINUOUS IMPROVEMENT: Student Outcomes. table 4-1
 -- Rows = outcome numbers 1-7; outcome_number
 -- Columns = course codes (CSE 301, CSE 320, etc.);course_name
@@ -363,6 +398,7 @@ CREATE TABLE IF NOT EXISTS curriculum (
     credit_hours_math_science DECIMAL(4, 1),
     credit_hours_engineering DECIMAL(4, 1),
     credit_hours_other DECIMAL(4, 1),
+    significant_design BOOLEAN DEFAULT FALSE,
     last_two_terms VARCHAR(100),
     max_section_enrollment INT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -395,6 +431,7 @@ CREATE TABLE IF NOT EXISTS curriculum_outcome_alignment (
 CREATE TABLE IF NOT EXISTS course_pre_co_requisite (
     pre_co_requisite_id INT AUTO_INCREMENT PRIMARY KEY,
     program_id INT NOT NULL,
+    course_number VARCHAR(50),
     pre_co_requisite TEXT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(program_id) ON DELETE CASCADE
