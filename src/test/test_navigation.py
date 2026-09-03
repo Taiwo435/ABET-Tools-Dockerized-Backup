@@ -287,8 +287,8 @@ def test_navigation(driver):
         expect_route(driver, path)
 
     navigate_and_expect(driver, "/tool/assignmentsgrades")
-    navigate_and_expect(driver, "/tool/faculty-form/")
-    navigate_and_expect(driver, "/tool/coordinator-form/")
+    navigate_and_expect(driver, "/tool/faculty-form")
+    navigate_and_expect(driver, "/tool/coordinator-form")
     navigate_and_expect(driver, "/report-generator/index.php")
 
     remove_db_user(EMAIL_ADDRESS)
