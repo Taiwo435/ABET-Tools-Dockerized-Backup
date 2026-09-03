@@ -198,6 +198,22 @@ services:
       - redis_data:/data
     networks:
       - app_network
+  
+
+  ###################################################
+  # Mailhog - local fake SMTP server for testing email sending in dev
+  ###################################################
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    hostname: mailhog
+    restart: unless-stopped
+    ports:
+      - "8025:8025"   # web UI
+      - "1025:1025"   # SMTP
+    networks:
+      - app_network
+
 
   ###################################################
   # Celery Worker - executes background tasks from all services
