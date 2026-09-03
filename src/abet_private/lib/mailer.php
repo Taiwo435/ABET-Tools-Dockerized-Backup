@@ -22,9 +22,10 @@ function send_verification_email(string $toEmail, string $code): void {
     // even when the container genuinely has MAILER_DSN set — getenv() is
     // the one that actually sees it.
     $dsn = getenv('MAILER_DSN') ?: ($_ENV['MAILER_DSN'] ?? 'null://null');
+    $fromAddress = getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@asu.edu';
 
     $email = (new Email())
-        ->from('no-reply@asu.edu')
+        ->from($fromAddress)
         ->to($toEmail)
         ->subject('Your ABET Tools verification code')
         ->text("Your verification code is: {$code}\n\nEnter this code on the verification page to activate your account. This code expires in 15 minutes.")
@@ -62,6 +63,7 @@ function send_permission_approved_email(string $toEmail, array $grantedPermissio
     // even when the container genuinely has MAILER_DSN set — getenv() is
     // the one that actually sees it.
     $dsn = getenv('MAILER_DSN') ?: ($_ENV['MAILER_DSN'] ?? 'null://null');
+    $fromAddress = getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@asu.edu';
     $permissionsList = implode(', ', array_map(
         static function (string $name): string {
             foreach (\App\Entity\Permissions::cases() as $permission) {
@@ -75,7 +77,7 @@ function send_permission_approved_email(string $toEmail, array $grantedPermissio
     ));
 
     $email = (new Email())
-        ->from('no-reply@asu.edu')
+        ->from($fromAddress)
         ->to($toEmail)
         ->subject('Your ABET Tools access request was approved')
         ->text("Your requested access has been approved. You now have: {$permissionsList}")
@@ -114,9 +116,10 @@ function send_password_reset_email(string $toEmail, string $subject, string $htm
     // even when the container genuinely has MAILER_DSN set — getenv() is
     // the one that actually sees it.
     $dsn = getenv('MAILER_DSN') ?: ($_ENV['MAILER_DSN'] ?? 'null://null');
+    $fromAddress = getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@asu.edu';
 
     $email = (new Email())
-        ->from('no-reply@asu.edu')
+        ->from($fromAddress)
         ->to($toEmail)
         ->subject($subject)
         ->text($textBody)
